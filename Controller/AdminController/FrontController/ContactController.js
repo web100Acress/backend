@@ -7,6 +7,10 @@ const contactPagedetailModel = require("../../../models/contactdetail")
 
 
 class contactController {
+
+    static contact=async(req,res)=>{
+        res.send('contact page controlller api listen')
+    }
     // contact page banner work
     // insert
     static contactbanner_insert = async (req, res) => {
