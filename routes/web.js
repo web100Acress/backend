@@ -10,6 +10,7 @@ const agentController = require('../Controller/AdminController/FrontController/A
 const aboutController = require('../Controller/AdminController/FrontController/AboutController')
 const projectController = require('../Controller/AdminController/FrontController/ProjectController')
 
+
  
 
 //Router for front home page  controller
@@ -28,11 +29,20 @@ router.get('/agent',agentController.agent)
 router.get('/project',projectController.project)
 
 // Admin Controller routing
-//project
+//projectDetail page 
+     //banner
+     router.post('/projectbannerInsert',projectController.projectbannerInsert)
+     router.get('/projectbannerEdit/:id/edit',projectController.projectbannerEdit)
+     router.post('/projectbannerUpdate/:id/update',projectController.projectbannerUpdate)
+     router.delete('/projectbannerDelete/:id/delete',projectController.projectbannerDelete)
+     //page
    router.post('/projectInsert',projectController.projectInsert)
    router.get('/projectEdit/:id/edit',projectController.projectEdit)
    router.post('/projectUpdate/:id/update',projectController.projectUpdate)
-  
+   router.delete('/projectDelete/:id/delete',projectController.projectDelete)
+      //from
+   router.post('/userInsert',projectController.userInsert)
+   router.delete("/userdataDelete/:id/delete",projectController.userdataDelete)
 //contact
    //contact banner 
    router.post('/contactbanner_insert',contactController.contactbanner_insert)
