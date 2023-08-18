@@ -11,7 +11,7 @@ class projectController {
         res.send("project")
     }
 
-    //banner for project detail page  
+//banner for project detail page  
     //insert
     static projectbannerInsert = async (req, res) => {
         // console.log("hello banner insert")
@@ -37,7 +37,8 @@ class projectController {
                 })
                 await data.save()
                 res.status(201).json({
-                    message: "data sucessfully inserted"
+                    message: "data sucessfully inserted",
+                    dataInsert:data
                 })
 
             } else {
@@ -49,7 +50,6 @@ class projectController {
             console.log(error)
         }
     }
-
     //edit
     static projectbannerEdit = async (req, res) => {
         // console.log("hello banner edit")
@@ -58,13 +58,38 @@ class projectController {
             const data = await projectBannerModel.findById(id)
 
             res.status(201).json({
-                message: "editing is enable !"
+                message: "editing is enable !",
+                editdata:data
             })
         } catch (error) {
             console.log(error)
         }
     }
+     //viewId
+     static projectbannerView=async(req,res)=>{
+        try {
+            const data = await projectBannerModel.findById(req.params.id)
+            res.status(201).json({
+                message: "data get sucessfully",
+                dataview: data
+            })
+        } catch (error) {
+            console.log(error)
+        }
+     }
+  // view all 
+  static projectbannerViewAll=async(req,res)=>{
+    try {
+        const data = await projectBannerModel.find()
 
+        res.status(201).json({
+            message: "all project get sucessfully",
+            dataview: data
+        })
+    } catch (error) {
+        console.log(error)
+    }
+ }
     //update
     static projectbannerUpdate = async (req, res) => {
         // console.log("hello update")
@@ -98,7 +123,8 @@ class projectController {
                     })
                     await dataUpdate.save()
                     res.status(201).json({
-                        message: "update data sucessfully!"
+                        message: "update data sucessfully!",
+                        data:dataUpdate
                     })
 
                 } else {
@@ -110,7 +136,8 @@ class projectController {
                     })
                     await dataupdate.save()
                     res.status(201).json({
-                        message: "update data sucessfully!"
+                        message: "update data sucessfully!",
+                        data:dataupdate
                     })
                 }
 
@@ -131,7 +158,8 @@ class projectController {
             const id=req.params.id;
             const data= await projectBannerModel.findByIdAndDelete(id)
             res.status(201).json({
-                message:"delete"
+                message:"delete",
+                dataDelete:data
             })
         } catch (error) {
             console.log(error)
@@ -140,7 +168,7 @@ class projectController {
 
 
 
-    // Project data insert api
+// Project data insert api
     static projectInsert = async (req, res) => {
         console.log("hello")
         try {
@@ -234,7 +262,6 @@ class projectController {
 
     }
 
-
     // project data edit
     static projectEdit = async (req, res) => {
         console.log("project edit")
@@ -248,9 +275,26 @@ class projectController {
             console.log("error")
         }
     }
+     // see project by id view details 
+     static projectView=async(req,res)=>{
+        console.log("helo")
+      try {
+        const projectName=req.params.projectName
+        const data = await ProjectModel.find({projectName:projectName})
+        res.status(200).json({
+            message: " enable",
+            dataview: data
+        })
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            error:"an error is occured",
+          })
+      }
+     }
     // project data edit
     static projectUpdate = async (req, res) => {
-        console.log("update")
+        // console.log("update")
         try {
             if (req.files) {
                 // const slider=req.files.sliderImage;
@@ -432,7 +476,8 @@ class projectController {
                 });
                 await data.save()
                 res.status(201).json({
-                    message: "done"
+                    message: "done",
+                    dataInsert:data
                 })
             } else {
                 res.status(403).json({

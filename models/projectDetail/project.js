@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-
 const projectSchema = new mongoose.Schema({
     sliderImage: {
         public_id: {

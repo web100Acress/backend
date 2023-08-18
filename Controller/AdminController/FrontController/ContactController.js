@@ -64,6 +64,19 @@ class contactController {
             console.log(error)
         }
     }
+    //view
+    static contactbanner_view=async(req,res)=>{
+        try {
+            const data = await contactbannerModel.findById(req.params.id)
+            //    await data.save()
+            res.status(201).json({
+                message: "view enable",
+                dataedit: data
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
     // update
     static contactbanner_update=async(req,res)=>{
        try {
@@ -91,7 +104,8 @@ class contactController {
                 //  console.log(updatedata)
                 await updatedata.save()
                 res.status(201).json({
-                    message:"update"
+                    message:"update",
+                    data:updatedata
                 })
             }else{
               const updatedata=await contactbannerModel.findByIdAndUpdate(req.params.id,{
@@ -101,7 +115,8 @@ class contactController {
             console.log(updatedata)
           await updatedata.save()
           res.status(201).json({
-            message:'updated:'
+            message:'updated:',
+            data:updatedata
           })
 
             }
@@ -114,7 +129,7 @@ class contactController {
        }
     }
 
-    // contact page form
+    // contact customer section page form
     // method for inserting custmer detail 
     static contact_Insert = async (req, res) => {
         //  console.log("hello post ")
@@ -167,13 +182,14 @@ class contactController {
         try {
             const data = await contactModel.findByIdAndDelete(req.params.id)
             res.status(201).json({
-                message: 'data deleted sucessfully!'
+                message: 'data deleted sucessfully!',
+                dataDelete:data
             })
         } catch (error) {
             console.log(error)
         }
     }
-    //  contact page companyt detail
+//  contact page companyt detail
     //contact page detail insert api
     static contact_pagedetail = async (req, res) => {
         // console.log('helllo  ')
@@ -219,7 +235,20 @@ class contactController {
             console.log(error)
         }
     }
+    
+     //view
+     static contact_pagedetail_view=async(req,res)=>{
+        try {
+            const data = await contactPagedetailModel.findById(req.params.id)
+            res.status(201).json({
+                message: "view is enable",
+                dataview: data
+            })
 
+        } catch (error) {
+            console.log(error)
+        }
+     }
     static contact_pagedetail_update = async (req, res) => {
         try {
             const id = req.params.id;
