@@ -89,9 +89,22 @@ const projectSchema = new mongoose.Schema({
             type: String,
             required: true
         }
-    ]
+    ],
+    unit:{
+        type:String,
+        required:true
+    },
+    launch:{
+        type:String,
+        required:true
+    },
+    area:{
+        type:String,
+        required:true
+    }
 
 },
+
     {
         timestamps: true
     }

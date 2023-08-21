@@ -2,7 +2,7 @@
 const cloudinary = require('cloudinary').v2;
 // contac page   models
 const contactModel = require("../../../models/contact")
-const contactbannerModel = require("../../../models/contactbanner")
+
 const contactPagedetailModel = require("../../../models/contactdetail")
 
 
@@ -12,122 +12,7 @@ class contactController {
         res.send('contact page controlller api listen')
     }
     // contact page banner work
-    // insert
-    static contactbanner_insert = async (req, res) => {
-        // console.log("helo")
-        try {
-            const { heading, descripation } = req.body
-            if (heading && descripation && req.files) {
-                const image = req.files.contact_banner;
-                const imageResult = await cloudinary.uploader.upload(
-                    image.tempFilePath, {
-                    folder: "100acre/ContactbannerImage"
-                }
-                );
-
-                const data = new contactbannerModel({
-                    contact_banner: {
-                        public_id: imageResult.public_id,
-                        url: imageResult.secure_url
-                    },
-                    heading: heading,
-                    descripation: descripation
-                })
-
-                await data.save()
-                res.status(201).json({
-                    message: "insert done",
-                    datainsert: data
-                })
-
-            } else {
-                res.status(403).json({
-                    message: "insert not  done"
-
-                })
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    //edit
-    static contactbanner_edit = async (req, res) => {
-        // console.log("hello")
-        try {
-            const data = await contactbannerModel.findById(req.params.id)
-            //    await data.save()
-            res.status(201).json({
-                message: "editing enable",
-                dataedit: data
-            })
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    //view
-    static contactbanner_view=async(req,res)=>{
-        try {
-            const data = await contactbannerModel.findById(req.params.id)
-            //    await data.save()
-            res.status(201).json({
-                message: "view enable",
-                dataedit: data
-            })
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    // update
-    static contactbanner_update=async(req,res)=>{
-       try {
-        const{heading,descripation}=req.body
-        if(heading&&descripation){
-            if(req.files){
-                const image=req.files.contact_banner;
-                // console.log(image)
-                 const data=await contactbannerModel.findById(req.params.id);
-                //  console.log(data)
-                 const imgaeid=data.contact_banner.public_id;
-                 await cloudinary.uploader.destroy(imgaeid)
-               
-                 const imageResult= await cloudinary.uploader.upload( image.tempFilePath ,{
-                    folder:"100acre/ContactbannerImage"
-                 })
-                 const updatedata=await contactbannerModel.findByIdAndUpdate(req.params.id,{
-                    contact_banner: {
-                        public_id: imageResult.public_id,
-                        url: imageResult.secure_url
-                                   },
-                    heading: heading,
-                    descripation: descripation
-                 })
-                //  console.log(updatedata)
-                await updatedata.save()
-                res.status(201).json({
-                    message:"update",
-                    data:updatedata
-                })
-            }else{
-              const updatedata=await contactbannerModel.findByIdAndUpdate(req.params.id,{
-                heading: heading,
-                descripation: descripation
-              })
-            console.log(updatedata)
-          await updatedata.save()
-          res.status(201).json({
-            message:'updated:',
-            data:updatedata
-          })
-
-            }
-        
-        }else{
-
-        }
-       } catch (error) {
-        
-       }
-    }
+  
 
     // contact customer section page form
     // method for inserting custmer detail 
@@ -194,15 +79,25 @@ class contactController {
     static contact_pagedetail = async (req, res) => {
         // console.log('helllo  ')
         try {
-            const { companyName, contactNumber, telephonenumber, email, address, descripation } = req.body
-            if (companyName && contactNumber && telephonenumber && email && address && descripation) {
+            const { companyName, contactNumber, telephonenumber, email, address, descripation ,heading,detail } = req.body
+            if (companyName && contactNumber && telephonenumber && email && address && descripation && req.files) {
+                const banner=req.files.contact_banner
+                const bannerResult=await cloudinary.uploader.upload(banner.tempFilePath,{
+                    folder: "100acre/ContactbannerImage"  
+                })
                 const data = new contactPagedetailModel({
+                    contact_banner: {
+                        public_id:bannerResult.public_id,
+                        url:bannerResult.secure_url
+                    },
                     companyName: companyName,
                     contactNumber: contactNumber,
                     telephonenumber: telephonenumber,
                     email: email,
                     address: address,
-                    descripation: descripation
+                    descripation: descripation,
+                    heading:heading,
+                    detail:detail
                 })
                 // console.log(data)
                 await data.save()
@@ -211,6 +106,7 @@ class contactController {
                     message: "detail posted!",
                     detail: data
                 })
+                
             } else {
                 res.status(403).json({
                     message: "check all field",
@@ -219,6 +115,9 @@ class contactController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                error: "error occured !"
+            })
         }
     }
 
@@ -233,6 +132,9 @@ class contactController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                error: "error occured !"
+            })
         }
     }
     
@@ -247,10 +149,46 @@ class contactController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                error: "error occured !"
+            })
         }
      }
+     //update
     static contact_pagedetail_update = async (req, res) => {
         try {
+            if(req.files){
+                const contact = await contactPagedetailModel.findById(req.params.id)
+                // console.log(data)
+                const bannerId = contact.contact_banner.public_id;
+                await cloudinary.uploader.destroy(bannerId)
+
+                const image = req.files.contact_banner;
+                const imageResult = await cloudinary.uploader.upload(
+                    image.tempFilePath, {
+                    folder: "100acre/ProjectImage"
+                }
+                );
+                   const id = req.params.id;
+                const data = await contactPagedetailModel.findByIdAndUpdate(id, {
+                    contact_banner:{
+                        public_id: imageResult.public_id,
+                        url: imageResult.secure_url
+                    },
+                    companyName: req.body.companyName,
+                    contactNumber: req.body.contactNumber,
+                    telephonenumber: req.body.telephonenumber,
+                    email: req.body.email,
+                    address: req.body.address,
+                    descripation: req.body.descripation,
+                    heading:req.body.heading,
+                    detail:req.body.detail
+                })
+                await data.save(data)
+                res.status(201).json({
+                    message: "updated!",
+                    dataUpdated: data
+                })}else{
             const id = req.params.id;
             const data = await contactPagedetailModel.findByIdAndUpdate(id, {
                 companyName: req.body.companyName,
@@ -258,17 +196,45 @@ class contactController {
                 telephonenumber: req.body.telephonenumber,
                 email: req.body.email,
                 address: req.body.address,
-                descripation: req.body.descripation
+                descripation: req.body.descripation,
+                heading:req.body.heading,
+                detail:req.body.detail
             })
             await data.save(data)
             res.status(201).json({
-                message: "updated!",
+                message: "updated",
                 dataUpdated: data
             })
-            console.log("helo")
+            // console.log("helo")
+        }
 
         } catch (error) {
+          console.log(error)
+          res.status(500).json({
+            error: "error occured !"
+        })
+        }
+    }
+    //delete
+    static contact_pagedetail_delete=async(req,res)=>{
+        try {
+            console.log("hello")
+            const id = req.params.id
+            const result = await contactPagedetailModel.findById(req.params.id)
+         
+            const image2Id = result.contact_banner.public_id
+            await cloudinary.uploader.destroy(image2Id)
 
+            const data = await contactPagedetailModel.findByIdAndDelete(id)
+            res.status(201).json({
+                message: 'data deleted sucessfully!',
+                deletedata: data
+            })
+        } catch (error) {
+          console.log(error)  
+          res.status(500).json({
+            error: "error occured !"
+        })
         }
     }
 

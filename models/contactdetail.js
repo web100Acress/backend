@@ -1,6 +1,16 @@
 const mongoose=require('mongoose')
 
 const contactPagedetail=new mongoose.Schema({
+    contact_banner:{
+        public_id:{
+            type:String,
+            required:true
+        },
+        url:{
+            type:String,
+            required:true
+        }
+    },
 
     companyName:{
         type:String,
@@ -30,6 +40,14 @@ const contactPagedetail=new mongoose.Schema({
         type:String,
         required:true,
     },
+    heading:{
+        type:String,
+        required:true, 
+    },
+    detail:{
+        type:String,
+        required:true,
+    }
     
     
 })

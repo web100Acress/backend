@@ -51,7 +51,11 @@ const buyCommercial_Schema = new mongoose.Schema({
     type:{
         type:String,
         required:true
-    }
+    },
+    area:{
+        type:String,
+        required:true
+    },
 
 
 })
