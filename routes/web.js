@@ -67,5 +67,13 @@ router.get('/project',projectController.project)
     router.get('/property/:type/rentView',rentController.rentView)
     router.post("/property/:id/rentUpdate",rentController.rentUpdate)
     router.delete('/property/:id/rentDelete',rentController.rentDelete)
+//About_Page
+    //Insert
+    router.post('/about/aboutInsert',aboutController.aboutInsert)  
+    router.get('/about/:id/aboutView',aboutController.aboutView)
+    router.get('/about/:id/aboutEdit',aboutController.aboutEdit)
+    router.post('/about/:id/aboutUpdate',aboutController.aboutUpdate)
+    router.delete('/about/:id/aboutDelete',aboutController.aboutDelete)
+      
 
 module.exports = router
