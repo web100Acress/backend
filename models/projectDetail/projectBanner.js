@@ -1,6 +1,6 @@
 
 const mongoose = require('mongoose');
-
+//iska use all project ke banner ke roop mei hoga 
 const projectBanner_Schema=new mongoose.Schema({
     bannerImage:{
       public_id: {

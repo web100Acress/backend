@@ -11,6 +11,7 @@ const aboutController = require('../Controller/AdminController/FrontController/A
 const projectController = require('../Controller/AdminController/FrontController/ProjectController')
 const BuyController = require('../Controller/AdminController/FrontController/BuyController')
 const rentController = require('../Controller/AdminController/FrontController/RentController')
+const registerController = require('../Controller/AdminController/FrontController/RegisterController')
 
 
  
@@ -24,7 +25,7 @@ router.get('/about',aboutController.about)
 router.get('/contact',contactController.contact)
 
  // router for blog page 
-router.get('/blog',blogController.blog)
+// router.get('/blog',blogController.blog)
 //router for agent page 
 router.get('/agent',agentController.agent)
 // project
@@ -74,6 +75,22 @@ router.get('/project',projectController.project)
     router.get('/about/:id/aboutEdit',aboutController.aboutEdit)
     router.post('/about/:id/aboutUpdate',aboutController.aboutUpdate)
     router.delete('/about/:id/aboutDelete',aboutController.aboutDelete)
+    //testimonial
+    router.post('/testimonial/testimonialInsert',aboutController.testimonialInsert)
+    router.get('/testimonial/testimonialView/:id',aboutController.testimonialView)
+    router.get('/testimonial/testimonialEdit/:id',aboutController.testimonialEdit) 
+    router.post('/testimonial/testimonialUpdate/:id',aboutController.testimonialUpdate)
+    router.delete('/testimonial/testimonialDelete/:id',aboutController.testimonialDelete)
+//Register
+    router.post('/register',registerController.register)
+    router.post('/verify_Login',registerController.verify_Login)
+    router.get('/logout',registerController.logout)
+    router.post('/forgetPassword',registerController.forgetPassword)
+    router.post('/reset/:token',registerController.reset)
+
+
+
+  
       
 
 module.exports = router
