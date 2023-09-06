@@ -43,6 +43,10 @@ connectDB()
 //     res.send("hello")
 // })
 
+// cookie
+const cookieParser=require('cookie-parser')
+app.use(cookieParser())
+
 // Router Link
 app.use('/',router)
 

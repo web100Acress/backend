@@ -12,6 +12,8 @@ const projectController = require('../Controller/AdminController/FrontController
 const BuyController = require('../Controller/AdminController/FrontController/BuyController')
 const rentController = require('../Controller/AdminController/FrontController/RentController')
 const registerController = require('../Controller/AdminController/FrontController/RegisterController')
+const authAdmin = require('../middleware/registerAuth')
+const PostPropertyController = require('../Controller/AdminController/FrontController/PostPropertyController')
 
 
  
@@ -88,9 +90,17 @@ router.get('/project',projectController.project)
     router.post('/forgetPassword',registerController.forgetPassword)
     router.post('/reset/:token',registerController.reset)
 
+// Post Property 
+  //post person 
+  router.post('/postPerson/register',PostPropertyController.postPerson_Register)
+   //property
+  router.post('/postPerson/property/:id',PostPropertyController.postProperty)
+  router.get('/postPerson/propertyView/:id',PostPropertyController.postProperty_View)
+  router.get('/postPerson/propertyoneView/:id',PostPropertyController.postPropertyOne_View)
+  router.get('/postPerson/propertyoneEdit/:id',PostPropertyController.postProperty_Edit)
+  // router.post('/postPerson/verifyLogin',PostPropertyController.postPerson_VerifyLogin)
+  // router.post('/postPerson/logout',PostPropertyController.postPerson_Logout)
+  // router.post('/postPerson/forget',PostPropertyController.postPerson_forget)
 
-
-  
-      
 
 module.exports = router

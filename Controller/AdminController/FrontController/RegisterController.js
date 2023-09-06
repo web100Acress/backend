@@ -27,8 +27,32 @@ const sendResetEmail = async (email, token) => {
         to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
         subject: 'Password Reset',
 
-        html: `Click the following link to reset your password: http://localhost:3500/reset/${token}`, // HTML body
+        // html: `Click the following link to reset your password: http://localhost:3500/reset/${token}`, // HTML body
+        html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>Forgot Password</title>
+        </head>
+        <body>
+        <p>Dear User,</p>
+        <p>Click the following link to reset your password : </p>
 
+        <p>
+        <a href="http://localhost:3500/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
+        </p>
+
+         <p>If you didn't request to password reset , please ignore this email. </p>
+
+        <p>Best regrads ,
+             <br>https://www.100acress.com/
+        </p>
+        </body>
+        </html>
+`
     });
 
 }
@@ -98,15 +122,19 @@ class registerController {
                         if (user.role == 'admin') {
                             const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
                             // console.log(token)
+                             console.log(token)
+                             res.cookie('token',token)
                             // res.json('token', token)
                             res.status(200).json({
-                                message: "admin pannelad login successful! "
+                                message: "admin pannel login successful! ",
+                                token:token,
                             })
 
                         } else {
                             const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
                             // console.log(token)
                             // res.json('token', token)
+                            res.cookie('token', token)
                             res.status(200).json({
                                 message: "admin user login successful! "
                             })
@@ -162,8 +190,8 @@ class registerController {
 
             // genrate token
             const token = generateToken();
-            const resetToken=await registerModel.findByIdAndUpdate(user._id,{
-                token:token
+            const resetToken = await registerModel.findByIdAndUpdate(user._id, {
+                token: token
             })
             await resetToken.save()
 
@@ -191,19 +219,19 @@ class registerController {
         // console.log(hashpassword)
 
         try {
-       
-        const hashpassword = await bcrypt.hash(password, 10)
-    
-        const user =await registerModel.findOneAndUpdate({ token:token },({
-            password:hashpassword
-        }))
-      console.log(user)
-      user.token=""
-    await user.save()
-    //  const data=user.token
 
-    // const token=user.token;
-   
+            const hashpassword = await bcrypt.hash(password, 10)
+
+            const user = await registerModel.findOneAndUpdate({ token: token }, ({
+                password: hashpassword
+            }))
+            console.log(user)
+            user.token = ""
+            await user.save()
+            //  const data=user.token
+
+            // const token=user.token;
+
             res.json({ message: 'Password reset successful' });
         } catch (error) {
             console.log(error)
@@ -215,3 +243,8 @@ class registerController {
     }
 }
 module.exports = registerController
+
+
+
+
+

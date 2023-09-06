@@ -19,7 +19,7 @@ const buyCommercial_Schema = new mongoose.Schema({
         required: true
     },
     propertyTitle: {
-        type: String,
+        type: String,//here we mention 1bhk or 
         required: true
     },
     address: {

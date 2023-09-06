@@ -82,7 +82,7 @@ class aboutController {
         // res.send("hello")
         try {
             const id = req.params.id;
-            const data = await aboutModel.findById(id)
+            const data = await aboutModel.findById(req.params.id)
             res.status(200).json({
                 message: "data get succefully !",
                 data
@@ -475,7 +475,6 @@ class aboutController {
 
 }
 module.exports = aboutController
-
 
 
 
