@@ -313,7 +313,7 @@ class rentController {
                         })
                     }
                 } else {
-                    const dataUpdaate = await rent_Model.findById(req.params.id, {
+                    const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
                         projectName: projectName,
                         propertyType: propertyType,
                         propertyName: propertyName,
