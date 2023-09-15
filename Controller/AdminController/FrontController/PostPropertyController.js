@@ -6,24 +6,63 @@ const otpGenerator = require('otp-generator')
 const cloudinary = require('cloudinary').v2;
 
 
-// email sender
-// const sendEmailOtp=async(email,otp)=>{
-//     const transporter=await nodemailer.createTransport({
-//       host: 'smtp.gmail.com',
-//       port:587,
-//       auth:{
-//         user: process.env.Email,
-//         pass: process.env.EmailPass
-//       }  
-//     });
 
-//     let info=await transporter.sendMail({
-//        from:'test@gmail.com',
-//        to:"amit100acre@gmail.com",//email replace this 
-//        subject:'Password Reset',
-//        html:`${otp}` 
-//     })
-// }
+
+const generateToken = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+const sendResetEmail = async (email, token) => {
+    // Connect with SMTP Gmail
+    const transporter = await nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        auth: {
+            user: process.env.Email,
+            pass: process.env.EmailPass
+        },
+    });
+    // Send mail with defined transport object
+    let info = await transporter.sendMail({
+        from: 'test@gmail.com', // Sender address
+        to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+        subject: 'Password Reset',
+
+        // html: `Click the following link to reset your password: http://localhost:3500/reset/${token}`, // HTML body
+        html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>Forgot Password</title>
+        </head>
+        <body>
+        <p>Dear User ,</p>
+        <p>Click the following link to reset your password :</p>
+        <p>
+
+        <a href="http://localhost:3500/postProperty/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
+        </p>
+        </p>
+
+        <p>If you didn't request to password reset , please ignore this email. </p>
+
+       <p>Best regrads ,
+            <br>https://www.100acress.com/
+       </p>
+       <form action="http://localhost:3500/postProperty/reset/${token}" method="POST">
+       <label for="newPassword">New Password:</label>
+       <input type="password"  name="password" required>
+       <button type="submit">Update Password</button>
+   </form>
+        </body>
+        </html>
+`
+    });
+
+}
 
 
 class PostPropertyController {
@@ -84,7 +123,134 @@ class PostPropertyController {
             })
         }
     }
+    // verify login for seller
+    static postPerson_VerifyLogin = async (req, res) => {
+        // console.log("hello")
+        try {
+            // res.send("listen the verify")
+            const { email, password } = req.body
+            if (email && password) {
+                const User = await postPropertyModel.findOne({ email: email })
+                // console.log(User)
+                if (User != null) {
+                    // console.log("hello")
+                    const isMatch = await bcrypt.compare(password, User.password)
+                    // console.log(isMatch)
+                    if ((email == email) && isMatch) {
+                        if (User.role == 'Seller') {
+                            //   console.log("seller")
+                            const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
+                            // console.log(token)
+                            res.status(200).json({
+                                message: " login successful! ",
+                                token: token,
+                            })
+                        } else {
+                            res.status(500).json({
+                                message: "something went wrong "
+                            })
+                        }
+                    } else {
+                        res.status(500).json({
+                            message: "check your email and password"
+                        })
+                    }
 
+                } else {
+                    res.status(500).json({
+                        message: "register first "
+                    })
+                }
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "something went wrong ! ",
+                error
+            })
+        }
+    }
+    // logout
+    static postPerson_logout = async (req, res) => {
+
+        try {
+            //    console.log("hello logout")  
+            res.clearCookie('token')
+            res.status(200).json({
+                message: "logout !"
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "something went wrong ! "
+            })
+        }
+    }
+    //forget password
+    static postPerson_forget = async (req, res) => {
+        const { email } = req.body
+        // console.log(email)
+        try {
+
+            const user = await postPropertyModel.findOne({ email: email })
+               console.log(user)
+            if (!user) {
+                res.status(404).json({
+                    message: "user not found ! "
+                })
+            }else{
+            const token = generateToken()
+            const resetToken = await postPropertyModel.findByIdAndUpdate(user._id, {
+                token: token
+            })
+            // console.log(token)
+            await resetToken.save()
+            await sendResetEmail(email, token)
+            //  console.log(resetToken)
+            res.status(200).json({
+                message: "password reset link sent successfully"
+            })
+        }
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error "
+            })
+        }
+    }
+    // Reset Password
+    static postPerson_reset = async (req, res) => {
+
+        // console.log("hello")
+        // res.send("hello")
+        try {
+            // console.log("hj")
+            const { token } = req.params
+            const { password } = req.body
+            const hashpassword = await bcrypt.hash(password, 10)
+            // console.log(hashpassword)
+            const user = await postPropertyModel.findOneAndUpdate({ token: token }, ({
+                password: hashpassword
+            }))
+            // console.log(user)
+            user.token = ""
+            await user.save()
+            res.status(200).json({
+                message: "your password successfully updated"
+            })
+
+        }
+        catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error"
+            })
+        }
+
+
+
+    }
 
     // post property
     static postProperty = async (req, res) => {
@@ -159,6 +325,9 @@ class PostPropertyController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message:"something went wrong"
+            })
         }
     }
 
@@ -409,68 +578,68 @@ class PostPropertyController {
                     })
                     const other = data.postProperty[0]
                     // console.log(other)
-                    for(let i=0;i<other.otherImage.length;i++){
-                         otherImageLink.push(
+                    for (let i = 0; i < other.otherImage.length; i++) {
+                        otherImageLink.push(
                             other.otherImage[i]
-                         )
+                        )
                     }
 
-                    const update={
-                        otherImage:otherImageLink,
-                        propertyName:propertyName,
-                        propertyType:propertyType,
-                        area:area,
-                        city:city,
-                        state:state,
-                        address:address,
-                        availableDate:availableDate,
-                        builtYear:builtYear,
-                        type:type,
-                        price:price,
-                        landMark:landMark,
-                        descripation:descripation,
-                        amenities:amenities,
-                        furnishing:furnishing
+                    const update = {
+                        otherImage: otherImageLink,
+                        propertyName: propertyName,
+                        propertyType: propertyType,
+                        area: area,
+                        city: city,
+                        state: state,
+                        address: address,
+                        availableDate: availableDate,
+                        builtYear: builtYear,
+                        type: type,
+                        price: price,
+                        landMark: landMark,
+                        descripation: descripation,
+                        amenities: amenities,
+                        furnishing: furnishing
 
                     }
                     // console.log(update)
-                    const dataUpdate=await postPropertyModel.findOneAndUpdate(
-                        {"postProperty._id":id},{$set:{"postProperty.$":update}}
+                    const dataUpdate = await postPropertyModel.findOneAndUpdate(
+                        { "postProperty._id": id }, { $set: { "postProperty.$": update } }
                     )
                     res.status(200).json({
-                        message:"updated successfully ! ",
+                        message: "updated successfully ! ",
                         dataUpdate
                     })
 
                 }
             } else {
 
-            
+
                 const id = req.params.id;
-                const update={
-                    propertyName:propertyName,
-                    propertyType:propertyType,
-                    area:area,
-                    city:city,
-                    state:state,
-                    address:address,
-                    availableDate:availableDate,
-                    builtYear:builtYear,
-                    type:type,
-                    price:price,
-                    landMark:landMark,
-                    descripation:descripation,
-                    amenities:amenities,
-                    furnishing:furnishing
+                const update = {
+                    propertyName: propertyName,
+                    propertyType: propertyType,
+                    area: area,
+                    city: city,
+                    state: state,
+                    address: address,
+                    availableDate: availableDate,
+                    builtYear: builtYear,
+                    type: type,
+                    price: price,
+                    landMark: landMark,
+                    descripation: descripation,
+                    amenities: amenities,
+                    furnishing: furnishing
 
                 }
 
-                   console.log(update)
-                   const dataUpdate=await postPropertyModel.findOneAndUpdate(
-                    {"postProperty._id":id},{$set:{"postProperty.$":update}}
+                console.log(update)
+                const dataUpdate = await postPropertyModel.findOneAndUpdate(
+                    { "postProperty._id": id }, { $set: { "postProperty.$": update } }
                 )
                 res.status(200).json({
-                    message:"updated successfully ! ",
+                    message: "updated successfully ! ",
                     dataUpdate
                 })
 
@@ -480,17 +649,63 @@ class PostPropertyController {
             res.status(500)
         }
     }
-static postProperty_Delete=async(req,res)=>{
-    // console.log("hello ")
-    // res.send("delete ")
-    try {
-        
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"something went wrong "
-        })
+    static postProperty_Delete = async (req, res) => {
+
+        try {
+            // console.log("hello")
+            const id = req.params.id
+            const data = await postPropertyModel.findOne({},
+                {
+                    postProperty: {
+                        $elemMatch: {
+                            _id: id
+                        }
+                    }
+                })
+
+            // console.log(data)
+            const frontId = data.postProperty[0].frontImage.public_id;
+            // console.log(frontId)
+            if (frontId != null) {
+                await cloudinary.uploader.destroy(frontId);
+            }
+
+            const otherImage = data.postProperty[0].otherImage
+
+            for (let i = 0; i < otherImage.length; i++) {
+
+                const frontId = data.postProperty[0].otherImage[i].public_id;
+                if (frontId != null) {
+                    await cloudinary.uploader.destroy(frontId)
+                }
+
+            }
+
+
+            const update = {
+                $pull: {
+                    postProperty: { _id: id }
+                }
+            };
+            // Perform the update operation
+            const result = await postPropertyModel.updateOne(update);
+            // const result = await postPropertyModel.deleteOne({ 'postProperty._id': id });
+            res.status(200).json({
+                message: "delete",
+                result
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "something went wrong "
+            })
+        }
     }
-}
+
+    // static findAll=async(req,res)=>{
+    //     const data=await postPropertyModel.find()
+    //     res.status(200).json({data})
+    // }
 }
 module.exports = PostPropertyController

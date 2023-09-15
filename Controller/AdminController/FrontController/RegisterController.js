@@ -1,5 +1,4 @@
 const registerModel = require("../../../models/register/registerModel")
-
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer")
@@ -122,7 +121,7 @@ class registerController {
                         if (user.role == 'admin') {
                             const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
                             // console.log(token)
-                             console.log(token)
+                            //  console.log(token)
                              res.cookie('token',token)
                             // res.json('token', token)
                             res.status(200).json({

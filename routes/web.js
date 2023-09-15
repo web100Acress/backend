@@ -14,6 +14,8 @@ const rentController = require('../Controller/AdminController/FrontController/Re
 const registerController = require('../Controller/AdminController/FrontController/RegisterController')
 const authAdmin = require('../middleware/registerAuth')
 const PostPropertyController = require('../Controller/AdminController/FrontController/PostPropertyController')
+const newlaunchController = require('../Controller/AdminController/FrontController/NewlauchController')
+
 
 
  
@@ -93,16 +95,50 @@ router.get('/project',projectController.project)
 // Post Property 
   //post person 
   router.post('/postPerson/register',PostPropertyController.postPerson_Register)
+  router.post('/postPerson/verify_Login',PostPropertyController.postPerson_VerifyLogin)
+  router.get('/postPerson/logout',PostPropertyController.postPerson_logout)
+  router.post('/postPerson/postProperty_forget',PostPropertyController.postPerson_forget)
+  router.post('/postPerson/reset/:token',PostPropertyController.postPerson_reset)
    //property
-  router.post('/postPerson/property/:id',PostPropertyController.postProperty)
+  router.post('/postPerson/propertyInsert/:id',PostPropertyController.postProperty)
   router.get('/postPerson/propertyView/:id',PostPropertyController.postProperty_View)
   router.get('/postPerson/propertyoneView/:id',PostPropertyController.postPropertyOne_View)
   router.get('/postPerson/propertyoneEdit/:id',PostPropertyController.postProperty_Edit)
   router.post('/postPerson/propertyoneUpdate/:id',PostPropertyController.postProperty_Update)
   router.delete('/postPerson/propertyDelete/:id',PostPropertyController.postProperty_Delete)
-  // router.post('/postPerson/verifyLogin',PostPropertyController.postPerson_VerifyLogin)
-  // router.post('/postPerson/logout',PostPropertyController.postPerson_Logout)
-  // router.post('/postPerson/forget',PostPropertyController.postPerson_forget)
+  // router.get("/findAll",PostPropertyController.findAll)
+
+
+//Blog
+router.post("/blog/insert",blogController.blog_Insert)
+router.get('/blog/view/:id',blogController.blog_View)
+router.get('/blog/edit/:id',blogController.blog_Edit)
+router.post('/blog/update/:id',blogController.blog_Update)
+router.delete('/blog/delete/:id',blogController.blog_delete)
+   //BlogPst
+router.post("/blogPost/insert/:id",blogController.blogPost_insert)   
+router.get('/blogPost/view/:id',blogController.blogPost_view)
+router.get("/blogPost/edit/:id",blogController.blogPost_edit)
+router.post("/blogPost/update/:id",blogController.blogPost_update)
+router.delete('/blogPost/delete/:id',blogController.blogPost_delete)
+
+// searching
+router.get("/property/search/:key",homeController.search)
+//new launch 
+router.post("/newlaunch/insert",newlaunchController.newlaunch_Insert)
+router.get("/newlaunch/view/:id",newlaunchController.newlaunch_view)
+router.get("/newlaunch/viewAll",newlaunchController.newlaunch_viewAll)
+router.get("/newlaunch/edit/:id",newlaunchController.newlaunch_edit)
+router.post("/newlaunch/update/:id",newlaunchController.newlaunch_update)
+router.delete("/newlaunch/delete/:id",newlaunchController.newlaunch_delete)
+//other Property
+
+router.post("/otherproperty/insert",newlaunchController.newlaunch_Insert)
+router.get("/otherproperty/view",newlaunchController.newlaunch_view)
+router.get("/otherproperty/viewAll",newlaunchController.newlaunch_viewAll)
+router.get("/otherproperty/edit/:id",newlaunchController.newlaunch_edit)
+router.post("/otherproperty/update",newlaunchController.newlaunch_update)
+router.delete("/newlaunch/delete",newlaunchController.newlaunch_delete)
 
 
 module.exports = router
