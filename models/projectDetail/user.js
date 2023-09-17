@@ -18,6 +18,10 @@ const UserSchema=new mongoose.Schema({
         type:String,
         required:true
       },
+      address:{
+        type:String,
+        required:true
+      }
     
 },{timestamps:true})
 

@@ -394,13 +394,29 @@ class projectController {
             console.log(error)
         }
     }
+//findAll
+static projectviewAll=async(req,res)=>{
+    // console.log("all")
+    try {
+       const data =await ProjectModel.find()
+
+res.status(200).json({
+    message:"all data get !",
+    data
+})    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message:"internal server error !"
+        })
+    }
+}
 
     //  project data delete
     static projectDelete = async (req, res) => {
         // console.log("helo")
         try {
             const id = req.params.id
-            const result = await ProjectModel.findById(req.params.id)
+            const result = await ProjectModel.findById({_id:id})
             const sliderId = result.sliderImage.public_id
             await cloudinary.uploader.destroy(sliderId)
 
@@ -410,7 +426,7 @@ class projectController {
             const image2Id = result.Image2.public_id
             await cloudinary.uploader.destroy(image2Id)
 
-            const data = await ProjectModel.findByIdAndDelete(id)
+            const data = await ProjectModel.findByIdAndDelete({_id:id})
             res.status(201).json({
                 message: 'data deleted sucessfully!',
                 deletedata: data
@@ -429,13 +445,14 @@ class projectController {
         // const data =new UserModel
 
         try {
-            const { name, email, mobile, projectName } = req.body
-            if (name && email && mobile && projectName) {
+            const { name, email, mobile, projectName ,address} = req.body
+            if (name && email && mobile && projectName && address) {
                 const data = new UserModel({
                     name: name,
                     email: email,
                     mobile: mobile,
-                    projectName: projectName
+                    projectName: projectName,
+                    address:address
                 })
 
 
@@ -451,15 +468,15 @@ class projectController {
                 // Send mail with defined transport object
                 let info = await transporter.sendMail({
                     from: 'test@gmail.com', // Sender address
-                    to: 'amit8601396382@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+                    to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
                     subject: 'New User Enquiry Detail', // Subject line
                     text: '', // Plain text body
                     html: `
         <div class="card">
           <div>
-           <center>
-             <h2>New User Enquiey Detail</h2>
-           <center>
+          <div class="header">
+          <h2>User Customer Contact Detail</h2>
+        </div>
           </div>
           <center>
           <div> User Customer Contact  Detail:</div>
@@ -467,13 +484,83 @@ class projectController {
           <div><h3>UserEmailId:${data.email}</h3></div>
           <div><h3>UserMobileNo.:${data.mobile}</h3></div>
           <div><h3>ProjectName:${data.project}</h3></div>
+          <div><h3>Address:${data.address}</h3></div>
           <center>
         
           <br>
      
          </div>
-        // `, // HTML body
+         `, // HTML body
+// html:`<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>User Contact Details</title>
+//     <style>
+//         body {
+//             font-family: Arial, sans-serif;
+//             background-color: #f2f2f2;
+//             margin: 0;
+//             padding: 0;
+//         }
 
+//         .card {
+//             max-width: 600px;
+//             margin: 0 auto;
+//             padding: 20px;
+//             background-color: #fff;
+//             border-radius: 10px;
+//             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+//         }
+
+//         .header {
+//             background-color: #007bff;
+//             color: #fff;
+//             text-align: center;
+//             padding: 10px;
+//             border-radius: 10px 10px 0 0;
+//         }
+
+//         h2 {
+//             margin: 0;
+//         }
+
+//         .details {
+//             padding: 20px;
+//             text-align: center;
+//         }
+
+//         h3 {
+//             margin: 10px 0;
+//             color: #333;
+//         }
+
+//         .footer {
+//             background-color: #007bff;
+//             color: #fff;
+//             text-align: center;
+//             padding: 10px;
+//             border-radius: 0 0 10px 10px;
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="card">
+      
+//         <div class="details">
+//             <div>User Customer Contact Detail:</div>
+//             <h3>UserName: ${data.name}</h3>
+//             <h3>UserEmailId: ${data.email}</h3>
+//             <h3>UserMobileNo.: ${data.mobile}</h3>
+//             <h3>ProjectName: ${data.project}</h3>
+//             <h3>Address: ${data.address}</h3>
+//         </div>
+       
+//     </div>
+// </body>
+// </html>
+// `
                 });
                 await data.save()
                 res.status(201).json({
@@ -495,7 +582,7 @@ class projectController {
 
         try {
             const id = req.params.id;
-            const data = await UserModel.findByIdAndDelete(id)
+            const data = await UserModel.findByIdAndDelete({_id:id})
 
             res.status(201).json({
                 message: "message delete",
@@ -508,5 +595,3 @@ class projectController {
 
 }
 module.exports = projectController
-
-

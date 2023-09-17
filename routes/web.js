@@ -15,6 +15,7 @@ const registerController = require('../Controller/AdminController/FrontControlle
 const authAdmin = require('../middleware/registerAuth')
 const PostPropertyController = require('../Controller/AdminController/FrontController/PostPropertyController')
 const newlaunchController = require('../Controller/AdminController/FrontController/NewlauchController')
+const otherpropertyController = require('../Controller/AdminController/FrontController/OtherpropertyController')
 
 
 
@@ -40,12 +41,13 @@ router.get('/project',projectController.project)
      //page with detail 
    router.post('/projectInsert',projectController.projectInsert)
    router.get('/projectView/:projectName/view',projectController.projectView)
+   router.get('/projectView/viewAll',projectController.projectviewAll)
    router.get('/projectEdit/:id/edit',projectController.projectEdit)
    router.post('/projectUpdate/:id/update',projectController.projectUpdate)
    router.delete('/projectDelete/:id/delete',projectController.projectDelete)
       //from
    router.post('/userInsert',projectController.userInsert)
-   router.delete("/userdataDelete/:id/delete",projectController.userdataDelete)
+   router.delete("/userdataDelete/delete/:id",projectController.userdataDelete)
 //contact
  // Customer Contact routing handler
    router.post('/contact_Insert',contactController.contact_Insert)
@@ -133,12 +135,12 @@ router.post("/newlaunch/update/:id",newlaunchController.newlaunch_update)
 router.delete("/newlaunch/delete/:id",newlaunchController.newlaunch_delete)
 //other Property
 
-router.post("/otherproperty/insert",newlaunchController.newlaunch_Insert)
-router.get("/otherproperty/view",newlaunchController.newlaunch_view)
-router.get("/otherproperty/viewAll",newlaunchController.newlaunch_viewAll)
-router.get("/otherproperty/edit/:id",newlaunchController.newlaunch_edit)
-router.post("/otherproperty/update",newlaunchController.newlaunch_update)
-router.delete("/newlaunch/delete",newlaunchController.newlaunch_delete)
+router.post("/otherproperty/insert",otherpropertyController.otherproperty_Insert)
+router.get("/otherproperty/viewAll",otherpropertyController.otherproperty_viewAll)
+router.get('/otherproperty/view/:id',otherpropertyController.otherproperty_view)
+router.get("/otherproperty/edit/:id",otherpropertyController.otherproperty_edit)
+router.post("/otherproperty/update/:id",otherpropertyController.otherproperty_update)
+router.delete("/otherproperty/delete/:id",otherpropertyController.otherproperty_delete)
 
 
 module.exports = router
