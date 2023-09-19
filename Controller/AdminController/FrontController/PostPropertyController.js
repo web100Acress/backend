@@ -251,6 +251,61 @@ class PostPropertyController {
 
 
     }
+    //view
+    static postPerson_View=async(req,res)=>{
+        // console.log("hello")
+        try {
+            const data=await postPropertyModel.find()
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })
+            
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+        }
+    }
+    // edit
+    static postPerson_Edit=async(req,res)=>{
+        // console.log("hello")
+        try {
+        // console.log("helo")
+        const id=req.params.id;
+        const data=await postPropertyModel.findById({_id:id})
+        res.status(200).json({
+            message:"data get sucessfully ! ",
+            data
+        })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+        }
+      
+    }
+    // update
+    static postPerson_update=async(req,res)=>{
+        // console.log("hello")
+        const { name, email, address, mobile} = req.body
+        const data =await postPropertyModel.findByIdAndUpdate(req.params.id,{
+           name:name,
+           email:email,
+           address:address,
+           mobile:mobile
+
+        })
+        await data.save()
+        res.status(200).json({data})
+        try {
+            
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     // post property
     static postProperty = async (req, res) => {
