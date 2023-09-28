@@ -193,24 +193,24 @@ class PostPropertyController {
         try {
 
             const user = await postPropertyModel.findOne({ email: email })
-               console.log(user)
+            console.log(user)
             if (!user) {
                 res.status(404).json({
                     message: "user not found ! "
                 })
-            }else{
-            const token = generateToken()
-            const resetToken = await postPropertyModel.findByIdAndUpdate(user._id, {
-                token: token
-            })
-            // console.log(token)
-            await resetToken.save()
-            await sendResetEmail(email, token)
-            //  console.log(resetToken)
-            res.status(200).json({
-                message: "password reset link sent successfully"
-            })
-        }
+            } else {
+                const token = generateToken()
+                const resetToken = await postPropertyModel.findByIdAndUpdate(user._id, {
+                    token: token
+                })
+                // console.log(token)
+                await resetToken.save()
+                await sendResetEmail(email, token)
+                //  console.log(resetToken)
+                res.status(200).json({
+                    message: "password reset link sent successfully"
+                })
+            }
 
         } catch (error) {
             console.log(error)
@@ -251,62 +251,79 @@ class PostPropertyController {
 
 
     }
-    //view
-    static postPerson_View=async(req,res)=>{
+    //viewAll
+    static postPerson_View = async (req, res) => {
         // console.log("hello")
         try {
-            const data=await postPropertyModel.find()
+            const data = await postPropertyModel.find()
             res.status(200).json({
-                message:"data get successfully ! ",
+                message: "data get successfully ! ",
                 data
             })
-            
+
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
             })
         }
     }
     // edit
-    static postPerson_Edit=async(req,res)=>{
+    static postPerson_Edit = async (req, res) => {
         // console.log("hello")
         try {
-        // console.log("helo")
-        const id=req.params.id;
-        const data=await postPropertyModel.findById({_id:id})
-        res.status(200).json({
-            message:"data get sucessfully ! ",
-            data
-        })
+            // console.log("helo")
+            const id = req.params.id;
+            const data = await postPropertyModel.findById({ _id: id })
+            res.status(200).json({
+                message: "data get sucessfully ! ",
+                data
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
             })
         }
-      
+
     }
     // update
-    static postPerson_update=async(req,res)=>{
+    static postPerson_update = async (req, res) => {
         // console.log("hello")
-        const { name, email, address, mobile} = req.body
-        const data =await postPropertyModel.findByIdAndUpdate(req.params.id,{
-           name:name,
-           email:email,
-           address:address,
-           mobile:mobile
+        const { name, email, address, mobile } = req.body
+        const data = await postPropertyModel.findByIdAndUpdate(req.params.id, {
+            name: name,
+            email: email,
+            address: address,
+            mobile: mobile
 
         })
         await data.save()
-        res.status(200).json({data})
+        res.status(200).json({ data })
         try {
-            
+
         } catch (error) {
             console.log(error)
         }
     }
+    // delete account
+    static postPerson_accountDelete = async (req, res) => {
+        // console.log("hello")
+        try {
+            const id = req.params.id;
+            const data = await postPropertyModel.findByIdAndDelete({ _id: id })
+            res.status(200).json({
+                message: "data deleted successfully !"
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! ",
 
+            })
+        }
+    }
+ 
     // post property
     static postProperty = async (req, res) => {
         try {
@@ -381,7 +398,7 @@ class PostPropertyController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"something went wrong"
+                message: "something went wrong"
             })
         }
     }
@@ -757,10 +774,6 @@ class PostPropertyController {
             })
         }
     }
-
-    // static findAll=async(req,res)=>{
-    //     const data=await postPropertyModel.find()
-    //     res.status(200).json({data})
-    // }
+   
 }
 module.exports = PostPropertyController

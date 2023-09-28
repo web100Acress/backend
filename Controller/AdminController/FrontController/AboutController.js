@@ -59,7 +59,7 @@ class aboutController {
 
                 } else {
                     res.status(500).json({
-                        message: "something went wrong !",
+                        message: "something went wrong !!",
                     })
                 }
             } else {
@@ -93,6 +93,23 @@ class aboutController {
             res.status(500).json({
                 message: "something went wrong ! "
             })
+        }
+    }
+    static aboutViewAll= async(req,res)=>{
+        // console.log("hello")
+        try {
+            // console.log("hello abot")
+            const data =await aboutModel.find()
+            // res.send(data)
+            res.status(200).json({
+                message:"data get successful ! ",
+                data
+            })
+        } catch (error) {
+          console.log(error)
+          res.status(500).json({
+            message:"internal server error ! "
+          })  
         }
     }
 
@@ -391,6 +408,23 @@ class aboutController {
             })
         }
     }
+    static testimonialViewAll=async(req,res)=>{
+        // console.log("hello")
+        try {
+            // console.log("testimonial listen")
+            const data=await testimonialModel.find()
+            // res.send(data)
+            res.status(200).json({
+                message:"data get successful ! ",
+                data
+            })
+        } catch (error) {
+          console.log(error)
+          res.status(500).json({
+            message:"internal server error ! "
+          }) 
+        }
+    }
 
     static testimonialEdit = async (req, res) => {
         try {
@@ -412,7 +446,9 @@ class aboutController {
        try {
         const{name,descripation}=req.body
         if(name && descripation){
-            if(req.files){   const image=req.files.image
+            if(req.files){  
+                
+                 const image=req.files.image
             
                 const id=req.params.id;
                 const data= await testimonialModel.findById(id)
@@ -475,8 +511,3 @@ class aboutController {
 
 }
 module.exports = aboutController
-
-
-
-
-

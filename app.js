@@ -2,9 +2,9 @@ const express=require('express')
 const mongoose = require('mongoose');
 const connectDB=require('./db/connect_db')
 const router=require("./routes/web")
-const Port=3500;
+const Port=process.env.PORT||3500;
 const app=express();
-const dotenv = require('dotenv').config()
+require('dotenv').config()
 const cors=require('cors')
 // const connectDb=require("./db/connect_db")
 const bodyParser = require('body-parser')
@@ -21,9 +21,12 @@ app.use(cors())
 
 // cloudinary config
 cloudinary.config({
-    cloud_name: 'dm5yrsqdc',
-    api_key:'696133393222185',
-    api_secret:'nUn6R9b9CA2Bg44sNTWtfRhvVFQ',
+    cloud_name:  process.env.ClOUDINARY_NAME  ,
+    //  'dm5yrsqdc',
+    api_key:process.env.ClOUDINARY_API_KEY,
+    // '696133393222185',
+    api_secret:process.env.ClOUDINARY_API_SECRET,
+    // 'nUn6R9b9CA2Bg44sNTWtfRhvVFQ',
     secure:true
 })
 

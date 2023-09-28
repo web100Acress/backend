@@ -106,7 +106,7 @@ class newlaunchController {
             res.status(200).json({
                 message:"data get successfull ! "
                 ,data
-            })
+            })           
         } catch (error) {
             console.log(error)
             res.send(500).json({

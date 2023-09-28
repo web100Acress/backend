@@ -89,6 +89,22 @@ class BuyController {
 
     }
 
+    static viewAll=async(req,res)=>{
+        try {
+            console.log("hello")
+            const data=await buyCommercial_Model.find()
+            res.status(200).json({
+                message:"All data get successfully ! ",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:'internal server error'
+            })
+        }
+    }
+    
     static buycommercialView = async (req, res) => {
         try {
             const type= req.params.type
@@ -113,12 +129,15 @@ class BuyController {
          const type=req.params.type;
         const query = { projectName:projectName,type:type };
          const data=await buyCommercial_Model.find(query)
-         res.status(200).json({datar:data})
+         res.status(200).json({
+            message:"data get succesfull",
+            datar:data
+        })
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "an error is occured",
+                message: "something went wrong ! ",
             })
         }
     }
@@ -135,7 +154,7 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-                error: "an error occured"
+                message:"something went wrong ! "
             })
         }
     }
@@ -328,7 +347,7 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-                error: "error occurred !"
+                message:"something went wrong ! "
             })
         }
     }
@@ -357,9 +376,10 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-                error: "error occured !"
+               message:"something went wrong ! "
             })
         }
     }
 }
 module.exports = BuyController
+                    

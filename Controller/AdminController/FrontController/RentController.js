@@ -129,6 +129,20 @@ class rentController {
             })
         }
     }
+    // ViewAll
+   static rentViewAll=async(req,res)=>{
+    // console.log("helj")
+    try {
+        // console.log("hello")
+        const data =await rent_Model.find()
+        res.send(data)
+    } catch (error) {
+      console.log(error)  
+      res.status(500).json({
+       message:"internal server error ! " 
+      })
+    }
+   }
     // update
     static rentUpdate = async (req, res) => {
         // res.send("listen rent  update ")

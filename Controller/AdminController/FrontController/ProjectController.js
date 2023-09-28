@@ -100,7 +100,7 @@ class projectController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error "
+                message: "internal server error "
             })
         }
 
@@ -394,29 +394,30 @@ class projectController {
             console.log(error)
         }
     }
-//findAll
-static projectviewAll=async(req,res)=>{
-    // console.log("all")
-    try {
-       const data =await ProjectModel.find()
+    //findAll
+    static projectviewAll = async (req, res) => {
+        // console.log("all")
+        try {
+            const data = await ProjectModel.find()
 
-res.status(200).json({
-    message:"all data get !",
-    data
-})    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"internal server error !"
-        })
+            res.status(200).json({
+                message: "all data get !",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error !"
+            })
+        }
     }
-}
 
     //  project data delete
     static projectDelete = async (req, res) => {
         // console.log("helo")
         try {
             const id = req.params.id
-            const result = await ProjectModel.findById({_id:id})
+            const result = await ProjectModel.findById({ _id: id })
             const sliderId = result.sliderImage.public_id
             await cloudinary.uploader.destroy(sliderId)
 
@@ -426,7 +427,7 @@ res.status(200).json({
             const image2Id = result.Image2.public_id
             await cloudinary.uploader.destroy(image2Id)
 
-            const data = await ProjectModel.findByIdAndDelete({_id:id})
+            const data = await ProjectModel.findByIdAndDelete({ _id: id })
             res.status(201).json({
                 message: 'data deleted sucessfully!',
                 deletedata: data
@@ -445,14 +446,14 @@ res.status(200).json({
         // const data =new UserModel
 
         try {
-            const { name, email, mobile, projectName ,address} = req.body
+            const { name, email, mobile, projectName, address } = req.body
             if (name && email && mobile && projectName && address) {
                 const data = new UserModel({
                     name: name,
                     email: email,
                     mobile: mobile,
                     projectName: projectName,
-                    address:address
+                    address: address
                 })
 
 
@@ -491,76 +492,76 @@ res.status(200).json({
      
          </div>
          `, // HTML body
-// html:`<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>User Contact Details</title>
-//     <style>
-//         body {
-//             font-family: Arial, sans-serif;
-//             background-color: #f2f2f2;
-//             margin: 0;
-//             padding: 0;
-//         }
+                    // html:`<!DOCTYPE html>
+                    // <html lang="en">
+                    // <head>
+                    //     <meta charset="UTF-8">
+                    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    //     <title>User Contact Details</title>
+                    //     <style>
+                    //         body {
+                    //             font-family: Arial, sans-serif;
+                    //             background-color: #f2f2f2;
+                    //             margin: 0;
+                    //             padding: 0;
+                    //         }
 
-//         .card {
-//             max-width: 600px;
-//             margin: 0 auto;
-//             padding: 20px;
-//             background-color: #fff;
-//             border-radius: 10px;
-//             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-//         }
+                    //         .card {
+                    //             max-width: 600px;
+                    //             margin: 0 auto;
+                    //             padding: 20px;
+                    //             background-color: #fff;
+                    //             border-radius: 10px;
+                    //             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                    //         }
 
-//         .header {
-//             background-color: #007bff;
-//             color: #fff;
-//             text-align: center;
-//             padding: 10px;
-//             border-radius: 10px 10px 0 0;
-//         }
+                    //         .header {
+                    //             background-color: #007bff;
+                    //             color: #fff;
+                    //             text-align: center;
+                    //             padding: 10px;
+                    //             border-radius: 10px 10px 0 0;
+                    //         }
 
-//         h2 {
-//             margin: 0;
-//         }
+                    //         h2 {
+                    //             margin: 0;
+                    //         }
 
-//         .details {
-//             padding: 20px;
-//             text-align: center;
-//         }
+                    //         .details {
+                    //             padding: 20px;
+                    //             text-align: center;
+                    //         }
 
-//         h3 {
-//             margin: 10px 0;
-//             color: #333;
-//         }
+                    //         h3 {
+                    //             margin: 10px 0;
+                    //             color: #333;
+                    //         }
 
-//         .footer {
-//             background-color: #007bff;
-//             color: #fff;
-//             text-align: center;
-//             padding: 10px;
-//             border-radius: 0 0 10px 10px;
-//         }
-//     </style>
-// </head>
-// <body>
-//     <div class="card">
-      
-//         <div class="details">
-//             <div>User Customer Contact Detail:</div>
-//             <h3>UserName: ${data.name}</h3>
-//             <h3>UserEmailId: ${data.email}</h3>
-//             <h3>UserMobileNo.: ${data.mobile}</h3>
-//             <h3>ProjectName: ${data.project}</h3>
-//             <h3>Address: ${data.address}</h3>
-//         </div>
-       
-//     </div>
-// </body>
-// </html>
-// `
+                    //         .footer {
+                    //             background-color: #007bff;
+                    //             color: #fff;
+                    //             text-align: center;
+                    //             padding: 10px;
+                    //             border-radius: 0 0 10px 10px;
+                    //         }
+                    //     </style>
+                    // </head>
+                    // <body>
+                    //     <div class="card">
+
+                    //         <div class="details">
+                    //             <div>User Customer Contact Detail:</div>
+                    //             <h3>UserName: ${data.name}</h3>
+                    //             <h3>UserEmailId: ${data.email}</h3>
+                    //             <h3>UserMobileNo.: ${data.mobile}</h3>
+                    //             <h3>ProjectName: ${data.project}</h3>
+                    //             <h3>Address: ${data.address}</h3>
+                    //         </div>
+
+                    //     </div>
+                    // </body>
+                    // </html>
+                    // `
                 });
                 await data.save()
                 res.status(201).json({
@@ -582,7 +583,7 @@ res.status(200).json({
 
         try {
             const id = req.params.id;
-            const data = await UserModel.findByIdAndDelete({_id:id})
+            const data = await UserModel.findByIdAndDelete({ _id: id })
 
             res.status(201).json({
                 message: "message delete",

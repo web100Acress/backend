@@ -41,6 +41,22 @@ class blogController {
             })
         }
     }
+    static blogviewAll=async(req,res)=>{
+        try {
+            // console.log("hello")
+            const data=await blogModel.find()
+            // res.send(data)
+            res.status(200).json({
+                message:"data get succesfull !",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+        }
+    }
 
     static blog_View = async (req, res) => {
         // res.send("hello")

@@ -60,6 +60,22 @@ class contactController {
             console.log(error)
         }
     }
+    static contactviewAll=async(req,res)=>{
+        // console.log("view")
+        try {
+            const data=await contactModel.find()
+            // res.send(data)
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+        }
+    }
     // method for delete the customer detail
     static contact_delete = async (req, res) => {
         // console.log('helllo  delete customer details')
@@ -152,6 +168,19 @@ class contactController {
             res.status(500).json({
                 error: "error occured !"
             })
+        }
+     }
+     static contactpagedetail_viewAll=async(req,res)=>{
+        // console.log("hello")
+        try {
+            const data = await contactPagedetailModel.find()
+            res.send(data)
+        } catch (error) {
+           console.log(error)
+           res.status(500).json({
+            message:"internal server error ! ",
+
+           }) 
         }
      }
      //update
