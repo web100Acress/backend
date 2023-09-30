@@ -22,7 +22,7 @@ const otherProperty_Schema = new mongoose.Schema({
 
     ],
     propertyType: {
-        type: String // means for resident home ,or for commercial like warehouse
+        type: String // means for resident home,bunglow,apartment ,or for commercial like warehouse,
     },
     propertyName: {
         type: String
@@ -56,7 +56,7 @@ const otherProperty_Schema = new mongoose.Schema({
     },
     type: {
         type: String
-    },//resident or commercial
+    },//resident or commercialre
     city: {
         type: String
     },
@@ -66,9 +66,6 @@ const otherProperty_Schema = new mongoose.Schema({
     address: {
         type: String
     },
-
-
-
 })
 const otherPropertyModel = mongoose.model('OtherProperty', otherProperty_Schema)
 module.exports = otherPropertyModel

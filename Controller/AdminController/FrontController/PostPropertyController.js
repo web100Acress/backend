@@ -67,7 +67,7 @@ const sendResetEmail = async (email, token) => {
 
 class PostPropertyController {
 
-    // seller work Registration work
+    // seller work Registration work    
 
     static postPerson_Register = async (req, res) => {
         try {
