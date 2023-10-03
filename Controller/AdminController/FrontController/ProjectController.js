@@ -411,7 +411,6 @@ class projectController {
             })
         }
     }
-
     //  project data delete
     static projectDelete = async (req, res) => {
         // console.log("helo")

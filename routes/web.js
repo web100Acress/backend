@@ -162,6 +162,10 @@ router.get('/otherproperty/view/:id', otherpropertyController.otherproperty_view
 router.get("/otherproperty/edit/:id", otherpropertyController.otherproperty_edit)
 router.post("/otherproperty/update/:id", otherpropertyController.otherproperty_update)
 router.delete("/otherproperty/delete/:id", otherpropertyController.otherproperty_delete)
-
+  // other property Enquiry 
+router.post("/otherproperty/enquiry/insert",otherpropertyController.otherEnquiry_insert) 
+router.get("/otherproperty/enquiry/viewAll",otherpropertyController.otherEnquiry_viewAll) 
+router.get("/otherproperty/enquiry/view/:id",otherpropertyController.otherEnquiry_view)
+router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherEnquiry_delete)
 
 module.exports = router
