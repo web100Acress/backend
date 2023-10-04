@@ -1,4 +1,4 @@
-const { errorMonitor } = require('nodemailer/lib/xoauth2');
+
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
@@ -37,7 +37,7 @@ class blogController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! "
+                message: " internal server error ! "
             })
         }
     }
@@ -216,7 +216,7 @@ class blogController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! "
+                message: "internal server error  ! "
             })
         }
     }
