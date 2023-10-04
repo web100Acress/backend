@@ -87,7 +87,7 @@ class newlaunchController {
         } catch (error) {
             console.log(error)
             res.send(500).json({
-                message: "internal server error ! "
+                message: "internal server error . "
             })
         }
     }
