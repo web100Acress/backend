@@ -504,4 +504,4 @@ class otherpropertyController {
   }
 
 }
-module.exports = otherpropertyController
+module.exports = otherpropertyController 

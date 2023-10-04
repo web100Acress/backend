@@ -6,16 +6,9 @@ class newlaunchController {
     static newlaunch_Insert = async (req, res) => {
         try {
             const {
-                projectName,
-                minPrice, maxPrice, developerName, bedroom, address,
-                state, block, floor, carparkSpace, nearestLandmark,
-                propertyType, facility, unit, launch, area, aboutProject
-            } = req.body
+                projectName, minPrice, maxPrice, developerName, bedroom, address,state, block, floor, carparkSpace, nearestLandmark, propertyType, facility, unit, launch, area, aboutProject} = req.body
 
-            if (projectName &&
-                minPrice && maxPrice && developerName && bedroom && address &&
-                state && block && floor && carparkSpace && nearestLandmark &&
-                propertyType && facility && unit && launch && area && aboutProject) {
+            if (projectName &&minPrice && maxPrice && developerName && bedroom && address &&state && block && floor && carparkSpace && nearestLandmark &&propertyType && facility && unit && launch && area && aboutProject) {
                 if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
 
                     const image = req.files.sliderImage;
@@ -76,7 +69,7 @@ class newlaunchController {
                     // console.log(data)
                     await data.save()
                     res.status(201).json({
-                        message: 'sumit data successfully',
+                        message: 'submit data successfully',
                         projectdata: data
 
                     })

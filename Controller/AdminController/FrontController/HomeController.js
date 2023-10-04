@@ -196,3 +196,4 @@ class homeController {
 }
 
 module.exports = homeController
+
