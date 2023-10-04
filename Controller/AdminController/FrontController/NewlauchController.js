@@ -111,7 +111,7 @@ class newlaunchController {
         try {
             const data = await newlaunchModel.find()
             res.status(200).json({
-                message:"All data get successfull ! "
+                message:"All data get successfull !! "
                 ,data
             })
         } catch (error) {
