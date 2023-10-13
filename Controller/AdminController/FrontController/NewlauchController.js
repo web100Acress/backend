@@ -3,6 +3,7 @@ const newlaunchModel = require('../../../models/newlaunch/newProject');
 const cloudinary = require('cloudinary').v2;
 class newlaunchController {
 
+    // data insert api Newlaunch
     static newlaunch_Insert = async (req, res) => {
         try {
             const {
@@ -91,22 +92,40 @@ class newlaunchController {
             })
         }
     }
-
+// data view for newlaunch by id
     static newlaunch_view = async (req, res) => {
         try {
             const id=req.params.id
             const data = await newlaunchModel.findById(id)
             res.status(200).json({
-                message:"data get successfull ! "
-                ,data
+                message:"data get successfully ! ",
+                data
             })           
         } catch (error) {
             console.log(error)
             res.send(500).json({
-                message: "internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }
+
+    static newlaunch_projectName = async (req, res) => {
+        console.log("hello")
+        try {
+            const projectName=req.params.projectName
+            const data = await newlaunchModel.find({projectName:projectName})
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })           
+        } catch (error) {
+            console.log(error)
+            res.send(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
+    // view all newLaunch data 
     static newlaunch_viewAll = async (req, res) => {
         try {
             const data = await newlaunchModel.find()
@@ -121,6 +140,7 @@ class newlaunchController {
             })
         }
     }
+    // edit new Launch data
     static newlaunch_edit = async (req, res) => {
         // console.log("hello")
         try {
@@ -137,6 +157,7 @@ class newlaunchController {
             })
         }
     }
+    // update data for new Launch data 
     static newlaunch_update = async (req, res) => {
         try {
             if (req.files) {

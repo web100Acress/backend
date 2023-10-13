@@ -408,25 +408,25 @@ class otherpropertyController {
           subject: 'New User Enquiry Detail', // Subject line
           text: '', // Plain text body
           html: `
-<div class="card">
-<div>
-<div class="header">
-<h2>User Customer Contact Detail Enquiry other property !</h2>
-</div>
-</div>
-<center>
-<div> User Customer Contact  Detail:</div>
-<div><h3>Seller Email:${data.sellerEmail}</h3></div>
-<div><h3>Seller Contact :${data.SellermobileNumber}</h3></div>
-<div><h3>Customer Email.:${data.cust_Email}</h3></div>
-<div><h3>Customer Name:${data.cust_Name}</h3></div>
-<div><h3>Customer Contact:${data.cust_Number}</h3></div>
-<div><h3>Property Address:${data. Prop_address}</h3></div>
-<center>
+          <div class="card">
+          <div>
+          <div class="header">
+          <h2>User Customer Contact Detail Enquiry other property !</h2>
+          </div>
+          </div>
+          <center>
+          <div> User Customer Contact  Detail:</div>
+          <div><h3>Seller Email:${data.sellerEmail}</h3></div>
+          <div><h3>Seller Contact :${data.SellermobileNumber}</h3></div>
+          <div><h3>Customer Email.:${data.cust_Email}</h3></div>
+          <div><h3>Customer Name:${data.cust_Name}</h3></div>
+          <div><h3>Customer Contact:${data.cust_Number}</h3></div>
+          <div><h3>Property Address:${data.Prop_address}</h3></div>
+          <center>
 
-<br>
+         <br>
 
-</div>
+         </div>
 `,
         });
         //  console.log(data)
@@ -437,7 +437,7 @@ class otherpropertyController {
         })
       } else {
         res.status(403).json({
-          message: "check your field ! "
+          message: "check input box !  "
         })
       }
     } catch (error) {

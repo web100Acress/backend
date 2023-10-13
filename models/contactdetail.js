@@ -4,7 +4,7 @@ const contactPagedetail=new mongoose.Schema({
     contact_banner:{
         public_id:{
             type:String,
-            required:true
+            required:true    //banner image for contact page 
         },
         url:{
             type:String,
@@ -41,15 +41,17 @@ const contactPagedetail=new mongoose.Schema({
         required:true,
     },
     heading:{
-        type:String,
+        type:String, // heading on the contact banner image 
         required:true, 
     },
     detail:{
-        type:String,
+        type:String, // detail on the contact banner image 
         required:true,
     }
     
     
+},{
+    timestamps:true
 })
 const contactPagedetailModel=mongoose.model('contactPage_Companydetail',contactPagedetail)
 module.exports=contactPagedetailModel

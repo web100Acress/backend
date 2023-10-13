@@ -11,19 +11,20 @@ class projectController {
     }
     // Project data insert api
     static projectInsert = async (req, res) => {
-        console.log("hello")
+        // console.log("hello")
         try {
-            // const {
-            //     projectName,
-            //     minPrice, maxPrice, developerName, bedroom, address,
-            //     state, block, floor, carparkSpace, nearestLandmark,
-            //     propertyType, aboutProjct, facility
-            // } = req.body
+            const {
+                projectName,
+                minPrice, maxPrice, developerName, bedroom, address,
+                state, block, floor,carparkSpace, nearestLandmark,
+                propertyType, aboutProject, facility,unit,area,launch
+            } = req.body
 
-            // if (projectName &&
-            //     minPrice && maxPrice && developerName && bedroom && address &&
-            //     state && block && floor && carparkSpace && nearestLandmark &&
-            //     propertyType && aboutProjct && facility && req.files) {
+            if (projectName &&
+                minPrice && maxPrice && developerName && bedroom && address &&
+                state && block && floor &&carparkSpace&& nearestLandmark &&
+                propertyType && aboutProject && facility&&unit&&area&&launch) {
+                 if(req.files.sliderImage&&req.files.sitePlan&& req.files.Image2){
 
 
 
@@ -62,41 +63,46 @@ class projectController {
                     public_id: dataviewImage.public_id,
                     url: dataviewImage.secure_url
                 },
-                projectName: req.body.projectName,
-                minPrice: req.body.minPrice,
-                maxPrice: req.body.maxPrice,
-                developerName: req.body.developerName,
-                bedroom: req.body.bedroom,
-                address: req.body.address,
-                state: req.body.state,
-                block: req.body.block,
-                floor: req.body.floor,
-                carparkSpace: req.body.carparkSpace,
-                nearestLandmark: req.body.nearestLandmark,
-                propertyType: req.body.propertyType,
-                aboutProject: req.body.aboutProject,
-                facility: req.body.facility,
-                unit: req.body.unit,
-                launch: req.body.launch,
-                area: req.body.area
+                projectName:projectName,
+                minPrice:minPrice,
+                maxPrice:maxPrice,
+                developerName:developerName,
+                bedroom:bedroom,
+                address: address,
+                state: state,
+                block: block,
+                floor:floor,
+                carparkSpace:carparkSpace,
+                nearestLandmark:nearestLandmark,
+                propertyType:propertyType,
+                aboutProject: aboutProject,
+                facility:facility,
+                unit:unit,
+                launch:launch,
+                area:area
 
 
             })
 
             // console.log(data)
             await data.save()
-            res.status(201).json({
+            res.status(200).json({
                 message: 'sumit data successfully',
                 projectdata: data
 
             })
-            // }
+        }else{
+            res.status(403).json({
+                message:"check image field ! "
+            })
+        }
+            }
 
-            // else {
-            //     res.status(403).json({
-            //         message: "all field are required"
-            //     })
-            // }
+            else {
+                res.status(403).json({
+                    message: "all field are required"
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -118,6 +124,9 @@ class projectController {
             })
         } catch (error) {
             console.log("error")
+            res.status(500).json({
+                message:"internal server error !"
+            })
         }
     }
     // see project by id view details 
@@ -141,8 +150,8 @@ class projectController {
     static projectUpdate = async (req, res) => {
         // console.log("update")
         try {
+        // const{projectName,minPrice,maxPrice,developerName,address,state,block,floor,carparkSpace,nearestLandmark,propertyType,aboutProject,unit,launch,area}=req.body
             if (req.files) {
-
                 if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
                     const data = await ProjectModel.findById(req.params.id)
                     // console.log(data)
@@ -269,7 +278,7 @@ class projectController {
 
                     const siteid = data.sitePlan.public_id;
                     await cloudinary.uploader.destroy(siteid)
-
+                       
                     const siteImage = req.files.sitePlan;
                     const site = await cloudinary.uploader.upload(
                         siteImage.tempFilePath, {
@@ -392,6 +401,10 @@ class projectController {
             }
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+           
         }
     }
     //findAll
@@ -399,7 +412,6 @@ class projectController {
         // console.log("all")
         try {
             const data = await ProjectModel.find()
-
             res.status(200).json({
                 message: "all data get !",
                 data
@@ -407,7 +419,7 @@ class projectController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error !"
+                message:"internal server error ! "
             })
         }
     }
@@ -427,26 +439,25 @@ class projectController {
             await cloudinary.uploader.destroy(image2Id)
 
             const data = await ProjectModel.findByIdAndDelete({ _id: id })
-            res.status(201).json({
+            res.status(202).json({
                 message: 'data deleted sucessfully!',
                 deletedata: data
             })
         } catch (error) {
             console.log(error)
-            res.status(201).json({
-                message: "done",
-                dataget: data
-            })
+           res.status(500).json({
+            message:"internal server error !"
+           })
         }
     } // Enquiry form for the Project detail page api
 
     static userInsert = async (req, res) => {
-        console.log("helo")
+        // console.log("helo")
         // const data =new UserModel
 
         try {
-            const { name, email, mobile, projectName, address } = req.body
-            if (name && email && mobile && projectName && address) {
+            const { name, email, mobile,  projectName, address } = req.body
+            if (name && email && mobile &&  projectName && address) {
                 const data = new UserModel({
                     name: name,
                     email: email,
@@ -472,24 +483,24 @@ class projectController {
                     subject: 'New User Enquiry Detail', // Subject line
                     text: '', // Plain text body
                     html: `
-        <div class="card">
-          <div>
-          <div class="header">
-          <h2>User Customer Contact Detail</h2>
-        </div>
-          </div>
-          <center>
-          <div> User Customer Contact  Detail:</div>
-          <div><h3>UserName:${data.name}</h3></div>
-          <div><h3>UserEmailId:${data.email}</h3></div>
-          <div><h3>UserMobileNo.:${data.mobile}</h3></div>
-          <div><h3>ProjectName:${data.project}</h3></div>
-          <div><h3>Address:${data.address}</h3></div>
-          <center>
+                    <div class="card">
+                     <div>
+                    <div class="header">
+                    <h2>User Customer Contact Detail</h2>
+                    </div>
+                    </div>
+                    <center>
+                    <div> User Customer Contact  Detail:</div>
+                    <div><h3>UserName:${data.name}</h3></div>
+                    <div><h3>UserEmailId:${data.email}</h3></div>
+                    <div><h3>UserMobileNo.:${data.mobile}</h3></div>
+                    <div><h3>ProjectName:${data. projectName}</h3></div>
+                    <div><h3>Address:${data.address}</h3></div>
+                    <center>
         
-          <br>
+                     <br>
      
-         </div>
+                     </div>
          `, // HTML body
                     // html:`<!DOCTYPE html>
                     // <html lang="en">
@@ -564,32 +575,54 @@ class projectController {
                 });
                 await data.save()
                 res.status(201).json({
-                    message: "done",
+                    message: "User data submitted successfully , and the data has been sent via email",
                     dataInsert: data
                 })
             } else {
-                res.status(403).json({
-                    message: "not success"
+                res.status(400).json({
+                    message: "some parameter are missing !"
                 })
             }
         } catch (error) {
+         console.log(error)
+         res.status(500).json({
+            message:"Internal server error !"
+         })
+        }
+    }
 
+    static userviewAll=async(req,res)=>{
+        // console.log("hello")
+        try {
+        const data=await UserModel.find()
+        res.status(200).json({
+          message:"Data retrived successfully !",
+          data
+        })
+        } catch (error) {
+           console.log(error)
+           res.status(500).json({
+            message:"internal server error ! "
+           }) 
         }
     }
     // user data
+    //delete
     static userdataDelete = async (req, res) => {
         // console.log('hello delete')
-
         try {
             const id = req.params.id;
             const data = await UserModel.findByIdAndDelete({ _id: id })
 
-            res.status(201).json({
-                message: "message delete",
-                datadelete: data
+            res.status(204).json({
+                message: "User data deleted successfully ! ",
+               
             })
         } catch (error) {
-            console.log(error)
+          console.log(error)
+          res.status(500).json({
+            message:"internal server error ! "
+          })  
         }
     }
 

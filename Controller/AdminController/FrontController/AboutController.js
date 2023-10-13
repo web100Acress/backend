@@ -1,6 +1,5 @@
 const aboutModel = require('../../../models/about/about');
 const testimonialModel = require('../../../models/about/testimonial');
-const { findByIdAndDelete } = require('../../../models/contact');
 // const { findById } = require('../../../models/contact');
 const rent_Model = require('../../../models/property/rent');
 
@@ -67,7 +66,6 @@ class aboutController {
                     message: "something went wrong !",
                 })
             }
-
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -255,7 +253,7 @@ class aboutController {
                         //    console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message: "updated successfully !",
+                            message: " data updated successfully !",
                             dataUpdate
                         })
                     } else if (req.files.chooseImage) {
@@ -285,7 +283,7 @@ class aboutController {
                         //    console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message: "updated successfully !",
+                            message: " data updated successfully !",
                             dataUpdate
                         })
                     }
@@ -305,7 +303,7 @@ class aboutController {
                     })
                     await dataUpdate.save()
                     res.status(200).json({
-                        message: "updated successfully !",
+                        message: " data updated successfully !",
                         dataUpdate
                     })
 
@@ -316,7 +314,7 @@ class aboutController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! ",
+                message: "Internal server error ! ",
             })
         }
     }
@@ -348,6 +346,9 @@ class aboutController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                mesaage:"Internal server error ! "
+            })
         }
     }
 
@@ -400,7 +401,10 @@ class aboutController {
             const id = req.params.id;
             const data = await testimonialModel.findById(id)
 
-            res.json(data)
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -431,13 +435,16 @@ class aboutController {
 
             const id = req.params.id
             const data = await testimonialModel.findById(id)
-            res.json(data)
-
+            // res.json(data)
+            res.status(200).json({
+                message:"data get for edit ! ",
+                data
+            })
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! "
+                message: "Internal server error ! "
             })
         }
     }
@@ -471,7 +478,9 @@ class aboutController {
   
                 // console.log(dataUpdated)
                 await dataUpdated.save()
-                res.json(dataUpdated)
+                  res.status(200).json({
+                    message:"data updated successfully ! "
+                  })
             }else{
                 const id=req.params.id;
                 const dataUpdated= await testimonialModel.findByIdAndUpdate(id ,{
@@ -480,18 +489,21 @@ class aboutController {
                     descripation:descripation
                   }) 
                   await dataUpdated.save()
-                  res.json(dataUpdated)
+                //   res.json(dataUpdated)
+                res.status(200).json({
+                    message:"data updated successfully ! "
+                })
             }
         }else{
-            res.status(500).json({
-                message:"something went wrong ! "
-            })
+         res.status(200).json({
+            message:"check your request !"
+         })
         }
         
        } catch (error) {
         console.log(error)
         res.status(500).json({
-            message:"something went wrong ! "
+            message:"Internal server error ! "
         })
        }
     }
@@ -499,12 +511,20 @@ class aboutController {
     static testimonialDelete = async (req, res) => {
         try {
             const id=req.params.id
+            const imageData= await testimonialModel.findById({_id:id})
+            const imageid=imageData.image.public_id
+            if(imageid!==null){
+                await cloudinary.uploader.destroy(imageid)
+            }
             const data=await testimonialModel.findByIdAndDelete(id)
-            res.json(data)
+            // res.json(data)
+            res.status(200).json({
+                message:"data deletd successfully ! "
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"something went wrong ! "
+                message:"Internal server error ! "
             })
         }
     }

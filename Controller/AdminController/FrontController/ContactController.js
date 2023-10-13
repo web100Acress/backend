@@ -31,18 +31,21 @@ class contactController {
 
                 // console.log(userData)
                 await userData.save()
-                res.status(201).json({
-                    message: "your message send ! Contact u later",
+                res.status(200).json({
+                    message: "your message send !",
                     data: userData
                 })
             } else {
                 res.status(403).json({
-                    message: "can not empty",
+                    message: "check your field ! ",
 
                 })
             }
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
         }
     }
     // method for view the customer detail
@@ -50,7 +53,6 @@ class contactController {
         // console.log('hello')
         try {
             const data = await contactModel.findById(req.params.id)
-
             res.status(201).json({
                 message: "data get sucessfully",
                 dataview: data
@@ -58,6 +60,9 @@ class contactController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
         }
     }
     static contactviewAll=async(req,res)=>{
@@ -103,7 +108,7 @@ class contactController {
                 })
                 const data = new contactPagedetailModel({
                     contact_banner: {
-                        public_id:bannerResult.public_id,
+                        public_id:bannerResult.public_id,//banner image for contact page 
                         url:bannerResult.secure_url
                     },
                     companyName: companyName,
@@ -112,8 +117,8 @@ class contactController {
                     email: email,
                     address: address,
                     descripation: descripation,
-                    heading:heading,
-                    detail:detail
+                    heading:heading, //heading on the banner image 
+                    detail:detail // detail on the banner image 
                 })
                 // console.log(data)
                 await data.save()
@@ -132,7 +137,7 @@ class contactController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: "internal server error!"
             })
         }
     }
@@ -149,7 +154,7 @@ class contactController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: " internal server error !"
             })
         }
     }
@@ -174,7 +179,11 @@ class contactController {
         // console.log("hello")
         try {
             const data = await contactPagedetailModel.find()
-            res.send(data)
+            // res.send(data)
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })
         } catch (error) {
            console.log(error)
            res.status(500).json({

@@ -99,7 +99,7 @@ class registerController {
                     })
                 }
             }
-            // console.log(req.body)
+          
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -155,8 +155,6 @@ class registerController {
             res.status("something went wrong")
         }
     }
-
-
     static logout = async (req, res) => {
         // res.send('hello logout')
         try {
@@ -172,10 +170,7 @@ class registerController {
             })
         }
     }
-
     // forget password
-
-
     static forgetPassword = async (req, res) => {
         // res.send('hello forget listen')
         const { email } = req.body
@@ -206,7 +201,6 @@ class registerController {
 
         }
     }
-
     // Handle password reset
     static reset = async (req, res) => {
         // res.send('hello reset')

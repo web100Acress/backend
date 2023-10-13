@@ -57,6 +57,7 @@ class homeController {
 
       } catch (error) {
         console.log(error)
+        
       }
     } else {
       res.send("please enter search query")
@@ -64,7 +65,7 @@ class homeController {
   }
   //search in otherproperty
   static search_other = async (req, res) => {
-    const { query } = req.query
+    const {query } = req.body
     console.log(query)
     //   console.log(query)
     if (query.length) {
@@ -85,6 +86,10 @@ class homeController {
           )
           if (data.length > 0) {
             searchData.push(...data);
+          }else{
+            res.status(200).json({
+              message: "Data not found!"
+            });
           }
         }
         if (searchData.length > 0) {
