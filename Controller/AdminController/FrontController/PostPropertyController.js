@@ -78,7 +78,7 @@ class PostPropertyController {
             const verify = await postPropertyModel.findOne({ email: email })
 
             if (verify) {
-                res.status(500).json({
+                res.status(409).json({
                     message: "user already register"
                 })
             }
@@ -106,8 +106,8 @@ class PostPropertyController {
                             })
 
                         } else {
-                            res.status(500).json({
-                                message: "passwprd and Confirm password does not match  ! "
+                            res.status(401).json({
+                                message: "password and Confirm password does not match  ! "
                             })
                         }
                     }
@@ -152,7 +152,7 @@ class PostPropertyController {
                             })
                         }
                     } else {
-                        res.status(200).json({
+                        res.status(401).json({
                             message: "Please verify your email and password before sign in !"
                         })
                     }
@@ -290,6 +290,7 @@ class PostPropertyController {
     // update
     static postPerson_update = async (req, res) => {
         // console.log("hello")
+        try{
         const { name, email, address, mobile } = req.body
         const data = await postPropertyModel.findByIdAndUpdate(req.params.id, {
             name: name,
@@ -300,10 +301,13 @@ class PostPropertyController {
         })
         await data.save()
         res.status(200).json({ data })
-        try {
+    
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message:"Internal server error ! "
+            })
         }
     }
     // delete account

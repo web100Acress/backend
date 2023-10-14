@@ -63,7 +63,7 @@ class registerController {
             const verify = await registerModel.findOne({ email: email })
 
             if (verify) {
-                res.status(500).json({
+                res.status(409).json({
                     message: "user already register"
                 })
             } else {
@@ -89,8 +89,8 @@ class registerController {
                             })
                         }
                     } else {
-                        res.status(500).json({
-                            message: "passwprd and Confirm password does not match  ! "
+                        res.status(401).json({
+                            message: "  ! "
                         })
                     }
                 } else {
@@ -139,20 +139,22 @@ class registerController {
                             })
                         }
                     } else {
-                        res.status(500).json({
+                        res.status(401).json({
                             message: "check your email and password that enter"
                         })
                     }
 
                 } else {
-                    res.status(500).json({
+                    res.status(401).json({
                         message: "this email yet not register"
                     })
                 }
             }
         } catch (error) {
             console.log(error)
-            res.status("something went wrong")
+            res.status(500).json({
+                message:"Internal server error !"
+            })
         }
     }
     static logout = async (req, res) => {
