@@ -511,13 +511,13 @@ class newlaunchController {
                 } else {
 
                     res.status(400).json({
-                        message: "check your field ! "
+                        message: "check  your image  field ! "
                     })
                 }
             } else {
 
                 res.status(400).json({
-                    message: "check your field ! "
+                    message: "check your  field !! "
                 })
             }
 
@@ -693,7 +693,8 @@ class newlaunchController {
                 message: "Data deleted successfully ! "
             })
         } catch (error) {
-
+        console.log(error)
+        res.status(500)
         }
     }
 
