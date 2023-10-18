@@ -42,7 +42,6 @@ class aboutController {
                             public_id: chooseResult.public_id,
                             url: chooseResult.secure_url
                         },
-
                         sliderHeading: sliderHeading,
                         sliderDescripation: sliderDescripation,
                         aboutHeading: aboutHeading,
@@ -100,7 +99,7 @@ class aboutController {
             const data =await aboutModel.find()
             // res.send(data)
             res.status(200).json({
-                message:"data get successful ! ",
+                message:"data get successfully ! ",
                 data
             })
         } catch (error) {
@@ -115,7 +114,7 @@ class aboutController {
         // res.send("hello edit")
         try {
             const id = req.params.id;
-            const data = await aboutModel.findById(id)
+            const data = await aboutModel.findById({_id:id})
             res.status(200).json({
                 message: "data edit !",
                 data
@@ -306,10 +305,7 @@ class aboutController {
                         message: " data updated successfully !",
                         dataUpdate
                     })
-
                 }
-
-
             }
         } catch (error) {
             console.log(error)
@@ -323,10 +319,9 @@ class aboutController {
         // res.send("hello delete ")
         try {
             const data = await aboutModel.findById(req.params.id)
-            const sliderId = data.sliderImage.public_id
+            const sliderId = data.sliderImage.public_id;
             const aboutId = data.aboutImage.public_id;
-            const chooseId = data.chooseImage.public_id;
-
+            const chooseId = data.chooseImage.public_id; 
             if (sliderId && aboutId && chooseId) {
                 await cloudinary.uploader.destroy(sliderId)
                 await cloudinary.uploader.destroy(aboutId)
@@ -376,15 +371,18 @@ class aboutController {
                     })
                     // console.log(data)
                     await data.save()
-                    res.json(data)
+                    // res.json(data)
+                    res.status(200).json({
+                        message:"data insert successfully ! "
+                    })
 
                 } else {
-                    res.status(500).json({
+                    res.status(204).json({
                         message: "please select image  !"
                     })
                 }
             } else {
-                res.status(500).json({
+                res.status(204).json({
                     message: "please select name and desripation ! "
                 })
             }
@@ -399,8 +397,7 @@ class aboutController {
         // res.send("hello view ")
         try {
             const id = req.params.id;
-            const data = await testimonialModel.findById(id)
-
+            const data = await testimonialModel.findById({_id:id})
             res.status(200).json({
                 message:"data get successfully ! ",
                 data
@@ -434,7 +431,7 @@ class aboutController {
         try {
 
             const id = req.params.id
-            const data = await testimonialModel.findById(id)
+            const data = await testimonialModel.findById({_id:id})
             // res.json(data)
             res.status(200).json({
                 message:"data get for edit ! ",
@@ -495,8 +492,8 @@ class aboutController {
                 })
             }
         }else{
-         res.status(200).json({
-            message:"check your request !"
+         res.status(204).json({
+            message:"check your field !"
          })
         }
         
@@ -516,7 +513,7 @@ class aboutController {
             if(imageid!==null){
                 await cloudinary.uploader.destroy(imageid)
             }
-            const data=await testimonialModel.findByIdAndDelete(id)
+            const data=await testimonialModel.findByIdAndDelete({_id:id})
             // res.json(data)
             res.status(200).json({
                 message:"data deletd successfully ! "

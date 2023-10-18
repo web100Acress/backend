@@ -24,7 +24,7 @@ class rentController {
                     const otherImageLink = []
 
                     if (otherImage.length >= 2) {
-                        for (let i = 0; i < otherImage.length; i++) {
+                        for(let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
                                 folder: "100acre/Rental_Property"
@@ -348,17 +348,19 @@ class rentController {
                     // console.log(dataUpdaate)
                     await dataUpdate.save()
                     res.status(200).json({
-                        message:"update successfully !",
-                        dataUpdaate
+                       message:"data updated successfully ! "
                     })
                 }
             } else {
-                res.status(500).json({
-                    message: "somthing going wrong !"
+                res.status(204).json({
+                    message: "No content  !"
                 })
             }
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+               message:"Internal server error ! "
+            })
         }
     }
     //delete
@@ -382,10 +384,10 @@ class rentController {
             })
 
         } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                error: "something went wrong !"
-            })
+           console.log(error)
+           res.status(500).json({
+            message:"Internal server error ! "
+           })
         }
     }
 

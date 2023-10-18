@@ -16,86 +16,86 @@ class projectController {
             const {
                 projectName,
                 minPrice, maxPrice, developerName, bedroom, address,
-                state, block, floor,carparkSpace, nearestLandmark,
-                propertyType, aboutProject, facility,unit,area,launch
+                state, block, floor, carparkSpace, nearestLandmark,
+                propertyType, aboutProject, facility, unit, area, launch
             } = req.body
 
             if (projectName &&
                 minPrice && maxPrice && developerName && bedroom && address &&
-                state && block && floor &&carparkSpace&& nearestLandmark &&
-                propertyType && aboutProject && facility&&unit&&area&&launch) {
-                 if(req.files.sliderImage&&req.files.sitePlan&& req.files.Image2){
+                state && block && floor && carparkSpace && nearestLandmark &&
+                propertyType && aboutProject && facility && unit && area && launch) {
+                if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
 
 
 
-            const image = req.files.sliderImage;
-            const imageResult = await cloudinary.uploader.upload(
-                image.tempFilePath, {
-                folder: "100acre/ProjectImage"
-            }
-            );
-            const siteImage = req.files.sitePlan;
-            const site = await cloudinary.uploader.upload(
-                siteImage.tempFilePath, {
-                folder: "100acre/ProjectImage"
-            }
-            );
+                    const image = req.files.sliderImage;
+                    const imageResult = await cloudinary.uploader.upload(
+                        image.tempFilePath, {
+                        folder: "100acre/ProjectImage"
+                    }
+                    );
+                    const siteImage = req.files.sitePlan;
+                    const site = await cloudinary.uploader.upload(
+                        siteImage.tempFilePath, {
+                        folder: "100acre/ProjectImage"
+                    }
+                    );
 
-            const image2 = req.files.Image2;
-            const dataviewImage = await cloudinary.uploader.upload(
-                image2.tempFilePath, {
-                folder: "100acre/ProjectImage"
-            }
-            );
-
-
-            const data = new ProjectModel({
-                sliderImage: {
-                    public_id: imageResult.public_id,
-                    url: imageResult.secure_url
-                },
-                sitePlan: {
-                    public_id: site.public_id,
-                    url: site.secure_url
-                },
-
-                Image2: {
-                    public_id: dataviewImage.public_id,
-                    url: dataviewImage.secure_url
-                },
-                projectName:projectName,
-                minPrice:minPrice,
-                maxPrice:maxPrice,
-                developerName:developerName,
-                bedroom:bedroom,
-                address: address,
-                state: state,
-                block: block,
-                floor:floor,
-                carparkSpace:carparkSpace,
-                nearestLandmark:nearestLandmark,
-                propertyType:propertyType,
-                aboutProject: aboutProject,
-                facility:facility,
-                unit:unit,
-                launch:launch,
-                area:area
+                    const image2 = req.files.Image2;
+                    const dataviewImage = await cloudinary.uploader.upload(
+                        image2.tempFilePath, {
+                        folder: "100acre/ProjectImage"
+                    }
+                    );
 
 
-            })
+                    const data = new ProjectModel({
+                        sliderImage: {
+                            public_id: imageResult.public_id,
+                            url: imageResult.secure_url
+                        },
+                        sitePlan: {
+                            public_id: site.public_id,
+                            url: site.secure_url
+                        },
 
-            // console.log(data)
-            await data.save()
-            res.status(200).json({
-                message: 'sumit data successfully',
-                projectdata: data
+                        Image2: {
+                            public_id: dataviewImage.public_id,
+                            url: dataviewImage.secure_url
+                        },
+                        projectName: projectName,
+                        minPrice: minPrice,
+                        maxPrice: maxPrice,
+                        developerName: developerName,
+                        bedroom: bedroom,
+                        address: address,
+                        state: state,
+                        block: block,
+                        floor: floor,
+                        carparkSpace: carparkSpace,
+                        nearestLandmark: nearestLandmark,
+                        propertyType: propertyType,
+                        aboutProject: aboutProject,
+                        facility: facility,
+                        unit: unit,
+                        launch: launch,
+                        area: area
 
-            })
-        }else{
-            res.status(403).json({
-                message:"check image field ! "
-            })
-        }
+
+                    })
+
+                    // console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message: 'sumit data successfully',
+                        projectdata: data
+
+                    })
+                } else {
+                    res.status(403).json({
+                        message: "check image field ! "
+                    })
+                }
             }
 
             else {
@@ -125,7 +125,7 @@ class projectController {
         } catch (error) {
             console.log("error")
             res.status(500).json({
-                message:"internal server error !"
+                message: "internal server error !"
             })
         }
     }
@@ -150,7 +150,7 @@ class projectController {
     static projectUpdate = async (req, res) => {
         // console.log("update")
         try {
-        // const{projectName,minPrice,maxPrice,developerName,address,state,block,floor,carparkSpace,nearestLandmark,propertyType,aboutProject,unit,launch,area}=req.body
+            // const{projectName,minPrice,maxPrice,developerName,address,state,block,floor,carparkSpace,nearestLandmark,propertyType,aboutProject,unit,launch,area}=req.body
             if (req.files) {
                 if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
                     const data = await ProjectModel.findById(req.params.id)
@@ -278,7 +278,7 @@ class projectController {
 
                     const siteid = data.sitePlan.public_id;
                     await cloudinary.uploader.destroy(siteid)
-                       
+
                     const siteImage = req.files.sitePlan;
                     const site = await cloudinary.uploader.upload(
                         siteImage.tempFilePath, {
@@ -402,9 +402,9 @@ class projectController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
             })
-           
+
         }
     }
     //findAll
@@ -419,7 +419,7 @@ class projectController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
             })
         }
     }
@@ -445,9 +445,9 @@ class projectController {
             })
         } catch (error) {
             console.log(error)
-           res.status(500).json({
-            message:"internal server error !"
-           })
+            res.status(500).json({
+                message: "internal server error !"
+            })
         }
     } // Enquiry form for the Project detail page api
 
@@ -456,8 +456,8 @@ class projectController {
         // const data =new UserModel
 
         try {
-            const { name, email, mobile,  projectName, address } = req.body
-            if (name && email && mobile &&  projectName && address) {
+            const { name, email, mobile, projectName, address } = req.body
+            if (name && email && mobile && projectName && address) {
                 const data = new UserModel({
                     name: name,
                     email: email,
@@ -494,7 +494,7 @@ class projectController {
                     <div><h3>UserName:${data.name}</h3></div>
                     <div><h3>UserEmailId:${data.email}</h3></div>
                     <div><h3>UserMobileNo.:${data.mobile}</h3></div>
-                    <div><h3>ProjectName:${data. projectName}</h3></div>
+                    <div><h3>ProjectName:${data.projectName}</h3></div>
                     <div><h3>Address:${data.address}</h3></div>
                     <center>
         
@@ -584,26 +584,26 @@ class projectController {
                 })
             }
         } catch (error) {
-         console.log(error)
-         res.status(500).json({
-            message:"Internal server error !"
-         })
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error !"
+            })
         }
     }
 
-    static userviewAll=async(req,res)=>{
+    static userviewAll = async (req, res) => {
         // console.log("hello")
         try {
-        const data=await UserModel.find()
-        res.status(200).json({
-          message:"Data retrived successfully !",
-          data
-        })
+            const data = await UserModel.find()
+            res.status(200).json({
+                message: "Data retrived successfully !",
+                data
+            })
         } catch (error) {
-           console.log(error)
-           res.status(500).json({
-            message:"internal server error ! "
-           }) 
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
         }
     }
     // user data
@@ -616,13 +616,13 @@ class projectController {
 
             res.status(204).json({
                 message: "User data deleted successfully ! ",
-               
+
             })
         } catch (error) {
-          console.log(error)
-          res.status(500).json({
-            message:"internal server error ! "
-          })  
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
         }
     }
 

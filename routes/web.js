@@ -179,6 +179,11 @@ router.get("/prelaunch/edit/:id",newlaunchController.preLaunch_edit)
 router.get("/preLaunch/view/:id",newlaunchController.preLaunch_view)
 router.post("/preLaunch/update/:id",newlaunchController.prelaunch_update)
 router.delete("/preLaunch/delete/:id",newlaunchController.prelaunch_delete)
+
 router.post("/preLaunch/bhk/insert/:id",newlaunchController.preLaunch_bhkinsert)
+router.get("/preLaunch/bhk/view/:id",newlaunchController.preLaunch_bhkview)
+router.get("/prelaunch/bhk/edit/:id",newlaunchController.prelaunch_bhkedit)
+router.post("/prelaunch/bhk/update/:id",newlaunchController.preLaunch_bhkupdate)
+router.delete("/preLaunch/bhk/delete/:id",newlaunchController.preLaunch_delete)
 
 module.exports = router

@@ -6,8 +6,6 @@ const otpGenerator = require('otp-generator')
 const cloudinary = require('cloudinary').v2;
 
 
-
-
 const generateToken = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
@@ -222,9 +220,6 @@ class PostPropertyController {
     }
     // Reset Password
     static postPerson_reset = async (req, res) => {
-
-        // console.log("hello")
-        // res.send("hello")
         try {
             // console.log("hj")
             const { token } = req.params
@@ -235,6 +230,7 @@ class PostPropertyController {
                 password: hashpassword
             }))
             // console.log(user)
+
             user.token = ""
             await user.save()
             res.status(200).json({
@@ -275,10 +271,17 @@ class PostPropertyController {
             // console.log("helo")
             const id = req.params.id;
             const data = await postPropertyModel.findById({ _id: id })
-            res.status(200).json({
-                message: "Data retrieved successfully ! ",
-                data
-            })
+            if (data) {
+                res.status(200).json({
+                    message: "Data retrieved successfully ! ",
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: "null  ! ",
+                    data
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -290,23 +293,24 @@ class PostPropertyController {
     // update
     static postPerson_update = async (req, res) => {
         // console.log("hello")
-        try{
-        const { name, email, address, mobile } = req.body
-        const data = await postPropertyModel.findByIdAndUpdate(req.params.id, {
-            name: name,
-            email: email,
-            address: address,
-            mobile: mobile
+        try {
+            const { name, email, address, mobile } = req.body
+            const data = await postPropertyModel.findByIdAndUpdate(req.params.id, {
+                name: name,
+                email: email,
+                address: address,
+                mobile: mobile
 
-        })
-        await data.save()
-        res.status(200).json({ data })
-    
-
+            })
+            await data.save()
+            res.status(200).json({
+                message: "updated successfully ! ",
+                data
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"Internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }
@@ -315,10 +319,18 @@ class PostPropertyController {
         // console.log("hello")
         try {
             const id = req.params.id;
+
             const data = await postPropertyModel.findByIdAndDelete({ _id: id })
-            res.status(200).json({
-                message: "data deleted successfully !"
-            })
+            if (data) {
+                res.status(200).json({
+                    message: "data deleted successfully !"
+                })
+            } else {
+                res.status(410).json({
+                    message: " resource has already been deleted or not found !"
+                })
+            }
+
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -331,32 +343,20 @@ class PostPropertyController {
     //insert
     static postProperty = async (req, res) => {
         try {
-//  const { propertyType, propertyName, address, city, state, price, area, descripation, landMark, amenities, builtYear, furnishing, type, availableDate } = req.body
-            // if (propertyType && propertyName && address && city && state && price && area && descripation && landMark && amenities && builtYear && furnishing && type && availableDate) {
-                // if (req.files.frontImage && req.files.otherImage) {
-                    const frontImage = req.files.frontImage;
-                    const frontResult = await cloudinary.uploader.upload(
-                        frontImage.tempFilePath, {
-                        folder: "100acre/Postproperty"
-                    }
-                    )
-                    const otherImage = req.files.otherImage;
-                    const otherImagelink = []
-                    if (otherImage.length >= 2) {
-                        for (let i = 0; i < otherImage.length; i++) {
-                            const otherResult = await cloudinary.uploader.upload(
-                                otherImage[i].tempFilePath, {
-                                folder: "100acre/Postproperty"
-                            }
-                            );
-                            otherImagelink.push({
-                                public_id: otherResult.public_id,
-                                url: otherResult.secure_url
-                            })
-                        }
-                    } else {
+
+            if (req.files.frontImage && req.files.otherImage) {
+                const frontImage = req.files.frontImage;
+                const frontResult = await cloudinary.uploader.upload(
+                    frontImage.tempFilePath, {
+                    folder: "100acre/Postproperty"
+                }
+                )
+                const otherImage = req.files.otherImage;
+                const otherImagelink = []
+                if (otherImage.length >= 2) {
+                    for (let i = 0; i < otherImage.length; i++) {
                         const otherResult = await cloudinary.uploader.upload(
-                            otherImage.tempFilePath, {
+                            otherImage[i].tempFilePath, {
                             folder: "100acre/Postproperty"
                         }
                         );
@@ -364,54 +364,59 @@ class PostPropertyController {
                             public_id: otherResult.public_id,
                             url: otherResult.secure_url
                         })
-
                     }
-
-                    const data = {
-                        propertyType:req.body.propertyType,
-                        propertyName:req.body.propertyName,
-                        address: req.body.address,
-                        city: req.body.city,
-                        state:req.body. state,
-                        price: req.body.price,
-                        area: req.body.area,
-                        descripation:req.body. descripation,
-                        landMark: req.body.landMark,
-                        amenities:req.body. amenities,
-                        builtYear:req.body. builtYear,
-                        furnishing: req.body.furnishing,
-                        type: req.body.type,
-                        availableDate: req.body.availableDate,
-                        frontImage: {
-                            public_id: frontResult.public_id,
-                            url: frontResult.secure_url
-                        },
-                        otherImage: otherImagelink
+                } else {
+                    const otherResult = await cloudinary.uploader.upload(
+                        otherImage.tempFilePath, {
+                        folder: "100acre/Postproperty"
                     }
-                    // console.log(data)
-                    const id = req.params.id
-                    // const postData= await postPropertyModel.findOne({ email: email })
-                    // const id=postData.id;
-                    // console.log(id)
-                    const dataPushed = await postPropertyModel.findOneAndUpdate(
-                        { _id: id },
-                        { $push: { postProperty: data } },
-                        { new: true })
-
-                    // res.send(dataPushed)
-                    res.status(200).json({
-                        message: "Data pushed successfully ! "
+                    );
+                    otherImagelink.push({
+                        public_id: otherResult.public_id,
+                        url: otherResult.secure_url
                     })
-                // } else {
-                //     res.status(400).json({
-                //         message: "check you image field ! "
-                //     })
-                // }
-        //     } else {
-        //         res.status(400).json({
-        //             message: "check you input field ! "
-        //         })
-        //     }
+
+                }
+
+                const data = {
+                    propertyType: req.body.propertyType,
+                    propertyName: req.body.propertyName,
+                    address: req.body.address,
+                    city: req.body.city,
+                    state: req.body.state,
+                    price: req.body.price,
+                    area: req.body.area,
+                    descripation: req.body.descripation,
+                    landMark: req.body.landMark,
+                    amenities: req.body.amenities,
+                    builtYear: req.body.builtYear,
+                    furnishing: req.body.furnishing,
+                    type: req.body.type,
+                    availableDate: req.body.availableDate,
+                    frontImage: {
+                        public_id: frontResult.public_id,
+                        url: frontResult.secure_url
+                    },
+                    otherImage: otherImagelink
+                }
+                // console.log(data)
+                const id = req.params.id
+
+                const dataPushed = await postPropertyModel.findOneAndUpdate(
+                    { _id: id },
+                    { $push: { postProperty: data } },
+                    { new: true })
+
+                // res.send(dataPushed)
+                res.status(200).json({
+                    message: "Data pushed successfully ! "
+                })
+            } else {
+                res.status(204).json({
+                    message: "check your field  ! "
+                })
+            }
+
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -419,19 +424,16 @@ class PostPropertyController {
             })
         }
     }
-// All view
+    // All view
     static postProperty_View = async (req, res) => {
         // console.log("vieww")
         try {
             const id = req.params.id
-            // console.log(id)
-            const data = await postPropertyModel.findById({_id:id})
-            // console.log(data)
-            res.status(200).json({
-                message: "Data retrieved successfully ! ",
-                data
-            })
-
+                const data = await postPropertyModel.findById({ _id: id })
+                res.status(200).json({
+                    message: "Data retrieved successfully ! ",
+                    data
+                })
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -485,7 +487,7 @@ class PostPropertyController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"Internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }
@@ -570,7 +572,7 @@ class PostPropertyController {
                         type: type,
                         amenities: amenities
                     }
-                    console.log(update)
+                    // console.log(update)
                     // console.log(otherImageLink)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
                         { 'postProperty._id': Id }, { $set: { 'postProperty.$': update } }, { new: true }
@@ -625,11 +627,15 @@ class PostPropertyController {
                         descripation: descripation
                     }
 
-                    console.log(update)
+                    // console.log(update)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
                         { "postProperty._id": id }, { $set: { 'postProperty.$': update } }
                     )
-                    res.send(dataUpdate)
+                    // res.send(dataUpdate)
+                    res.status(200).json({
+                        message: "data updated",
+                        dataUpdate
+                    })
                 } else if (req.files.otherImage) {
                     // res.send("listn other")
                     const otherImage = req.files.otherImage;
@@ -737,7 +743,7 @@ class PostPropertyController {
 
                 }
 
-                console.log(update)
+                // console.log(update)
                 const dataUpdate = await postPropertyModel.findOneAndUpdate(
                     { "postProperty._id": id }, { $set: { "postProperty.$": update } }
                 )
@@ -749,7 +755,10 @@ class PostPropertyController {
             }
         } catch (error) {
             console.log(error)
-            res.status(500)
+            res.status(500).json({
+                message: "internal server error ! ",
+
+            })
         }
     }
     static postProperty_Delete = async (req, res) => {
@@ -797,6 +806,6 @@ class PostPropertyController {
             })
         }
     }
-    
+
 }
 module.exports = PostPropertyController

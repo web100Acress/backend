@@ -99,7 +99,7 @@ class registerController {
                     })
                 }
             }
-          
+
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -122,11 +122,11 @@ class registerController {
                             const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
                             // console.log(token)
                             //  console.log(token)
-                             res.cookie('token',token)
+                            res.cookie('token', token)
                             // res.json('token', token)
                             res.status(200).json({
                                 message: "admin pannel login successful! ",
-                                token:token,
+                                // token:token,
                             })
 
                         } else {
@@ -153,7 +153,7 @@ class registerController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"Internal server error !"
+                message: "Internal server error !"
             })
         }
     }
@@ -181,7 +181,9 @@ class registerController {
             const user = await registerModel.findOne({ email: email })
             // console.log(user)
             if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(404).json({
+                    message: 'User not found'
+                });
             }
 
             // genrate token
@@ -194,12 +196,16 @@ class registerController {
             // Send email with reset link
             await sendResetEmail(email, token);
 
-            res.json({ message: 'Password reset link sent' });
+            res.status(200).json({
+                message: 'Password reset link sent'
+            });
 
 
         } catch (error) {
             console.log(error)
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(500).json({
+                message: 'Internal server error'
+            });
 
         }
     }
@@ -208,7 +214,7 @@ class registerController {
         // res.send('hello reset')
         const { token } = req.params
         const { password } = req.body
-        console.log(password)
+        // console.log(password)
         // console.log(token,password)
         // const hashpassword = await bcrypt.hash(password, 10)
         // console.log(hashpassword)
@@ -224,13 +230,13 @@ class registerController {
             user.token = ""
             await user.save()
             //  const data=user.token
-
             // const token=user.token;
 
-            res.json({ message: 'Password reset successful' });
+            res.status(200).json({
+                 message: 'Password reset successful' ,
+                });
         } catch (error) {
             console.log(error)
-
             res.status(500).json({
                 message: 'Internal server error'
             });

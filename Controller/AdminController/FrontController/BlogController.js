@@ -33,6 +33,10 @@ class blogController {
                 })
 
 
+            }else{
+            res.status(204).json({
+
+            })
             }
         } catch (error) {
             console.log(error)
@@ -78,7 +82,7 @@ class blogController {
         try {
             // res.send("edit")
             const id = req.params.id
-            const data = await blogModel.findById(id)
+            const data = await blogModel.findById({_id:id})
             res.status(200).json({
                 message: "data get successfully ! ",
                 data

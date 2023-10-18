@@ -126,23 +126,23 @@ class newlaunchController {
             })
         }
     }
-  //viewAll
-   static newProject=async(req,res)=>{
-    
-    try {
-        const data= await newlaunchModel.find()
-        // res.send(data)
-        res.status(200).json({
-            message:"data get",
-            data:data
-        })
-    } catch (error) {
-        console.log(error)
-        res.send(500).json({
-            message: "internal server error ! "
-        })
+    //viewAll
+    static newProject = async (req, res) => {
+
+        try {
+            const data = await newlaunchModel.find()
+            // res.send(data)
+            res.status(200).json({
+                message: "data get",
+                data: data
+            })
+        } catch (error) {
+            console.log(error)
+            res.send(500).json({
+                message: "internal server error ! "
+            })
+        }
     }
-   }
     // edit new Launch data
     static newlaunch_edit = async (req, res) => {
         // console.log("hello")
@@ -449,158 +449,162 @@ class newlaunchController {
         }
     }
 
-///////////////////////////////////////////////////////////prelaunch
+    ///////////////////////////////////////////////////////////prelaunch
 
-static preLaunch_insert=async(req,res)=>{
-    // console.log("hello")
-    // console.log(req.body)
-    try {
-      const{ projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
-        maxCovered_Area,aboutProject,  builderName,amentites, location}=req.body  
-        // if(projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
-        // maxCovered_Area && aboutProject &&  builderName && amentites && location){   
-                const photo=req.files.photo
+    static preLaunch_insert = async (req, res) => {
+        // console.log("hello")
+        // console.log(req.body)
+        try {
+            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
+                maxCovered_Area, aboutProject, builderName, amentites, location } = req.body
+            if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
+                maxCovered_Area && aboutProject && builderName && amentites && location) {
+                const photo = req.files.photo
                 const otherImagelink = []
                 if (photo.length >= 2) {
-                  for (let i = 0; i < photo.length; i++) {
+                    for (let i = 0; i < photo.length; i++) {
+                        const photoResult = await cloudinary.uploader.upload(
+                            photo[i].tempFilePath, {
+                            folder: "100acre/preLaunch"
+                        }
+                        );
+                        otherImagelink.push({
+                            public_id: photoResult.public_id,
+                            url: photoResult.secure_url
+                        })
+                    }
+                } else {
                     const photoResult = await cloudinary.uploader.upload(
-                      photo[i].tempFilePath, {
-                      folder: "100acre/preLaunch"
+                        photo.tempFilePath, {
+                        folder: "100acre/prelaunch"
                     }
                     );
                     otherImagelink.push({
-                      public_id: photoResult.public_id,
-                      url: photoResult.secure_url
+                        public_id: photoResult.public_id,
+                        url: photoResult.secure_url
                     })
-                  }
-                } else {
-                  const photoResult = await cloudinary.uploader.upload(
-                    photo.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                  }
-                  );
-                  otherImagelink.push({
-                    public_id: photoResult.public_id,
-                    url: photoResult.secure_url
-                  })
-          
+
                 }
-                const data=new prelaunchModel({
-                    projectName:projectName,
-                    price:price,
-                    city:city,
-                    configuration:configuration,
-                    status:status,
-                    featured:featured,
-                    rera_No:rera_No,
+                const data = new prelaunchModel({
+                    projectName: projectName,
+                    price: price,
+                    city: city,
+                    configuration: configuration,
+                    status: status,
+                    featured: featured,
+                    rera_No: rera_No,
                     minCovered_Area: minCovered_Area,
                     maxCovered_Area: maxCovered_Area,
-                    aboutProject:aboutProject,
+                    aboutProject: aboutProject,
                     builderName: builderName,
-                    amentites:amentites,
-                    location:location,
-                    photo:otherImagelink
+                    amentites: amentites,
+                    location: location,
+                    photo: otherImagelink
 
 
                 })
-            await data.save()
-            res.status(200).json({
-                message:"data inserted successfull ! "
+                await data.save()
+                res.status(200).json({
+                    message: "data inserted successfull ! "
+                })
+            } else {
+                // res.status(204).json({
+                //     message: "check your field ! "
+                // })
+                res.status(400).json({
+                    message: "check your field ! "
+                })
+            }
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
             })
-        // }else{
-        //     console.log("check")
-        // }
+        }
+    }
+    // viewAll
+    static preLaunch_viewAll = async (req, res) => {
+        // console.log("hello")
+        try {
+            const data = await prelaunchModel.find()
+            res.status(200).json({
+                message: " data get ! ",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
+    // view
+    static preLaunch_view = async (req, res) => {
+        // console.log("hello")
+        try {
+            const id = req.params.id
+            const data = await prelaunchModel.findById({ _id: id })
+            res.send(data)
 
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"Internal server error ! "
-        })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
     }
-}
-// viewAll
-static preLaunch_viewAll=async(req,res)=>{
-    // console.log("hello")
-    try {
-        const data= await prelaunchModel.find()
+    // edit
+    static preLaunch_edit = async (req, res) => {
+        // console.log("helo")
+        try {
+            const id = req.params.id
+            const data = await prelaunchModel.findById({ _id: id })
+            // res.send(data)
+            res.status(200).json({
+                message: "data get for edit ! ",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
+    // update 
+    static prelaunch_update = async (req, res) => {
 
-        res.status(200).json({
-            message:" data get ! ",
-            data
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"Internal server error ! "
-        })   
-    }
-}
-// view
-static preLaunch_view=async(req,res)=>{
-    // console.log("hello")
-    try {
-        const id=req.params.id
-        const data= await prelaunchModel.findById({_id:id})
-        res.send(data)
-       
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"Internal server error ! "
-        })
-    }
-}
-// edit
-static preLaunch_edit=async(req,res)=>{
-    // console.log("helo")
-    try {
-        const id=req.params.id
-        const data=await prelaunchModel.findById({_id:id})
-        // res.send(data)
-        res.status(200).json({
-            message:"data get for edit ! ",
-            data
-        })
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({
-        message:"Internal server error ! "
-      })  
-    }
-}
-  // update 
-  static prelaunch_update=async(req,res)=>{
-    
-    try {
-        const{projectName,price,city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location}=req.body
-            if(req.files){
-                const photo=req.files.photo;
-                const id=req.params.id
+        try {
+            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location } = req.body
+            if (req.files) {
+                const photo = req.files.photo;
+                const id = req.params.id
                 // const data=await prelaunchModel.findById({_id:id})
                 const otherImagelink = []
                 if (photo.length >= 2) {
-                  for (let i = 0; i < photo.length; i++) {
+                    for (let i = 0; i < photo.length; i++) {
+                        const photoResult = await cloudinary.uploader.upload(
+                            photo[i].tempFilePath, {
+                            folder: "100acre/preLaunch"
+                        }
+                        );
+                        otherImagelink.push({
+                            public_id: photoResult.public_id,
+                            url: photoResult.secure_url
+                        })
+                    }
+                } else {
                     const photoResult = await cloudinary.uploader.upload(
-                      photo[i].tempFilePath, {
-                      folder: "100acre/preLaunch"
+                        photo.tempFilePath, {
+                        folder: "100acre/prelaunch"
                     }
                     );
                     otherImagelink.push({
-                      public_id: photoResult.public_id,
-                      url: photoResult.secure_url
+                        public_id: photoResult.public_id,
+                        url: photoResult.secure_url
                     })
-                  }
-                } else {
-                  const photoResult = await cloudinary.uploader.upload(
-                    photo.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                  }
-                  );
-                  otherImagelink.push({
-                    public_id: photoResult.public_id,
-                    url: photoResult.secure_url
-                  })
-          
+
                 }
                 const result = await prelaunchModel.findById(req.params.id)
                 for (let i = 0; i < result.photo.length; i++) {
@@ -609,132 +613,300 @@ static preLaunch_edit=async(req,res)=>{
                     );
                 }
 
-                const dataupdate= await prelaunchModel.findByIdAndUpdate({_id:id},{
-                    projectName:projectName,
-                    price:price,
-                    city:city,
-                    configuration:configuration,
-                    status:status,
-                    featured:featured,
-                    rera_No:rera_No,
+                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                    projectName: projectName,
+                    price: price,
+                    city: city,
+                    configuration: configuration,
+                    status: status,
+                    featured: featured,
+                    rera_No: rera_No,
                     minCovered_Area: minCovered_Area,
                     maxCovered_Area: maxCovered_Area,
-                    aboutProject:aboutProject,
+                    aboutProject: aboutProject,
                     builderName: builderName,
-                    amentites:amentites,
-                    location:location,
-                    photo:otherImagelink
+                    amentites: amentites,
+                    location: location,
+                    photo: otherImagelink
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
                 res.status(200).json({
-                    message:" data updadated successfully ! "
+                    message: " data updadated successfully ! "
                 })
 
-            }else{
-               const id=req.params.id
-                const dataupdate= await prelaunchModel.findByIdAndUpdate({_id:id},{
-                    projectName:projectName,
-                    price:price,
-                    city:city,
-                    configuration:configuration,
-                    status:status,
-                    featured:featured,
-                    rera_No:rera_No,
+            } else {
+                const id = req.params.id
+                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                    projectName: projectName,
+                    price: price,
+                    city: city,
+                    configuration: configuration,
+                    status: status,
+                    featured: featured,
+                    rera_No: rera_No,
                     minCovered_Area: minCovered_Area,
                     maxCovered_Area: maxCovered_Area,
-                    aboutProject:aboutProject,
+                    aboutProject: aboutProject,
                     builderName: builderName,
-                    amentites:amentites,
-                    location:location,
-                   
+                    amentites: amentites,
+                    location: location,
+
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
                 res.status(200).json({
-                    message:"data updated successfully ! "
+                    message: "data updated successfully ! "
                 })
             }
 
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({
-        message:"Internal server error ! "
-      })  
-    }
-  }
-
-  //delete
-  static prelaunch_delete=async(req,res)=>{
-    // console.log("helllo")
-    try {
-        const id = req.params.id;
-
-        const result = await prelaunchModel.findById({_id:id})
-        // const imageId = result.photo.public_id
-        // console.log(imageId)
-        for (let i = 0; i < result.length; i++) {
-            const otherResult = await buyCommercial_Model.findById({_id:id})
-            const otherId = otherResult.photo[i].public_id
-            console.log(otherId)
-            await cloudinary.uploader.destroy(otherId)
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
         }
-        await prelaunchModel.findByIdAndDelete({_id:id})
-        res.status(200).json({
-            message:"Data deleted successfully ! "
-        })
-    } catch (error) {
-        
     }
-  }
 
-  ////////////////////////////bhk details
-  static preLaunch_bhkinsert= async (req, res) => {
-    // console.log("hello")
-    try {
-        const { input_Bhk,build_area, possession } = req.body
-        if (req.files) {
-            const image = req.files.image;
-            const imageResult = await cloudinary.uploader.upload(
-                image.tempFilePath, {
-                folder: "100acre/preLaunch"
-            }
-            )
-            const data = {
-                image: {
-                    public_id: imageResult.public_id,
-                    url: imageResult.secure_url
-                },
-                input_Bhk:input_Bhk,
-                build_area:build_area,
-                possession:possession,
+    //delete
+    static prelaunch_delete = async (req, res) => {
+        // console.log("helllo")
+        try {
+            const id = req.params.id;
 
+            const result = await prelaunchModel.findById({ _id: id })
+            // const imageId = result.photo.public_id
+            // console.log(imageId)
+            for (let i = 0; i < result.length; i++) {
+                const otherResult = await buyCommercial_Model.findById({ _id: id })
+                const otherId = otherResult.photo[i].public_id
+                console.log(otherId)
+                await cloudinary.uploader.destroy(otherId)
             }
-            console.log(data)
-            const id = req.params.id
-            const dataPushed = await prelaunchModel.findOneAndUpdate(
-                { _id: id },
-                { $push: { BHK_details: data } },
-                { new: true }
-            )
-            // console.log(dataPushed)
-            await dataPushed.save()
+            await prelaunchModel.findByIdAndDelete({ _id: id })
             res.status(200).json({
-                message: "data updated successfully ! "
+                message: "Data deleted successfully ! "
             })
-        } else {
-            res.status(204).json({
-                message: "check your field ! "
-            })
+        } catch (error) {
 
         }
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message: "internal server error  ! "
-        })
     }
-}
+
+    ////////////////////////////bhk details
+    static preLaunch_bhkinsert = async (req, res) => {
+        // console.log("hello")
+        try {
+            const { input_Bhk, build_area, possession } = req.body
+            if (req.files) {
+                const image = req.files.image;
+                const imageResult = await cloudinary.uploader.upload(
+                    image.tempFilePath, {
+                    folder: "100acre/preLaunch"
+                }
+                )
+                const data = {
+                    image: {
+                        public_id: imageResult.public_id,
+                        url: imageResult.secure_url
+                    },
+                    input_Bhk: input_Bhk,
+                    build_area: build_area,
+                    possession: possession,
+
+                }
+                // console.log(data)
+                const id = req.params.id
+                const dataPushed = await prelaunchModel.findOneAndUpdate(
+                    { _id: id },
+                    { $push: { BHK_details: data } },
+                    { new: true }
+                )
+                // console.log(dataPushed)
+                await dataPushed.save()
+                res.status(200).json({
+                    message: "data updated successfully ! "
+                })
+            } else {
+                res.status(204).json({
+                    message: "check your field ! "
+                })
+
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error  ! "
+            })
+        }
+    }
+
+    static preLaunch_bhkview = async (req, res) => {
+        // console.log("helllo")
+        try {
+            const id = req.params.id;
+            const data = await prelaunchModel.findOne({ "BHK_details._id": id },
+                {
+                    BHK_details: {
+                        $elemMatch: {
+                            _id: id,
+                        },
+                    },
+                },
+            );
+            // console.log(data)
+            res.status(200).json({
+                message: "data get successfull ! ",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
+        }
+    }
+
+    static prelaunch_bhkedit = async (req, res) => {
+        try {
+            const id = req.params.id
+            const data = await prelaunchModel.findOne({ "BHK_details._id": id },
+                {
+                    BHK_details: {
+                        $elemMatch: {
+                            _id: id
+                        }
+                    }
+                }
+            )
+            // console.log(data)
+            res.status(200).json({
+                message: "data get successfully ! ",
+                data
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
+    static preLaunch_bhkupdate = async (req, res) => {
+        // console.log("hello")
+        try {
+            const { input_Bhk, build_area, possession } = req.body
+            if (req.files) {
+                const image = req.files.image;
+                const id = req.params.id
+                const data = await prelaunchModel.findOne({ "BHK_details._id": id },
+                    {
+                        BHK_details: {
+                            $elemMatch: {
+                                _id: id
+                            }
+                        }
+                    }
+                )
+                const imageId = data.BHK_details[0].image.public_id
+                //  console.log(imageId)
+                await cloudinary.uploader.destroy(imageId)
+                const imageResult = await cloudinary.uploader.upload(
+                    image.tempFilePath,
+                    { folder: "100acre/preLaunch" }
+                )
+
+                const update = {
+                    image: {
+                        public_id: imageResult.public_id,
+                        url: imageResult.secure_url
+                    },
+                    input_Bhk: input_Bhk,
+                    build_area: build_area,
+                    possession: possession,
+                }
+                const dataUpdate = await prelaunchModel.findOneAndUpdate(
+                    { 'BHK_details._id': id }, { $set: { 'BHK_details.$': update } }, { new: true }
+                )
+                // console.log(dataUpdate)
+                res.status(200).json({
+                    message: "data updated successfully ! "
+                })
+            } else {
+                const id = req.params.id;
+                // console.log(id)
+                // const data= await prelaunchModel.findOne({"BHK_details._id":id},
+                // {
+                //     BHK_details:{
+                //         $elemMatch:{
+                //             _id:id
+                //         }
+                //     }
+                // } 
+                // )
+                // console.log(data)
+                const data = {
+                    input_Bhk: input_Bhk,
+                    build_area: build_area,
+                    possession: possession
+                }
+
+                const dataUpdate = await prelaunchModel.findOneAndUpdate(
+                    { "BHK_details._id": id }, { $set: { "BHK_details.$": data } }
+                )
+
+                //    console.log(dataUpdate)
+                res.status(200).json({
+                    message: "data updated successfully ! "
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
+        }
+    }
+
+    static preLaunch_delete = async (req, res) => {
+        // console.log("hello")
+        try {
+            const id = req.params.id
+            //  console.log(id)
+            const data = await prelaunchModel.findOne({ "BHK_details._id": id },
+
+                {
+                    BHK_details: {
+                        $elemMatch: {
+                            _id: id
+                        }
+                    }
+                }
+            )
+            // console.log(data)
+            const imageId = data.BHK_details[0].image.public_id
+            // console.log(imageId)
+            if (imageId.length > 0) {
+                await cloudinary.uploader.destroy(imageId)
+            }
+            const update = {
+                $pull: {
+                    BHK_details: {
+                        _id: id
+                    }
+                }
+            }
+            const dataUpdate = await prelaunchModel.updateOne(update)
+            res.status(200).json({
+                message: " deleted successfully"
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
 
 }
 module.exports = newlaunchController
