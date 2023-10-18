@@ -459,58 +459,63 @@ class newlaunchController {
                 maxCovered_Area, aboutProject, builderName, amentites, location } = req.body
             if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
                 maxCovered_Area && aboutProject && builderName && amentites && location) {
-                const photo = req.files.photo
-                const otherImagelink = []
-                if (photo.length >= 2) {
-                    for (let i = 0; i < photo.length; i++) {
+                if (req.files) {
+                    const photo = req.files.photo
+                    const otherImagelink = []
+                    if (photo.length >= 2) {
+                        for (let i = 0; i < photo.length; i++) {
+                            const photoResult = await cloudinary.uploader.upload(
+                                photo[i].tempFilePath, {
+                                folder: "100acre/preLaunch"
+                            }
+                            );
+                            otherImagelink.push({
+                                public_id: photoResult.public_id,
+                                url: photoResult.secure_url
+                            })
+                        }
+                    } else {
                         const photoResult = await cloudinary.uploader.upload(
-                            photo[i].tempFilePath, {
-                            folder: "100acre/preLaunch"
+                            photo.tempFilePath, {
+                            folder: "100acre/prelaunch"
                         }
                         );
                         otherImagelink.push({
                             public_id: photoResult.public_id,
                             url: photoResult.secure_url
                         })
+
                     }
-                } else {
-                    const photoResult = await cloudinary.uploader.upload(
-                        photo.tempFilePath, {
-                        folder: "100acre/prelaunch"
-                    }
-                    );
-                    otherImagelink.push({
-                        public_id: photoResult.public_id,
-                        url: photoResult.secure_url
+                    const data = new prelaunchModel({
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        photo: otherImagelink
+
+
                     })
+                    await data.save()
+                    res.status(200).json({
+                        message: "data inserted successfull ! "
+                    })
+                } else {
 
+                    res.status(400).json({
+                        message: "check your field ! "
+                    })
                 }
-                const data = new prelaunchModel({
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    photo: otherImagelink
-
-
-                })
-                await data.save()
-                res.status(200).json({
-                    message: "data inserted successfull ! "
-                })
             } else {
-                // res.status(204).json({
-                //     message: "check your field ! "
-                // })
+
                 res.status(400).json({
                     message: "check your field ! "
                 })
