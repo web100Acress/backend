@@ -72,7 +72,7 @@ class rentController {
                     })
                     await data.save()
                     res.status(200).json({
-                        message: "rental data insert successfully",
+                        message: "Rental data insert successfully",
                         dataRent: data
                     })
 
@@ -125,7 +125,7 @@ class rentController {
             })
         } catch (error) {
             res.status(500).json({
-                message: "something went wrong !"
+                message: "Internal server error !"
             })
         }
     }
@@ -135,7 +135,11 @@ class rentController {
     try {
         // console.log("hello")
         const data =await rent_Model.find()
-        res.send(data)
+        // res.send(data)
+        res.status(200).json({
+            message:"Data get successfully ! ",
+            data
+        })
     } catch (error) {
       console.log(error)  
       res.status(500).json({
@@ -153,9 +157,7 @@ class rentController {
                     if (req.files.frontImage && req.files.otherImage) {
                         const front = req.files.frontImage;
                         const other = req.files.otherImage
-
                         const otherImageLink = []
-
                         const data = await rent_Model.findById(req.params.id)
                         const frontId = data.frontImage.public_id;
                         await cloudinary.uploader.destroy(frontId)
@@ -187,7 +189,6 @@ class rentController {
                                 public_id: otherResult.public_id
                             })
                         }
-
                         const result = await rent_Model.findById(req.params.id)
                         for (let i = 0; i < result.otherImage.length; i++) {
 
@@ -195,7 +196,7 @@ class rentController {
                                 result.otherImage[i]
                             )
                         }
-                        // console.log(otherImageLink)
+                        
                         const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
                             frontImage: {
                                 public_id: frontResult.public_id,
@@ -348,12 +349,12 @@ class rentController {
                     // console.log(dataUpdaate)
                     await dataUpdate.save()
                     res.status(200).json({
-                       message:"data updated successfully ! "
+                       message:" data updated successfully ! "
                     })
                 }
             } else {
                 res.status(204).json({
-                    message: "No content  !"
+                    message: " check your field no content !"
                 })
             }
         } catch (error) {
@@ -366,7 +367,7 @@ class rentController {
     //delete
     static rentDelete = async (req, res) => {
         try {
-            // console.log("hello")
+            // console.log("error ")
             const image = await rent_Model.findById(req.params.id)
             const imageId = image.frontImage.public_id;
 
@@ -380,7 +381,7 @@ class rentController {
             await rent_Model.findByIdAndDelete(req.params.id)
 
             res.status(200).json({
-                message: "delete successfully !"
+                message: " data deleted successfully !"
             })
 
         } catch (error) {

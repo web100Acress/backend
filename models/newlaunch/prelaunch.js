@@ -78,6 +78,36 @@ const preLaunch_Schema= new mongoose.Schema({
     location:{
         type: String,
         
+    },
+    floorPlan:{
+        public_id: {
+            type: String,
+            
+        },
+        url: {
+            type: String,
+
+        }
+    },
+    sitePlan:{
+        public_id: {
+            type: String,
+            
+        },
+        url: {
+            type: String,
+
+        }
+    },
+    locationMap:{
+        public_id: {
+            type: String,
+            
+        },
+        url: {
+            type: String,
+
+        }
     }
 
 })

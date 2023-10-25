@@ -25,8 +25,6 @@ const sendResetEmail = async (email, token) => {
         from: 'test@gmail.com', // Sender address
         to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
         subject: 'Password Reset',
-
-        // html: `Click the following link to reset your password: http://localhost:3500/reset/${token}`, // HTML body
         html: `
         <!DOCTYPE html>
         <html lang:"en>
@@ -44,7 +42,7 @@ const sendResetEmail = async (email, token) => {
         <a href="http://localhost:3500/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
         </p>
 
-         <p>If you didn't request to password reset , please ignore this email. </p>
+         <p>If you didn't request to password reset , please ingore this email  </p>
 
         <p>Best regrads ,
              <br>https://www.100acress.com/
@@ -53,7 +51,7 @@ const sendResetEmail = async (email, token) => {
         </html>
 `
     });
-
+   
 }
 class registerController {
 
@@ -174,9 +172,7 @@ class registerController {
     }
     // forget password
     static forgetPassword = async (req, res) => {
-        // res.send('hello forget listen')
         const { email } = req.body
-        // console.log(email)
         try {
             const user = await registerModel.findOne({ email: email })
             // console.log(user)
@@ -214,7 +210,7 @@ class registerController {
         // res.send('hello reset')
         const { token } = req.params
         const { password } = req.body
-        // console.log(password)
+        
         // console.log(token,password)
         // const hashpassword = await bcrypt.hash(password, 10)
         // console.log(hashpassword)
@@ -230,10 +226,10 @@ class registerController {
             user.token = ""
             await user.save()
             //  const data=user.token
-            // const token=user.token;
+           
 
             res.status(200).json({
-                 message: 'Password reset successful' ,
+                 message: 'Password reset successfully !' ,
                 });
         } catch (error) {
             console.log(error)
