@@ -260,7 +260,7 @@ class BuyController {
                         // console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message: "successfully updated !",
+                            message: "successfully updatede !",
                             data: dataUpdate
                         })
 
