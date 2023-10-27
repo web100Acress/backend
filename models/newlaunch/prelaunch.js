@@ -108,8 +108,16 @@ const preLaunch_Schema= new mongoose.Schema({
             type: String,
 
         }
+    },
+    Aboutdeveloper:{
+        type:String
+    },
+    url:{
+        type:String
     }
 
+},{
+    timestamps:true
 })
 const prelaunchModel=mongoose.model('preLunach',preLaunch_Schema)
 module.exports=prelaunchModel

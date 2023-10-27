@@ -256,7 +256,7 @@ class contactController {
     //delete
     static contact_pagedetail_delete=async(req,res)=>{
         try {
-            console.log("hello")
+            // console.log("hello")
             const id = req.params.id
             const result = await contactPagedetailModel.findById(req.params.id)
          

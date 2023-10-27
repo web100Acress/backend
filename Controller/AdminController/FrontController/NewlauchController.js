@@ -456,9 +456,9 @@ class newlaunchController {
         // console.log(req.body)
         try {
             const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
-                maxCovered_Area, aboutProject, builderName, amentites, location } = req.body
+                maxCovered_Area, aboutProject, builderName, amentites, location ,Aboutdeveloper,url} = req.body
             if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
-                maxCovered_Area && aboutProject && builderName && amentites && location) {
+                maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper&&url) {
                 if (req.files) {
                     const photo = req.files.photo
                     const floorPlan=req.files.floorPlan
@@ -509,11 +509,11 @@ class newlaunchController {
                         },
                         sitePlan:{
                           public_id:siteResult.public_id,
-                          url:floorResult.secure_url
+                          url:siteResult.secure_url
                         },
                         locationMap:{
                             public_id:locationResult.public_id,
-                            url:floorResult.secure_url
+                            url:locationResult.secure_url
                         },
                         projectName: projectName,
                         price: price,
@@ -528,7 +528,9 @@ class newlaunchController {
                         builderName: builderName,
                         amentites: amentites,
                         location: location,
-                        photo: otherImagelink
+                        photo: otherImagelink,
+                        Aboutdeveloper:Aboutdeveloper,
+                        url:url
 
 
                     })
@@ -617,7 +619,7 @@ class newlaunchController {
     static prelaunch_update = async (req, res) => {
 
         try {
-            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location } = req.body
+            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location,url,Aboutdeveloper } = req.body
             if (req.params.id) {
                 if(req.files.photo && req.files.floorPlan && req.files.sitePlan&&req.files.locationMap){
 
@@ -681,11 +683,11 @@ class newlaunchController {
                     },
                     sitePlan:{
                       public_id:siteResult.public_id,
-                      url:floorResult.secure_url
+                      url:siteResult.secure_url
                     },
                     locationMap:{
                         public_id:locationResult.public_id,
-                        url:floorResult.secure_url
+                        url:locationResult.secure_url
                     },
                     projectName: projectName,
                     price: price,
@@ -700,7 +702,9 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
-                    photo: otherImagelink
+                    photo: otherImagelink,
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -761,7 +765,9 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
-                    photo: otherImagelink
+                    photo: otherImagelink,
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -798,6 +804,8 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -824,7 +832,7 @@ class newlaunchController {
                   
                     sitePlan:{
                       public_id:siteResult.public_id,
-                      url:floorResult.secure_url
+                      url:siteResult.secure_url
                     },
                 
                     projectName: projectName,
@@ -846,8 +854,7 @@ class newlaunchController {
                 res.status(200).json({
                     message: " data updadated successfully ! "
                 }) 
-            }else if(req.files.locationMap){
-               
+            }else if(req.files.locationMap){  
                 const id = req.params.id
                 // const data=await prelaunchModel.findById({_id:id})
                 const locationMap=req.files.locationMap
@@ -856,13 +863,11 @@ class newlaunchController {
                     locationMap.tempFilePath, {
                     folder: "100acre/prelaunch"
                 })
-
-               
                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
                  
                     locationMap:{
                         public_id:locationResult.public_id,
-                        url:floorResult.secure_url
+                        url:locationResult.secure_url
                     },
                     projectName: projectName,
                     price: price,
@@ -877,7 +882,8 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
-                    photo: otherImagelink
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -888,8 +894,7 @@ class newlaunchController {
             }
             else{
                 const id = req.params.id
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                    
+                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, { 
                     projectName: projectName,
                     price: price,
                     city: city,
@@ -903,6 +908,8 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url
 
                 })
                 // console.log(dataupdate)
