@@ -176,7 +176,7 @@ router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherE
 router.post("/preLaunch/insert",newlaunchController.preLaunch_insert)
 router.get("/preLaunch/viewAll",newlaunchController.preLaunch_viewAll)
 router.get("/prelaunch/edit/:id",newlaunchController.preLaunch_edit)
-router.get("/preLaunch/view/:id",newlaunchController.preLaunch_view)
+router.get("/preLaunch/view/:url",newlaunchController.preLaunch_view)
 router.post("/preLaunch/update/:id",newlaunchController.prelaunch_update)
 router.delete("/preLaunch/delete/:id",newlaunchController.prelaunch_delete)
 

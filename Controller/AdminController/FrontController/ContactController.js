@@ -16,6 +16,7 @@ class contactController {
 
     // contact customer section page form
     // method for inserting custmer detail 
+
     static contact_Insert = async (req, res) => {
         //  console.log("hello post ")
         // console.log(req.body)
@@ -141,7 +142,6 @@ class contactController {
             })
         }
     }
-
     static contact_pagedetail_edit = async (req, res) => {
         // console.log('helo')
         try {
@@ -158,7 +158,6 @@ class contactController {
             })
         }
     }
-    
      //view
      static contact_pagedetail_view=async(req,res)=>{
         try {

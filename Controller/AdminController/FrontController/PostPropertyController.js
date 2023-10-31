@@ -41,16 +41,16 @@ const sendResetEmail = async (email, token) => {
         <p>click the following link to reset the password :</p>
         <p>
 
-        <a href="http://localhost:3500/postProperty/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
+        <a href="https://100acress.com/postProperty/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
         </p>
         </p>
 
         <p>If you didn't request to password reset , please ignore this email. </p>
 
        <p>Best regrads ,
-            <br>https://www.100acress.com/
+            <br>
        </p>
-       <form action="http://localhost:3500/postProperty/reset/${token}" method="POST">
+       <form action="https://100acress.com/postProperty/reset/${token}" method="POST">
        <label for="newPassword">New Password:</label>
        <input type="password"  name="password" required>
        <label for="newPassword">CPassword:</label>
@@ -220,7 +220,7 @@ class PostPropertyController {
     // Reset Password
     static postPerson_reset = async (req, res) => {
         try {
-            // console.log("hj")
+
             const { token } = req.params
             const { password } = req.body
             const hashpassword = await bcrypt.hash(password, 10)
@@ -228,8 +228,6 @@ class PostPropertyController {
             const user = await postPropertyModel.findOneAndUpdate({ token: token }, ({
                 password: hashpassword
             }))
-            // console.log(user)
-
             user.token = ""
             await user.save()
             res.status(200).json({
@@ -242,9 +240,6 @@ class PostPropertyController {
                 message: "Internal server error"
             })
         }
-
-
-
     }
     //viewAll
     static postPerson_View = async (req, res) => {
@@ -751,7 +746,7 @@ class PostPropertyController {
                 // console.log(update)
                 const dataUpdate = await postPropertyModel.findOneAndUpdate(
                     { "postProperty._id": id },
-                 { $set: { "postProperty.$": update } }
+                    { $set: { "postProperty.$": update } }
                 )
                 res.status(200).json({
                     message: "updated successfully ! ",

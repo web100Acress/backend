@@ -13,6 +13,7 @@ class rentController {
                 furnishing, builtYear, amenities, landmark, type, city, state, address } = req.body
             if (projectName && propertyType && propertyName && price && area && availableDate && descripation
                 && furnishing && builtYear && amenities && landmark && type && city && state && address) {
+
                 if (req.files.frontImage && req.files.otherImage) {
                     const frontImage = req.files.frontImage
                     const otherImage = req.files.otherImage
@@ -90,7 +91,7 @@ class rentController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "an error is occured",
+                error: "An error is occured",
             })
         }
     }
@@ -100,15 +101,23 @@ class rentController {
         try {
             // console.log("edit")
             const id = req.params.id
-            const data = await rent_Model.findById(id)
+            if(id.length>0){
+            const data = await rent_Model.findById({
+                _id:id
+            })
             res.status(200).json({
-                message: "data get successfully !",
+                message: "Data get successfully !",
                 dataEdit: data
             })
+        }else{
+            res.status(201).json({
+                message:"Id can not read ! "
+            })
+        }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "something went wrong !"
+                error: "Internal server error !"
             })
         }
     }
@@ -120,7 +129,7 @@ class rentController {
             const type = req.params.type
             const data = await rent_Model.find({ type: type })
             res.status(200).json({
-                message: "data get successfully !",
+                message:"Data get Successfully ! ",
                 dataView: data
             })
         } catch (error) {

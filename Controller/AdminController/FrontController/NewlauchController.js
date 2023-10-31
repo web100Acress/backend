@@ -71,25 +71,25 @@ class newlaunchController {
                     // console.log(data)
                     await data.save()
                     res.status(201).json({
-                        message: 'submit data successfully',
+                        message: 'Submit data successfully ! ' ,
                         projectdata: data
 
                     })
                 } else {
                     res.status(403).json({
-                        message: "all field are required"
+                        message: "All field are required ! ",
                     })
                 }
             }
             else {
                 res.status(403).json({
-                    message: "all field are required"
+                    message: "All field are required"
                 })
             }
         } catch (error) {
             console.log(error)
             res.send(500).json({
-                message: "internal server error . "
+                message: "Internal server error . "
             })
         }
     }
@@ -133,7 +133,7 @@ class newlaunchController {
             const data = await newlaunchModel.find()
             // res.send(data)
             res.status(200).json({
-                message: "data get",
+                message: "Data get successfully ! ",
                 data: data
             })
         } catch (error) {
@@ -573,21 +573,21 @@ class newlaunchController {
             })
         }
     }
-    // view
+    // view  the prelaunch project by their name 
     static preLaunch_view = async (req, res) => {
         // console.log("hello")
         try {
-            const id = req.params.id
-            if(id.length>0){
-            const data = await prelaunchModel.findById({ _id: id })
+            const url = req.params.url
+            if(url.length>0){
+            const data = await prelaunchModel.find({ url:url })
             res.status(200).json({
-                message:"data get",
+                message:"data get successfully ! ",
                 data
             })
         }else{
             res.status(200).json({
-                message:"Id is not read ",
-                data
+                message:"query url not get ! ",
+              
             })  
         }
         } catch (error) {
@@ -1016,7 +1016,6 @@ class newlaunchController {
             })
         }
     }
-
     static preLaunch_bhkview = async (req, res) => {
         // console.log("helllo")
         try {
@@ -1042,7 +1041,6 @@ class newlaunchController {
             })
         }
     }
-
     static prelaunch_bhkedit = async (req, res) => {
         try {
             const id = req.params.id
@@ -1143,7 +1141,6 @@ class newlaunchController {
             })
         }
     }
-
     static preLaunch_delete = async (req, res) => {
         // console.log("hello")
         try {

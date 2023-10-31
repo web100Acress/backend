@@ -10,6 +10,9 @@ const cors=require('cors')
 const bodyParser = require('body-parser')
 const fileUpload=require('express-fileupload')
 var cloudinary=require('cloudinary').v2;
+const compression = require('compression');
+
+app.use(compression())
 
 
 // set template
