@@ -53,6 +53,7 @@ router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
 //contact
 // Customer Contact routing handler
 router.post('/contact_Insert', contactController.contact_Insert)
+router.post('/contact_Updated/:id', contactController.contact_Update)
 router.get('/contact_view/:id/customer', contactController.contact_view)
 router.get("/contact/viewAll", contactController.contactviewAll)
 router.delete('/contact_delete/:id/delete', contactController.contact_delete)

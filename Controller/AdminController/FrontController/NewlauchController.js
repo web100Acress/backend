@@ -456,9 +456,9 @@ class newlaunchController {
         // console.log(req.body)
         try {
             const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
-                maxCovered_Area, aboutProject, builderName, amentites, location ,Aboutdeveloper,url} = req.body
+                maxCovered_Area, aboutProject, builderName, amentites, location ,Aboutdeveloper,url,meta_title,meta_discripation} = req.body
             if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
-                maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper&&url) {
+                maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper&&url&&meta_title&&meta_discripation) {
                 if (req.files) {
                     const photo = req.files.photo
                     const floorPlan=req.files.floorPlan
@@ -530,7 +530,9 @@ class newlaunchController {
                         location: location,
                         photo: otherImagelink,
                         Aboutdeveloper:Aboutdeveloper,
-                        url:url
+                        url:url,
+                        meta_title:meta_title,
+                        meta_discripation:meta_discripation
 
 
                     })
@@ -619,7 +621,8 @@ class newlaunchController {
     static prelaunch_update = async (req, res) => {
 
         try {
-            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location,url,Aboutdeveloper } = req.body
+            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location,url,Aboutdeveloper, meta_title, meta_discripation
+} = req.body
             if (req.params.id) {
                 if(req.files.photo && req.files.floorPlan && req.files.sitePlan&&req.files.locationMap){
 
@@ -704,7 +707,10 @@ class newlaunchController {
                     location: location,
                     photo: otherImagelink,
                     Aboutdeveloper:Aboutdeveloper,
-                    url:url
+                    url:url,
+                    meta_title:meta_title,
+                    meta_discripation:meta_discripation
+
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -767,7 +773,10 @@ class newlaunchController {
                     location: location,
                     photo: otherImagelink,
                     Aboutdeveloper:Aboutdeveloper,
-                    url:url
+                    url:url,
+                    meta_title:meta_title,
+                    meta_discripation:meta_discripation
+
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -805,7 +814,10 @@ class newlaunchController {
                     amentites: amentites,
                     location: location,
                     Aboutdeveloper:Aboutdeveloper,
-                    url:url
+                    url:url, 
+                    meta_title:meta_title,
+                    meta_discripation:meta_discripation
+
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
@@ -848,6 +860,11 @@ class newlaunchController {
                     builderName: builderName,
                     amentites: amentites,
                     location: location,
+                    Aboutdeveloper:Aboutdeveloper,
+                    url:url,
+                    meta_title:meta_title,
+                    meta_discripation:meta_discripation
+
                 })
                 // console.log(dataupdate)
                 await dataupdate.save()
