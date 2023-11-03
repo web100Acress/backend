@@ -71,7 +71,7 @@ class newlaunchController {
                     // console.log(data)
                     await data.save()
                     res.status(201).json({
-                        message: 'Submit data successfully ! ' ,
+                        message: 'Submit data successfully ! ',
                         projectdata: data
 
                     })
@@ -456,14 +456,14 @@ class newlaunchController {
         // console.log(req.body)
         try {
             const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
-                maxCovered_Area, aboutProject, builderName, amentites, location ,Aboutdeveloper,url,meta_title,meta_discripation} = req.body
+                maxCovered_Area, aboutProject, builderName, amentites, location, Aboutdeveloper, url, meta_title,meta_description } = req.body
             if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
-                maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper&&url&&meta_title&&meta_discripation) {
+                maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper && url && meta_title && meta_description) {
                 if (req.files) {
                     const photo = req.files.photo
-                    const floorPlan=req.files.floorPlan
-                    const sitePlan=req.files.sitePlan
-                    const locationMap=req.files.locationMap
+                    const floorPlan = req.files.floorPlan
+                    const sitePlan = req.files.sitePlan
+                    const locationMap = req.files.locationMap
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
                         folder: "100acre/prelaunch"
@@ -501,19 +501,19 @@ class newlaunchController {
                         })
 
                     }
-                    
+
                     const data = new prelaunchModel({
-                        floorPlan:{
-                            public_id:floorResult.public_id,
-                        url: floorResult.secure_url,
+                        floorPlan: {
+                            public_id: floorResult.public_id,
+                            url: floorResult.secure_url,
                         },
-                        sitePlan:{
-                          public_id:siteResult.public_id,
-                          url:siteResult.secure_url
+                        sitePlan: {
+                            public_id: siteResult.public_id,
+                            url: siteResult.secure_url
                         },
-                        locationMap:{
-                            public_id:locationResult.public_id,
-                            url:locationResult.secure_url
+                        locationMap: {
+                            public_id: locationResult.public_id,
+                            url: locationResult.secure_url
                         },
                         projectName: projectName,
                         price: price,
@@ -529,16 +529,14 @@ class newlaunchController {
                         amentites: amentites,
                         location: location,
                         photo: otherImagelink,
-                        Aboutdeveloper:Aboutdeveloper,
-                        url:url,
-                        meta_title:meta_title,
-                        meta_discripation:meta_discripation
-
-
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
                     })
                     await data.save()
                     res.status(200).json({
-                        message: "data inserted successfully ! "
+                        message: "Data inserted successfully ! "
                     })
                 } else {
                     res.status(400).json({
@@ -580,18 +578,18 @@ class newlaunchController {
         // console.log("hello")
         try {
             const url = req.params.url
-            if(url.length>0){
-            const data = await prelaunchModel.find({ url:url })
-            res.status(200).json({
-                message:"data get successfully ! ",
-                data
-            })
-        }else{
-            res.status(200).json({
-                message:"query url not get ! ",
-              
-            })  
-        }
+            if (url.length > 0) {
+                const data = await prelaunchModel.find({ url: url })
+                res.status(200).json({
+                    message: "data get successfully ! ",
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: "query url not get ! ",
+
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -621,325 +619,327 @@ class newlaunchController {
     static prelaunch_update = async (req, res) => {
 
         try {
-            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location,url,Aboutdeveloper, meta_title, meta_discripation
-} = req.body
+            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location, url, Aboutdeveloper, meta_title, meta_description
+            } = req.body
             if (req.params.id) {
-                if(req.files.photo && req.files.floorPlan && req.files.sitePlan&&req.files.locationMap){
+                if (req.files.photo && req.files.floorPlan && req.files.sitePlan && req.files.locationMap) {
 
-                
-                const photo = req.files.photo;
-                const id = req.params.id
-                // const data=await prelaunchModel.findById({_id:id})
 
-                const floorPlan=req.files.floorPlan
-                const sitePlan=req.files.sitePlan
-                const locationMap=req.files.locationMap
-                const floorResult = await cloudinary.uploader.upload(
-                    floorPlan.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
-                const siteResult = await cloudinary.uploader.upload(
-                    sitePlan.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
-                const locationResult = await cloudinary.uploader.upload(
-                    locationMap.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
+                    const photo = req.files.photo;
+                    const id = req.params.id
+                    // const data=await prelaunchModel.findById({_id:id})
 
-                const otherImagelink = []
-                if (photo.length >= 2) {
-                    for (let i = 0; i < photo.length; i++) {
+                    const floorPlan = req.files.floorPlan
+                    const sitePlan = req.files.sitePlan
+                    const locationMap = req.files.locationMap
+                    const floorResult = await cloudinary.uploader.upload(
+                        floorPlan.tempFilePath, {
+                        folder: "100acre/prelaunch"
+                    })
+                    const siteResult = await cloudinary.uploader.upload(
+                        sitePlan.tempFilePath, {
+                        folder: "100acre/prelaunch"
+                    })
+                    const locationResult = await cloudinary.uploader.upload(
+                        locationMap.tempFilePath, {
+                        folder: "100acre/prelaunch"
+                    })
+
+                    const otherImagelink = []
+                    if (photo.length >= 2) {
+                        for (let i = 0; i < photo.length; i++) {
+                            const photoResult = await cloudinary.uploader.upload(
+                                photo[i].tempFilePath, {
+                                folder: "100acre/preLaunch"
+                            }
+                            );
+                            otherImagelink.push({
+                                public_id: photoResult.public_id,
+                                url: photoResult.secure_url
+                            })
+                        }
+                    } else {
                         const photoResult = await cloudinary.uploader.upload(
-                            photo[i].tempFilePath, {
-                            folder: "100acre/preLaunch"
+                            photo.tempFilePath, {
+                            folder: "100acre/prelaunch"
                         }
                         );
                         otherImagelink.push({
                             public_id: photoResult.public_id,
                             url: photoResult.secure_url
                         })
+
                     }
-                } else {
-                    const photoResult = await cloudinary.uploader.upload(
-                        photo.tempFilePath, {
-                        folder: "100acre/prelaunch"
+                    const result = await prelaunchModel.findById(req.params.id)
+                    for (let i = 0; i < result.photo.length; i++) {
+                        otherImagelink.push(
+                            result.photo[i]
+                        );
                     }
-                    );
-                    otherImagelink.push({
-                        public_id: photoResult.public_id,
-                        url: photoResult.secure_url
+
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                        floorPlan: {
+                            public_id: floorResult.public_id,
+                            url: floorResult.secure_url,
+                        },
+                        sitePlan: {
+                            public_id: siteResult.public_id,
+                            url: siteResult.secure_url
+                        },
+                        locationMap: {
+                            public_id: locationResult.public_id,
+                            url: locationResult.secure_url
+                        },
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        photo: otherImagelink,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
+
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: " data updadated successfully ! "
                     })
 
-                }
-                const result = await prelaunchModel.findById(req.params.id)
-                for (let i = 0; i < result.photo.length; i++) {
-                    otherImagelink.push(
-                        result.photo[i]
-                    );
-                }
-
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                    floorPlan:{
-                        public_id:floorResult.public_id,
-                    url: floorResult.secure_url,
-                    },
-                    sitePlan:{
-                      public_id:siteResult.public_id,
-                      url:siteResult.secure_url
-                    },
-                    locationMap:{
-                        public_id:locationResult.public_id,
-                        url:locationResult.secure_url
-                    },
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    photo: otherImagelink,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url,
-                    meta_title:meta_title,
-                    meta_discripation:meta_discripation
-
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: " data updadated successfully ! "
-                })
-
-            }else if(req.files.photo){
-                const photo = req.files.photo;
-                const id = req.params.id
-                // const data=await prelaunchModel.findById({_id:id})
+                } else if (req.files.photo) {
+                    const photo = req.files.photo;
+                    const id = req.params.id
+                    // const data=await prelaunchModel.findById({_id:id})
 
 
 
-                const otherImagelink = []
-                if (photo.length >= 2) {
-                    for (let i = 0; i < photo.length; i++) {
+                    const otherImagelink = []
+                    if (photo.length >= 2) {
+                        for (let i = 0; i < photo.length; i++) {
+                            const photoResult = await cloudinary.uploader.upload(
+                                photo[i].tempFilePath, {
+                                folder: "100acre/preLaunch"
+                            }
+                            );
+                            otherImagelink.push({
+                                public_id: photoResult.public_id,
+                                url: photoResult.secure_url
+                            })
+                        }
+                    } else {
                         const photoResult = await cloudinary.uploader.upload(
-                            photo[i].tempFilePath, {
-                            folder: "100acre/preLaunch"
+                            photo.tempFilePath, {
+                            folder: "100acre/prelaunch"
                         }
                         );
                         otherImagelink.push({
                             public_id: photoResult.public_id,
                             url: photoResult.secure_url
                         })
+
                     }
-                } else {
-                    const photoResult = await cloudinary.uploader.upload(
-                        photo.tempFilePath, {
+                    const result = await prelaunchModel.findById(req.params.id)
+                    for (let i = 0; i < result.photo.length; i++) {
+                        otherImagelink.push(
+                            result.photo[i]
+                        );
+                    }
+
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        photo: otherImagelink,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
+
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: " data updadated successfully ! "
+                    })
+                } else if (req.files.floorPlan) {
+
+                    const id = req.params.id
+                    // const data=await prelaunchModel.findById({_id:id})
+
+                    const floorPlan = req.files.floorPlan
+
+                    const floorResult = await cloudinary.uploader.upload(
+                        floorPlan.tempFilePath, {
                         folder: "100acre/prelaunch"
-                    }
-                    );
-                    otherImagelink.push({
-                        public_id: photoResult.public_id,
-                        url: photoResult.secure_url
+                    })
+
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                        floorPlan: {
+                            public_id: floorResult.public_id,
+                            url: floorResult.secure_url,
+                        },
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
+
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: " data updadated successfully ! "
+                    })
+                } else if (req.files.sitePlan) {
+                    const id = req.params.id
+                    // const data=await prelaunchModel.findById({_id:id})
+
+
+                    const sitePlan = req.files.sitePlan
+
+
+                    const siteResult = await cloudinary.uploader.upload(
+                        sitePlan.tempFilePath, {
+                        folder: "100acre/prelaunch"
+                    })
+
+
+
+
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+
+                        sitePlan: {
+                            public_id: siteResult.public_id,
+                            url: siteResult.secure_url
+                        },
+
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
+
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: " data updadated successfully ! "
+                    })
+                } else if (req.files.locationMap) {
+                    const id = req.params.id
+                    // const data=await prelaunchModel.findById({_id:id})
+                    const locationMap = req.files.locationMap
+
+                    const locationResult = await cloudinary.uploader.upload(
+                        locationMap.tempFilePath, {
+                        folder: "100acre/prelaunch"
+                    })
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+
+                        locationMap: {
+                            public_id: locationResult.public_id,
+                            url: locationResult.secure_url
+                        },
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: " data updadated successfully ! "
                     })
 
                 }
-                const result = await prelaunchModel.findById(req.params.id)
-                for (let i = 0; i < result.photo.length; i++) {
-                    otherImagelink.push(
-                        result.photo[i]
-                    );
+                else {
+                    const id = req.params.id
+                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                        projectName: projectName,
+                        price: price,
+                        city: city,
+                        configuration: configuration,
+                        status: status,
+                        featured: featured,
+                        rera_No: rera_No,
+                        minCovered_Area: minCovered_Area,
+                        maxCovered_Area: maxCovered_Area,
+                        aboutProject: aboutProject,
+                        builderName: builderName,
+                        amentites: amentites,
+                        location: location,
+                        Aboutdeveloper: Aboutdeveloper,
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
+
+                    })
+                    // console.log(dataupdate)
+                    await dataupdate.save()
+                    res.status(200).json({
+                        message: "data updated successfully ! "
+                    })
                 }
-
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    photo: otherImagelink,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url,
-                    meta_title:meta_title,
-                    meta_discripation:meta_discripation
-
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: " data updadated successfully ! "
-                })
-            }else if( req.files.floorPlan ){
-               
-                const id = req.params.id
-                // const data=await prelaunchModel.findById({_id:id})
-
-                const floorPlan=req.files.floorPlan
-               
-                const floorResult = await cloudinary.uploader.upload(
-                    floorPlan.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
-               
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                    floorPlan:{
-                        public_id:floorResult.public_id,
-                    url: floorResult.secure_url,
-                    },
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url, 
-                    meta_title:meta_title,
-                    meta_discripation:meta_discripation
-
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: " data updadated successfully ! "
-                }) 
-            }else if( req.files.sitePlan){
-                const id = req.params.id
-                // const data=await prelaunchModel.findById({_id:id})
-
-              
-                const sitePlan=req.files.sitePlan
-               
-                
-                const siteResult = await cloudinary.uploader.upload(
-                    sitePlan.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
-               
-
-              
-
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                  
-                    sitePlan:{
-                      public_id:siteResult.public_id,
-                      url:siteResult.secure_url
-                    },
-                
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url,
-                    meta_title:meta_title,
-                    meta_discripation:meta_discripation
-
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: " data updadated successfully ! "
-                }) 
-            }else if(req.files.locationMap){  
-                const id = req.params.id
-                // const data=await prelaunchModel.findById({_id:id})
-                const locationMap=req.files.locationMap
-               
-                const locationResult = await cloudinary.uploader.upload(
-                    locationMap.tempFilePath, {
-                    folder: "100acre/prelaunch"
-                })
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                 
-                    locationMap:{
-                        public_id:locationResult.public_id,
-                        url:locationResult.secure_url
-                    },
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: " data updadated successfully ! "
-                })
-
-            }
-            else{
-                const id = req.params.id
-                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, { 
-                    projectName: projectName,
-                    price: price,
-                    city: city,
-                    configuration: configuration,
-                    status: status,
-                    featured: featured,
-                    rera_No: rera_No,
-                    minCovered_Area: minCovered_Area,
-                    maxCovered_Area: maxCovered_Area,
-                    aboutProject: aboutProject,
-                    builderName: builderName,
-                    amentites: amentites,
-                    location: location,
-                    Aboutdeveloper:Aboutdeveloper,
-                    url:url
-
-                })
-                // console.log(dataupdate)
-                await dataupdate.save()
-                res.status(200).json({
-                    message: "data updated successfully ! "
-                })
-            }
 
             } else {
-               res.status(400).json({
-                message:"check id "
-               }) 
+                res.status(400).json({
+                    message: " check  your id field !"
+                })
             }
 
         } catch (error) {
@@ -959,19 +959,21 @@ class newlaunchController {
             const result = await prelaunchModel.findById({ _id: id })
             // const imageId = result.photo.public_id
             // console.log(imageId)
+
             for (let i = 0; i < result.length; i++) {
                 const otherResult = await buyCommercial_Model.findById({ _id: id })
                 const otherId = otherResult.photo[i].public_id
                 // console.log(otherId)
+
                 await cloudinary.uploader.destroy(otherId)
             }
-            const floorPlan= otherResult.floorPlan.public_id
+            const floorPlan = otherResult.floorPlan.public_id
             await cloudinary.uploader.destroy(floorPlan)
 
             const sitePlan = otherResult.sitePlan.public_id
             await cloudinary.uploader.destroy(sitePlan)
 
-            const locationMap= otherResult.locationMap.public_id
+            const locationMap = otherResult.locationMap.public_id
             await cloudinary.uploader.destroy(locationMap)
 
             await prelaunchModel.findByIdAndDelete({ _id: id })
@@ -979,10 +981,10 @@ class newlaunchController {
                 message: "Data deleted successfully ! "
             })
         } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"Internal server error !"
-        })
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error !"
+            })
         }
     }
 
@@ -1048,13 +1050,13 @@ class newlaunchController {
             );
             // console.log(data)
             res.status(200).json({
-                message: "data get successfull ! ",
+                message: "Data get successfull ! ",
                 data
             })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }
@@ -1121,7 +1123,7 @@ class newlaunchController {
                 )
                 // console.log(dataUpdate)
                 res.status(200).json({
-                    message: "data updated successfully ! "
+                    message: "Data updated successfully ! "
                 })
             } else {
                 const id = req.params.id;
@@ -1145,16 +1147,15 @@ class newlaunchController {
                 const dataUpdate = await prelaunchModel.findOneAndUpdate(
                     { "BHK_details._id": id }, { $set: { "BHK_details.$": data } }
                 )
-
                 //    console.log(dataUpdate)
                 res.status(200).json({
-                    message: "data updated successfully ! "
+                    message: "Data updated successfully ! "
                 })
             }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }

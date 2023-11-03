@@ -195,7 +195,7 @@ class contactController {
         try {
             const data = await contactPagedetailModel.findById(req.params.id)
             res.status(201).json({
-                message: "view is enable",
+                message: "data get successfull ! ",
                 dataview: data
             })
 
