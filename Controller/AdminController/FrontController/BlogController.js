@@ -38,12 +38,13 @@ class blogController {
 
             })
             }
-        } catch (error) {
+        }catch(error) {
             console.log(error)
             res.status(500).json({
                 message: " internal server error ! "
             })
         }
+      
     }
     static blogviewAll=async(req,res)=>{
         try {

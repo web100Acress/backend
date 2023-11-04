@@ -153,11 +153,9 @@ router.get("/buyproperty/search",homeController.search_buy)
 router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
 router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
 router.get("/newlaunch/:projectName",newlaunchController.newlaunch_projectName)
-
 router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
 router.post("/newlaunch/update/:id", newlaunchController.newlaunch_update)
 router.delete("/newlaunch/delete/:id", newlaunchController.newlaunch_delete)
-
 router.get("/allview/newProject",newlaunchController.newProject)
 
 //other Property routing 

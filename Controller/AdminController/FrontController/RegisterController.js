@@ -89,12 +89,12 @@ class registerController {
                         }
                     } else {
                         res.status(401).json({
-                            message: "  ! "
+                            message: " password and confirm password not match  ! "
                         })
                     }
                 } else {
-                    res.status(500).json({
-                        message: "something went dwrong ! "
+                    res.status(200).json({
+                        message: "something went wrong ! "
                     })
                 }
             }
@@ -179,7 +179,7 @@ class registerController {
             // console.log(user)
             if (!user) {
                 return res.status(404).json({
-                    message: 'User not found'
+                    message:'User not found'
                 });
             }
 
@@ -194,7 +194,7 @@ class registerController {
             await sendResetEmail(email, token);
 
             res.status(200).json({
-                message: 'Password reset link sent'
+                message: 'Password reset link sent to your email id !'
             });
 
 

@@ -546,7 +546,7 @@ class newlaunchController {
             } else {
 
                 res.status(400).json({
-                    message: "check your  field !! "
+                    message: "check your field !! "
                 })
             }
 
@@ -621,7 +621,7 @@ class newlaunchController {
         try {
             const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location, url, Aboutdeveloper, meta_title, meta_description
             } = req.body
-            if (req.params.id) {
+            if (req.files) {
                 if (req.files.photo && req.files.floorPlan && req.files.sitePlan && req.files.locationMap) {
 
 
@@ -908,7 +908,13 @@ class newlaunchController {
 
                 }
                 else {
-                    const id = req.params.id
+                  res.status(200).json({
+                    message:"check your files !g"
+                  })
+                }
+
+            } else {
+                const id = req.params.id
                     const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
                         projectName: projectName,
                         price: price,
@@ -934,12 +940,6 @@ class newlaunchController {
                     res.status(200).json({
                         message: "data updated successfully ! "
                     })
-                }
-
-            } else {
-                res.status(400).json({
-                    message: " check  your id field !"
-                })
             }
 
         } catch (error) {
