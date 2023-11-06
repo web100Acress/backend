@@ -1,4 +1,5 @@
 
+const { json } = require('body-parser');
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
@@ -384,7 +385,6 @@ class blogController {
                 }
             }
         })
-
         const blogimageId=data.blog[0].blogImage.public_id;
        
         if(blogimageId!==null){
@@ -413,5 +413,4 @@ class blogController {
     }
 }
 module.exports = blogController
-
 
