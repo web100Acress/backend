@@ -114,7 +114,14 @@ const preLaunch_Schema= new mongoose.Schema({
     },
     url:{
         type:String
+    },
+    meta_title:{
+        type:String
+    } ,
+    meta_description:{
+        type:String
     }
+
 
 },{
     timestamps:true

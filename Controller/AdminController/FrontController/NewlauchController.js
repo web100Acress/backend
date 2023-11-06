@@ -911,7 +911,9 @@ class newlaunchController {
                         amentites: amentites,
                         location: location,
                         Aboutdeveloper: Aboutdeveloper,
-                        url: url
+                        url: url,
+                        meta_title: meta_title,
+                        meta_description:meta_description
                     })
                     // console.log(dataupdate)
                     await dataupdate.save()
