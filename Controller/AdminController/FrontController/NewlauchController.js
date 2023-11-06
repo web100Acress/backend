@@ -466,18 +466,18 @@ class newlaunchController {
                     const locationMap = req.files.locationMap
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const siteResult = await cloudinary.uploader.upload(
                         sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const locationResult = await cloudinary.uploader.upload(
                         locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const otherImagelink = []
                     if (photo.length >= 2) {
@@ -495,8 +495,8 @@ class newlaunchController {
                     } else {
                         const photoResult = await cloudinary.uploader.upload(
                             photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
-                            folder: `100acre/prelaunch/${projectName}`,
+                            folder: "100acre/prelaunch"
+                            // folder: `100acre/prelaunch/${projectName}`,
                         }
                         );
                         otherImagelink.push({
@@ -639,17 +639,17 @@ class newlaunchController {
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
                         // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const siteResult = await cloudinary.uploader.upload(
                         sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const locationResult = await cloudinary.uploader.upload(
                         locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
 
                     const otherImagelink = []
@@ -668,8 +668,8 @@ class newlaunchController {
                     } else {
                         const photoResult = await cloudinary.uploader.upload(
                             photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
-                            folder: `100acre/prelaunch/${projectName}`,
+                            folder: "100acre/prelaunch"
+                            // folder: `100acre/prelaunch/${projectName}`,
                         }
                         );
                         otherImagelink.push({
@@ -736,8 +736,8 @@ class newlaunchController {
                         for (let i = 0; i < photo.length; i++) {
                             const photoResult = await cloudinary.uploader.upload(
                                 photo[i].tempFilePath, {
-                                // folder: "100acre/preLaunch"
-                                folder: `100acre/prelaunch/${projectName}`,
+                                folder: "100acre/preLaunch"
+                                // folder: `100acre/prelaunch/${projectName}`,
                             }
                             );
                             otherImagelink.push({
@@ -748,8 +748,8 @@ class newlaunchController {
                     } else {
                         const photoResult = await cloudinary.uploader.upload(
                             photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
-                            folder: `100acre/prelaunch/${projectName}`,
+                            folder: "100acre/prelaunch"
+                            // folder: `100acre/prelaunch/${projectName}`,
                         }
                         );
                         otherImagelink.push({
@@ -800,8 +800,8 @@ class newlaunchController {
 
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
 
                     const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
@@ -843,8 +843,8 @@ class newlaunchController {
 
                     const siteResult = await cloudinary.uploader.upload(
                         sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"/
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
 
 
@@ -888,8 +888,8 @@ class newlaunchController {
 
                     const locationResult = await cloudinary.uploader.upload(
                         locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
+                        folder: "100acre/prelaunch"
+                        // folder: `100acre/prelaunch/${projectName}`,
                     })
                     const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
 
