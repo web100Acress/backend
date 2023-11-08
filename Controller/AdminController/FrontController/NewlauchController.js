@@ -1010,18 +1010,12 @@ class newlaunchController {
         try {
             const { input_Bhk, build_area, possession } = req.body
             if (req.files) {
-                const id = req.params.id
+               
                 const image = req.files.image;
-                const dataGet = await prelaunchModel.findOne({ "BHK_details._id": id },
-                {
-                    BHK_details: {
-                        $elemMatch: {
-                            _id: id,
-                        },
-                    },
-                },
-            );
-               const projectName=dataGet.projectName
+                const id = req.params.id;
+                const dataf = await prelaunchModel.findOne({ _id: id }, );
+               const projectName=dataf.projectName
+            //   console.log(projectName)
                 const imageResult = await cloudinary.uploader.upload(
                     image.tempFilePath, {
                     // folder: "100acre/preLaunch"
@@ -1059,7 +1053,8 @@ class newlaunchController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error  ! "
+                message: "internal server error  ! ",
+                error
             })
         }
     }
