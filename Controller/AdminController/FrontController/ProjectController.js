@@ -456,14 +456,15 @@ class projectController {
         // const data =new UserModel
 
         try {
-            const { name, email, mobile, projectName, address } = req.body
-            if (name && email && mobile && projectName && address) {
+            const { name, email, mobile, projectName, address,status } = req.body
+            if (name && email && mobile && projectName && address &&status) {
                 const data = new UserModel({
                     name: name,
                     email: email,
                     mobile: mobile,
                     projectName: projectName,
-                    address: address
+                    address: address,
+                    status:status
                 })
 
 
@@ -479,7 +480,7 @@ class projectController {
                 // Send mail with defined transport object
                 let info = await transporter.sendMail({
                     from: 'test@gmail.com', // Sender address
-                    to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+                    to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
                     subject: 'New User Enquiry Detail', // Subject line
                     text: '', // Plain text body
                     html: `

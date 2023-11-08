@@ -467,6 +467,7 @@ class newlaunchController {
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
                         // folder: "100acre/prelaunch"
+
                         folder: `100acre/prelaunch/${projectName}`,
                     })
                     const siteResult = await cloudinary.uploader.upload(
@@ -721,7 +722,7 @@ class newlaunchController {
                     // console.log(dataupdate)
                     await dataupdate.save()
                     res.status(200).json({
-                        message: " data updadated successfully ! "
+                        message: " data updated successfully ! "
                     })
 
                 } else if (req.files.photo) {
@@ -789,7 +790,7 @@ class newlaunchController {
                     // console.log(dataupdate)
                     await dataupdate.save()
                     res.status(200).json({
-                        message: " data updadated successfully ! "
+                        message: " data updated successfully ! "
                     })
                 } else if (req.files.floorPlan) {
 
@@ -831,7 +832,7 @@ class newlaunchController {
                     // console.log(dataupdate)
                     await dataupdate.save()
                     res.status(200).json({
-                        message: " data updadated successfully ! "
+                        message: " data updated successfully ! "
                     })
                 } else if (req.files.sitePlan) {
                     const id = req.params.id
@@ -879,7 +880,7 @@ class newlaunchController {
                     // console.log(dataupdate)
                     await dataupdate.save()
                     res.status(200).json({
-                        message: " data updadated successfully ! "
+                        message: " data updated successfully ! "
                     })
                 } else if (req.files.locationMap) {
                     const id = req.params.id
@@ -918,13 +919,13 @@ class newlaunchController {
                     // console.log(dataupdate)
                     await dataupdate.save()
                     res.status(200).json({
-                        message: " data updadated successfully ! "
+                        message: " data updated successfully ! "
                     })
 
                 }
                 else {
                   res.status(200).json({
-                    message:"check your files !g"
+                    message:"check your files !"
                   })
                 }
 
@@ -1009,10 +1010,22 @@ class newlaunchController {
         try {
             const { input_Bhk, build_area, possession } = req.body
             if (req.files) {
+                const id = req.params.id
                 const image = req.files.image;
+                const dataGet = await prelaunchModel.findOne({ "BHK_details._id": id },
+                {
+                    BHK_details: {
+                        $elemMatch: {
+                            _id: id,
+                        },
+                    },
+                },
+            );
+               const projectName=dataGet.projectName
                 const imageResult = await cloudinary.uploader.upload(
                     image.tempFilePath, {
-                    folder: "100acre/preLaunch"
+                    // folder: "100acre/preLaunch"
+                    folder: `100acre/prelaunch/${projectName}`,
                 }
                 )
                 const data = {
@@ -1026,7 +1039,7 @@ class newlaunchController {
 
                 }
                 // console.log(data)
-                const id = req.params.id
+               
                 const dataPushed = await prelaunchModel.findOneAndUpdate(
                     { _id: id },
                     { $push: { BHK_details: data } },
@@ -1065,7 +1078,7 @@ class newlaunchController {
             );
             // console.log(data)
             res.status(200).json({
-                message: "Data get successfull ! ",
+                message: "Data get successfully ! ",
                 data
             })
         } catch (error) {
