@@ -480,14 +480,14 @@ class projectController {
                 // Send mail with defined transport object
                 let info = await transporter.sendMail({
                     from: 'test@gmail.com', // Sender address
-                    to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+                    to: 'tanuj.100acress@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
                     subject: 'New User Enquiry Detail', // Subject line
                     text: '', // Plain text body
                     html: `
                     <div class="card">
                      <div>
                     <div class="header">
-                    <h2>User Customer Contact Detail</h2>
+                    <h2>Customer Contact Detail !</h2>
                     </div>
                     </div>
                     <center>
