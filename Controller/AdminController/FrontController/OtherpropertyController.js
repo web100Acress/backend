@@ -404,18 +404,18 @@ class otherpropertyController {
         // Send mail with defined transport object
         let info = await transporter.sendMail({
           from: 'test@gmail.com', // Sender address
-          to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
-          subject: 'New User Enquiry Detail', // Subject line
+          to: 'query.adharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+          subject:'New User Enquiry Detail', // Subject line
           text: '', // Plain text body
           html: `
           <div class="card">
           <div>
           <div class="header">
-          <h2>User Customer Contact Detail Enquiry other property !</h2>
+          <h2> Customer Contact Detail Enquiry other property !</h2>
           </div>
           </div>
           <center>
-          <div> User Customer Contact  Detail:</div>
+          <div>Customer Contact  Detail:</div>
           <div><h3>Seller Email:${data.sellerEmail}</h3></div>
           <div><h3>Seller Contact :${data.SellermobileNumber}</h3></div>
           <div><h3>Customer Email.:${data.cust_Email}</h3></div>

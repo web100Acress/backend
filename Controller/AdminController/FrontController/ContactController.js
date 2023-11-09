@@ -30,7 +30,6 @@ class contactController {
                     message: message,
                     status: status
                 })
-
                 // console.log(userData)
                 await userData.save()
                 res.status(200).json({
@@ -86,7 +85,7 @@ class contactController {
     static contact_Update = async (req, res) => {
         try {
             const { name, email, mobile, message, status } = req.body
-            if (status != 0) {
+            if (status !=null) {
                 const id = req.params.id;
                 //   console.log(id) 
                 const data = await contactModel.findByIdAndUpdate({ _id: id }, {

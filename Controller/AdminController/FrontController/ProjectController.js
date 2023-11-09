@@ -480,7 +480,7 @@ class projectController {
                 // Send mail with defined transport object
                 let info = await transporter.sendMail({
                     from: 'test@gmail.com', // Sender address
-                    to: 'tanuj.100acress@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+                    to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
                     subject: 'New User Enquiry Detail', // Subject line
                     text: '', // Plain text body
                     html: `
@@ -502,77 +502,7 @@ class projectController {
                      <br>
      
                      </div>
-         `, // HTML body
-                    // html:`<!DOCTYPE html>
-                    // <html lang="en">
-                    // <head>
-                    //     <meta charset="UTF-8">
-                    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    //     <title>User Contact Details</title>
-                    //     <style>
-                    //         body {
-                    //             font-family: Arial, sans-serif;
-                    //             background-color: #f2f2f2;
-                    //             margin: 0;
-                    //             padding: 0;
-                    //         }
-
-                    //         .card {
-                    //             max-width: 600px;
-                    //             margin: 0 auto;
-                    //             padding: 20px;
-                    //             background-color: #fff;
-                    //             border-radius: 10px;
-                    //             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                    //         }
-
-                    //         .header {
-                    //             background-color: #007bff;
-                    //             color: #fff;
-                    //             text-align: center;
-                    //             padding: 10px;
-                    //             border-radius: 10px 10px 0 0;
-                    //         }
-
-                    //         h2 {
-                    //             margin: 0;
-                    //         }
-
-                    //         .details {
-                    //             padding: 20px;
-                    //             text-align: center;
-                    //         }
-
-                    //         h3 {
-                    //             margin: 10px 0;
-                    //             color: #333;
-                    //         }
-
-                    //         .footer {
-                    //             background-color: #007bff;
-                    //             color: #fff;
-                    //             text-align: center;
-                    //             padding: 10px;
-                    //             border-radius: 0 0 10px 10px;
-                    //         }
-                    //     </style>
-                    // </head>
-                    // <body>
-                    //     <div class="card">
-
-                    //         <div class="details">
-                    //             <div>User Customer Contact Detail:</div>
-                    //             <h3>UserName: ${data.name}</h3>
-                    //             <h3>UserEmailId: ${data.email}</h3>
-                    //             <h3>UserMobileNo.: ${data.mobile}</h3>
-                    //             <h3>ProjectName: ${data.project}</h3>
-                    //             <h3>Address: ${data.address}</h3>
-                    //         </div>
-
-                    //     </div>
-                    // </body>
-                    // </html>
-                    // `
+         `,
                 });
                 await data.save()
                 res.status(201).json({
@@ -591,7 +521,6 @@ class projectController {
             })
         }
     }
-
     static userviewAll = async (req, res) => {
         // console.log("hello")
         try {
@@ -614,10 +543,8 @@ class projectController {
         try {
             const id = req.params.id;
             const data = await UserModel.findByIdAndDelete({ _id: id })
-
             res.status(204).json({
                 message: "User data deleted successfully ! ",
-
             })
         } catch (error) {
             console.log(error)
@@ -626,6 +553,5 @@ class projectController {
             })
         }
     }
-
 }
 module.exports = projectController
