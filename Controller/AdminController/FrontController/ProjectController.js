@@ -487,11 +487,11 @@ class projectController {
                     <div class="card">
                      <div>
                     <div class="header">
-                    <h2>Customer Contact Detail !</h2>
+                    <h2>Customer Contact Detail</h2>
                     </div>
                     </div>
                     <center>
-                    <div> User Customer Contact  Detail:</div>
+                    <div>  Customer Contact  Detail:</div>
                     <div><h3>UserName:${data.name}</h3></div>
                     <div><h3>UserEmailId:${data.email}</h3></div>
                     <div><h3>UserMobileNo.:${data.mobile}</h3></div>
