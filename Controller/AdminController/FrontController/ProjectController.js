@@ -536,7 +536,38 @@ class projectController {
             })
         }
     }
-    // user data
+    static userUpdate=async(req,res)=>{
+        try {
+            const{name,email,mobile,projectName,address,status}=req.body
+            if(status!=null){
+                const id =req.params.id;
+                 const data = await UserModel.findByIdAndUpdate({ _id:id},{
+                    name:name,
+                    email:email,
+                    mobile:mobile,
+                    projectname:projectName,
+                    address:address,
+                    status:status
+
+                 })
+                 await data.save()
+                 res.status(200).json({
+                    message:"data updated successfuly !"
+                 })
+            }else{
+                res.status(200).json({
+                    message:"check your field ! "
+                })
+            }
+        
+        } catch (error) {
+         console.log(error)
+         res.status(500).json({
+            message:"Inetrnal server error ! "
+         })   
+        }
+    }
+        // user data
     //delete
     static userdataDelete = async (req, res) => {
         // console.log('hello delete')
