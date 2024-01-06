@@ -553,6 +553,7 @@ class newlaunchController {
             })
         }
     }
+    
 
 }
 module.exports = newlaunchController

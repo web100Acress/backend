@@ -17,6 +17,7 @@ const PostPropertyController = require('../Controller/AdminController/FrontContr
 const newlaunchController = require('../Controller/AdminController/FrontController/NewlauchController')
 const otherpropertyController = require('../Controller/AdminController/FrontController/OtherpropertyController')
 const buyCommercial_Model = require('../models/property/buyCommercial')
+const authAdmin = require('../middleware/registerAuth')
 
 
 //Router for front home page  controller
@@ -100,7 +101,8 @@ router.delete('/testimonial/testimonialDelete/:id', aboutController.testimonialD
  
 //post person 
 router.post('/postPerson/register', PostPropertyController.postPerson_Register)
-router.post('/postPerson/verify_Login', PostPropertyController.postPerson_VerifyLogin)
+router.get('/postPerson/Role/:email',PostPropertyController.postPerson_verifyRole)
+router.post('/postPerson/verify_Login',authAdmin, PostPropertyController.postPerson_VerifyLogin)
 router.get('/postPerson/logout', PostPropertyController.postPerson_logout)
 router.post('/postPerson/postProperty_forget', PostPropertyController.postPerson_forget)
 router.post('/postPerson/reset/:token', PostPropertyController.postPerson_reset)

@@ -148,6 +148,7 @@ class PostPropertyController {
             const { email, password } = req.body
             if (email && password) {
                 const User = await postPropertyModel.findOne({ email: email })
+                console.log(User.role,"hello")
                 if (User != null) {
                     const isMatch = await bcrypt.compare(password, User.password)
                     if ((email == email) && isMatch) {
@@ -188,6 +189,31 @@ class PostPropertyController {
 
             })
         }
+    }
+    static postPerson_verifyRole=async(req,res)=>{
+      try {
+        const email = req.params.email
+        // console.log(req.params.email)
+        if (email) {
+            const User = await postPropertyModel.findOne({ email: email })
+            if(User){
+                res.status(200).json({
+                    message:"user found ! ",
+                    User:User
+                })
+            }else{
+                res.status(200).json({
+                    message:"user not found "
+                })
+            }
+        }else{
+            res.status(200).json({
+                message:"please enter email !"
+            })
+        }
+      } catch (error) {
+        
+      }
     }
     // logout
     static postPerson_logout = async (req, res) => {
