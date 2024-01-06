@@ -1,5 +1,29 @@
 const mongoose=require('mongoose')
 
+const bhk_Schema=new mongoose.Schema({
+    
+        input_Bhk:{
+            type:String
+        },
+        build_area:{
+            type:String
+        },
+        possession:{
+            type:String
+        },
+        image:{
+            public_id: {
+                type: String,
+               
+            },
+            url: {
+                type: String,
+             
+            }
+        },
+})
+
+
 const preLaunch_Schema= new mongoose.Schema({
     projectName: {
         type:String,
@@ -7,7 +31,6 @@ const preLaunch_Schema= new mongoose.Schema({
     },
     price:{
         type:String,
-    
     },
     city:{
       
@@ -45,28 +68,7 @@ const preLaunch_Schema= new mongoose.Schema({
        
     },
     BHK_details:[
-        {
-        input_Bhk:{
-            type:String
-        },
-        build_area:{
-            type:String
-        },
-        possession:{
-            type:String
-        },
-        image:{
-            public_id: {
-                type: String,
-               
-            },
-            url: {
-                type: String,
-             
-            }
-        },
-
-    }
+     bhk_Schema
     ],
     photo:[],
     amentites:[
@@ -128,3 +130,9 @@ const preLaunch_Schema= new mongoose.Schema({
 })
 const prelaunchModel=mongoose.model('preLunach',preLaunch_Schema)
 module.exports=prelaunchModel
+
+
+
+
+  
+ 

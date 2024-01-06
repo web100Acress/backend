@@ -2,10 +2,11 @@ const otherEnquiryModel = require('../../../models/otherProperty/otherpropertyEn
 const otherPropertyModel = require('../../../models/otherProperty/otherpropertyModel');
 const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
-
+const NodeCache = require("node-cache");
+const cache = new NodeCache();
 
 class otherpropertyController {
-
+  //  otherproperty data insert
   static otherproperty_Insert = async (req, res) => {
     try {
       const { propertyOwnerEmail, propertyOwnerNumber, propertyType, propertyName, address, city, state, price, area, descripation, landMark, amenities, builtYear, furnishing, type, availableDate } = req.body
@@ -13,7 +14,7 @@ class otherpropertyController {
       const frontImage = req.files.frontImage;
       const frontResult = await cloudinary.uploader.upload(
         frontImage.tempFilePath, {
-        folder: "100acre/otherProperty"
+        folder: `100acre/otherProperty/${propertyName}`
       }
       )
       const otherImage = req.files.otherImage;
@@ -22,7 +23,7 @@ class otherpropertyController {
         for (let i = 0; i < otherImage.length; i++) {
           const otherResult = await cloudinary.uploader.upload(
             otherImage[i].tempFilePath, {
-            folder: "100acre/otherProperty"
+            folder: `100acre/otherProperty/${propertyName}`
           }
           );
           otherImagelink.push({
@@ -33,7 +34,7 @@ class otherpropertyController {
       } else {
         const otherResult = await cloudinary.uploader.upload(
           otherImage.tempFilePath, {
-          folder: "100acre/otherProperty"
+          folder: `100acre/otherProperty/${propertyName}`
         }
         );
         otherImagelink.push({
@@ -68,32 +69,35 @@ class otherpropertyController {
       })
       // console.log(data)
       await data.save()
+
       res.status(200).json({
         message: "data submit successfully ! "
       })
     } catch (error) {
       console.log(error)
       res.send(500).json({
-        message: "internal server error ! "
+        message: "Internal server error ! "
       })
     }
   }
+  // otherproperty data view 
   static otherproperty_view = async (req, res) => {
     try {
       // console.log("hello")
       const id = req.params.id
       const data = await otherPropertyModel.find({ _id: id });
-      // res.send(data)
+      // res.send(data ,"message")
       res.status(200).json({
-        message: "data get !!"
+        message: "data get!"
       })
     } catch (error) {
       console.log(error)
       res.send(500).json({
-        message: "internal server error ! "
+        message: "Internal server error ! "
       })
     }
   }
+  // otherproperty data viewAll
   static otherproperty_viewAll = async (req, res) => {
     // console.log("hello")
     try {
@@ -106,11 +110,11 @@ class otherpropertyController {
     } catch (error) {
       console.log(error)
       res.send(500).json({
-        message: "internal server error ! "
+        message: "Internal server error ! "
       })
     }
   }
-
+  // otherproperty data edit
   static otherproperty_edit = async (req, res) => {
     try {
       // console.log("hello")
@@ -124,10 +128,11 @@ class otherpropertyController {
     } catch (error) {
       console.log(error)
       res.send(500).json({
-        message: "internal server error ! "
+        message: "Internal server error! "
       })
     }
   }
+  //otherproperty update
   static otherproperty_update = async (req, res) => {
     try {
       // console.log("hello")
@@ -146,7 +151,7 @@ class otherpropertyController {
           await cloudinary.uploader.destroy(frontId)
           const frontResult = await cloudinary.uploader.upload(
             frontImage.tempFilePath, {
-            folder: "100acre/otherProperty"
+            folder: `100acre/otherProperty/${propertyName}`
           }
           )
 
@@ -154,7 +159,7 @@ class otherpropertyController {
             for (let i = 0; i < otherImage.length; i++) {
               const otherResult = await cloudinary.uploader.upload(
                 otherImage[i].tempFilePath, {
-                folder: "100acre/otherProperty"
+                folder: `100acre/otherProperty/${propertyName}`
               }
               );
               otherImageLink.push({
@@ -165,7 +170,7 @@ class otherpropertyController {
           } else {
             const otherResult = await cloudinary.uploader.upload(
               otherImage.tempFilePath, {
-              folder: "100acre/otherProperty"
+              folder: `100acre/otherProperty/${propertyName}`
             }
             );
             otherImageLink.push({
@@ -211,7 +216,7 @@ class otherpropertyController {
           await cloudinary.uploader.destroy(frontId)
           const frontResult = await cloudinary.uploader.upload(
             frontImage.tempFilePath, {
-            folder: "100acre/otherProperty"
+            folder: `100acre/otherProperty/${propertyName}`
           }
           )
           const dataUpdate = new otherPropertyModel({
@@ -339,6 +344,7 @@ class otherpropertyController {
       })
     }
   }
+  // otherproperty delete
   static otherproperty_delete = async (req, res) => {
     try {
       // console.log(data)
@@ -373,16 +379,14 @@ class otherpropertyController {
       })
     }
   }
-
   // other property Enquiry 
-
   static otherEnquiry_insert = async (req, res) => {
     // console.log("hello")
     try {
       // res.send("dsdoojo;whojosd")
-      const { sellerEmail, SellermobileNumber, cust_Name, cust_Email, cust_Number, propertyName, address } = req.body
+      const { sellerEmail, SellermobileNumber, cust_Name, cust_Email, cust_Number, propertyName, address, status } = req.body
       // console.log(req.body)
-      if (sellerEmail && SellermobileNumber && cust_Name && cust_Email && cust_Number && propertyName && address) {
+      if (cust_Email && cust_Number) {
         const data = new otherEnquiryModel({
           sellerEmail: sellerEmail,
           SellermobileNumber: SellermobileNumber,
@@ -390,7 +394,8 @@ class otherpropertyController {
           cust_Number: cust_Number,
           cust_Name: cust_Name,
           propertyName: propertyName,
-          Prop_address: address
+          Prop_address: address,
+          status: status
         })
         // Connect with SMTP Gmail
         const transporter = await nodemailer.createTransport({
@@ -405,7 +410,7 @@ class otherpropertyController {
         let info = await transporter.sendMail({
           from: 'test@gmail.com', // Sender address
           to: 'query.adharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
-          subject:'New User Enquiry Detail', // Subject line
+          subject: 'New User Enquiry Detail', // Subject line
           text: '', // Plain text body
           html: `
           <div class="card">
@@ -447,16 +452,62 @@ class otherpropertyController {
       })
     }
   }
+  // other property Enquiry update
+  static otherEnquiry_Update = async (req, res) => {
+    // console.log("hello")
+    try {
+      const { sellerEmail, SellermobileNumber, cust_Name, cust_Email, cust_Number, propertyName, address, status } = req.body
+      if (status != null) {
+        // console.log("hello")
+        const id = req.params.id
 
+        const data = await otherEnquiryModel.findByIdAndUpdate({ id: id }, {
+          sellerEmail: sellerEmail,
+          SellermobileNumber: SellermobileNumber,
+          cust_Name: cust_Name,
+          cust_Email: cust_Email,
+          cust_Number: cust_Number,
+          propertyName: propertyName,
+          address: address,
+          status: status,
+        })
+        // console.log(data)
+        await data.save()
+        res.status(200).json({
+          message:" data updated successfully ! "
+        })
+
+      } else {
+        res.status(201).json({
+          message: "done "
+        })
+      }
+
+    } catch (error) {
+      res.status(500).json({
+        message: "Internal server error ! "
+      })
+    }
+  }
+  // other property Enquiry viewAll
   static otherEnquiry_viewAll = async (req, res) => {
     try {
-      // res.send("hediqdh")
-      const data = await otherEnquiryModel.find()
-      // res.send(data)
+      const cachedData = cache.get('authorData');
+      if (cachedData) {
+        // If data is in cache, return cached data
+        return res.json({
+          data: cachedData,
+          message: 'Data retrieved from cache!',
+        });
+      }
+      // If data is not in cache,fetch from the database
+      const data = await rent_Model.find()
+      // Store data in the cache for future use
+      cache.set('authorData',data);
       res.status(200).json({
-        message: "data get successful ! ",
-        data
-      })
+        data,
+        message: 'Data fetched from the database !',
+      });
     } catch (error) {
       console.log(error)
       res.status(500).json({
@@ -464,7 +515,7 @@ class otherpropertyController {
       })
     }
   }
-
+  // other property Enquiry view 
   static otherEnquiry_view = async (req, res) => {
     // console.log("hello")
     try {
@@ -484,7 +535,7 @@ class otherpropertyController {
       })
     }
   }
-
+// other property Enquiry delete
   static otherEnquiry_delete = async (req, res) => {
     try {
       // console.log("hello")

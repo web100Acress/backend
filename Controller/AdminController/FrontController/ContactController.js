@@ -51,7 +51,7 @@ class contactController {
     }
     // method for view the customer detail
     static contact_view = async (req, res) => {
-        // console.log('hello')
+      
         try {
             const data = await contactModel.findById(req.params.id)
             res.status(201).json({
@@ -66,6 +66,7 @@ class contactController {
             })
         }
     }
+    // method for viewAll the customer detail 
     static contactviewAll = async (req, res) => {
         // console.log("view")
         try {
@@ -82,6 +83,7 @@ class contactController {
             })
         }
     }
+    // method for update the customer detail 
     static contact_Update = async (req, res) => {
         try {
             const { name, email, mobile, message, status } = req.body
@@ -172,6 +174,7 @@ class contactController {
             })
         }
     }
+    // contact page detail edit 
     static contact_pagedetail_edit = async (req, res) => {
         // console.log('helo')
         try {
@@ -189,7 +192,7 @@ class contactController {
             })
         }
     }
-    //view
+    // contact page detail view 
     static contact_pagedetail_view = async (req, res) => {
         try {
             const data = await contactPagedetailModel.findById(req.params.id)
@@ -205,6 +208,7 @@ class contactController {
             })
         }
     }
+    // contact page detail viewAll 
     static contactpagedetail_viewAll = async (req, res) => {
         // console.log("hello")
         try {
@@ -222,7 +226,7 @@ class contactController {
             })
         }
     }
-    //update
+    // contact page detail update 
     static contact_pagedetail_update = async (req, res) => {
         try {
             if (req.files) {
@@ -284,7 +288,7 @@ class contactController {
             })
         }
     }
-    //delete
+    //contact page detail delete 
     static contact_pagedetail_delete = async (req, res) => {
         try {
             // console.log("hello")

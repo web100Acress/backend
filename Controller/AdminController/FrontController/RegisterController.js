@@ -63,7 +63,7 @@ class registerController {
 
             if (verify) {
                 res.status(409).json({
-                    message: "user already register"
+                    message: "User already register ! "
                 })
             } else {
                 if (name && email && password && cpassword && mobile) {
@@ -124,14 +124,12 @@ class registerController {
                             res.cookie('token', token)
                             // res.json('token', token)
                             res.status(200).json({
-                                message: "admin pannel login successful! ",
+                                message: "admin login successfully done ! ",
                                 // token:token,
                             })
 
                         } else {
                             const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
-                            // console.log(token)
-                            // res.json('token', token)
                             res.cookie('token', token)
                             res.status(200).json({
                                 message: "admin user login successful! "
@@ -139,7 +137,7 @@ class registerController {
                         }
                     } else {
                         res.status(401).json({
-                            message: "check your email and password that enter"
+                            message: "check your email && password"
                         })
                     }
 
@@ -208,16 +206,12 @@ class registerController {
     }
     // Handle password reset
     static reset = async (req, res) => {
-        // res.send('hello reset')
+        // res.send("djhdbsdcdkb")
         const { token } = req.params
         const { password } = req.body
-        
         // console.log(token,password)
-        // const hashpassword = await bcrypt.hash(password, 10)
-        // console.log(hashpassword)
-
         try {
-
+           if(password){
             const hashpassword = await bcrypt.hash(password, 10)
 
             const user = await registerModel.findOneAndUpdate({ token: token }, ({
@@ -227,11 +221,14 @@ class registerController {
             user.token = ""
             await user.save()
             //  const data=user.token
-           
-
             res.status(200).json({
                  message: 'Password reset successfully !' ,
                 });
+            }else{
+                res.status(200).json({
+                    message: 'Please enter password!' ,
+                   }); 
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({

@@ -7,7 +7,7 @@ const cloudinary = require('cloudinary').v2;
 class aboutController {
 
     static about = async (req, res) => {
-        res.send("about page listent")
+        res.send("about page listen")
     }
 
     static aboutInsert = async (req, res) => {

@@ -24,6 +24,10 @@ const otherEnquiry_Schema= new mongoose.Schema({
     },
     propertyName:{
         type:String
+    },
+    status:{
+        type:String,
+        default:'Pending'
     }
 
 })

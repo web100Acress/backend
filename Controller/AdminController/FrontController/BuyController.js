@@ -1,6 +1,7 @@
 const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const cloudinary = require('cloudinary').v2;
-
+const NodeCache = require("node-cache");
+const cache = new NodeCache();
 class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
@@ -12,13 +13,11 @@ class BuyController {
                     const other = req.files.otherImage
 
                 // const length=other.length;
-                // console.log(length)
-
                     const otherImageLink = []
                     // console.log(otherImageLink)
                     const imageResult = await cloudinary.uploader.upload(
                         front.tempFilePath, {
-                        folder: "100acre/BuyCommercial"
+                        folder:`100acre/BuyCommercial/${projectName}`
                     }
 
                     )
@@ -27,7 +26,7 @@ class BuyController {
                     for (let i=0; i<other.length; i++) {
                         const otherResult = await cloudinary.uploader.upload(
                             other[i].tempFilePath, {
-                            folder: "100acre/BuyCommercial"
+                            folder: `100acre/BuyCommercial/${projectName}`
                         }
                         );
                         otherImageLink.push({
@@ -38,7 +37,7 @@ class BuyController {
                 }else{
                     const otherResult = await cloudinary.uploader.upload(
                         other.tempFilePath, {
-                        folder: "100acre/BuyCommercial"
+                        folder:`100acre/BuyCommercial/${projectName}`
                     }
                     );
                     otherImageLink.push({
@@ -62,12 +61,11 @@ class BuyController {
                         amenities: amenities,
                         type: type,
                         area: area
-
                     })
-                    // console.log(data)
+                    // cconsole.log(data)
                     await data.save()
                     res.status(201).json({
-                        message: "done",
+                        message: "data inserted successfully !",
                         dataget: data
                     })
                 } else {
@@ -77,13 +75,13 @@ class BuyController {
                 }
             } else {
                 res.status(403).json({
-                    message: " not  done",
+                    message: "check your field ! ",
                 })
             }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: "internal server error  !"
             })
         }
 
@@ -91,12 +89,22 @@ class BuyController {
 
     static viewAll=async(req,res)=>{
         try {
-            console.log("hello")
-            const data=await buyCommercial_Model.find()
+            const cachedData = cache.get('authorData');
+            if (cachedData) {
+               // If data is in cache, return cached data
+               return res.json({
+                  data: cachedData,
+                  message: 'Data retrieved from cache!',
+               });
+            }
+            // If data is not in cache, fetch from the database
+            const data = await  buyCommercial_Model.find()
+            // Store data in the cache for future use
+            cache.set('authorData', data);
             res.status(200).json({
-                message:"All data get successfully ! ",
-                data
-            })
+               data,
+               message: 'Data fetched from the database!',
+            });
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -104,7 +112,7 @@ class BuyController {
             })
         }
     }
-    
+         
     static buycommercialView = async (req, res) => {
         try {
             const type= req.params.type
@@ -176,14 +184,14 @@ class BuyController {
                         await cloudinary.uploader.destroy(frontId)
 
                         const frontResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: "100acre/BuyCommercial"
+                            folder:`100acre/BuyCommercial/${projectName}`
                         })
 
 
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherResult = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: "100acre/BuyCommercial"
+                                    folder:`100acre/BuyCommercial/${projectName}`
                                 });
                                 otherImageLink.push({
                                     public_id: otherResult.public_id,
@@ -192,7 +200,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: "100acre/BuyCommercial"
+                                folder:`100acre/BuyCommercial/${projectName}`
                             });
 
                             otherImageLink.push({
@@ -237,7 +245,7 @@ class BuyController {
                         await cloudinary.uploader.destroy(imageId)
 
                         const imageResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: "100acre/BuyCommercial"
+                            folder:`100acre/BuyCommercial/${projectName}`
                         })
 
                         const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
@@ -272,7 +280,7 @@ class BuyController {
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherimage = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: "100acre/BuyCommercial"
+                                    folder:`100acre/BuyCommercial/${projectName}`
                                 })
                                 otherImageLink.push({
                                     public_id: otherimage.public_id,
@@ -281,7 +289,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: "100acre/BuyCommercial"
+                                folder:`100acre/BuyCommercial/${projectName}`
                             });
 
                             otherImageLink.push({
@@ -380,6 +388,7 @@ class BuyController {
             })
         }
     }
+    
 }
 module.exports = BuyController
                     

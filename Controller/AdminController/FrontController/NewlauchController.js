@@ -1,462 +1,19 @@
-const newlaunchModel = require('../../../models/newlaunch/newProject');
+
 const prelaunchModel = require('../../../models/newlaunch/prelaunch');
+const NodeCache = require("node-cache");
+// const testModel = require('../../../models/postProperty/test');
+const cache = new NodeCache();
 
 const cloudinary = require('cloudinary').v2;
 class newlaunchController {
 
-    //   data insert api Newlaunch
-    static newlaunch_Insert = async (req, res) => {
-        try {
-            const {
-                projectName, minPrice, maxPrice, developerName, bedroom, address, state, block, floor, carparkSpace, nearestLandmark, propertyType, facility, unit, launch, area, aboutProject } = req.body
-
-            if (projectName && minPrice && maxPrice && developerName && bedroom && address && state && block && floor && carparkSpace && nearestLandmark && propertyType && facility && unit && launch && area && aboutProject) {
-                if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
-
-                    const image = req.files.sliderImage;
-                    const imageResult = await cloudinary.uploader.upload(
-                        image.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-                    const siteImage = req.files.sitePlan;
-                    const site = await cloudinary.uploader.upload(
-                        siteImage.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-                    const image2 = req.files.Image2;
-                    const dataviewImage = await cloudinary.uploader.upload(
-                        image2.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-
-                    const data = new newlaunchModel({
-                        sliderImage: {
-                            public_id: imageResult.public_id,
-                            url: imageResult.secure_url
-                        },
-                        sitePlan: {
-                            public_id: site.public_id,
-                            url: site.secure_url
-                        },
-
-                        Image2: {
-                            public_id: dataviewImage.public_id,
-                            url: dataviewImage.secure_url
-                        },
-                        projectName: projectName,
-                        minPrice: minPrice,
-                        maxPrice: maxPrice,
-                        developerName: developerName,
-                        bedroom: bedroom,
-                        address: address,
-                        state: state,
-                        block: block,
-                        floor: floor,
-                        carparkSpace: carparkSpace,
-                        nearestLandmark: nearestLandmark,
-                        propertyType: propertyType,
-                        aboutProject: aboutProject,
-                        facility: facility,
-                        unit: unit,
-                        launch: launch,
-                        area: area
-
-                    })
-
-                    // console.log(data)
-                    await data.save()
-                    res.status(201).json({
-                        message: 'Submit data successfully ! ',
-                        projectdata: data
-
-                    })
-                } else {
-                    res.status(403).json({
-                        message: "All field are required ! ",
-                    })
-                }
-            }
-            else {
-                res.status(403).json({
-                    message: "All field are required"
-                })
-            }
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "Internal server error . "
-            })
-        }
-    }
-    // data view for newlaunch by id
-    static newlaunch_view = async (req, res) => {
-        try {
-            const id = req.params.id
-            const data = await newlaunchModel.findById(id)
-            res.status(200).json({
-                message: "data get successfully ! ",
-                data
-            })
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "Internal server error ! "
-            })
-        }
-    }
-
-    static newlaunch_projectName = async (req, res) => {
-        // console.log("hello")
-        try {
-            const projectName = req.params.projectName
-            const data = await newlaunchModel.find({ projectName: projectName })
-            res.status(200).json({
-                message: "data get successfully ! ",
-                data
-            })
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "Internal server error ! "
-            })
-        }
-    }
-    //viewAll
-    static newProject = async (req, res) => {
-
-        try {
-            const data = await newlaunchModel.find()
-            // res.send(data)
-            res.status(200).json({
-                message: "Data get successfully ! ",
-                data: data
-            })
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "internal server error ! "
-            })
-        }
-    }
-    // edit new Launch data
-    static newlaunch_edit = async (req, res) => {
-        // console.log("hello")
-        try {
-            const id = req.params.id
-            const data = await newlaunchModel.findById(id)
-            res.status(200).json({
-                message: "edit data get successfull ! "
-                , data
-            })
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "internal server error ! "
-            })
-        }
-    }
-    // update data for new Launch data 
-    static newlaunch_update = async (req, res) => {
-        try {
-            if (req.files) {
-                if (req.files.sliderImage && req.files.sitePlan && req.files.Image2) {
-                    const data = await newlaunchModel.findById(req.params.id)
-                    // console.log(data)
-                    const sliderid = data.sliderImage.public_id;
-                    await cloudinary.uploader.destroy(sliderid)
-
-                    const siteid = data.sitePlan.public_id;
-                    await cloudinary.uploader.destroy(siteid)
-
-                    const imageid = data.Image2.public_id;
-                    await cloudinary.uploader.destroy(imageid)
-
-                    const image = req.files.sliderImage;
-                    const imageResult = await cloudinary.uploader.upload(
-                        image.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-                    const siteImage = req.files.sitePlan;
-                    const site = await cloudinary.uploader.upload(
-                        siteImage.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-                    const image2 = req.files.Image2;
-                    const dataviewImage = await cloudinary.uploader.upload(
-                        image2.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-
-                    const dataUpdate = await newlaunchModel.findByIdAndUpdate(req.params.id, {
-                        sliderImage: {
-                            public_id: imageResult.public_id,
-                            url: imageResult.secure_url
-                        },
-                        sitePlan: {
-                            public_id: site.public_id,
-                            url: site.secure_url
-                        },
-
-                        Image2: {
-                            public_id: dataviewImage.public_id,
-                            url: dataviewImage.secure_url
-                        },
-                        projectName: req.body.projectName,
-                        minPrice: req.body.minPrice,
-                        maxPrice: req.body.maxPrice,
-                        developerName: req.body.developerName,
-                        bedroom: req.body.bedroom,
-                        address: req.body.address,
-                        state: req.body.state,
-                        block: req.body.block,
-                        floor: req.body.floor,
-                        carparkSpace: req.body.carparkSpace,
-                        nearestLandmark: req.body.nearestLandmark,
-                        propertyType: req.body.propertyType,
-                        aboutProject: req.body.aboutProject,
-                        facility: req.body.facility,
-                        unit: req.body.unit,
-                        launch: req.body.launch,
-                        area: req.body.area
-
-                    })
-
-                    // console.log(data)
-                    await dataUpdate.save()
-                    res.status(201).json({
-                        message: 'dataupdate successfully',
-                        projectdata: dataUpdate
-
-                    })
-                } else if (req.files.sliderImage) {
-                    const data = await newlaunchModel.findById(req.params.id)
-                    // console.log(data)
-                    const sliderid = data.sliderImage.public_id;
-                    await cloudinary.uploader.destroy(sliderid)
-
-                    const image = req.files.sliderImage;
-                    const imageResult = await cloudinary.uploader.upload(
-                        image.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-                    const dataUpdate = await newlaunchModel.findByIdAndUpdate(req.params.id, {
-                        sliderImage: {
-                            public_id: imageResult.public_id,
-                            url: imageResult.secure_url
-                        },
-                        projectName: req.body.projectName,
-                        minPrice: req.body.minPrice,
-                        maxPrice: req.body.maxPrice,
-                        developerName: req.body.developerName,
-                        bedroom: req.body.bedroom,
-                        address: req.body.address,
-                        state: req.body.state,
-                        block: req.body.block,
-                        floor: req.body.floor,
-                        carparkSpace: req.body.carparkSpace,
-                        nearestLandmark: req.body.nearestLandmark,
-                        propertyType: req.body.propertyType,
-                        aboutProject: req.body.aboutProject,
-                        facility: req.body.facility,
-                        unit: req.body.unit,
-                        launch: req.body.launch,
-                        area: req.body.area
-
-                    })
-
-                    // console.log(data)
-                    await dataUpdate.save()
-                    res.status(201).json({
-                        message: 'dataupdate successfully!',
-                        projectdata: dataUpdate
-
-                    })
-                } else if (req.files.sitePlan) {
-                    const data = await newlaunchModel.findById(req.params.id)
-                    // console.log(data)
-
-
-                    const siteid = data.sitePlan.public_id;
-                    await cloudinary.uploader.destroy(siteid)
-
-                    const siteImage = req.files.sitePlan;
-                    const site = await cloudinary.uploader.upload(
-                        siteImage.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-                    const dataUpdate = await newlaunchModel.findByIdAndUpdate(req.params.id, {
-                        sitePlan: {
-                            public_id: site.public_id,
-                            url: site.secure_url
-                        },
-                        projectName: req.body.projectName,
-                        minPrice: req.body.minPrice,
-                        maxPrice: req.body.maxPrice,
-                        developerName: req.body.developerName,
-                        bedroom: req.body.bedroom,
-                        address: req.body.address,
-                        state: req.body.state,
-                        block: req.body.block,
-                        floor: req.body.floor,
-                        carparkSpace: req.body.carparkSpace,
-                        nearestLandmark: req.body.nearestLandmark,
-                        propertyType: req.body.propertyType,
-                        aboutProject: req.body.aboutProject,
-                        facility: req.body.facility,
-                        unit: req.body.unit,
-                        launch: req.body.launch,
-                        area: req.body.area
-
-                    })
-
-                    // console.log(data)
-                    await dataUpdate.save()
-                    res.status(201).json({
-                        message: 'su dataupdate successfully',
-                        projectdata: dataUpdate
-
-                    })
-                } else if (req.files.Image2) {
-                    const data = await newlaunchModel.findById(req.params.id)
-                    // console.log(data)
-
-                    const imageid = data.Image2.public_id;
-                    await cloudinary.uploader.destroy(imageid)
-
-
-                    const image2 = req.files.Image2;
-                    const dataviewImage = await cloudinary.uploader.upload(
-                        image2.tempFilePath, {
-                        folder: "100acre/NewLaunch"
-                    }
-                    );
-
-                    const dataUpdate = await newlaunchModel.findByIdAndUpdate(req.params.id, {
-                        Image2: {
-                            public_id: dataviewImage.public_id,
-                            url: dataviewImage.secure_url
-                        },
-                        projectName: req.body.projectName,
-                        minPrice: req.body.minPrice,
-                        maxPrice: req.body.maxPrice,
-                        developerName: req.body.developerName,
-                        bedroom: req.body.bedroom,
-                        address: req.body.address,
-                        state: req.body.state,
-                        block: req.body.block,
-                        floor: req.body.floor,
-                        carparkSpace: req.body.carparkSpace,
-                        nearestLandmark: req.body.nearestLandmark,
-                        propertyType: req.body.propertyType,
-                        aboutProject: req.body.aboutProject,
-                        facility: req.body.facility,
-                        unit: req.body.unit,
-                        launch: req.body.launch,
-                        area: req.body.area
-
-                    })
-
-                    // console.log(data)
-                    await dataUpdate.save()
-                    res.status(201).json({
-                        message: 'sumit dataupdate! successfully',
-                        projectdata: dataUpdate
-
-                    })
-                }
-
-            } else {
-                const id = req.params.id
-                const data = await newlaunchModel.findByIdAndUpdate(id, {
-
-                    projectName: req.body.projectName,
-                    minPrice: req.body.minPrice,
-                    maxPrice: req.body.maxPrice,
-                    developerName: req.body.developerName,
-                    bedroom: req.body.bedroom,
-                    address: req.body.address,
-                    state: req.body.state,
-                    block: req.body.block,
-                    floor: req.body.floor,
-                    carparkSpace: req.body.carparkSpace,
-                    nearestLandmark: req.body.nearestLandmark,
-                    propertyType: req.body.propertyType,
-                    aboutProject: req.body.aboutProject,
-                    facility: req.body.facility,
-                    unit: req.body.unit,
-                    launch: req.body.launch,
-                    area: req.body.area
-
-                })
-
-                // console.log(data)
-                await data.save()
-                res.status(201).json({
-                    message: 'sumit dataupdate successfull',
-                    projectdata: data
-
-                })
-            }
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "internal server error ! "
-            })
-        }
-    }
-    static newlaunch_delete = async (req, res) => {
-        try {
-            const id = req.params.id
-            const result = await newlaunchModel.findById(req.params.id)
-            const sliderId = result.sliderImage.public_id
-            if (sliderId !== null) {
-                await cloudinary.uploader.destroy(sliderId)
-            }
-
-            const siteId = result.sitePlan.public_id
-            if (siteId !== null) {
-                await cloudinary.uploader.destroy(siteId)
-            }
-
-            const image2Id = result.Image2.public_id
-            if (image2Id !== null) {
-                await cloudinary.uploader.destroy(image2Id)
-            }
-            const data = await newlaunchModel.findByIdAndDelete(id)
-            res.status(201).json({
-                message: 'data deleted sucessfully!',
-                deletedata: data
-            })
-        } catch (error) {
-            console.log(error)
-            res.send(500).json({
-                message: "internal server error ! "
-            })
-        }
-    }
-
-    ///////////////////////////////////////////////////////////prelaunch
-
+    // PreLaunch Api 
     static preLaunch_insert = async (req, res) => {
         // console.log("hello")
         // console.log(req.body)
         try {
             const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area,
-                maxCovered_Area, aboutProject, builderName, amentites, location, Aboutdeveloper, url, meta_title,meta_description } = req.body
+                maxCovered_Area, aboutProject, builderName, amentites, location, Aboutdeveloper, url, meta_title, meta_description } = req.body
             if (projectName && price && city && configuration && status && featured && rera_No && minCovered_Area &&
                 maxCovered_Area && aboutProject && builderName && amentites && location && Aboutdeveloper && url && meta_title && meta_description) {
                 if (req.files) {
@@ -466,18 +23,14 @@ class newlaunchController {
                     const locationMap = req.files.locationMap
                     const floorResult = await cloudinary.uploader.upload(
                         floorPlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-
                         folder: `100acre/prelaunch/${projectName}`,
                     })
                     const siteResult = await cloudinary.uploader.upload(
                         sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
                         folder: `100acre/prelaunch/${projectName}`,
                     })
                     const locationResult = await cloudinary.uploader.upload(
                         locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
                         folder: `100acre/prelaunch/${projectName}`,
                     })
                     const otherImagelink = []
@@ -485,7 +38,7 @@ class newlaunchController {
                         for (let i = 0; i < photo.length; i++) {
                             const photoResult = await cloudinary.uploader.upload(
                                 photo[i].tempFilePath, {
-                                folder: "100acre/preLaunch"
+                                folder: `100acre/prelaunch/${projectName}`,
                             }
                             );
                             otherImagelink.push({
@@ -496,7 +49,6 @@ class newlaunchController {
                     } else {
                         const photoResult = await cloudinary.uploader.upload(
                             photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
                             folder: `100acre/prelaunch/${projectName}`,
                         }
                         );
@@ -537,7 +89,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
                     })
                     await data.save()
                     res.status(200).json({
@@ -564,20 +116,23 @@ class newlaunchController {
     }
     // viewAll
     static preLaunch_viewAll = async (req, res) => {
-        // console.log("hello")
+        console.log("hello")
+
         try {
-            const data = await prelaunchModel.find()
-            res.status(200).json({
-                message: " data get ! ",
-                data
-            })
+
+        const data = await prelaunchModel.find();
+          res.status(200).json({
+            message:"data fetched from database ! ",
+            data
+          })
         } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "Internal server error ! "
-            })
+          console.error(error);
+          res.status(500).json({
+            message: 'Internal server error!',
+          });
         }
     }
+
     // view  the prelaunch project by their name 
     static preLaunch_view = async (req, res) => {
         // console.log("hello")
@@ -716,7 +271,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
 
                     })
                     // console.log(dataupdate)
@@ -784,7 +339,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
 
                     })
                     // console.log(dataupdate)
@@ -826,7 +381,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
 
                     })
                     // console.log(dataupdate)
@@ -874,7 +429,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
 
                     })
                     // console.log(dataupdate)
@@ -914,7 +469,7 @@ class newlaunchController {
                         Aboutdeveloper: Aboutdeveloper,
                         url: url,
                         meta_title: meta_title,
-                        meta_description:meta_description
+                        meta_description: meta_description
                     })
                     // console.log(dataupdate)
                     await dataupdate.save()
@@ -924,38 +479,38 @@ class newlaunchController {
 
                 }
                 else {
-                  res.status(200).json({
-                    message:"check your files !"
-                  })
+                    res.status(200).json({
+                        message: "check your files !"
+                    })
                 }
 
             } else {
                 const id = req.params.id
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description:meta_description
+                const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+                    projectName: projectName,
+                    price: price,
+                    city: city,
+                    configuration: configuration,
+                    status: status,
+                    featured: featured,
+                    rera_No: rera_No,
+                    minCovered_Area: minCovered_Area,
+                    maxCovered_Area: maxCovered_Area,
+                    aboutProject: aboutProject,
+                    builderName: builderName,
+                    amentites: amentites,
+                    location: location,
+                    Aboutdeveloper: Aboutdeveloper,
+                    url: url,
+                    meta_title: meta_title,
+                    meta_description: meta_description
 
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: "data updated successfully ! "
-                    })
+                })
+                // console.log(dataupdate)
+                await dataupdate.save()
+                res.status(200).json({
+                    message: "data updated successfully ! "
+                })
             }
 
         } catch (error) {
@@ -1004,18 +559,18 @@ class newlaunchController {
         }
     }
 
-    ////////////////////////////bhk details
+    ///bhk details
     static preLaunch_bhkinsert = async (req, res) => {
         // console.log("hello")
         try {
             const { input_Bhk, build_area, possession } = req.body
             if (req.files) {
-               
+
                 const image = req.files.image;
                 const id = req.params.id;
-                const dataf = await prelaunchModel.findOne({ _id: id }, );
-               const projectName=dataf.projectName
-            //   console.log(projectName)
+                const dataf = await prelaunchModel.findOne({ _id: id },);
+                const projectName = dataf.projectName
+                //   console.log(projectName)
                 const imageResult = await cloudinary.uploader.upload(
                     image.tempFilePath, {
                     // folder: "100acre/preLaunch"
@@ -1033,7 +588,7 @@ class newlaunchController {
 
                 }
                 // console.log(data)
-               
+
                 const dataPushed = await prelaunchModel.findOneAndUpdate(
                     { _id: id },
                     { $push: { BHK_details: data } },
@@ -1048,7 +603,6 @@ class newlaunchController {
                 res.status(204).json({
                     message: "check your field ! "
                 })
-
             }
         } catch (error) {
             console.log(error)
@@ -1129,7 +683,7 @@ class newlaunchController {
                 await cloudinary.uploader.destroy(imageId)
                 const imageResult = await cloudinary.uploader.upload(
                     image.tempFilePath,
-                    {   folder: `100acre/prelaunch/${data.projectName}`, }
+                    { folder: `100acre/prelaunch/${data.projectName}`, }
                 )
 
                 const update = {
@@ -1222,7 +776,6 @@ class newlaunchController {
             })
         }
     }
-
 }
 module.exports = newlaunchController
 

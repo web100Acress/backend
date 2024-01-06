@@ -1,20 +1,22 @@
 
-const { json } = require('body-parser');
+// const { json } = require('body-parser');
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
+
 class blogController {
 
-    //blog
+    //Blog insert api for data
     static blog_Insert = async (req, res) => {
-        // res.send("hello")
+       //console.log("hello")
         try {
             const { title, descripation } = req.body
             if (title && descripation) {
+
                 const sliderImage = req.files.sliderImage;
                 const sliderResult = await cloudinary.uploader.upload(
                     sliderImage.tempFilePath, {
-                    folder: "100acre/Blog"
+                    folder: `100acre/Blog/${title}`
                 }
                 )
 
@@ -34,36 +36,36 @@ class blogController {
                 })
 
 
-            }else{
-            res.status(204).json({
-
-            })
+            } else {
+                res.status(204).json({
+                    message: "check your field ! "
+                })
             }
-        }catch(error) {
+        } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: " internal server error ! "
+                message: " Internal server error ! "
             })
         }
-      
     }
-    static blogviewAll=async(req,res)=>{
+    // blog data view All
+    static blogviewAll = async (req, res) => {
         try {
             // console.log("hello")
-            const data=await blogModel.find()
+            const data = await blogModel.find()
             // res.send(data)
             res.status(200).json({
-                message:"data get succesfull !",
+                message: "Data get succesfull !",
                 data
             })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "Internal server error !"
             })
-        }
+        }   
     }
-
+    // blog data view one 
     static blog_View = async (req, res) => {
         // res.send("hello")
         try {
@@ -80,11 +82,12 @@ class blogController {
             })
         }
     }
+    // blog  data edit 
     static blog_Edit = async (req, res) => {
         try {
             // res.send("edit")
             const id = req.params.id
-            const data = await blogModel.findById({_id:id})
+            const data = await blogModel.findById({ _id: id })
             res.status(200).json({
                 message: "data get successfully ! ",
                 data
@@ -96,6 +99,7 @@ class blogController {
             })
         }
     }
+    // blog data update 
     static blog_Update = async (req, res) => {
         // console.log("hello")
         try {
@@ -109,7 +113,7 @@ class blogController {
                     await cloudinary.uploader.destroy(sliderId)
                     const sliderResult = await cloudinary.uploader.upload(
                         sliderImage.tempFilePath,
-                        { folder: "100acre/Blog" }
+                        {  folder:`100acre/blog/${title}`}
                     )
 
                     const dataUpdate = await blogModel.findByIdAndUpdate(id, {
@@ -154,6 +158,7 @@ class blogController {
             })
         }
     }
+    // blog data delete 
     static blog_delete = async (req, res) => {
         try {
             //   console.log("delete")
@@ -180,8 +185,8 @@ class blogController {
             })
         }
     }
-
     // PostBlogs
+      // blog post data inert 
     static blogPost_insert = async (req, res) => {
         // console.log("hello")
         try {
@@ -190,7 +195,7 @@ class blogController {
                 const blogimage = req.files.blogImage;
                 const blogResult = await cloudinary.uploader.upload(
                     blogimage.tempFilePath, {
-                    folder: "100acre/Blog"
+                    folder:`100acre/blog/${title}`
                 }
                 )
                 const data = {
@@ -222,11 +227,11 @@ class blogController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error  ! "
+                message: "Internal server error  ! "
             })
         }
     }
-
+      // blog post data view 
     static blogPost_view = async (req, res) => {
         // console.log("HELLO")
         try {
@@ -255,7 +260,7 @@ class blogController {
             })
         }
     }
-
+      // blog post data edit 
     static blogPost_edit = async (req, res) => {
         // console.log("edit")
         try {
@@ -279,7 +284,7 @@ class blogController {
             })
         }
     }
-
+    // blog Post data update 
     static blogPost_update = async (req, res) => {
         // console.log("hello")
         try {
@@ -300,67 +305,67 @@ class blogController {
                     }
                 )
                 console.log(data)
-                const blogimageId=data.blog[0].blogImage.public_id;
+                const blogimageId = data.blog[0].blogImage.public_id;
                 // console.log(blogimageId)
                 await cloudinary.uploader.destroy(blogimageId)
-                const blogimageResult=await cloudinary.uploader.upload(
-                  blogimage.tempFilePath ,
-                  {
-                    folder:"100/Blog"
-                  }  
+                const blogimageResult = await cloudinary.uploader.upload(
+                    blogimage.tempFilePath,
+                    {
+                        folder:`100acre/blog/${title}`
+                    }
                 )
-                const dataUpdate={
-                   blogImage:{
-                    public_id:blogimageResult.public_id,
-                    url:blogController.secure_url
-                   },
-                   title:title,
-                   descripation:descripation
+                const dataUpdate = {
+                    blogImage: {
+                        public_id: blogimageResult.public_id,
+                        url: blogController.secure_url
+                    },
+                    title: title,
+                    descripation: descripation
                 }
                 // console.log(dataUpdate)
-                const update=await blogModel.findOneAndUpdate(
-                    {"blog._id":id},
+                const update = await blogModel.findOneAndUpdate(
+                    { "blog._id": id },
                     {
-                        $set:{
-                            "blog.$":dataUpdate
+                        $set: {
+                            "blog.$": dataUpdate
                         }
                     }
-                    )
-                    // console.log(update)
-                    await update.save()
-                    res.status(200).json({
-                        message:"updated successfully ! "
-                    })
+                )
+                // console.log(update)
+                await update.save()
+                res.status(200).json({
+                    message: "updated successfully ! "
+                })
 
             } else {
                 // console.log("no")
-                const id=req.params.id;
+                const id = req.params.id;
 
-                const data=await blogModel.findOne({"blog._id":id},
-                {
-                    blog:{
-                        $elemMatch:{
-                            _id:id
+                const data = await blogModel.findOne({ "blog._id": id },
+                    {
+                        blog: {
+                            $elemMatch: {
+                                _id: id
+                            }
                         }
-                    }
-                })
+                    })
 
                 // console.log(data)
-                const update={
-                    title:title,
-                    descripation:descripation
+                const update = {
+                    title: title,
+                    descripation: descripation
                 }
                 // console.log(update)
-                const dataUpdate=await blogModel.findOneAndUpdate({"blog._id":id},
-                {
-                    $set:{
-                        "blog.$":update
-                    }
-                })
+                const dataUpdate = await blogModel.findOneAndUpdate({ "blog._id": id },
+                    {
+                        $set: {
+                            "blog.$": update
+                        }
+                    })
                 // console.log(dataUpdate)
                 await dataUpdate.save()
                 res.status(200).json({
-                    message:"data updated successfully ! "
+                    message: "data updated successfully ! "
                 })
             }
         } catch (error) {
@@ -370,46 +375,43 @@ class blogController {
             })
         }
     }
+    // blog post data delete 
+    static blogPost_delete = async (req, res) => {
+        try {
+            // res.send('hello')
+            const id = req.params.id
+            console.log(id)
+            const data = await blogModel.findOne({ "blog._id": id },
+                {
+                    blog: {
+                        $elemMatch: {
+                            _id: id
+                        }
+                    }
+                })
+            const blogimageId = data.blog[0].blogImage.public_id;
 
-    static blogPost_delete=async(req,res)=>{
-    //   console.log("hello")  
-    try {
-        // res.send("helo")
-        const id=req.params.id
-        // console.log(id)
-        const data =await blogModel.findOne({"blog._id":id},
-        {
-            blog:{
-                $elemMatch:{
-                    _id:id
-                }
+            if (blogimageId !== null) {
+                await cloudinary.uploader.destroy(blogimageId)
             }
-        })
-        const blogimageId=data.blog[0].blogImage.public_id;
-       
-        if(blogimageId!==null){
-            await cloudinary.uploader.destroy(blogimageId)
+            const update = {
+                $pull: {
+                    blog: { _id: id }
+                }
+            };
+            // Perform the update operation
+            const result = await blogModel.updateOne(update);
+            res.status(200).json({
+                message: "delete",
+                result
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
         }
-
-           const update = {
-       $pull: {
-           blog: { _id: id }
-       }
-   };
-   // Perform the update operation
-   const result = await blogModel.updateOne(update);
-   // const result = await postPropertyModel.deleteOne({ 'postProperty._id': id });
-   res.status(200).json({
-       message: "delete",
-       result
-   })
-
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message:"something went wrong ! "
-        })
-    }
     }
 }
 module.exports = blogController

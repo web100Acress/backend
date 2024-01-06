@@ -1,107 +1,95 @@
 const mongoose = require('mongoose')
+
+const bhk_Schema = new mongoose.Schema({
+    bhk_type: {
+        type: String
+    },
+    price: {
+        type: String
+    },
+    bhk_Area: {
+        type: String
+    }
+
+})
+
 const projectSchema = new mongoose.Schema({
-    sliderImage: {
+
+    project_floorplan_Image: [],
+
+    project_Bg1: {
         public_id: {
             type: String,
-            required: true
         },
         url: {
             type: String,
-            required: true
-        }
+        },
     },
-    sitePlan: {
+    logo: {
         public_id: {
             type: String,
-            required: true
         },
         url: {
             type: String,
-            required: true
-        }
+        },
     },
-    Image2: {
+
+    project_locationImage: {
         public_id: {
             type: String,
-            required: true
         },
         url: {
             type: String,
-            required: true
-        }
+        },
+    },
+
+
+    state: {
+        type: String
     },
     projectName: {
         type: String,
-        required: true
+
     },
-    minPrice: {
+    projectAddress: {
         type: String,
-        required: true
     },
-    maxPrice: {
+    project_discripation: {
         type: String,
-        required: true
     },
-    developerName: {
+    projectRedefine_Connectivity: [{
         type: String,
-        required: true
-    },
-    bedroom: [{
-        type: String,
-        required: true
+
     }],
-    address: {
+    projectRedefine_Entertainment: [{
         type: String,
-        required: true
-    },
-    state:
-        {
-            type: String,
-            required: true
-        },
-    
-    block: {
+
+    }],
+    projectRedefine_Business: [{
         type: String,
-        required: true
-    },
-    floor: {
+
+    }],
+    projectRedefine_Education: [{
         type: String,
-        required: true
+
+    }],
+
+    meta_description: {
+        type: String
     },
-    carparkSpace: {
-        type: String,
-        required: true
+    meta_title: {
+        type: String
     },
-    nearestLandmark:{
-        type:String,
-        required:true
+
+    Amenities: [{ type: String }],
+    projectBgContent: {
+        type:String
     },
-    propertyType: {
-        type: String,
-        required: true
+    projectReraNo: {
+        type:String
     },
-    aboutProject: {
-        type: String,
-        required: true
-    },
-    facility: [
-        {
-            type: String,
-            required: true
-        }
-    ],
-    unit:{
-        type:String,
-        required:true
-    },
-    launch:{
-        type:String,
-        required:true
-    },
-    area:{
-        type:String,
-        required:true
-    }
+
+    BhK_Details: [bhk_Schema],
 
 },
 

@@ -8,7 +8,7 @@ const UserSchema=new mongoose.Schema({
     },
     email:{
         type:String,
-    
+        required:true
       },
       mobile:{
         type:String,
@@ -16,11 +16,11 @@ const UserSchema=new mongoose.Schema({
       },
       projectName:{
         type:String,
-        required:true
+       
       },
       address:{
         type:String,
-        required:true
+   
       },
       status:{
         type:String,

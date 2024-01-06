@@ -1,4 +1,7 @@
 const rent_Model = require('../../../models/property/rent');
+const NodeCache = require("node-cache");
+const cache = new NodeCache();
+
 
 const cloudinary = require('cloudinary').v2;
 class rentController {
@@ -142,13 +145,23 @@ class rentController {
    static rentViewAll=async(req,res)=>{
     // console.log("helj")
     try {
-        // console.log("hello")
-        const data =await rent_Model.find()
-        // res.send(data)
-        res.status(200).json({
-            message:"Data get successfully ! ",
-            data
-        })
+        const cachedData = cache.get('authorData');
+            if (cachedData) {
+               // If data is in cache, return cached data
+               return res.json({
+                  data: cachedData,
+                  message: 'Data retrieved from cache!',
+               });
+            }
+            // If data is not in cache, fetch from the database
+            const data = await  rent_Model.find()
+            // Store data in the cache for future use
+            cache.set('authorData', data);
+            res.status(200).json({
+               data,
+               message: 'Data fetched from the database!',
+            });
+        
     } catch (error) {
       console.log(error)  
       res.status(500).json({
