@@ -92,12 +92,11 @@ const sendPostEmail = async (email) => {
 
 class PostPropertyController {
     // seller work Registration work    
-    static postPerson_Register = async (req, res) => {
+    static postPerson_Register = async(req, res) => {
         try {
             const { name, email, mobile, password, cpassword } = req.body
             // console.log(req.body
             const verify = await postPropertyModel.findOne({ email: email })
-
             if (verify) {
                 res.status(409).json({
                     message: " User already exists !"
@@ -132,7 +131,7 @@ class PostPropertyController {
                     }
                 } else {
                     res.status(204).json({
-                        message: "check ypur field ! "
+                        message: "check your field ! "
                     })
                 }
             }
