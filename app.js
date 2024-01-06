@@ -12,7 +12,7 @@ const fileUpload=require('express-fileupload')
 var cloudinary=require('cloudinary').v2;
 
 
-app.use(compression())
+// app.use(compression())
 
 // set template
 // app.set('view engine', 'ejs')

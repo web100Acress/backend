@@ -135,362 +135,362 @@ class newlaunchController {
             })
         }
     }
-    static newlaunch_update = async (req, res) => {
-        try {
-            const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location, url, Aboutdeveloper, meta_title, meta_description
-            } = req.body
-            if (req.files) {
-                if (req.files.photo && req.files.floorPlan && req.files.sitePlan && req.files.locationMap) {
+    // static newlaunch_update = async (req, res) => {
+    //     try {
+    //         const { projectName, price, city, configuration, status, featured, rera_No, minCovered_Area, maxCovered_Area, aboutProject, builderName, amentites, location, url, Aboutdeveloper, meta_title, meta_description
+    //         } = req.body
+    //         if (req.files) {
+    //             if (req.files.photo && req.files.floorPlan && req.files.sitePlan && req.files.locationMap) {
 
 
-                    const photo = req.files.photo;
-                    const id = req.params.id
-                    // const data=await prelaunchModel.findById({_id:id})
+    //                 const photo = req.files.photo;
+    //                 const id = req.params.id
+    //                 // const data=await prelaunchModel.findById({_id:id})
 
-                    const floorPlan = req.files.floorPlan
-                    const sitePlan = req.files.sitePlan
-                    const locationMap = req.files.locationMap
-                    const floorResult = await cloudinary.uploader.upload(
-                        floorPlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
-                    const siteResult = await cloudinary.uploader.upload(
-                        sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
-                    const locationResult = await cloudinary.uploader.upload(
-                        locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
+    //                 const floorPlan = req.files.floorPlan
+    //                 const sitePlan = req.files.sitePlan
+    //                 const locationMap = req.files.locationMap
+    //                 const floorResult = await cloudinary.uploader.upload(
+    //                     floorPlan.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
+    //                 const siteResult = await cloudinary.uploader.upload(
+    //                     sitePlan.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
+    //                 const locationResult = await cloudinary.uploader.upload(
+    //                     locationMap.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
 
-                    const otherImagelink = []
-                    if (photo.length >= 2) {
-                        for (let i = 0; i < photo.length; i++) {
-                            const photoResult = await cloudinary.uploader.upload(
-                                photo[i].tempFilePath, {
-                                folder: "100acre/preLaunch"
-                            }
-                            );
-                            otherImagelink.push({
-                                public_id: photoResult.public_id,
-                                url: photoResult.secure_url
-                            })
-                        }
-                    } else {
-                        const photoResult = await cloudinary.uploader.upload(
-                            photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
-                            folder: `100acre/prelaunch/${projectName}`,
-                        }
-                        );
-                        otherImagelink.push({
-                            public_id: photoResult.public_id,
-                            url: photoResult.secure_url
-                        })
+    //                 const otherImagelink = []
+    //                 if (photo.length >= 2) {
+    //                     for (let i = 0; i < photo.length; i++) {
+    //                         const photoResult = await cloudinary.uploader.upload(
+    //                             photo[i].tempFilePath, {
+    //                             folder: "100acre/preLaunch"
+    //                         }
+    //                         );
+    //                         otherImagelink.push({
+    //                             public_id: photoResult.public_id,
+    //                             url: photoResult.secure_url
+    //                         })
+    //                     }
+    //                 } else {
+    //                     const photoResult = await cloudinary.uploader.upload(
+    //                         photo.tempFilePath, {
+    //                         // folder: "100acre/prelaunch"
+    //                         folder: `100acre/prelaunch/${projectName}`,
+    //                     }
+    //                     );
+    //                     otherImagelink.push({
+    //                         public_id: photoResult.public_id,
+    //                         url: photoResult.secure_url
+    //                     })
 
-                    }
-                    const result = await prelaunchModel.findById(req.params.id)
-                    for (let i = 0; i < result.photo.length; i++) {
-                        otherImagelink.push(
-                            result.photo[i]
-                        );
-                    }
+    //                 }
+    //                 const result = await prelaunchModel.findById(req.params.id)
+    //                 for (let i = 0; i < result.photo.length; i++) {
+    //                     otherImagelink.push(
+    //                         result.photo[i]
+    //                     );
+    //                 }
 
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                        floorPlan: {
-                            public_id: floorResult.public_id,
-                            url: floorResult.secure_url,
-                        },
-                        sitePlan: {
-                            public_id: siteResult.public_id,
-                            url: siteResult.secure_url
-                        },
-                        locationMap: {
-                            public_id: locationResult.public_id,
-                            url: locationResult.secure_url
-                        },
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        photo: otherImagelink,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description: meta_description
+    //                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+    //                     floorPlan: {
+    //                         public_id: floorResult.public_id,
+    //                         url: floorResult.secure_url,
+    //                     },
+    //                     sitePlan: {
+    //                         public_id: siteResult.public_id,
+    //                         url: siteResult.secure_url
+    //                     },
+    //                     locationMap: {
+    //                         public_id: locationResult.public_id,
+    //                         url: locationResult.secure_url
+    //                     },
+    //                     projectName: projectName,
+    //                     price: price,
+    //                     city: city,
+    //                     configuration: configuration,
+    //                     status: status,
+    //                     featured: featured,
+    //                     rera_No: rera_No,
+    //                     minCovered_Area: minCovered_Area,
+    //                     maxCovered_Area: maxCovered_Area,
+    //                     aboutProject: aboutProject,
+    //                     builderName: builderName,
+    //                     amentites: amentites,
+    //                     location: location,
+    //                     photo: otherImagelink,
+    //                     Aboutdeveloper: Aboutdeveloper,
+    //                     url: url,
+    //                     meta_title: meta_title,
+    //                     meta_description: meta_description
 
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: " data updated successfully ! "
-                    })
+    //                 })
+    //                 // console.log(dataupdate)
+    //                 await dataupdate.save()
+    //                 res.status(200).json({
+    //                     message: " data updated successfully ! "
+    //                 })
 
-                } else if (req.files.photo) {
-                    const photo = req.files.photo;
-                    const id = req.params.id
-                    // const data=await prelaunchModel.findById({_id:id})
-
-
-
-                    const otherImagelink = []
-                    if (photo.length >= 2) {
-                        for (let i = 0; i < photo.length; i++) {
-                            const photoResult = await cloudinary.uploader.upload(
-                                photo[i].tempFilePath, {
-                                // folder: "100acre/preLaunch"
-                                folder: `100acre/prelaunch/${projectName}`,
-                            }
-                            );
-                            otherImagelink.push({
-                                public_id: photoResult.public_id,
-                                url: photoResult.secure_url
-                            })
-                        }
-                    } else {
-                        const photoResult = await cloudinary.uploader.upload(
-                            photo.tempFilePath, {
-                            // folder: "100acre/prelaunch"
-                            folder: `100acre/prelaunch/${projectName}`,
-                        }
-                        );
-                        otherImagelink.push({
-                            public_id: photoResult.public_id,
-                            url: photoResult.secure_url
-                        })
-
-                    }
-                    const result = await prelaunchModel.findById(req.params.id)
-                    for (let i = 0; i < result.photo.length; i++) {
-                        otherImagelink.push(
-                            result.photo[i]
-                        );
-                    }
-
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        photo: otherImagelink,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description: meta_description
-
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: " data updated successfully ! "
-                    })
-                } else if (req.files.floorPlan) {
-
-                    const id = req.params.id
-                    // const data=await prelaunchModel.findById({_id:id})
-
-                    const floorPlan = req.files.floorPlan
-
-                    const floorResult = await cloudinary.uploader.upload(
-                        floorPlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
-
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
-                        floorPlan: {
-                            public_id: floorResult.public_id,
-                            url: floorResult.secure_url,
-                        },
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description: meta_description
-
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: " data updated successfully ! "
-                    })
-                } else if (req.files.sitePlan) {
-                    const id = req.params.id
-                    // const data=await prelaunchModel.findById({_id:id})
-
-
-                    const sitePlan = req.files.sitePlan
-
-
-                    const siteResult = await cloudinary.uploader.upload(
-                        sitePlan.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
+    //             } else if (req.files.photo) {
+    //                 const photo = req.files.photo;
+    //                 const id = req.params.id
+    //                 // const data=await prelaunchModel.findById({_id:id})
 
 
 
+    //                 const otherImagelink = []
+    //                 if (photo.length >= 2) {
+    //                     for (let i = 0; i < photo.length; i++) {
+    //                         const photoResult = await cloudinary.uploader.upload(
+    //                             photo[i].tempFilePath, {
+    //                             // folder: "100acre/preLaunch"
+    //                             folder: `100acre/prelaunch/${projectName}`,
+    //                         }
+    //                         );
+    //                         otherImagelink.push({
+    //                             public_id: photoResult.public_id,
+    //                             url: photoResult.secure_url
+    //                         })
+    //                     }
+    //                 } else {
+    //                     const photoResult = await cloudinary.uploader.upload(
+    //                         photo.tempFilePath, {
+    //                         // folder: "100acre/prelaunch"
+    //                         folder: `100acre/prelaunch/${projectName}`,
+    //                     }
+    //                     );
+    //                     otherImagelink.push({
+    //                         public_id: photoResult.public_id,
+    //                         url: photoResult.secure_url
+    //                     })
 
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+    //                 }
+    //                 const result = await prelaunchModel.findById(req.params.id)
+    //                 for (let i = 0; i < result.photo.length; i++) {
+    //                     otherImagelink.push(
+    //                         result.photo[i]
+    //                     );
+    //                 }
 
-                        sitePlan: {
-                            public_id: siteResult.public_id,
-                            url: siteResult.secure_url
-                        },
+    //                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+    //                     projectName: projectName,
+    //                     price: price,
+    //                     city: city,
+    //                     configuration: configuration,
+    //                     status: status,
+    //                     featured: featured,
+    //                     rera_No: rera_No,
+    //                     minCovered_Area: minCovered_Area,
+    //                     maxCovered_Area: maxCovered_Area,
+    //                     aboutProject: aboutProject,
+    //                     builderName: builderName,
+    //                     amentites: amentites,
+    //                     location: location,
+    //                     photo: otherImagelink,
+    //                     Aboutdeveloper: Aboutdeveloper,
+    //                     url: url,
+    //                     meta_title: meta_title,
+    //                     meta_description: meta_description
 
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description: meta_description
+    //                 })
+    //                 // console.log(dataupdate)
+    //                 await dataupdate.save()
+    //                 res.status(200).json({
+    //                     message: " data updated successfully ! "
+    //                 })
+    //             } else if (req.files.floorPlan) {
 
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: " data updated successfully ! "
-                    })
-                } else if (req.files.locationMap) {
-                    const id = req.params.id
-                    // const data=await prelaunchModel.findById({_id:id})
-                    const locationMap = req.files.locationMap
+    //                 const id = req.params.id
+    //                 // const data=await prelaunchModel.findById({_id:id})
 
-                    const locationResult = await cloudinary.uploader.upload(
-                        locationMap.tempFilePath, {
-                        // folder: "100acre/prelaunch"
-                        folder: `100acre/prelaunch/${projectName}`,
-                    })
-                    const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+    //                 const floorPlan = req.files.floorPlan
 
-                        locationMap: {
-                            public_id: locationResult.public_id,
-                            url: locationResult.secure_url
-                        },
-                        projectName: projectName,
-                        price: price,
-                        city: city,
-                        configuration: configuration,
-                        status: status,
-                        featured: featured,
-                        rera_No: rera_No,
-                        minCovered_Area: minCovered_Area,
-                        maxCovered_Area: maxCovered_Area,
-                        aboutProject: aboutProject,
-                        builderName: builderName,
-                        amentites: amentites,
-                        location: location,
-                        Aboutdeveloper: Aboutdeveloper,
-                        url: url,
-                        meta_title: meta_title,
-                        meta_description: meta_description
-                    })
-                    // console.log(dataupdate)
-                    await dataupdate.save()
-                    res.status(200).json({
-                        message: " data updated successfully ! "
-                    })
+    //                 const floorResult = await cloudinary.uploader.upload(
+    //                     floorPlan.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
 
-                }
-                else {
-                    res.status(200).json({
-                        message: "check your files !"
-                    })
-                }
+    //                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+    //                     floorPlan: {
+    //                         public_id: floorResult.public_id,
+    //                         url: floorResult.secure_url,
+    //                     },
+    //                     projectName: projectName,
+    //                     price: price,
+    //                     city: city,
+    //                     configuration: configuration,
+    //                     status: status,
+    //                     featured: featured,
+    //                     rera_No: rera_No,
+    //                     minCovered_Area: minCovered_Area,
+    //                     maxCovered_Area: maxCovered_Area,
+    //                     aboutProject: aboutProject,
+    //                     builderName: builderName,
+    //                     amentites: amentites,
+    //                     location: location,
+    //                     Aboutdeveloper: Aboutdeveloper,
+    //                     url: url,
+    //                     meta_title: meta_title,
+    //                     meta_description: meta_description
 
-            } else {
-                const id = req.params.id
-                const data = await newlaunchModel .findByIdAndUpdate(id, {
+    //                 })
+    //                 // console.log(dataupdate)
+    //                 await dataupdate.save()
+    //                 res.status(200).json({
+    //                     message: " data updated successfully ! "
+    //                 })
+    //             } else if (req.files.sitePlan) {
+    //                 const id = req.params.id
+    //                 // const data=await prelaunchModel.findById({_id:id})
 
-                    projectName: req.body.projectName,
-                    minPrice: req.body.minPrice,
-                    maxPrice: req.body.maxPrice,
-                    developerName: req.body.developerName,
-                    bedroom: req.body.bedroom,
-                    address: req.body.address,
-                    state: req.body.state,
-                    block: req.body.block,
-                    floor: req.body.floor,
-                    carparkSpace: req.body.carparkSpace,
-                    nearestLandmark: req.body.nearestLandmark,
-                    propertyType: req.body.propertyType,
-                    aboutProject: req.body.aboutProject,
-                    facility: req.body.facility,
-                    unit: req.body.unit,
-                    launch: req.body.launch,
-                    area: req.body.area
 
-                })
+    //                 const sitePlan = req.files.sitePlan
 
-                // console.log(data)
 
-                const dataPushed = await prelaunchModel.findOneAndUpdate(
-                    { _id: id },
-                    { $push: { BHK_details: data } },
-                    { new: true }
-                )
-                // console.log(dataPushed)
-                await dataPushed.save()
-                res.status(200).json({
-                    message: "data updated successfully ! "
-                })
-            } else {
-                res.status(204).json({
-                    message: "check your field ! "
-                })
-            }
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "internal server error  ! ",
-                error
-            })
-        }
-    }
+    //                 const siteResult = await cloudinary.uploader.upload(
+    //                     sitePlan.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
+
+
+
+
+    //                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+
+    //                     sitePlan: {
+    //                         public_id: siteResult.public_id,
+    //                         url: siteResult.secure_url
+    //                     },
+
+    //                     projectName: projectName,
+    //                     price: price,
+    //                     city: city,
+    //                     configuration: configuration,
+    //                     status: status,
+    //                     featured: featured,
+    //                     rera_No: rera_No,
+    //                     minCovered_Area: minCovered_Area,
+    //                     maxCovered_Area: maxCovered_Area,
+    //                     aboutProject: aboutProject,
+    //                     builderName: builderName,
+    //                     amentites: amentites,
+    //                     location: location,
+    //                     Aboutdeveloper: Aboutdeveloper,
+    //                     url: url,
+    //                     meta_title: meta_title,
+    //                     meta_description: meta_description
+
+    //                 })
+    //                 // console.log(dataupdate)
+    //                 await dataupdate.save()
+    //                 res.status(200).json({
+    //                     message: " data updated successfully ! "
+    //                 })
+    //             } else if (req.files.locationMap) {
+    //                 const id = req.params.id
+    //                 // const data=await prelaunchModel.findById({_id:id})
+    //                 const locationMap = req.files.locationMap
+
+    //                 const locationResult = await cloudinary.uploader.upload(
+    //                     locationMap.tempFilePath, {
+    //                     // folder: "100acre/prelaunch"
+    //                     folder: `100acre/prelaunch/${projectName}`,
+    //                 })
+    //                 const dataupdate = await prelaunchModel.findByIdAndUpdate({ _id: id }, {
+
+    //                     locationMap: {
+    //                         public_id: locationResult.public_id,
+    //                         url: locationResult.secure_url
+    //                     },
+    //                     projectName: projectName,
+    //                     price: price,
+    //                     city: city,
+    //                     configuration: configuration,
+    //                     status: status,
+    //                     featured: featured,
+    //                     rera_No: rera_No,
+    //                     minCovered_Area: minCovered_Area,
+    //                     maxCovered_Area: maxCovered_Area,
+    //                     aboutProject: aboutProject,
+    //                     builderName: builderName,
+    //                     amentites: amentites,
+    //                     location: location,
+    //                     Aboutdeveloper: Aboutdeveloper,
+    //                     url: url,
+    //                     meta_title: meta_title,
+    //                     meta_description: meta_description
+    //                 })
+    //                 // console.log(dataupdate)
+    //                 await dataupdate.save()
+    //                 res.status(200).json({
+    //                     message: " data updated successfully ! "
+    //                 })
+
+    //             }
+    //             else {
+    //                 res.status(200).json({
+    //                     message: "check your files !"
+    //                 })
+    //             }
+
+    //         } else {
+    //             const id = req.params.id
+    //             const data = await newlaunchModel .findByIdAndUpdate(id, {
+
+    //                 projectName: req.body.projectName,
+    //                 minPrice: req.body.minPrice,
+    //                 maxPrice: req.body.maxPrice,
+    //                 developerName: req.body.developerName,
+    //                 bedroom: req.body.bedroom,
+    //                 address: req.body.address,
+    //                 state: req.body.state,
+    //                 block: req.body.block,
+    //                 floor: req.body.floor,
+    //                 carparkSpace: req.body.carparkSpace,
+    //                 nearestLandmark: req.body.nearestLandmark,
+    //                 propertyType: req.body.propertyType,
+    //                 aboutProject: req.body.aboutProject,
+    //                 facility: req.body.facility,
+    //                 unit: req.body.unit,
+    //                 launch: req.body.launch,
+    //                 area: req.body.area
+
+    //             })
+
+    //             // console.log(data)
+
+    //             const dataPushed = await prelaunchModel.findOneAndUpdate(
+    //                 { _id: id },
+    //                 { $push: { BHK_details: data } },
+    //                 { new: true }
+    //             )
+    //             // console.log(dataPushed)
+    //             await dataPushed.save()
+    //             res.status(200).json({
+    //                 message: "data updated successfully ! "
+    //             })
+    //         } else {
+    //             res.status(204).json({
+    //                 message: "check your field ! "
+    //             })
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message: "internal server error  ! ",
+    //             error
+    //         })
+    //     }
+    // }
     static preLaunch_bhkview = async (req, res) => {
         // console.log("helllo")
         try {
