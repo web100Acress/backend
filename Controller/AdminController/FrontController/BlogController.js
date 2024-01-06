@@ -1,4 +1,5 @@
 
+const { json } = require('body-parser');
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
@@ -33,13 +34,18 @@ class blogController {
                 })
 
 
+            }else{
+            res.status(204).json({
+
+            })
             }
-        } catch (error) {
+        }catch(error) {
             console.log(error)
             res.status(500).json({
                 message: " internal server error ! "
             })
         }
+      
     }
     static blogviewAll=async(req,res)=>{
         try {
@@ -78,7 +84,7 @@ class blogController {
         try {
             // res.send("edit")
             const id = req.params.id
-            const data = await blogModel.findById(id)
+            const data = await blogModel.findById({_id:id})
             res.status(200).json({
                 message: "data get successfully ! ",
                 data
@@ -379,7 +385,6 @@ class blogController {
                 }
             }
         })
-
         const blogimageId=data.blog[0].blogImage.public_id;
        
         if(blogimageId!==null){
@@ -408,5 +413,4 @@ class blogController {
     }
 }
 module.exports = blogController
-
 

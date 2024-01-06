@@ -1,6 +1,5 @@
 const aboutModel = require('../../../models/about/about');
 const testimonialModel = require('../../../models/about/testimonial');
-const { findByIdAndDelete } = require('../../../models/contact');
 // const { findById } = require('../../../models/contact');
 const rent_Model = require('../../../models/property/rent');
 
@@ -43,7 +42,6 @@ class aboutController {
                             public_id: chooseResult.public_id,
                             url: chooseResult.secure_url
                         },
-
                         sliderHeading: sliderHeading,
                         sliderDescripation: sliderDescripation,
                         aboutHeading: aboutHeading,
@@ -67,7 +65,6 @@ class aboutController {
                     message: "something went wrong !",
                 })
             }
-
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -102,7 +99,7 @@ class aboutController {
             const data =await aboutModel.find()
             // res.send(data)
             res.status(200).json({
-                message:"data get successful ! ",
+                message:"data get successfully ! ",
                 data
             })
         } catch (error) {
@@ -117,7 +114,7 @@ class aboutController {
         // res.send("hello edit")
         try {
             const id = req.params.id;
-            const data = await aboutModel.findById(id)
+            const data = await aboutModel.findById({_id:id})
             res.status(200).json({
                 message: "data edit !",
                 data
@@ -255,7 +252,7 @@ class aboutController {
                         //    console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message: "updated successfully !",
+                            message: " data updated successfully !",
                             dataUpdate
                         })
                     } else if (req.files.chooseImage) {
@@ -285,7 +282,7 @@ class aboutController {
                         //    console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message: "updated successfully !",
+                            message: " data updated successfully !",
                             dataUpdate
                         })
                     }
@@ -305,18 +302,15 @@ class aboutController {
                     })
                     await dataUpdate.save()
                     res.status(200).json({
-                        message: "updated successfully !",
+                        message: " data updated successfully !",
                         dataUpdate
                     })
-
                 }
-
-
             }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! ",
+                message: "Internal server error ! ",
             })
         }
     }
@@ -325,10 +319,9 @@ class aboutController {
         // res.send("hello delete ")
         try {
             const data = await aboutModel.findById(req.params.id)
-            const sliderId = data.sliderImage.public_id
+            const sliderId = data.sliderImage.public_id;
             const aboutId = data.aboutImage.public_id;
-            const chooseId = data.chooseImage.public_id;
-
+            const chooseId = data.chooseImage.public_id; 
             if (sliderId && aboutId && chooseId) {
                 await cloudinary.uploader.destroy(sliderId)
                 await cloudinary.uploader.destroy(aboutId)
@@ -348,6 +341,9 @@ class aboutController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                mesaage:"Internal server error ! "
+            })
         }
     }
 
@@ -375,15 +371,18 @@ class aboutController {
                     })
                     // console.log(data)
                     await data.save()
-                    res.json(data)
+                    // res.json(data)
+                    res.status(200).json({
+                        message:"data insert successfully ! "
+                    })
 
                 } else {
-                    res.status(500).json({
+                    res.status(204).json({
                         message: "please select image  !"
                     })
                 }
             } else {
-                res.status(500).json({
+                res.status(204).json({
                     message: "please select name and desripation ! "
                 })
             }
@@ -398,9 +397,11 @@ class aboutController {
         // res.send("hello view ")
         try {
             const id = req.params.id;
-            const data = await testimonialModel.findById(id)
-
-            res.json(data)
+            const data = await testimonialModel.findById({_id:id})
+            res.status(200).json({
+                message:"data get successfully ! ",
+                data
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -430,14 +431,17 @@ class aboutController {
         try {
 
             const id = req.params.id
-            const data = await testimonialModel.findById(id)
-            res.json(data)
-
+            const data = await testimonialModel.findById({_id:id})
+            // res.json(data)
+            res.status(200).json({
+                message:"data get for edit ! ",
+                data
+            })
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "something went wrong ! "
+                message: "Internal server error ! "
             })
         }
     }
@@ -471,7 +475,9 @@ class aboutController {
   
                 // console.log(dataUpdated)
                 await dataUpdated.save()
-                res.json(dataUpdated)
+                  res.status(200).json({
+                    message:"data updated successfully ! "
+                  })
             }else{
                 const id=req.params.id;
                 const dataUpdated= await testimonialModel.findByIdAndUpdate(id ,{
@@ -480,18 +486,21 @@ class aboutController {
                     descripation:descripation
                   }) 
                   await dataUpdated.save()
-                  res.json(dataUpdated)
+                //   res.json(dataUpdated)
+                res.status(200).json({
+                    message:"data updated successfully ! "
+                })
             }
         }else{
-            res.status(500).json({
-                message:"something went wrong ! "
-            })
+         res.status(204).json({
+            message:"check your field !"
+         })
         }
         
        } catch (error) {
         console.log(error)
         res.status(500).json({
-            message:"something went wrong ! "
+            message:"Internal server error ! "
         })
        }
     }
@@ -499,12 +508,20 @@ class aboutController {
     static testimonialDelete = async (req, res) => {
         try {
             const id=req.params.id
-            const data=await testimonialModel.findByIdAndDelete(id)
-            res.json(data)
+            const imageData= await testimonialModel.findById({_id:id})
+            const imageid=imageData.image.public_id
+            if(imageid!==null){
+                await cloudinary.uploader.destroy(imageid)
+            }
+            const data=await testimonialModel.findByIdAndDelete({_id:id})
+            // res.json(data)
+            res.status(200).json({
+                message:"data deletd successfully ! "
+            })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"something went wrong ! "
+                message:"Internal server error ! "
             })
         }
     }

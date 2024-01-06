@@ -8,41 +8,45 @@ const contactPagedetailModel = require("../../../models/contactdetail")
 
 class contactController {
 
-    static contact=async(req,res)=>{
+    static contact = async (req, res) => {
         res.send('contact page controlller api listen')
     }
     // contact page banner work
-  
+
 
     // contact customer section page form
     // method for inserting custmer detail 
+
     static contact_Insert = async (req, res) => {
         //  console.log("hello post ")
         // console.log(req.body)
         try {
-            const { name, email, mobile, message } = req.body
-            if (name && email && mobile && message) {
+            const { name, email, mobile, message, status } = req.body
+            if (name && email && mobile && message && status) {
                 const userData = new contactModel({
                     name: name,
                     email: email,
                     mobile: mobile,
-                    message: message
+                    message: message,
+                    status: status
                 })
-
                 // console.log(userData)
                 await userData.save()
-                res.status(201).json({
-                    message: "your message send ! Contact u later",
+                res.status(200).json({
+                    message: "your message send !",
                     data: userData
                 })
             } else {
                 res.status(403).json({
-                    message: "can not empty",
+                    message: "check your field ! ",
 
                 })
             }
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
         }
     }
     // method for view the customer detail
@@ -50,7 +54,6 @@ class contactController {
         // console.log('hello')
         try {
             const data = await contactModel.findById(req.params.id)
-
             res.status(201).json({
                 message: "data get sucessfully",
                 dataview: data
@@ -58,53 +61,87 @@ class contactController {
 
         } catch (error) {
             console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
         }
     }
-    static contactviewAll=async(req,res)=>{
+    static contactviewAll = async (req, res) => {
         // console.log("view")
         try {
-            const data=await contactModel.find()
+            const data = await contactModel.find()
             // res.send(data)
             res.status(200).json({
-                message:"data get successfully ! ",
+                message: "data get successfully ! ",
                 data
             })
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
+            })
+        }
+    }
+    static contact_Update = async (req, res) => {
+        try {
+            const { name, email, mobile, message, status } = req.body
+            if (status !=null) {
+                const id = req.params.id;
+                //   console.log(id) 
+                const data = await contactModel.findByIdAndUpdate({ _id: id }, {
+                    name: name,
+                    email: email,
+                    message: message,
+                    mobile: mobile,
+                    status: status
+
+                })
+                await data.save()
+                res.status(200).json({
+                    message: "Data updated successfully ! ",
+                })
+
+            } else {
+                res.status(200).json({
+                    message: "check your status field ! "
+                })
+            }
+        } catch (error) {
+            res.status(500).json({
+                message: "Internal server error ! "
             })
         }
     }
     // method for delete the customer detail
     static contact_delete = async (req, res) => {
         // console.log('helllo  delete customer details')
-
         try {
             const data = await contactModel.findByIdAndDelete(req.params.id)
             res.status(201).json({
                 message: 'data deleted sucessfully!',
-                dataDelete:data
+                dataDelete: data
             })
         } catch (error) {
-            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
         }
     }
-//  contact page companyt detail
+    //  contact page companyt detail
     //contact page detail insert api
     static contact_pagedetail = async (req, res) => {
         // console.log('helllo  ')
         try {
-            const { companyName, contactNumber, telephonenumber, email, address, descripation ,heading,detail } = req.body
+            const { companyName, contactNumber, telephonenumber, email, address, descripation, heading, detail } = req.body
             if (companyName && contactNumber && telephonenumber && email && address && descripation && req.files) {
-                const banner=req.files.contact_banner
-                const bannerResult=await cloudinary.uploader.upload(banner.tempFilePath,{
-                    folder: "100acre/ContactbannerImage"  
+                const banner = req.files.contact_banner
+                const bannerResult = await cloudinary.uploader.upload(banner.tempFilePath, {
+                    folder: "100acre/ContactbannerImage"
                 })
                 const data = new contactPagedetailModel({
                     contact_banner: {
-                        public_id:bannerResult.public_id,
-                        url:bannerResult.secure_url
+                        public_id: bannerResult.public_id,//banner image for contact page 
+                        url: bannerResult.secure_url
                     },
                     companyName: companyName,
                     contactNumber: contactNumber,
@@ -112,81 +149,83 @@ class contactController {
                     email: email,
                     address: address,
                     descripation: descripation,
-                    heading:heading,
-                    detail:detail
+                    heading: heading, //heading on the banner image 
+                    detail: detail // detail on the banner image 
                 })
                 // console.log(data)
                 await data.save()
                 res.status(201).json({
-
-                    message: "detail posted!",
+                    message: "data posted successfully !",
                     detail: data
                 })
-                
+
             } else {
                 res.status(403).json({
-                    message: "check all field",
+                    message: "check all field !",
                 })
             }
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: "internal server error!"
             })
         }
     }
-
     static contact_pagedetail_edit = async (req, res) => {
         // console.log('helo')
         try {
-            const data = await contactPagedetailModel.findById(req.params.id)
+            const id = req.params.id
+            const data = await contactPagedetailModel.findById({ _id: id })
             res.status(201).json({
-                message: "editing is enable",
+                message: "data editing is enable !",
                 dataedit: data
             })
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: " internal server error !"
             })
         }
     }
-    
-     //view
-     static contact_pagedetail_view=async(req,res)=>{
+    //view
+    static contact_pagedetail_view = async (req, res) => {
         try {
             const data = await contactPagedetailModel.findById(req.params.id)
             res.status(201).json({
-                message: "view is enable",
+                message: "data get successfull ! ",
                 dataview: data
             })
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "error occured !"
+                error: "Internal server error !"
             })
         }
-     }
-     static contactpagedetail_viewAll=async(req,res)=>{
+    }
+    static contactpagedetail_viewAll = async (req, res) => {
         // console.log("hello")
         try {
             const data = await contactPagedetailModel.find()
-            res.send(data)
+            // res.send(data)
+            res.status(200).json({
+                message: "data get successfully ! ",
+                data
+            })
         } catch (error) {
-           console.log(error)
-           res.status(500).json({
-            message:"internal server error ! ",
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! ",
 
-           }) 
+            })
         }
-     }
-     //update
+    }
+    //update
     static contact_pagedetail_update = async (req, res) => {
         try {
-            if(req.files){
+            if (req.files) {
                 const contact = await contactPagedetailModel.findById(req.params.id)
                 // console.log(data)
                 const bannerId = contact.contact_banner.public_id;
@@ -198,9 +237,9 @@ class contactController {
                     folder: "100acre/ProjectImage"
                 }
                 );
-                   const id = req.params.id;
+                const id = req.params.id;
                 const data = await contactPagedetailModel.findByIdAndUpdate(id, {
-                    contact_banner:{
+                    contact_banner: {
                         public_id: imageResult.public_id,
                         url: imageResult.secure_url
                     },
@@ -210,47 +249,48 @@ class contactController {
                     email: req.body.email,
                     address: req.body.address,
                     descripation: req.body.descripation,
-                    heading:req.body.heading,
-                    detail:req.body.detail
+                    heading: req.body.heading,
+                    detail: req.body.detail
                 })
                 await data.save(data)
                 res.status(201).json({
                     message: "updated!",
                     dataUpdated: data
-                })}else{
-            const id = req.params.id;
-            const data = await contactPagedetailModel.findByIdAndUpdate(id, {
-                companyName: req.body.companyName,
-                contactNumber: req.body.contactNumber,
-                telephonenumber: req.body.telephonenumber,
-                email: req.body.email,
-                address: req.body.address,
-                descripation: req.body.descripation,
-                heading:req.body.heading,
-                detail:req.body.detail
-            })
-            await data.save(data)
-            res.status(201).json({
-                message: "updated",
-                dataUpdated: data
-            })
-            // console.log("helo")
-        }
+                })
+            } else {
+                const id = req.params.id;
+                const data = await contactPagedetailModel.findByIdAndUpdate(id, {
+                    companyName: req.body.companyName,
+                    contactNumber: req.body.contactNumber,
+                    telephonenumber: req.body.telephonenumber,
+                    email: req.body.email,
+                    address: req.body.address,
+                    descripation: req.body.descripation,
+                    heading: req.body.heading,
+                    detail: req.body.detail
+                })
+                await data.save(data)
+                res.status(201).json({
+                    message: "updated",
+                    dataUpdated: data
+                })
+                // console.log("helo")
+            }
 
         } catch (error) {
-          console.log(error)
-          res.status(500).json({
-            error: "error occured !"
-        })
+            console.log(error)
+            res.status(500).json({
+                error: "Internal server error !"
+            })
         }
     }
     //delete
-    static contact_pagedetail_delete=async(req,res)=>{
+    static contact_pagedetail_delete = async (req, res) => {
         try {
-            console.log("hello")
+            // console.log("hello")
             const id = req.params.id
             const result = await contactPagedetailModel.findById(req.params.id)
-         
+
             const image2Id = result.contact_banner.public_id
             await cloudinary.uploader.destroy(image2Id)
 
@@ -260,10 +300,10 @@ class contactController {
                 deletedata: data
             })
         } catch (error) {
-          console.log(error)  
-          res.status(500).json({
-            error: "error occured !"
-        })
+            console.log(error)
+            res.status(500).json({
+                error: "Internal server error !"
+            })
         }
     }
 
