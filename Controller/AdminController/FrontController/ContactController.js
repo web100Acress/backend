@@ -66,8 +66,7 @@ class contactController {
             })
         }
     }
-    // method for viewAll the customer detail 
-    static contactviewAll = async (req, res) => {
+    static contactviewAll=async(req,res)=>{
         // console.log("view")
         try {
             const data = await contactModel.find()
@@ -79,38 +78,7 @@ class contactController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message: "internal server error ! "
-            })
-        }
-    }
-    // method for update the customer detail 
-    static contact_Update = async (req, res) => {
-        try {
-            const { name, email, mobile, message, status } = req.body
-            if (status !=null) {
-                const id = req.params.id;
-                //   console.log(id) 
-                const data = await contactModel.findByIdAndUpdate({ _id: id }, {
-                    name: name,
-                    email: email,
-                    message: message,
-                    mobile: mobile,
-                    status: status
-
-                })
-                await data.save()
-                res.status(200).json({
-                    message: "Data updated successfully ! ",
-                })
-
-            } else {
-                res.status(200).json({
-                    message: "check your status field ! "
-                })
-            }
-        } catch (error) {
-            res.status(500).json({
-                message: "Internal server error ! "
+                message:"internal server error ! "
             })
         }
     }
@@ -174,7 +142,7 @@ class contactController {
             })
         }
     }
-    // contact page detail edit 
+
     static contact_pagedetail_edit = async (req, res) => {
         // console.log('helo')
         try {
@@ -192,8 +160,9 @@ class contactController {
             })
         }
     }
-    // contact page detail view 
-    static contact_pagedetail_view = async (req, res) => {
+    
+     //view
+     static contact_pagedetail_view=async(req,res)=>{
         try {
             const data = await contactPagedetailModel.findById(req.params.id)
             res.status(201).json({
@@ -207,9 +176,8 @@ class contactController {
                 error: "Internal server error !"
             })
         }
-    }
-    // contact page detail viewAll 
-    static contactpagedetail_viewAll = async (req, res) => {
+     }
+     static contactpagedetail_viewAll=async(req,res)=>{
         // console.log("hello")
         try {
             const data = await contactPagedetailModel.find()
@@ -225,8 +193,8 @@ class contactController {
 
             })
         }
-    }
-    // contact page detail update 
+     }
+     //update
     static contact_pagedetail_update = async (req, res) => {
         try {
             if (req.files) {
@@ -288,8 +256,8 @@ class contactController {
             })
         }
     }
-    //contact page detail delete 
-    static contact_pagedetail_delete = async (req, res) => {
+    //delete
+    static contact_pagedetail_delete=async(req,res)=>{
         try {
             // console.log("hello")
             const id = req.params.id

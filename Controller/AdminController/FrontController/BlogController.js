@@ -1,5 +1,4 @@
 
-// const { json } = require('body-parser');
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
@@ -36,17 +35,14 @@ class blogController {
                 })
 
 
-            } else {
-                res.status(204).json({
-                    message: "check your field ! "
-                })
             }
-        } catch (error) {
+        }catch(error) {
             console.log(error)
             res.status(500).json({
                 message: " Internal server error ! "
             })
         }
+      
     }
     // blog data view All
     static blogviewAll = async (req, res) => {
@@ -87,7 +83,7 @@ class blogController {
         try {
             // res.send("edit")
             const id = req.params.id
-            const data = await blogModel.findById({ _id: id })
+            const data = await blogModel.findById(id)
             res.status(200).json({
                 message: "data get successfully ! ",
                 data
@@ -375,36 +371,40 @@ class blogController {
             })
         }
     }
-    // blog post data delete 
-    static blogPost_delete = async (req, res) => {
-        try {
-            // res.send('hello')
-            const id = req.params.id
-            console.log(id)
-            const data = await blogModel.findOne({ "blog._id": id },
-                {
-                    blog: {
-                        $elemMatch: {
-                            _id: id
-                        }
-                    }
-                })
-            const blogimageId = data.blog[0].blogImage.public_id;
 
-            if (blogimageId !== null) {
-                await cloudinary.uploader.destroy(blogimageId)
-            }
-            const update = {
-                $pull: {
-                    blog: { _id: id }
+    static blogPost_delete=async(req,res)=>{
+    //   console.log("hello")  
+    try {
+        // res.send("helo")
+        const id=req.params.id
+        // console.log(id)
+        const data =await blogModel.findOne({"blog._id":id},
+        {
+            blog:{
+                $elemMatch:{
+                    _id:id
                 }
-            };
-            // Perform the update operation
-            const result = await blogModel.updateOne(update);
-            res.status(200).json({
-                message: "delete",
-                result
-            })
+            }
+        })
+
+        const blogimageId=data.blog[0].blogImage.public_id;
+       
+        if(blogimageId!==null){
+            await cloudinary.uploader.destroy(blogimageId)
+        }
+
+           const update = {
+       $pull: {
+           blog: { _id: id }
+       }
+   };
+   // Perform the update operation
+   const result = await blogModel.updateOne(update);
+   // const result = await postPropertyModel.deleteOne({ 'postProperty._id': id });
+   res.status(200).json({
+       message: "delete",
+       result
+   })
 
         } catch (error) {
             console.log(error)

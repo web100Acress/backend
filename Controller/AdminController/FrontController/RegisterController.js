@@ -62,8 +62,8 @@ class registerController {
             const verify = await registerModel.findOne({ email: email })
 
             if (verify) {
-                res.status(409).json({
-                    message: "User already register ! "
+                res.status(500).json({
+                    message: "user already register"
                 })
             } else {
                 if (name && email && password && cpassword && mobile) {
@@ -124,8 +124,8 @@ class registerController {
                             res.cookie('token', token)
                             // res.json('token', token)
                             res.status(200).json({
-                                message: "admin login successfully done ! ",
-                                // token:token,
+                                message: "admin pannel login successful! ",
+                                token:token,
                             })
 
                         } else {
@@ -136,8 +136,8 @@ class registerController {
                             })
                         }
                     } else {
-                        res.status(401).json({
-                            message: "check your email && password"
+                        res.status(500).json({
+                            message: "check your email and password that enter"
                         })
                     }
 
@@ -209,6 +209,7 @@ class registerController {
         // res.send("djhdbsdcdkb")
         const { token } = req.params
         const { password } = req.body
+        console.log(password)
         // console.log(token,password)
         try {
            if(password){
@@ -221,14 +222,10 @@ class registerController {
             user.token = ""
             await user.save()
             //  const data=user.token
-            res.status(200).json({
-                 message: 'Password reset successfully !' ,
-                });
-            }else{
-                res.status(200).json({
-                    message: 'Please enter password!' ,
-                   }); 
-            }
+
+            // const token=user.token;
+
+            res.json({ message: 'Password reset successful' });
         } catch (error) {
             console.log(error)
             res.status(500).json({

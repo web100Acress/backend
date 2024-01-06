@@ -73,10 +73,6 @@ class homeController {
 
       } catch (error) {
         console.log(error)
-        res.status(500).json({
-          message: "internal server error ! "
-        })
-
       }
     } else {
       res.status(200).json({
@@ -86,8 +82,8 @@ class homeController {
   }
   //search for otherproperty 
   static search_other = async (req, res) => {
-
-    const { query } = req.body
+    const { query } = req.query
+    console.log(query)
     //   console.log(query)
     if (query.length) {
       const words = query.split(' ');
@@ -107,16 +103,17 @@ class homeController {
           )
           if (data.length > 0) {
             searchData.push(...data);
-
-            res.status(200).json({
-              message: "Data  found!",
-              searchData
-            });
-          } else {
-            res.status(200).json({
-              message: "Data not found!"
-            });
           }
+        }
+        if (searchData.length > 0) {
+          res.status(200).json({
+            message: "Data found!",
+            data: searchData
+          });
+        } else {
+          res.status(200).json({
+            message: "Data not found!"
+          });
         }
       } catch (error) {
         console.log(error)

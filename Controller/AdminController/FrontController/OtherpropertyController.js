@@ -409,7 +409,7 @@ class otherpropertyController {
         // Send mail with defined transport object
         let info = await transporter.sendMail({
           from: 'test@gmail.com', // Sender address
-          to: 'query.adharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+          to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
           subject: 'New User Enquiry Detail', // Subject line
           text: '', // Plain text body
           html: `

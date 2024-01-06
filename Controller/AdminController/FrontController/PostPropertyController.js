@@ -131,7 +131,7 @@ class PostPropertyController {
                     }
                 } else {
                     res.status(204).json({
-                        message: "check your field ! "
+                        message: "check yur field ! "
                     })
                 }
             }

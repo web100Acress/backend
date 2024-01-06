@@ -119,7 +119,9 @@ router.get('/postPerson/propertyoneEdit/:id', PostPropertyController.postPropert
 router.post('/postPerson/propertyoneUpdate/:id', PostPropertyController.postProperty_Update)
 router.delete('/postPerson/propertyDelete/:id', PostPropertyController.postProperty_Delete)
 // router.get("/findAll",PostPropertyController.findAll)
-//Blog routing 
+
+
+//Blog
 router.post("/blog/insert", blogController.blog_Insert)
 router.get("/blog/blogviewAll", blogController.blogviewAll)
 router.get('/blog/view/:id', blogController.blog_View)
@@ -141,42 +143,28 @@ router.post("/postPerson/search", homeController.search_other)
 //searching rent
 router.get("/rentproperty/search",homeController.search_rent)
 //searching buy
-router.post("/buyproperty/search",homeController.search_buy)
-// filter data in the section of preLaunch 
-router.get("/filterData",homeController.filter_data)
+router.get("/buyproperty/search",homeController.search_buy)
 
-//other Property routing 
+//new launch 
+router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
+router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
+router.get("/newlaunch/viewAll", newlaunchController.newlaunch_viewAll)
+router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
+router.post("/newlaunch/update/:id", newlaunchController.newlaunch_update)
+router.delete("/newlaunch/delete/:id", newlaunchController.newlaunch_delete)
+//other Property
+
 router.post("/otherproperty/insert", otherpropertyController.otherproperty_Insert)
 router.get("/otherproperty/viewAll", otherpropertyController.otherproperty_viewAll)
 router.get('/otherproperty/view/:id', otherpropertyController.otherproperty_view)
 router.get("/otherproperty/edit/:id", otherpropertyController.otherproperty_edit)
 router.post("/otherproperty/update/:id", otherpropertyController.otherproperty_update)
 router.delete("/otherproperty/delete/:id", otherpropertyController.otherproperty_delete)
-  // other property Enquiry routing
-
+  // other property Enquiry 
 router.post("/otherproperty/enquiry/insert",otherpropertyController.otherEnquiry_insert) 
 router.post("/otherproperty/enquiry/update/:id",otherpropertyController.otherEnquiry_Update) 
 router.get("/otherproperty/enquiry/viewAll",otherpropertyController.otherEnquiry_viewAll) 
 router.get("/otherproperty/enquiry/view/:id",otherpropertyController.otherEnquiry_view)
 router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherEnquiry_delete)
-
-//prelaunch suggested by 
-router.post("/preLaunch/insert",newlaunchController.preLaunch_insert)
-router.get("/preLaunch/viewAll",newlaunchController.preLaunch_viewAll)
-router.get("/prelaunch/edit/:id",newlaunchController.preLaunch_edit)
-router.get("/preLaunch/view/:url",newlaunchController.preLaunch_view)
-router.post("/preLaunch/update/:id",newlaunchController.prelaunch_update)
-router.delete("/preLaunch/delete/:id",newlaunchController.prelaunch_delete)
-
-router.post("/preLaunch/bhk/insert/:id",newlaunchController.preLaunch_bhkinsert)
-router.get("/preLaunch/bhk/view/:id",newlaunchController.preLaunch_bhkview)
-router.get("/prelaunch/bhk/edit/:id",newlaunchController.prelaunch_bhkedit)
-router.post("/prelaunch/bhk/update/:id",newlaunchController.preLaunch_bhkupdate)
-router.delete("/preLaunch/bhk/delete/:id",newlaunchController.preLaunch_delete)
-
-
-
-router.post('/join',homeController.join)
-
 
 module.exports = router
