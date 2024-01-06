@@ -393,7 +393,17 @@ class projectController {
                         })
                     }else if(req.files.project_floorplan_Image){
                         // console.log("hello")
-                        const project_floorplan=req.files.project_floorplan_Image
+                        const project_floorplan=req.files.project_floorplan_Image;
+                        const floorImageLink=[]
+                        if(project_floorplan.length>=2){
+                            for(i=0;i<project_floorplan.length;i++){
+                                const project_floorplanResult=await cloudinary.uploader.upload(
+                                    project_floorplan[i].tempFilePath,{
+
+                                    }
+                                )
+                            }
+                        }
                     
                     }
                 }
