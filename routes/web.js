@@ -40,7 +40,7 @@ router.get('/project', projectController.project)
 //page with detail 
 router.post('/projectInsert', projectController.projectInsert)
 router.get('/projectView/:projectName/view', projectController.projectView)
-// router.get('/projectView/viewAll', projectController.projectviewAll)
+router.get('/projectView/viewAll', projectController.projectviewAll)
 router.get('/projectEdit/:id', projectController.projectEdit)
 // router.post('/projectUpdate/:id', projectController.projectUpdate)
 // router.delete('/projectDelete/:id', projectController.projectDelete)
@@ -154,7 +154,7 @@ router.get("/newlaunch/viewAll", newlaunchController.newlaunch_viewAll)
 router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
 // router.post("/newlaunch/update/:id", newlaunchController.newlaunch_update)
 // router.delete("/newlaunch/delete/:id", newlaunchController.newlaunch_delete)
-//other Property
+//other Propertyc
 
 router.post("/otherproperty/insert", otherpropertyController.otherproperty_Insert)
 router.get("/otherproperty/viewAll", otherpropertyController.otherproperty_viewAll)

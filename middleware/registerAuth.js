@@ -17,7 +17,6 @@ const authAdmin = async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error)
-
     }
 }
 module.exports = authAdmin
