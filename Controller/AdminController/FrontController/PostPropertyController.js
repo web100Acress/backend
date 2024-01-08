@@ -157,13 +157,14 @@ class PostPropertyController {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " login successfully done  ! ",
-
+                                token:token
                             })
                         } else if (User.role == "Admin") {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " Admin login successfully done ! ",
 
+                                  token:token
                             })
                         } else {
                             res.status(201).json({
