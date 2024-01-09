@@ -88,7 +88,7 @@ class projectController {
                         },
                         project_Bg1: {
                             public_id: projectBgResult.public_id,
-                            url:projectBgResult.secure_url
+                            url: projectBgResult.secure_url
                         },
 
                         project_locationImage: {
@@ -111,16 +111,25 @@ class projectController {
                         meta_title: meta_title,
                         meta_description: meta_description,
                         projectBgContent: projectBgContent,
+                        projectReraNo: projectReraNo
 
                     })
                     // console.log(data)
                     await data.save()
                     res.status(200).json({
-                        message:"data inserted successfully ! "
+                        message: "data inserted successfully ! "
                     })
 
+                } else {
+                    res.status(403).json({
+                        message: "Check Image field ! "
+                    })
                 }
-            } else { }
+            } else {
+                res.status(403).json({
+                    message: "check input field ! "
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -162,10 +171,15 @@ class projectController {
             })
         }
     }
-
     static projectUpdate = async (req, res) => {
-
-
+    try {
+     
+    } catch (error) {
+       console.log(error) 
+       res.status(500).json({
+        message:"Internal server error !"
+       })
+    }
     }
     //findAll
     static projectviewAll = async (req, res) => {
@@ -219,7 +233,6 @@ class projectController {
             })
         }
     }
-
     // Enquiry form for the Project detail page api
     static userInsert = async (req, res) => {
         // console.log("helo")

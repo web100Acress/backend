@@ -42,8 +42,8 @@ router.post('/projectInsert', projectController.projectInsert)
 router.get('/projectView/:projectName/view', projectController.projectView)
 router.get('/projectView/viewAll', projectController.projectviewAll)
 router.get('/projectEdit/:id', projectController.projectEdit)
-// router.post('/projectUpdate/:id', projectController.projectUpdate)
-// router.delete('/projectDelete/:id', projectController.projectDelete)
+router.post('/projectUpdate/:id', projectController.projectUpdate)
+router.delete('/projectDelete/:id', projectController.projectDelete)
 //from
 // router.post('/userInsert', projectController.userInsert)
 // router.get("/userviewAll",projectController.userviewAll)
@@ -100,6 +100,7 @@ router.delete('/testimonial/testimonialDelete/:id', aboutController.testimonialD
 // Post Property
  
 //post person 
+
 router.post('/postPerson/register', PostPropertyController.postPerson_Register)
 router.get('/postPerson/Role/:email',PostPropertyController.postPerson_verifyRole)
 router.post('/postPerson/verify_Login', PostPropertyController.postPerson_VerifyLogin)
