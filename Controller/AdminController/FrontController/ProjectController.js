@@ -190,7 +190,7 @@ class projectController {
                 if(req.files){
                     if(req.files.logo&&req.files.project_Bg1&&req.files.project_locationImage&&req.files.project_floorplan){
                         const logo=req.files.logo;
-                        // const logoResult=await cloudinary.uploader
+                    //    const logoResult=await cloudinary.
                     }
                 }else{
 

@@ -103,7 +103,7 @@ router.delete('/testimonial/testimonialDelete/:id', aboutController.testimonialD
 
 router.post('/postPerson/register', PostPropertyController.postPerson_Register)
 router.get('/postPerson/Role/:email',PostPropertyController.postPerson_verifyRole)
-router.post('/postPerson/verify_Login', PostPropertyController.postPerson_VerifyLogin)
+router.post('/postPerson/verify_Login',authAdmin, PostPropertyController.postPerson_VerifyLogin)
 router.get('/postPerson/logout', PostPropertyController.postPerson_logout)
 router.post('/postPerson/postProperty_forget', PostPropertyController.postPerson_forget)
 router.post('/postPerson/reset/:token', PostPropertyController.postPerson_reset)
