@@ -172,14 +172,35 @@ class projectController {
         }
     }
     static projectUpdate = async (req, res) => {
-    try {
-     
-    } catch (error) {
-       console.log(error) 
-       res.status(500).json({
-        message:"Internal server error !"
-       })
-    }
+        try {
+            //  console.log("hello")
+            const { projectName,
+                state,
+                project_discripation,
+                projectAddress,
+                builderName,
+                AboutDeveloper,
+                projectRedefine_Business,
+                projectRedefine_Connectivity,
+                projectRedefine_Education,
+                projectRedefine_Entertainment,
+                Amenities,
+                projectBgContent,
+                projectReraNo } = req.body
+                if(req.files){
+                    if(req.files.logo&&req.files.project_Bg1&&req.files.project_locationImage&&req.files.project_floorplan){
+                        const logo=req.files.logo;
+                        // const logoResult=await cloudinary.uploader
+                    }
+                }else{
+
+                }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error !"
+            })
+        }
     }
     //findAll
     static projectviewAll = async (req, res) => {

@@ -157,11 +157,13 @@ class PostPropertyController {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " login successfully done  ! ",  
+                                token:token
                             })
                         } else if (User.role == "Admin") {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " Admin login successfully done ! ",
+                                token:token
                             })
                         } else {
                             res.status(201).json({
@@ -281,7 +283,8 @@ class PostPropertyController {
                 // console.log(token, "here token is updated and set as empty token after running this api")
                 await user.save()
                 res.status(200).json({
-                    message: "Your password has been updated successfuly ! "
+                    message: "Your password has been updated successfuly ! ",
+                    user:user.email
                 })}else{
                     res.status(200).json({
                         message:"Please provide registered email again ! "
@@ -386,16 +389,14 @@ class PostPropertyController {
             const { email, password } = req.body
             if (email && password) {
                 const hashpassword = await bcrypt.hash(password, 10)
-                const data = await postPropertyModel.findOneAndUpdate(
-
-                    { email: email },
-                    { password: hashpassword }
-
+                const data = await postPropertyModel.findOneAndUpdate({ email: email },
+                    {
+                     password: hashpassword 
+                    }
                 )
-
                 await data.save()
                 res.status(200).json({
-                    message: "Your password has been updated successfuly ! "
+                    message: "Your password has been updated successfuly !"
                 })
             } else {
                 res.status(200).json({
