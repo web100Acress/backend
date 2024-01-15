@@ -57,6 +57,15 @@ const property_Schema=new mongoose.Schema({
             address: {
                 type: String
             },
+            email:{
+                type:String
+            },
+            number:{
+                type:String
+            },
+            verify:{
+                type:String
+            }
         })
 
 const post_Schema =new mongoose.Schema({

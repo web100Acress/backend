@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer")
 // const otpGenerator = require('otp-generator')
 const cloudinary = require('cloudinary').v2;
-
+const NodeCache = require("node-cache");
+const cache = new NodeCache();
 
 
 const generateToken = () => {
@@ -232,7 +233,6 @@ class PostPropertyController {
     //forget password
     static postPerson_forget = async (req, res) => {
         const { email } = req.body
-
         try {
             if (email) {
                 const user = await postPropertyModel.findOne({ email: email })
@@ -442,6 +442,7 @@ class PostPropertyController {
             const { propertyName } = req.body
             if (req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
+                    const id = req.params.id  
 
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
@@ -475,7 +476,12 @@ class PostPropertyController {
                         })
 
                     }
-
+                   
+                    const personData=await postPropertyModel.findOne({_id:id})
+                     const email=personData.email;
+                     const number=personData.mobile;
+                     console.log(email,number)
+                 
                     const data = {
                         propertyType: req.body.propertyType,
                         propertyName: req.body.propertyName,
@@ -491,14 +497,17 @@ class PostPropertyController {
                         furnishing: req.body.furnishing,
                         type: req.body.type,
                         availableDate: req.body.availableDate,
+                        email:email,
+                        number:number,
+                        verify:" ",
                         frontImage: {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
                         },
                         otherImage: otherImagelink
                     }
-                    // console.log(data)
-                    const id = req.params.id
+                    console.log(data)
+                   
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -507,7 +516,7 @@ class PostPropertyController {
                             { new: true })
 
                         const email = dataPushed.email
-                        console.log(email, "hello")
+                       
                         await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
@@ -518,8 +527,11 @@ class PostPropertyController {
                         })
                     }
                 } else if (req.files.frontImage) {
-                    // console.log("hello2")
-
+               
+                    const id = req.params.id
+                    const personData=await postPropertyModel.findOne({_id:id})
+                    const email=personData.email;
+                    const number=personData.mobile;
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
@@ -545,10 +557,12 @@ class PostPropertyController {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
                         },
-                        
+                        email:email,
+                        number:number,
+                        verify:''
                     }
                     // console.log(data)
-                    const id = req.params.id
+                 
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -569,7 +583,10 @@ class PostPropertyController {
                     }
 
                 } else if (req.files.otherImage) {
-
+                    const id = req.params.id
+                    const personData=await postPropertyModel.findOne({_id:id})
+                    const email=personData.email;
+                    const number=personData.mobile;
                     const otherImage = req.files.otherImage;
                     const otherImagelink = []
                     if (otherImage.length >= 2) {
@@ -613,10 +630,13 @@ class PostPropertyController {
                         type: req.body.type,
                         availableDate: req.body.availableDate,
                        
-                        otherImage: otherImagelink
+                        otherImage: otherImagelink,
+                        email:email,
+                        number:number,
+                        verify:''
                     }
                     // console.log(data)
-                    const id = req.params.id
+                
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -637,6 +657,11 @@ class PostPropertyController {
                     }
                 }
             } else {
+                const id = req.params.id
+                const personData=await postPropertyModel.findOne({_id:id})
+                const email=personData.email;
+                const number=personData.mobile;
+                // console.log(email,number)
                 const data = {
                     propertyType: req.body.propertyType,
                     propertyName: req.body.propertyName,
@@ -652,10 +677,13 @@ class PostPropertyController {
                     furnishing: req.body.furnishing,
                     type: req.body.type,
                     availableDate: req.body.availableDate,
+                    email:email,
+                    number:number,
+                    verify:""
                  
                 }
                 // console.log(data)
-                const id = req.params.id
+      
                 if (id) {
 
                     const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -664,7 +692,7 @@ class PostPropertyController {
                         { new: true })
 
                     const email = dataPushed.email
-                    console.log(email, "hello")
+                    // console.log(email, "hello")
                     await sendPostEmail(email)
                     res.status(200).json({
                         message: "Data pushed successfully ! "
@@ -683,34 +711,51 @@ class PostPropertyController {
             })
         }
     }
-    // postproperty  data  All view
+    // postproperty  data  All view lks
     static postProperty_View = async (req, res) => {
         try {
-            const id = req.params.id
-            if (id) {
-                const cachedData = cache.get('authorData');
-                if (cachedData) {
+                // const cachedData = cache.get('authorData');
+                
                     // If data is in cache, return cached data
 
-                    return res.json({
-                        data: cachedData,
-                        message: 'Data retrieved from cache!',
-                    });
-                }
+                    // return res.json({
+                    //     data: cachedData,
+                    //     message: 'Data retrieved from cache!',
+                    // });
+                
                 // If data is not in cache, fetch from the database
-                const data = await postPropertyModel.findById({ _id: id })
+                // const data = await postPropertyModel.find()
+                // if(data){
                 // set data into cache for accessing 
-                cache.set('authorData', data);
-                res.status(200).json({
-                    data,
-                    message: 'Data fetched from the database!',
-                });
-            } else {
-                res.status(403).json({
-                    data,
-                    message: 'data id is not fetched !',
-                });
-            }
+                // cache.set('authorData', data);
+                // res.status(200).json({
+                //     data:data,
+                //     message: 'Data fetched from the database!',
+                // });
+                
+            // } else {
+            //     res.status(403).json({
+            //         data,
+            //         message: 'data  not fetched !',
+            //     });
+            // }
+
+            // const cachedData = cache.get('setData')
+            // console.log(cachedData,"hello")
+            // if (cachedData) {
+            //     return res.status(201).json({
+            //         message: "data fetched from cache !",
+            //         data: cachedData
+            //     })
+            // }else{
+
+            const data = await postPropertyModel.find()
+            // cache.set('authorData', data);
+            res.status(200).json({
+                message: "All project Data get  !",
+                data
+            })
+        // }
         } catch (error) {
             res.status(500).json({
                 message: "internal server error ! "

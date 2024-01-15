@@ -31,18 +31,20 @@ class projectController {
                 meta_description,
                 projectBgContent,
                 projectReraNo,
+                type: type,
+                city: city,
             } = req.body
             if (req.files) {
-                if (req.files.logo && req.files.project_Bg1 && req.files.project_locationImage && req.files.project_floorplan_Image) {
+                if (req.files.logo && req.files. frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
                     const logo = req.files.logo
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
                         folder: `100acre/project/${projectName}`
                     }
                     )
-                    const project_Bg1 = req.files.project_Bg1
+                    const frontImage = req.files. frontImage
                     const projectBgResult = await cloudinary.uploader.upload(
-                        project_Bg1.tempFilePath, {
+                        frontImage.tempFilePath, {
                         folder: `100acre/project/${projectName}`
                     }
                     )
@@ -86,7 +88,7 @@ class projectController {
                             public_id: logoResult.public_id,
                             url: logoResult.secure_url
                         },
-                        project_Bg1: {
+                        frontImage: {
                             public_id: projectBgResult.public_id,
                             url: projectBgResult.secure_url
                         },
@@ -111,7 +113,9 @@ class projectController {
                         meta_title: meta_title,
                         meta_description: meta_description,
                         projectBgContent: projectBgContent,
-                        projectReraNo: projectReraNo
+                        projectReraNo: projectReraNo,
+                        type: type,
+                        city: city,
 
                     })
                     // console.log(data)
@@ -173,8 +177,9 @@ class projectController {
     }
     static projectUpdate = async (req, res) => {
         try {
-            //  console.log("hello")
-            const { projectName,
+            // console.log("hello")
+            const { 
+                projectName,
                 state,
                 project_discripation,
                 projectAddress,
@@ -186,17 +191,262 @@ class projectController {
                 projectRedefine_Entertainment,
                 Amenities,
                 projectBgContent,
-                projectReraNo } = req.body
-                if(req.files){
-                    if(req.files.logo&&req.files.project_Bg1&&req.files.project_locationImage&&req.files.project_floorplan){
-                        const logo=req.files.logo;
-                       const logoResult=await cloudinary.uploader.upload(
-                        
-                       )
+                projectReraNo  ,
+                meta_description,
+                meta_title,
+                type,
+                 city,
+            } = req.body
+            const id = req.params.id;
+            if (req.files) {
+                // console.log("hellofile")
+                if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
+                    const logo = req.files.logo;
+                    // console.log("hello")
+                    const logoResult = await cloudinary.uploader.upload(
+                        logo.tempFilePath, {
+                        folder: `100acre/projectName/${projectName}`
                     }
-                }else{
+                    )
+                    const frontImage = req.files.frontImage;
+                    const projectBgResult = await cloudinary.uploader.upload(
+                        frontImage.tempFilePath, {
+                        folder: `100acre/project/${projectName}`
+                    }
+                    )
+                    const project_locationImage = req.files.project_locationImage;
+                    const projectlocationResult = await cloudinary.uploader.upload(
+                        project_locationImage.tempFilePath, {
+                        folder: `100acre/projectName/${projectName}`
+                    }
+                    )
 
+                    const floorplan = req.files.project_floorplan_Image;
+                    const floorplanLink = []
+                    if (floorplan.lenght >= 2) {
+                        for (let i = 0; i < floorplan.lenght; i++) {
+                            const project_floorplanResult = await cloudinary.uploader.upload(
+                                floorplan[i].tempFilePath, {
+                                folder: `100acre/project/${projectName}`
+                            }
+                            )
+                            floorplanLink.push({
+                                public_id: project_floorplanResult.public_id,
+                                url: project_floorplanResult.secure_url
+                            })
+                        }
+                    } else {
+                        const project_floorplanResult = await cloudinary.uploader.upload(
+                            floorplan.tempFilePath, {
+                            folder: `100acre/project/${projectName}`
+                        }
+                        )
+                        floorplanLink.push({
+                            public_id: project_floorplanResult.public_id,
+                            url: project_floorplanResult.secure_url
+                        })
+                    }
+
+                    const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                        logo: {
+                            public_id: logoResult.public_id,
+                            url: logoResult.secure_url
+                        },
+                        frontImage: {
+                            public_id: projectBgResult.public_id,
+                            url: projectBgResult.secure_url
+                        },
+                        project_locationImage: {
+                            public_id: projectlocationResult.public_id,
+                            url: projectlocationResult.secure_url
+                        },
+                        project_floorplan_Image: floorplanLink,
+                        projectName: projectName,
+                        state: state,
+                        project_discripation: project_discripation,
+                        projectAddress: projectAddress,
+                        AboutDeveloper: AboutDeveloper,
+                        builderName: builderName,
+                        projectRedefine_Business: projectRedefine_Business,
+                        projectRedefine_Connectivity: projectRedefine_Connectivity,
+                        projectRedefine_Education: projectRedefine_Education,
+                        projectRedefine_Entertainment: projectRedefine_Entertainment,
+                        Amenities: Amenities,
+                        projectBgContent: projectBgContent,
+                        projectReraNo: projectReraNo,
+                        meta_title: meta_title,
+                        meta_description: meta_description,
+                        type: type,
+                        city: city,
+
+                    })
+                    // console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message: 'data updated successfully ! '
+                    })
+                } else if (req.files.logo) {
+                    console.log("logo")
+                    const logo = req.files.logo;
+                    // console.log("hello")
+                    const logoResult = await cloudinary.uploader.upload(
+                        logo.tempFilePath, {
+                        folder: `100acre/projectName/${projectName}`
+                    }
+                    )
+                    
+                   
+           
+                    const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                        logo: {
+                            public_id: logoResult.public_id,
+                            url: logoResult.secure_url
+                        },
+                    
+                        projectName: projectName,
+                        state: state,
+                        project_discripation: project_discripation,
+                        projectAddress: projectAddress,
+                        AboutDeveloper: AboutDeveloper,
+                        builderName: builderName,
+                        projectRedefine_Business: projectRedefine_Business,
+                        projectRedefine_Connectivity: projectRedefine_Connectivity,
+                        projectRedefine_Education: projectRedefine_Education,
+                        projectRedefine_Entertainment: projectRedefine_Entertainment,
+                        Amenities: Amenities,
+                        projectBgContent: projectBgContent,
+                        projectReraNo: projectReraNo,
+                        meta_title: meta_title,
+                        meta_description: meta_description
+                    })
+                    // console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message:"data updated successfully ! "
+                    })
+                }else if(req.files.frontImage){
+
+                    // console.log("helo project")
+                    const frontImage=req.files.frontImage;
+                    const projectBgResult=await cloudinary.uploader.upload(
+                        frontImage.tempFilePath,{
+                        folder:`100acre/project/${projectName}`
+                       } 
+                    )
+                    const data=await ProjectModel.findByIdAndUpdate({_id:id},{
+                        frontImage:{
+                            public_id:projectBgResult.public_id,
+                            url:projectBgResult.secure_url
+                        },
+                        projectName:projectName,
+                        state:state,
+                        project_discripation:project_discripation,
+                        projectAddress:projectAddress,
+                        bulderName:builderName,
+                        AboutDeveloper:AboutDeveloper,
+                        projectRedefine_Business:projectRedefine_Business,
+                        projectRedefine_Education:projectRedefine_Education,
+                        projectRedefine_Connectivity:projectRedefine_Connectivity,
+                        projectRedefine_Entertainment:projectRedefine_Entertainment,
+                        Amenities:Amenities,
+                        projectBgResult:projectBgResult,
+                        projectReraNo:projectReraNo,
+                        meta_description:meta_description,
+                        meta_title:meta_title,
+                        type: type,
+                        city: city,
+                    })
+                // console.log(data)
+                await data.save()
+                res.status(200).json({
+                    message:"data updated successfully !"
+                })
+                }else if(req.files.project_locationImage){
+                    const projectLocation=req.files.project_locationImage;
+                     const projectLocationResult=await cloudinary.uploader.upload(
+                        projectLocation.tempFilePath,{
+                            folder:`100acre/project/${projectName}`
+                        }
+                     )
+                     const data=await ProjectModel.findByIdAndUpdate({_id:id},{
+                        project_locationImage:{
+                            public_id:projectLocationResult.public_id,
+                            url:projectLocationResult.secure_url
+                        },
+                        projectName:projectName,
+                        state:state,
+                        projectAddress:projectAddress,
+                        builderName:builderName,
+                        AboutDeveloper:AboutDeveloper,
+                        project_discripation:project_discripation,
+                        projectRedefine_Business:projectRedefine_Business,
+                        projectRedefine_Connectivity:projectRedefine_Connectivity,
+                        projectRedefine_Education:projectRedefine_Education,
+                        projectRedefine_Entertainment:projectRedefine_Entertainment,
+                        Amenities:Amenities,
+                        projectBgContent:projectBgContent,
+                        projectReraNo:projectReraNo,
+                        meta_description:meta_description,
+                        meta_title:meta_title,
+                        city:city,
+                        type:type
+                     })
+                    //  console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message:"data updated successfully ! ",
+                        data
+                    })
+                }else if(req.files.project_floorplan_Image){
+                    const project_floorplan_Image=req.files.project_floorplan_Image;
+                    const floorplanLink=[]
+                    if(project_floorplan_Image>=2){
+                        for(let i=0;i<project_floorplan_Image;i++){
+                            const project_floorplanResult=await cloudinary.uploader.upload(
+                                project_floorplan_Image[i].tempFilePath,{
+                                    folder:`100acre/project/${projectName}`
+                                }
+                            )
+                            floorplanLink.push({
+                                public_id:project_floorplanResult.public_id,
+                                url:project_floorplanResult.secure_url
+                            })
+                        }
+                    }else{
+                          const project_floorplanResult=await cloudinary.uploader.upload(
+                            project_floorplan_Image.tempFilePath,{
+                                folder:`100acre/project/${projectName}`
+                            }
+                          )
+                          floorplanLink.push({
+                            public_id:project_floorplanResult.public_id,
+                            url:project_floorplanResult.secure_url
+                          })
+                    }
+
+                    const data=await ProjectModel.findByIdAndUpdate({_id:id},{
+                        project_floorplan_Image:floorplanLink,
+                       projectName:projectName ,
+                       state:state,
+                       projectAddress:projectAddress,
+                       project_discripation:project_discripation,
+                       projectRedefine_Business:projectRedefine_Business,
+                       projectRedefine_Connectivity:projectRedefine_Connectivity,
+                       projectRedefine_Entertainment:projectRedefine_Entertainment,
+                       projectRedefine_Education:projectRedefine_Education,
+                       Amenities:Amenities,
+                       projectBgContent:projectBgContent,
+                       projectReraNo:projectReraNo,
+                       meta_description:meta_description,
+                       meta_title:meta_title,
+                       city:city,
+                       type:type
+                    })
+                    console.log(data)
                 }
+            } else {
+
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({

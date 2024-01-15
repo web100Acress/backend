@@ -17,7 +17,7 @@ const projectSchema = new mongoose.Schema({
 
     project_floorplan_Image: [],
 
-    project_Bg1: {
+    frontImage: {
         public_id: {
             type: String,
         },
@@ -86,6 +86,12 @@ const projectSchema = new mongoose.Schema({
         type:String
     },
     projectReraNo: {
+        type:String
+    },
+    type: {
+        type:String
+    },
+    city:{
         type:String
     },
 
