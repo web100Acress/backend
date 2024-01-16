@@ -442,10 +442,33 @@ class projectController {
                        city:city,
                        type:type
                     })
-                    console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message:"data updated successfully ! "
+                    })
                 }
             } else {
-
+                const data =await ProjectModel.findByIdAndUpdate({_id:id},{
+                    projectName:projectName ,
+                    state:state,
+                    projectAddress:projectAddress,
+                    project_discripation:project_discripation,
+                    projectRedefine_Business:projectRedefine_Business,
+                    projectRedefine_Connectivity:projectRedefine_Connectivity,
+                    projectRedefine_Entertainment:projectRedefine_Entertainment,
+                    projectRedefine_Education:projectRedefine_Education,
+                    Amenities:Amenities,
+                    projectBgContent:projectBgContent,
+                    projectReraNo:projectReraNo,
+                    meta_description:meta_description,
+                    meta_title:meta_title,
+                    city:city,
+                    type:type
+                })
+                await data.save()
+                res.status(200).json({
+                    message:"data updated successfully ! "
+                })
             }
         } catch (error) {
             console.log(error)

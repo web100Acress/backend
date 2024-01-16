@@ -93,7 +93,7 @@ const sendPostEmail = async (email) => {
 
 class PostPropertyController {
     // seller work Registration work    
-    static postPerson_Register = async(req, res) => {
+    static postPerson_Register = async (req, res) => {
         try {
             const { name, email, mobile, password, cpassword } = req.body
             // console.log(req.body
@@ -157,14 +157,16 @@ class PostPropertyController {
                         if (User.role == 'Seller') {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
-                                message: " login successfully done  ! ",  
-                                token:token
+                                message: " login successfully done  ! ",
+                                token: token,
+
                             })
                         } else if (User.role == "Admin") {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " Admin login successfully done ! ",
-                                token:token
+                                token: token,
+
                             })
                         } else {
                             res.status(201).json({
@@ -191,30 +193,30 @@ class PostPropertyController {
             })
         }
     }
-    static postPerson_verifyRole=async(req,res)=>{
-      try {
-        const email = req.params.email
-        // console.log(req.params.email)
-        if (email) {
-            const User = await postPropertyModel.findOne({ email: email })
-            if(User){
+    static postPerson_verifyRole = async (req, res) => {
+        try {
+            const email = req.params.email
+            // console.log(req.params.email)
+            if (email) {
+                const User = await postPropertyModel.findOne({ email: email })
+                if (User) {
+                    res.status(200).json({
+                        message: "user found ! ",
+                        User: User
+                    })
+                } else {
+                    res.status(200).json({
+                        message: "user not found "
+                    })
+                }
+            } else {
                 res.status(200).json({
-                    message:"user found ! ",
-                    User:User
-                })
-            }else{
-                res.status(200).json({
-                    message:"user not found "
+                    message: "please enter email !"
                 })
             }
-        }else{
-            res.status(200).json({
-                message:"please enter email !"
-            })
+        } catch (error) {
+
         }
-      } catch (error) {
-        
-      }
     }
     // logout
     static postPerson_logout = async (req, res) => {
@@ -277,17 +279,18 @@ class PostPropertyController {
                 // console.log(hashpassword)
                 const user = await postPropertyModel.findOneAndUpdate({ token: token }, ({
                     password: hashpassword,
-                    token:"",
+                    token: "",
                 }))
-                if(user){
-                // console.log(token, "here token is updated and set as empty token after running this api")
-                await user.save()
-                res.status(200).json({
-                    message: "Your password has been updated successfuly ! ",
-                    user:user.email
-                })}else{
+                if (user) {
+                    // console.log(token, "here token is updated and set as empty token after running this api")
+                    await user.save()
                     res.status(200).json({
-                        message:"Please provide registered email again ! "
+                        message: "Your password has been updated successfuly ! ",
+                        user: user.email
+                    })
+                } else {
+                    res.status(200).json({
+                        message: "Please provide registered email again ! "
                     })
                 }
             } else {
@@ -312,6 +315,7 @@ class PostPropertyController {
                 message: "data get successfully ! ",
                 data
             })
+           
 
         } catch (error) {
             console.log(error)
@@ -391,7 +395,7 @@ class PostPropertyController {
                 const hashpassword = await bcrypt.hash(password, 10)
                 const data = await postPropertyModel.findOneAndUpdate({ email: email },
                     {
-                     password: hashpassword 
+                        password: hashpassword
                     }
                 )
                 await data.save()
@@ -442,7 +446,7 @@ class PostPropertyController {
             const { propertyName } = req.body
             if (req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
-                    const id = req.params.id  
+                    const id = req.params.id
 
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
@@ -476,12 +480,12 @@ class PostPropertyController {
                         })
 
                     }
-                   
-                    const personData=await postPropertyModel.findOne({_id:id})
-                     const email=personData.email;
-                     const number=personData.mobile;
-                     console.log(email,number)
-                 
+
+                    const personData = await postPropertyModel.findOne({ _id: id })
+                    const email = personData.email;
+                    const number = personData.mobile;
+                    console.log(email, number)
+
                     const data = {
                         propertyType: req.body.propertyType,
                         propertyName: req.body.propertyName,
@@ -497,9 +501,9 @@ class PostPropertyController {
                         furnishing: req.body.furnishing,
                         type: req.body.type,
                         availableDate: req.body.availableDate,
-                        email:email,
-                        number:number,
-                        verify:" ",
+                        email: email,
+                        number: number,
+                        verify: " ",
                         frontImage: {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
@@ -507,7 +511,7 @@ class PostPropertyController {
                         otherImage: otherImagelink
                     }
                     console.log(data)
-                   
+
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -516,8 +520,8 @@ class PostPropertyController {
                             { new: true })
 
                         const email = dataPushed.email
-                       
-                        await sendPostEmail(email)
+
+                        // await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
                         })
@@ -527,11 +531,11 @@ class PostPropertyController {
                         })
                     }
                 } else if (req.files.frontImage) {
-               
+
                     const id = req.params.id
-                    const personData=await postPropertyModel.findOne({_id:id})
-                    const email=personData.email;
-                    const number=personData.mobile;
+                    const personData = await postPropertyModel.findOne({ _id: id })
+                    const email = personData.email;
+                    const number = personData.mobile;
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
@@ -557,12 +561,12 @@ class PostPropertyController {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
                         },
-                        email:email,
-                        number:number,
-                        verify:''
+                        email: email,
+                        number: number,
+                        verify: ''
                     }
                     // console.log(data)
-                 
+
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -584,9 +588,9 @@ class PostPropertyController {
 
                 } else if (req.files.otherImage) {
                     const id = req.params.id
-                    const personData=await postPropertyModel.findOne({_id:id})
-                    const email=personData.email;
-                    const number=personData.mobile;
+                    const personData = await postPropertyModel.findOne({ _id: id })
+                    const email = personData.email;
+                    const number = personData.mobile;
                     const otherImage = req.files.otherImage;
                     const otherImagelink = []
                     if (otherImage.length >= 2) {
@@ -629,14 +633,14 @@ class PostPropertyController {
                         furnishing: req.body.furnishing,
                         type: req.body.type,
                         availableDate: req.body.availableDate,
-                       
+
                         otherImage: otherImagelink,
-                        email:email,
-                        number:number,
-                        verify:''
+                        email: email,
+                        number: number,
+                        verify: ''
                     }
                     // console.log(data)
-                
+
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -646,7 +650,7 @@ class PostPropertyController {
 
                         const email = dataPushed.email
                         console.log(email, "hello")
-                        await sendPostEmail(email)
+                        // await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
                         })
@@ -658,9 +662,9 @@ class PostPropertyController {
                 }
             } else {
                 const id = req.params.id
-                const personData=await postPropertyModel.findOne({_id:id})
-                const email=personData.email;
-                const number=personData.mobile;
+                const personData = await postPropertyModel.findOne({ _id: id })
+                const email = personData.email;
+                const number = personData.mobile;
                 // console.log(email,number)
                 const data = {
                     propertyType: req.body.propertyType,
@@ -677,13 +681,13 @@ class PostPropertyController {
                     furnishing: req.body.furnishing,
                     type: req.body.type,
                     availableDate: req.body.availableDate,
-                    email:email,
-                    number:number,
-                    verify:""
-                 
+                    email: email,
+                    number: number,
+                    verify: ""
+
                 }
                 // console.log(data)
-      
+
                 if (id) {
 
                     const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -693,7 +697,7 @@ class PostPropertyController {
 
                     const email = dataPushed.email
                     // console.log(email, "hello")
-                    await sendPostEmail(email)
+                    // await sendPostEmail(email)
                     res.status(200).json({
                         message: "Data pushed successfully ! "
                     })
@@ -703,7 +707,6 @@ class PostPropertyController {
                     })
                 }
             }
-      
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -711,57 +714,37 @@ class PostPropertyController {
             })
         }
     }
-    // postproperty  data  All view lks
+    // postproperty  data user wise  All view lks
     static postProperty_View = async (req, res) => {
         try {
-                // const cachedData = cache.get('authorData');
-                
-                    // If data is in cache, return cached data
+            const id = req.params.id
+            if (id) {
+                const data = await postPropertyModel.findById({_id:id})
+                if (data) {
+                    res.status(200).json({
+                        message: "All project Data get  !",
+                        data
+                    })
+                } else {
+                    res.status(200).json({
+                        message: " data not found !",
 
-                    // return res.json({
-                    //     data: cachedData,
-                    //     message: 'Data retrieved from cache!',
-                    // });
-                
-                // If data is not in cache, fetch from the database
-                // const data = await postPropertyModel.find()
-                // if(data){
-                // set data into cache for accessing 
-                // cache.set('authorData', data);
-                // res.status(200).json({
-                //     data:data,
-                //     message: 'Data fetched from the database!',
-                // });
-                
-            // } else {
-            //     res.status(403).json({
-            //         data,
-            //         message: 'data  not fetched !',
-            //     });
-            // }
+                    })
+                }
+            } else {
+                res.status(200).json({
+                    message: "Id not found  !",
 
-            // const cachedData = cache.get('setData')
-            // console.log(cachedData,"hello")
-            // if (cachedData) {
-            //     return res.status(201).json({
-            //         message: "data fetched from cache !",
-            //         data: cachedData
-            //     })
-            // }else{
-
-            const data = await postPropertyModel.find()
-            // cache.set('authorData', data);
-            res.status(200).json({
-                message: "All project Data get  !",
-                data
-            })
-        // }
+                })
+            }
         } catch (error) {
             res.status(500).json({
                 message: "internal server error ! "
             })
         }
+
     }
+
     // postproperty data  view 
     static postPropertyOne_View = async (req, res) => {
         try {

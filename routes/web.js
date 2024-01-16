@@ -116,7 +116,7 @@ router.post('/changePassword',PostPropertyController.Post_changePassword)
 
 //property routing
 router.post('/postPerson/propertyInsert/:id', PostPropertyController.postProperty)
-router.get('/postPerson/propertyView', PostPropertyController.postProperty_View)
+router.get('/postPerson/propertyView/:id', PostPropertyController.postProperty_View)
 router.get('/postPerson/propertyoneView/:id', PostPropertyController.postPropertyOne_View)
 router.get('/postPerson/propertyoneEdit/:id', PostPropertyController.postProperty_Edit)
 router.post('/postPerson/propertyoneUpdate/:id', PostPropertyController.postProperty_Update)
