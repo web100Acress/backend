@@ -9,11 +9,12 @@ class rentController {
     // Rent Property Insert Edit view delete
     //Insert
     static rentInsert = async (req, res) => {
-        // res.send("listen rent insert !")
+        // res.send("listen rent insert ! ")
         try {
             // console.log("hello")
             const { projectName, propertyType, propertyName, price, area, availableDate, descripation,
                 furnishing, builtYear, amenities, landmark, type, city, state, address } = req.body
+
             if (projectName && propertyType && propertyName && price && area && availableDate && descripation
                 && furnishing && builtYear && amenities && landmark && type && city && state && address) {
 
@@ -28,7 +29,7 @@ class rentController {
                     const otherImageLink = []
 
                     if (otherImage.length >= 2) {
-                        for(let i = 0; i < otherImage.length; i++) {
+                        for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
                                 folder: "100acre/Rental_Property"
@@ -104,19 +105,19 @@ class rentController {
         try {
             // console.log("edit")
             const id = req.params.id
-            if(id.length>0){
-            const data = await rent_Model.findById({
-                _id:id
-            })
-            res.status(200).json({
-                message: "Data get successfully !",
-                dataEdit: data
-            })
-        }else{
-            res.status(201).json({
-                message:"Id can not read ! "
-            })
-        }
+            if (id.length > 0) {
+                const data = await rent_Model.findById({
+                    _id: id
+                })
+                res.status(200).json({
+                    message: "Data get successfully !",
+                    dataEdit: data
+                })
+            } else {
+                res.status(201).json({
+                    message: "Id can not read ! "
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -124,6 +125,37 @@ class rentController {
             })
         }
     }
+    // rental property view by id
+    static rentView_id = async (req, res) => {
+        // console.log("helllo")
+        try {
+            // console.log("hello")
+            const id =req.params.id
+            if(id){
+            const data =await rent_Model.findById({_id:id})
+            if(data){
+               res.status(200).json({
+                message:'data get successfully !',
+                data:data
+               })
+            }else{
+              res.status(200).json({
+              message:"data not found ! "
+            })
+            }
+            }else{
+                res.status(200).json({
+                    message:"data not found !"
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error ! "
+            })
+        }
+    }
+
     //view
     static rentView = async (req, res) => {
         // res.send("listen  rent view ")
@@ -132,7 +164,7 @@ class rentController {
             const type = req.params.type
             const data = await rent_Model.find({ type: type })
             res.status(200).json({
-                message:"Data get Successfully ! ",
+                message: "Data get Successfully ! ",
                 dataView: data
             })
         } catch (error) {
@@ -142,20 +174,26 @@ class rentController {
         }
     }
     // ViewAll
-   static rentViewAll=async(req,res)=>{
-    // console.log("helj")
-    try {
-        // console.log("hello")
-        const data =await rent_Model.find()
-        res.send(data)
-    } catch (error) {
-      console.log(error)  
-      res.status(500).json({
-       message:"internal server error ! " 
-      })
+    static rentViewAll = async (req, res) => {
+        // console.log("helj")
+        try {
+            // console.log("hello")
+            const data = await rent_Model.find()
+            // res.send(data)
+            if(data){
+                res.status(200).json({
+                    message:"data get successfully !",
+                    data :data 
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
+        }
     }
-   }
-    // update
+    // rental property upadted api 
     static rentUpdate = async (req, res) => {
         // res.send("listen rent  update ")
         try {
@@ -204,7 +242,7 @@ class rentController {
                                 result.otherImage[i]
                             )
                         }
-                        
+
                         const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
                             frontImage: {
                                 public_id: frontResult.public_id,
@@ -230,7 +268,7 @@ class rentController {
                         })
                         // console.log(dataUpdate)
                         res.status(200).json({
-                            message:"update successfully !",
+                            message: "update successfully !",
                             dataUpdate
                         })
 
@@ -271,8 +309,8 @@ class rentController {
                         })
                         // console.log(dataUpdate)
                         res.status(200).json({
-                           message:"update successfull !",
-                           dataUpdate 
+                            message: "update successfull !",
+                            dataUpdate
                         })
 
                     } else if (req.files.otherImage) {
@@ -331,7 +369,7 @@ class rentController {
                         // console.log(dataUpdate)
                         await dataUpdate.save()
                         res.status(200).json({
-                            message:"updated successfuly !",
+                            message: "updated successfuly !",
                             dataUpdate
                         })
                     }
@@ -357,7 +395,7 @@ class rentController {
                     // console.log(dataUpdaate)
                     await dataUpdate.save()
                     res.status(200).json({
-                       message:" data updated successfully ! "
+                        message: " data updated successfully ! "
                     })
                 }
             } else {
@@ -368,11 +406,11 @@ class rentController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-               message:"Internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }
-    //delete
+    // rental property delete api
     static rentDelete = async (req, res) => {
         try {
             // console.log("error ")
@@ -393,10 +431,10 @@ class rentController {
             })
 
         } catch (error) {
-           console.log(error)
-           res.status(500).json({
-            message:"Internal server error ! "
-           })
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
         }
     }
 

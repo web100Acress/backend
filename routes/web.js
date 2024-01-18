@@ -45,10 +45,12 @@ router.get('/projectEdit/:id', projectController.projectEdit)
 router.post('/projectUpdate/:id', projectController.projectUpdate)
 router.delete('/projectDelete/:id', projectController.projectDelete)
 //from
-// router.post('/userInsert', projectController.userInsert)
-// router.get("/userviewAll",projectController.userviewAll)
-// router.post("/userUpdate/:id",projectController.userUpdate)
-// router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
+router.post('/userInsert', projectController.userInsert)
+router.get("/userViewAll",projectController.userViewAll)
+router.get("/userviewDetail/:id",projectController.userViewDetail)
+router.post("/userUpdate/:id",projectController.userUpdate)
+router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
+
 //contact
 // Customer Contact routing handler
 router.post('/contact_Insert', contactController.contact_Insert)
@@ -75,6 +77,7 @@ router.delete('/property/:id/delete', BuyController.buycommercialDelete)
 //rent
 router.post('/property/rentInsert', rentController.rentInsert)
 router.get('/property/:id/rentedit', rentController.rentEdit)
+router.get('/property/rent/:id',rentController.rentView_id)
 router.get('/property/:type/rentView', rentController.rentView)
 router.get("/property/viewAll", rentController.rentViewAll)
 router.post("/property/:id/rentUpdate", rentController.rentUpdate)

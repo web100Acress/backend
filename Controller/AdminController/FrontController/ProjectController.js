@@ -35,14 +35,14 @@ class projectController {
                 city: city,
             } = req.body
             if (req.files) {
-                if (req.files.logo && req.files. frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
+                if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
                     const logo = req.files.logo
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
                         folder: `100acre/project/${projectName}`
                     }
                     )
-                    const frontImage = req.files. frontImage
+                    const frontImage = req.files.frontImage
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
                         folder: `100acre/project/${projectName}`
@@ -178,7 +178,7 @@ class projectController {
     static projectUpdate = async (req, res) => {
         try {
             // console.log("hello")
-            const { 
+            const {
                 projectName,
                 state,
                 project_discripation,
@@ -191,11 +191,11 @@ class projectController {
                 projectRedefine_Entertainment,
                 Amenities,
                 projectBgContent,
-                projectReraNo  ,
+                projectReraNo,
                 meta_description,
                 meta_title,
                 type,
-                 city,
+                city,
             } = req.body
             const id = req.params.id;
             if (req.files) {
@@ -294,15 +294,15 @@ class projectController {
                         folder: `100acre/projectName/${projectName}`
                     }
                     )
-                    
-                   
-           
+
+
+
                     const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
                         logo: {
                             public_id: logoResult.public_id,
                             url: logoResult.secure_url
                         },
-                    
+
                         projectName: projectName,
                         state: state,
                         project_discripation: project_discripation,
@@ -322,152 +322,152 @@ class projectController {
                     // console.log(data)
                     await data.save()
                     res.status(200).json({
-                        message:"data updated successfully ! "
+                        message: "data updated successfully ! "
                     })
-                }else if(req.files.frontImage){
+                } else if (req.files.frontImage) {
 
                     // console.log("helo project")
-                    const frontImage=req.files.frontImage;
-                    const projectBgResult=await cloudinary.uploader.upload(
-                        frontImage.tempFilePath,{
-                        folder:`100acre/project/${projectName}`
-                       } 
+                    const frontImage = req.files.frontImage;
+                    const projectBgResult = await cloudinary.uploader.upload(
+                        frontImage.tempFilePath, {
+                        folder: `100acre/project/${projectName}`
+                    }
                     )
-                    const data=await ProjectModel.findByIdAndUpdate({_id:id},{
-                        frontImage:{
-                            public_id:projectBgResult.public_id,
-                            url:projectBgResult.secure_url
+                    const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                        frontImage: {
+                            public_id: projectBgResult.public_id,
+                            url: projectBgResult.secure_url
                         },
-                        projectName:projectName,
-                        state:state,
-                        project_discripation:project_discripation,
-                        projectAddress:projectAddress,
-                        bulderName:builderName,
-                        AboutDeveloper:AboutDeveloper,
-                        projectRedefine_Business:projectRedefine_Business,
-                        projectRedefine_Education:projectRedefine_Education,
-                        projectRedefine_Connectivity:projectRedefine_Connectivity,
-                        projectRedefine_Entertainment:projectRedefine_Entertainment,
-                        Amenities:Amenities,
-                        projectBgResult:projectBgResult,
-                        projectReraNo:projectReraNo,
-                        meta_description:meta_description,
-                        meta_title:meta_title,
+                        projectName: projectName,
+                        state: state,
+                        project_discripation: project_discripation,
+                        projectAddress: projectAddress,
+                        bulderName: builderName,
+                        AboutDeveloper: AboutDeveloper,
+                        projectRedefine_Business: projectRedefine_Business,
+                        projectRedefine_Education: projectRedefine_Education,
+                        projectRedefine_Connectivity: projectRedefine_Connectivity,
+                        projectRedefine_Entertainment: projectRedefine_Entertainment,
+                        Amenities: Amenities,
+                        projectBgResult: projectBgResult,
+                        projectReraNo: projectReraNo,
+                        meta_description: meta_description,
+                        meta_title: meta_title,
                         type: type,
                         city: city,
                     })
-                // console.log(data)
-                await data.save()
-                res.status(200).json({
-                    message:"data updated successfully !"
-                })
-                }else if(req.files.project_locationImage){
-                    const projectLocation=req.files.project_locationImage;
-                     const projectLocationResult=await cloudinary.uploader.upload(
-                        projectLocation.tempFilePath,{
-                            folder:`100acre/project/${projectName}`
-                        }
-                     )
-                     const data=await ProjectModel.findByIdAndUpdate({_id:id},{
-                        project_locationImage:{
-                            public_id:projectLocationResult.public_id,
-                            url:projectLocationResult.secure_url
+                    // console.log(data)
+                    await data.save()
+                    res.status(200).json({
+                        message: "data updated successfully !"
+                    })
+                } else if (req.files.project_locationImage) {
+                    const projectLocation = req.files.project_locationImage;
+                    const projectLocationResult = await cloudinary.uploader.upload(
+                        projectLocation.tempFilePath, {
+                        folder: `100acre/project/${projectName}`
+                    }
+                    )
+                    const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                        project_locationImage: {
+                            public_id: projectLocationResult.public_id,
+                            url: projectLocationResult.secure_url
                         },
-                        projectName:projectName,
-                        state:state,
-                        projectAddress:projectAddress,
-                        builderName:builderName,
-                        AboutDeveloper:AboutDeveloper,
-                        project_discripation:project_discripation,
-                        projectRedefine_Business:projectRedefine_Business,
-                        projectRedefine_Connectivity:projectRedefine_Connectivity,
-                        projectRedefine_Education:projectRedefine_Education,
-                        projectRedefine_Entertainment:projectRedefine_Entertainment,
-                        Amenities:Amenities,
-                        projectBgContent:projectBgContent,
-                        projectReraNo:projectReraNo,
-                        meta_description:meta_description,
-                        meta_title:meta_title,
-                        city:city,
-                        type:type
-                     })
+                        projectName: projectName,
+                        state: state,
+                        projectAddress: projectAddress,
+                        builderName: builderName,
+                        AboutDeveloper: AboutDeveloper,
+                        project_discripation: project_discripation,
+                        projectRedefine_Business: projectRedefine_Business,
+                        projectRedefine_Connectivity: projectRedefine_Connectivity,
+                        projectRedefine_Education: projectRedefine_Education,
+                        projectRedefine_Entertainment: projectRedefine_Entertainment,
+                        Amenities: Amenities,
+                        projectBgContent: projectBgContent,
+                        projectReraNo: projectReraNo,
+                        meta_description: meta_description,
+                        meta_title: meta_title,
+                        city: city,
+                        type: type
+                    })
                     //  console.log(data)
                     await data.save()
                     res.status(200).json({
-                        message:"data updated successfully ! ",
+                        message: "data updated successfully ! ",
                         data
                     })
-                }else if(req.files.project_floorplan_Image){
-                    const project_floorplan_Image=req.files.project_floorplan_Image;
-                    const floorplanLink=[]
-                    if(project_floorplan_Image>=2){
-                        for(let i=0;i<project_floorplan_Image;i++){
-                            const project_floorplanResult=await cloudinary.uploader.upload(
-                                project_floorplan_Image[i].tempFilePath,{
-                                    folder:`100acre/project/${projectName}`
-                                }
+                } else if (req.files.project_floorplan_Image) {
+                    const project_floorplan_Image = req.files.project_floorplan_Image;
+                    const floorplanLink = []
+                    if (project_floorplan_Image >= 2) {
+                        for (let i = 0; i < project_floorplan_Image; i++) {
+                            const project_floorplanResult = await cloudinary.uploader.upload(
+                                project_floorplan_Image[i].tempFilePath, {
+                                folder: `100acre/project/${projectName}`
+                            }
                             )
                             floorplanLink.push({
-                                public_id:project_floorplanResult.public_id,
-                                url:project_floorplanResult.secure_url
+                                public_id: project_floorplanResult.public_id,
+                                url: project_floorplanResult.secure_url
                             })
                         }
-                    }else{
-                          const project_floorplanResult=await cloudinary.uploader.upload(
-                            project_floorplan_Image.tempFilePath,{
-                                folder:`100acre/project/${projectName}`
-                            }
-                          )
-                          floorplanLink.push({
-                            public_id:project_floorplanResult.public_id,
-                            url:project_floorplanResult.secure_url
-                          })
+                    } else {
+                        const project_floorplanResult = await cloudinary.uploader.upload(
+                            project_floorplan_Image.tempFilePath, {
+                            folder: `100acre/project/${projectName}`
+                        }
+                        )
+                        floorplanLink.push({
+                            public_id: project_floorplanResult.public_id,
+                            url: project_floorplanResult.secure_url
+                        })
                     }
 
-                    const data=await ProjectModel.findByIdAndUpdate({_id:id},{
-                        project_floorplan_Image:floorplanLink,
-                       projectName:projectName ,
-                       state:state,
-                       projectAddress:projectAddress,
-                       project_discripation:project_discripation,
-                       projectRedefine_Business:projectRedefine_Business,
-                       projectRedefine_Connectivity:projectRedefine_Connectivity,
-                       projectRedefine_Entertainment:projectRedefine_Entertainment,
-                       projectRedefine_Education:projectRedefine_Education,
-                       Amenities:Amenities,
-                       projectBgContent:projectBgContent,
-                       projectReraNo:projectReraNo,
-                       meta_description:meta_description,
-                       meta_title:meta_title,
-                       city:city,
-                       type:type
+                    const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                        project_floorplan_Image: floorplanLink,
+                        projectName: projectName,
+                        state: state,
+                        projectAddress: projectAddress,
+                        project_discripation: project_discripation,
+                        projectRedefine_Business: projectRedefine_Business,
+                        projectRedefine_Connectivity: projectRedefine_Connectivity,
+                        projectRedefine_Entertainment: projectRedefine_Entertainment,
+                        projectRedefine_Education: projectRedefine_Education,
+                        Amenities: Amenities,
+                        projectBgContent: projectBgContent,
+                        projectReraNo: projectReraNo,
+                        meta_description: meta_description,
+                        meta_title: meta_title,
+                        city: city,
+                        type: type
                     })
                     await data.save()
                     res.status(200).json({
-                        message:"data updated successfully ! "
+                        message: "data updated successfully ! "
                     })
                 }
             } else {
-                const data =await ProjectModel.findByIdAndUpdate({_id:id},{
-                    projectName:projectName ,
-                    state:state,
-                    projectAddress:projectAddress,
-                    project_discripation:project_discripation,
-                    projectRedefine_Business:projectRedefine_Business,
-                    projectRedefine_Connectivity:projectRedefine_Connectivity,
-                    projectRedefine_Entertainment:projectRedefine_Entertainment,
-                    projectRedefine_Education:projectRedefine_Education,
-                    Amenities:Amenities,
-                    projectBgContent:projectBgContent,
-                    projectReraNo:projectReraNo,
-                    meta_description:meta_description,
-                    meta_title:meta_title,
-                    city:city,
-                    type:type
+                const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
+                    projectName: projectName,
+                    state: state,
+                    projectAddress: projectAddress,
+                    project_discripation: project_discripation,
+                    projectRedefine_Business: projectRedefine_Business,
+                    projectRedefine_Connectivity: projectRedefine_Connectivity,
+                    projectRedefine_Entertainment: projectRedefine_Entertainment,
+                    projectRedefine_Education: projectRedefine_Education,
+                    Amenities: Amenities,
+                    projectBgContent: projectBgContent,
+                    projectReraNo: projectReraNo,
+                    meta_description: meta_description,
+                    meta_title: meta_title,
+                    city: city,
+                    type: type
                 })
                 await data.save()
                 res.status(200).json({
-                    message:"data updated successfully ! "
+                    message: "data updated successfully ! "
                 })
             }
         } catch (error) {
@@ -502,7 +502,7 @@ class projectController {
             })
         }
     }
-    //  project data delete
+    //  project data delete 
     static projectDelete = async (req, res) => {
         // console.log("helo")
         try {
@@ -529,7 +529,11 @@ class projectController {
             })
         }
     }
-    // Enquiry form for the Project detail page api
+
+
+
+    
+    //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")
         // const data =new UserModel
@@ -591,6 +595,96 @@ class projectController {
             }
         } catch (error) {
 
+        }
+    }
+    // Enquiry viewAll
+    static userViewAll = async (req, res) => {
+        // console.log("hello")
+        try {
+            // console.log("hellcadco")
+           
+            const data=await UserModel.find()
+            if(data){
+                res.status(200).json({
+                    message:"data get successfully !",
+                    data:data
+                })
+            }else{
+              res.status(200).json({
+                message:"data not found ! "
+              })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
+        }
+    }
+    // Enquiry user detail view 
+    static userViewDetail=async(req,res)=>{
+        // console.log("hello")
+        try{
+            // console.log("hello")
+            const id=req.params.id;
+            if(id){
+                const data=await UserModel.findById({_id:id})
+                if(data){ 
+                    res.status(200).json({
+                        message:"Data get successfully ! ",
+                        data:data
+                    })
+                }else{
+                 res.status(200).json({
+                    message:"data not found ! "
+                 })
+                }
+            }else{
+
+            }
+        }catch(error){ 
+
+        }
+    }
+    // Enquiry update 
+    static userUpdate = async (req, res) => {
+        // 
+        try {
+            // console.log("hello")
+            // console.log(req.body)
+            const id = req.params.id
+            const { name, email, mobile, projectName, address, status } = req.body
+
+            if (id) {
+                if (status) {
+                    const data = await UserModel.findByIdAndUpdate({ _id: id }, {
+                        name: name,
+                        email: email,
+                        mobile: mobile,
+                        projectName: projectName,
+                        address: address,
+                        status: status
+                    })
+                    // console.log(data)
+                    await data.save()
+                } else {
+                    // console.log("hello ")
+                    res.status(403).json({
+                        message: "Check status field ! "
+                    })
+
+                }
+
+            } else {
+                res.status(403).json({
+                    message: "please mtach id  ! "
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Internal server error ! "
+            })
         }
     }
     // user data
