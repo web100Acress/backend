@@ -37,20 +37,21 @@ router.get('/project', projectController.project)
 
 // Admin Controller routing
 //projectDetail page 
-//page with detail 
+     //page with detail 
 router.post('/projectInsert', projectController.projectInsert)
 router.get('/projectView/:projectName/view', projectController.projectView)
 router.get('/projectView/viewAll', projectController.projectviewAll)
 router.get('/projectEdit/:id', projectController.projectEdit)
 router.post('/projectUpdate/:id', projectController.projectUpdate)
 router.delete('/projectDelete/:id', projectController.projectDelete)
-//from
+   //from
 router.post('/userInsert', projectController.userInsert)
 router.get("/userViewAll",projectController.userViewAll)
 router.get("/userviewDetail/:id",projectController.userViewDetail)
 router.post("/userUpdate/:id",projectController.userUpdate)
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
-
+    // bhk detail routing 
+router.post('/bhk_insert/:id',projectController.bhk_insert)
 //contact
 // Customer Contact routing handler
 router.post('/contact_Insert', contactController.contact_Insert)

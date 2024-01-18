@@ -529,10 +529,17 @@ class projectController {
             })
         }
     }
-
-
-
-    
+    // project Bhk detail inter
+    static bhk_insert = async (req, res) => {
+        try {
+            console.log("hello")
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "Inetrnal server error !"
+            })
+        }
+    }
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")
@@ -602,17 +609,17 @@ class projectController {
         // console.log("hello")
         try {
             // console.log("hellcadco")
-           
-            const data=await UserModel.find()
-            if(data){
+
+            const data = await UserModel.find()
+            if (data) {
                 res.status(200).json({
-                    message:"data get successfully !",
-                    data:data
+                    message: "data get successfully !",
+                    data: data
                 })
-            }else{
-              res.status(200).json({
-                message:"data not found ! "
-              })
+            } else {
+                res.status(200).json({
+                    message: "data not found ! "
+                })
             }
         } catch (error) {
             console.log(error)
@@ -622,27 +629,27 @@ class projectController {
         }
     }
     // Enquiry user detail view 
-    static userViewDetail=async(req,res)=>{
+    static userViewDetail = async (req, res) => {
         // console.log("hello")
-        try{
+        try {
             // console.log("hello")
-            const id=req.params.id;
-            if(id){
-                const data=await UserModel.findById({_id:id})
-                if(data){ 
+            const id = req.params.id;
+            if (id) {
+                const data = await UserModel.findById({ _id: id })
+                if (data) {
                     res.status(200).json({
-                        message:"Data get successfully ! ",
-                        data:data
+                        message: "Data get successfully ! ",
+                        data: data
                     })
-                }else{
-                 res.status(200).json({
-                    message:"data not found ! "
-                 })
+                } else {
+                    res.status(200).json({
+                        message: "data not found ! "
+                    })
                 }
-            }else{
+            } else {
 
             }
-        }catch(error){ 
+        } catch (error) {
 
         }
     }

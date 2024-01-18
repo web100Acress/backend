@@ -484,7 +484,7 @@ class PostPropertyController {
                     const personData = await postPropertyModel.findOne({ _id: id })
                     const email = personData.email;
                     const number = personData.mobile;
-                    console.log(email, number)
+                    // console.log(email, number)
 
                     const data = {
                         propertyType: req.body.propertyType,
@@ -510,12 +510,12 @@ class PostPropertyController {
                         },
                         otherImage: otherImagelink
                     }
-                    console.log(data)
+                    // console.log(data)
 
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
-                            { _id: id },
+                            {_id:id},
                             { $push: { postProperty: data } },
                             { new: true })
 
