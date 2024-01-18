@@ -183,14 +183,11 @@ class rentController {
             if(data){
                 res.status(200).json({
                     message:"data get successfully !",
-                    data :data 
+                    data
                 })
             }
         } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "internal server error ! "
-            })
+          console.log(error)
         }
     }
     // rental property upadted api 
