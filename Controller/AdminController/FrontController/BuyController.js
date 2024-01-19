@@ -106,8 +106,9 @@ class BuyController {
             // Store data in the cache for future use
             cache.set('authorData', data);
             res.status(200).json({
-                data,
                 message: 'Data fetched from the database!',
+                data
+              
             });
         } catch (error) {
             console.log(error)
