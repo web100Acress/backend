@@ -6,27 +6,38 @@ class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
         try {
-            const { projectName, propertyTitle, price, state, city, address, type, descripation, amenities, area,furnishing
-            ,landMark,builtYear } = req.body
-            if (projectName && propertyTitle && price && state && city && address && type && descripation && amenities && area &&furnishing&&landMark&&builtYear&& req.files) {
+            const { projectName, propertyTitle, price, state, city, address, type, descripation, amenities, area, furnishing
+                , landMark, builtYear } = req.body
+            if (projectName && propertyTitle && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear && req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
                     const front = req.files.frontImage;
                     const other = req.files.otherImage
 
-                // const length=other.length;
+                    // const length=other.length;
                     const otherImageLink = []
                     // console.log(otherImageLink)
                     const imageResult = await cloudinary.uploader.upload(
                         front.tempFilePath, {
-                        folder:`100acre/BuyCommercial/${projectName}`
+                        folder: `100acre/BuyCommercial/${projectName}`
                     }
 
                     )
                     // console.log(imageResult)
-                    if(other.length >= 2){
-                    for (let i=0; i<other.length; i++) {
+                    if (other.length >= 2) {
+                        for (let i = 0; i < other.length; i++) {
+                            const otherResult = await cloudinary.uploader.upload(
+                                other[i].tempFilePath, {
+                                folder: `100acre/BuyCommercial/${projectName}`
+                            }
+                            );
+                            otherImageLink.push({
+                                public_id: otherResult.public_id,
+                                url: otherResult.secure_url
+                            })
+                        }
+                    } else {
                         const otherResult = await cloudinary.uploader.upload(
-                            other[i].tempFilePath, {
+                            other.tempFilePath, {
                             folder: `100acre/BuyCommercial/${projectName}`
                         }
                         );
@@ -35,17 +46,6 @@ class BuyController {
                             url: otherResult.secure_url
                         })
                     }
-                }else{
-                    const otherResult = await cloudinary.uploader.upload(
-                        other.tempFilePath, {
-                        folder:`100acre/BuyCommercial/${projectName}`
-                    }
-                    );
-                    otherImageLink.push({
-                        public_id: otherResult.public_id,
-                        url: otherResult.secure_url
-                    })
-                }
                     const data = new buyCommercial_Model({
                         frontImage: {
                             public_id: imageResult.public_id,
@@ -62,9 +62,9 @@ class BuyController {
                         amenities: amenities,
                         type: type,
                         area: area,
-                        furnishing:furnishing,
-                        landMark:landMark,
-                        builtYear:builtYear
+                        furnishing: furnishing,
+                        landMark: landMark,
+                        builtYear: builtYear
                     })
                     // cconsole.log(data)
                     await data.save()
@@ -91,61 +91,73 @@ class BuyController {
 
     }
 
-    static viewAll=async(req,res)=>{
+    static viewAll = async (req, res) => {
         try {
             const cachedData = cache.get('authorData');
             if (cachedData) {
-               // If data is in cache, return cached data
-               return res.json({
-                  data: cachedData,
-                  message: 'Data retrieved from cache!',
-               });
+                // If data is in cache, return cached data
+                return res.json({
+                    data: cachedData,
+                    message: 'Data retrieved from cache!',
+                });
             }
             // If data is not in cache, fetch from the database
-            const data = await  buyCommercial_Model.find()
+            const data = await buyCommercial_Model.find()
             // Store data in the cache for future use
             cache.set('authorData', data);
             res.status(200).json({
-               data,
-               message: 'Data fetched from the database!',
+                data,
+                message: 'Data fetched from the database!',
             });
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:'internal server error'
+                message: 'internal server error'
             })
         }
     }
-         
-    static buycommercialView = async (req, res) => {
+    // view by id 
+    static buyView_id = async (req, res) => {
         try {
-            const type= req.params.type
-            const data = await buyCommercial_Model.find({ type:type })
-
-            res.status(201).json({
-                message: "view enable",
-                dataview: data
-            })
+            const id = req.params.id;
+            if (id) {
+                const data = await buyCommercial_Model.findById({ _id: id })
+                if (data) {
+                    res.status(200).json({
+                        message: "data get successfully ! ",
+                        data
+                    })
+                } else {
+                    res.status(200).json({
+                        message: "data not found ! "
+                    })
+                }
+            }else{
+                res.status(404).json({
+                    message:"id does not found in url !"
+                })
+            }
 
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "an error is occured",
+                message: "internal server error ! "
             })
         }
     }
+ s
     //    res.send('search with name and type')
-    static view = async (req, res) => {
+    static view_Name_type = async (req, res) => {
         try {
-    
-         const projectName=req.params.projectName;
-         const type=req.params.type;
-        const query = { projectName:projectName,type:type };
-         const data=await buyCommercial_Model.find(query)
-         res.status(200).json({
-            message:"data get succesfull",
-            datar:data
-        })
+
+            const projectName = req.params.projectName;
+            const type = req.params.type;
+            const query = { projectName: projectName, type: type };
+            const data = await buyCommercial_Model.find(query)
+            res.status(200).json({
+                message: "data get succesfull",
+                data: data
+            })
 
         } catch (error) {
             console.log(error)
@@ -154,6 +166,7 @@ class BuyController {
             })
         }
     }
+
 
     static buycommercialEdit = async (req, res) => {
         try {
@@ -167,7 +180,7 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-                message:"something went wrong ! "
+                message: "something went wrong ! "
             })
         }
     }
@@ -175,8 +188,8 @@ class BuyController {
     static buycommercialUpdate = async (req, res) => {
         // res.send("listen update")
         try {
-            const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities ,area,furnishing,landMark,builtYear } = req.body
-            if (projectName && propertyTitle && city && state && address && price && type && descripation && amenities && area&&furnishing&&landMark&&builtYear) {
+            const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
+            if (projectName && propertyTitle && city && state && address && price && type && descripation && amenities && area && furnishing && landMark && builtYear) {
                 if (req.files) {
 
                     if (req.files.frontImage && req.files.otherImage) {
@@ -189,14 +202,14 @@ class BuyController {
                         await cloudinary.uploader.destroy(frontId)
 
                         const frontResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder:`100acre/BuyCommercial/${projectName}`
+                            folder: `100acre/BuyCommercial/${projectName}`
                         })
 
 
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherResult = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder:`100acre/BuyCommercial/${projectName}`
+                                    folder: `100acre/BuyCommercial/${projectName}`
                                 });
                                 otherImageLink.push({
                                     public_id: otherResult.public_id,
@@ -205,7 +218,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder:`100acre/BuyCommercial/${projectName}`
+                                folder: `100acre/BuyCommercial/${projectName}`
                             });
 
                             otherImageLink.push({
@@ -235,10 +248,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area,
-                            furnishing:furnishing,
-                            landMark:landMark,
-                            builtYear:builtYear
+                            area: area,
+                            furnishing: furnishing,
+                            landMark: landMark,
+                            builtYear: builtYear
                         })
                         // console.log(dataUpdate)
                         await dataUpdate.save()
@@ -253,7 +266,7 @@ class BuyController {
                         await cloudinary.uploader.destroy(imageId)
 
                         const imageResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder:`100acre/BuyCommercial/${projectName}`
+                            folder: `100acre/BuyCommercial/${projectName}`
                         })
 
                         const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
@@ -270,10 +283,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area,
-                            furnishing:furnishing,
-                            landMark:landMark,
-                            builtYear:builtYear
+                            area: area,
+                            furnishing: furnishing,
+                            landMark: landMark,
+                            builtYear: builtYear
 
                         })
                         // console.log(dataUpdate)
@@ -291,7 +304,7 @@ class BuyController {
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherimage = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder:`100acre/BuyCommercial/${projectName}`
+                                    folder: `100acre/BuyCommercial/${projectName}`
                                 })
                                 otherImageLink.push({
                                     public_id: otherimage.public_id,
@@ -300,7 +313,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder:`100acre/BuyCommercial/${projectName}`
+                                folder: `100acre/BuyCommercial/${projectName}`
                             });
 
                             otherImageLink.push({
@@ -328,10 +341,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area,
-                            furnishing:furnishing,
-                            landMark:landMark,
-                            builtYear:builtYear
+                            area: area,
+                            furnishing: furnishing,
+                            landMark: landMark,
+                            builtYear: builtYear
                         })
                         // console.log(dataUpdate)
                         await dataUpdate.save()
@@ -352,10 +365,10 @@ class BuyController {
                         descripation: descripation,
                         amenities: amenities,
                         type: type,
-                        area:area,
-                        landMark:landMark,
-                        furnishing:furnishing,
-                        builtYear:builtYear
+                        area: area,
+                        landMark: landMark,
+                        furnishing: furnishing,
+                        builtYear: builtYear
                     })
                     // console.log(dataset)
                     await dataset.save()
@@ -372,7 +385,7 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-                message:"something went wrong ! "
+                message: "something went wrong ! "
             })
         }
     }
@@ -401,11 +414,10 @@ class BuyController {
         } catch (error) {
             console.log(error);
             res.status(500).json({
-               message:"something went wrong ! "
+                message: "something went wrong ! "
             })
         }
     }
-    
+
 }
 module.exports = BuyController
-                    

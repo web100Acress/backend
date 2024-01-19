@@ -68,13 +68,14 @@ router.get('/contact_pagedetail_viewAll', contactController.contactpagedetail_vi
 router.delete('/contact_pagedetail_delete/:id/delete', contactController.contact_pagedetail_delete)
 //Property
 //Buy
-router.post('/property/buycommercialInsert', BuyController.buycommercialInsert)
-router.get('/property/:type/buyCommercial', BuyController.buycommercialView)
-router.get('/property/:projectName/:type/buyCommercial', BuyController.view)
-router.get("/property/buyCommercial", BuyController.viewAll)
-router.get('/property/:id/edit', BuyController.buycommercialEdit)
-router.post('/property/:id/update', BuyController.buycommercialUpdate)
-router.delete('/property/:id/delete', BuyController.buycommercialDelete)
+router.post('/property/buyInsert', BuyController.buycommercialInsert)
+// router.get('/property/buy/:type', BuyController.buycommercialView)
+router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
+router.get("/property/buy/ViewAll", BuyController.viewAll)
+router.get('/property/view/:id',BuyController.buyView_id)
+router.get('/property/buy/edit/:id', BuyController.buycommercialEdit)
+router.post('/property/buy/update/:id', BuyController.buycommercialUpdate)
+router.delete('/property/buy/delete/:id', BuyController.buycommercialDelete)
 //rent
 router.post('/property/rentInsert', rentController.rentInsert)
 router.get('/property/:id/rentedit', rentController.rentEdit)

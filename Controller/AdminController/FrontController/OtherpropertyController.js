@@ -452,7 +452,7 @@ class otherpropertyController {
       })
     }
   }
-  // other property Enquiry update
+  // other property Enquiry updated 
   static otherEnquiry_Update = async (req, res) => {
     // console.log("hello")
     try {
