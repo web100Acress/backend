@@ -6,8 +6,9 @@ class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
         try {
-            const { projectName, propertyTitle, price, state, city, address, type, descripation, amenities, area } = req.body
-            if (projectName && propertyTitle && price && state && city && address && type && descripation && amenities && area && req.files) {
+            const { projectName, propertyTitle, price, state, city, address, type, descripation, amenities, area,furnishing
+            ,landMark,builtYear } = req.body
+            if (projectName && propertyTitle && price && state && city && address && type && descripation && amenities && area &&furnishing&&landMark&&builtYear&& req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
                     const front = req.files.frontImage;
                     const other = req.files.otherImage
@@ -60,7 +61,10 @@ class BuyController {
                         descripation: descripation,
                         amenities: amenities,
                         type: type,
-                        area: area
+                        area: area,
+                        furnishing:furnishing,
+                        landMark:landMark,
+                        builtYear:builtYear
                     })
                     // cconsole.log(data)
                     await data.save()
@@ -130,9 +134,10 @@ class BuyController {
             })
         }
     }
+    //    res.send('search with name and type')
     static view = async (req, res) => {
         try {
-    //    res.send('search with name and type')
+    
          const projectName=req.params.projectName;
          const type=req.params.type;
         const query = { projectName:projectName,type:type };
@@ -170,8 +175,8 @@ class BuyController {
     static buycommercialUpdate = async (req, res) => {
         // res.send("listen update")
         try {
-            const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities ,area } = req.body
-            if (projectName && propertyTitle && city && state && address && price && type && descripation && amenities && area) {
+            const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities ,area,furnishing,landMark,builtYear } = req.body
+            if (projectName && propertyTitle && city && state && address && price && type && descripation && amenities && area&&furnishing&&landMark&&builtYear) {
                 if (req.files) {
 
                     if (req.files.frontImage && req.files.otherImage) {
@@ -230,7 +235,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area
+                            area:area,
+                            furnishing:furnishing,
+                            landMark:landMark,
+                            builtYear:builtYear
                         })
                         // console.log(dataUpdate)
                         await dataUpdate.save()
@@ -262,7 +270,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area
+                            area:area,
+                            furnishing:furnishing,
+                            landMark:landMark,
+                            builtYear:builtYear
 
                         })
                         // console.log(dataUpdate)
@@ -317,7 +328,10 @@ class BuyController {
                             descripation: descripation,
                             amenities: amenities,
                             type: type,
-                            area:area
+                            area:area,
+                            furnishing:furnishing,
+                            landMark:landMark,
+                            builtYear:builtYear
                         })
                         // console.log(dataUpdate)
                         await dataUpdate.save()
@@ -338,7 +352,10 @@ class BuyController {
                         descripation: descripation,
                         amenities: amenities,
                         type: type,
-                        area:area
+                        area:area,
+                        landMark:landMark,
+                        furnishing:furnishing,
+                        builtYear:builtYear
                     })
                     // console.log(dataset)
                     await dataset.save()

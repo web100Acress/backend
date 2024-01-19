@@ -56,6 +56,18 @@ const buyCommercial_Schema = new mongoose.Schema({
         type:String,
         required:true
     },
+    furnishing:{
+        type:String,
+        required:true
+    },
+    landMark:{
+        type:String,
+        required:true
+    },
+    builtYear:{
+        type:String,
+        required:true
+    }
 
 
 })

@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const bhk_Schema = new mongoose.Schema({
     bhk_type: {
-        type: String
+        type: String //1/2/3bhk
     },
     price: {
         type: String

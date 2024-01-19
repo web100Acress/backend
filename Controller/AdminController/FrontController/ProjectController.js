@@ -31,8 +31,8 @@ class projectController {
                 meta_description,
                 projectBgContent,
                 projectReraNo,
-                type: type,
-                city: city,
+                type,
+                city,
             } = req.body
             if (req.files) {
                 if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
@@ -532,7 +532,43 @@ class projectController {
     // project Bhk detail inter
     static bhk_insert = async (req, res) => {
         try {
-            console.log("hello")
+            // console.log("hello")
+            if (req.body) {
+                const id = req.params.id
+                if (id) {
+                    const { bhk_type, price, bhk_Area } = req.body
+                    if (bhk_type && price && bhk_Area) {
+                        const data = {
+                            bhk_type: bhk_type,
+                            price: price,
+                            bhk_Area: bhk_Area
+                        }
+                        const dataPushed = await ProjectModel.findOneAndUpdate(
+                            { _id: id },
+                            { $push: { BhK_Details: data } },
+                            { new: true }
+                        )
+                        
+                        await dataPushed.save()
+                        console.log(dataPushed)
+                        res.status(200).json({
+                            message: "data pushed successfully !"
+                        })
+                    } else {
+                        res.status(403).json({
+                            message: "check your input field ! "
+                        })
+                    }
+                } else {
+                    res.status(403).json({
+                        message: "check id !"
+                    })
+                }
+            } else {
+                res.status(403).json({
+                    message: "check your field ! "
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -540,6 +576,7 @@ class projectController {
             })
         }
     }
+
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")
@@ -711,4 +748,4 @@ class projectController {
         }
     }
 }
-module.exports = projectController
+module.exports = projectController                                                   
