@@ -93,18 +93,18 @@ class BuyController {
 
     static viewAll = async (req, res) => {
         try {
-            const cachedData = cache.get('authorData');
-            if (cachedData) {
-                // If data is in cache, return cached data
-                return res.json({
-                    data: cachedData,
-                    message: 'Data retrieved from cache!',
-                });
-            }
+            // const cachedData = cache.get('authorData');
+            // if (cachedData) {
+            //     // If data is in cache, return cached data
+            //     return res.json({
+            //         data: cachedData,
+            //         message: 'Data retrieved from cache!',
+            //     });
+            // }
             // If data is not in cache, fetch from the database
             const data = await buyCommercial_Model.find()
             // Store data in the cache for future use
-            cache.set('authorData', data);
+            // cache.set('authorData', data);
             res.status(200).json({
                 message: 'Data fetched from the database!',
                 data
@@ -146,7 +146,7 @@ class BuyController {
             })
         }
     }
- s
+ 
     //    res.send('search with name and type')
     static view_Name_type = async (req, res) => {
         try {

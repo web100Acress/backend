@@ -744,7 +744,6 @@ class PostPropertyController {
         }
 
     }
-
     // postproperty data  view // here we use postproperty id 
     static postPropertyOne_View = async (req, res) => {
         try {

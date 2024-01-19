@@ -86,15 +86,12 @@ class otherpropertyController {
       // console.log("hello")
       const id = req.params.id
       const data = await otherPropertyModel.find({ _id: id });
-      // res.send(data ,"message")
       res.status(200).json({
-        message: "data get!"
+        data:data,
+        message:"data get successfully ~"
       })
     } catch (error) {
-      console.log(error)
-      res.send(500).json({
-        message: "Internal server error ! "
-      })
+     
     }
   }
   // otherproperty data viewAll
@@ -437,8 +434,8 @@ class otherpropertyController {
         //  console.log(data)
         await data.save()
         res.status(200).json({
-          message: "data submitted successfully ! ",
-          data
+         message:"data submitted successfully !",
+         data:data
         })
       } else {
         res.status(403).json({

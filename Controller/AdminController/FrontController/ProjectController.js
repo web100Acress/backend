@@ -576,6 +576,7 @@ class projectController {
             })
         }
     }
+    
 
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
