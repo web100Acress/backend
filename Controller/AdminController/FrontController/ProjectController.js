@@ -34,24 +34,27 @@ class projectController {
                 type,
                 city,
             } = req.body
+            // console.log(req.body)
+            // console.log(req.files)
             if (req.files) {
                 if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
                     const logo = req.files.logo
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:`100acre/project/${builderName}`
                     }
                     )
+                    console.log(logo,logoResult)
                     const frontImage = req.files.frontImage
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:`100acre/project/${builderName}`
                     }
                     )
                     const project_locationImage = req.files.project_locationImage;
                     const projectLocationResult = await cloudinary.uploader.upload(
                         project_locationImage.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:`100acre/project/${builderName}`
                     }
                     )
 
@@ -61,7 +64,7 @@ class projectController {
                         for (let i = 0; i < project_floorplan; i++) {
                             const project_floorplanResult = await cloudinary.uploader.upload(
                                 project_floorplan[i].tempFilePath, {
-                                folder: `100acre/project/${projectName}`
+                                folder:`100acre/project/${builderName}`
                             }
                             )
                             floorplanLink.push({
@@ -73,7 +76,7 @@ class projectController {
                     } else {
                         const project_floorplanResult = await cloudinary.uploader.upload(
                             project_floorplan.tempFilePath, {
-                            folder: `100acre/project/${projectName}`
+                            folder:`100acre/project/${builderName}`
                         }
                         )
                         floorplanLink.push({
@@ -529,7 +532,7 @@ class projectController {
             })
         }
     }
-    // project Bhk detail inter
+    // project Bhk detail inter data
     static bhk_insert = async (req, res) => {
         try {
             // console.log("hello")
@@ -576,7 +579,11 @@ class projectController {
             })
         }
     }
-    
+    // project bhk detail view 
+    static bhk_view=async(req,res)=>{
+        // console.log("hello")
+        
+    }
 
     //Enquiry for the project page 
     static userInsert = async (req, res) => {

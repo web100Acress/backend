@@ -153,7 +153,6 @@ class PostPropertyController {
                 if (User != null) {
                     const isMatch = await bcrypt.compare(password, User.password)
                     if ((email == email) && isMatch) {
-
                         if (User.role == 'Seller') {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
@@ -315,7 +314,7 @@ class PostPropertyController {
                 message: "data get successfully ! ",
                 data
             })
-           
+
 
         } catch (error) {
             console.log(error)
@@ -515,7 +514,7 @@ class PostPropertyController {
                     if (id) {
 
                         const dataPushed = await postPropertyModel.findOneAndUpdate(
-                            {_id:id},
+                            { _id: id },
                             { $push: { postProperty: data } },
                             { new: true })
 
@@ -719,7 +718,7 @@ class PostPropertyController {
         try {
             const id = req.params.id
             if (id) {
-                const data = await postPropertyModel.findById({_id:id})
+                const data = await postPropertyModel.findById({ _id: id })
                 if (data) {
                     res.status(200).json({
                         message: "All project Data get  !",
@@ -758,10 +757,16 @@ class PostPropertyController {
                     },
                 }
             )
-            res.status(200).json({
-                message: "data retrieved successfully ! ",
-                data
-            })
+            if (data) {
+                res.status(200).json({
+                    message: "data retrieved successfully ! ",
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: "data not found !"
+                })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({

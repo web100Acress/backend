@@ -50,10 +50,10 @@ class otherpropertyController {
         propertyType: propertyType,
         propertyName: propertyName,
         address: address,
-        city: city,
-        state: state,
-        price: price,
-        area: area,
+        // city: city,
+        // state: state,
+        // price: price,
+        // area: area,
         descripation: descripation,
         landMark: landMark,
         amenities: amenities,
@@ -61,6 +61,10 @@ class otherpropertyController {
         furnishing: furnishing,
         type: type,
         availableDate: availableDate,
+        city:city,
+        state:state,
+        price:price,
+        area:area,
         frontImage: {
           public_id: frontResult.public_id,
           url: frontResult.secure_url
@@ -88,10 +92,13 @@ class otherpropertyController {
       const data = await otherPropertyModel.find({ _id: id });
       res.status(200).json({
         data:data,
-        message:"data get successfully ~"
+        message:"data get successfully !"
       })
     } catch (error) {
-     
+     console.log(error)
+     res.status(500).json({
+      message:"internal server error !"
+     })
     }
   }
   // otherproperty data viewAll
@@ -393,6 +400,7 @@ class otherpropertyController {
           propertyName: propertyName,
           Prop_address: address,
           status: status
+       
         })
         // Connect with SMTP Gmail
         const transporter = await nodemailer.createTransport({
@@ -431,7 +439,7 @@ class otherpropertyController {
          </div>
 `,
         });
-        //  console.log(data)
+       //console.log(data)
         await data.save()
         res.status(200).json({
          message:"data submitted successfully !",

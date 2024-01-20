@@ -190,7 +190,7 @@ class BuyController {
         // res.send("listen update")
         try {
             const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
-            if (projectName && propertyTitle && city && state && address && price && type && descripation && amenities && area && furnishing && landMark && builtYear) {
+           
                 if (req.files) {
 
                     if (req.files.frontImage && req.files.otherImage) {
@@ -378,11 +378,7 @@ class BuyController {
                         data: dataset
                     })
                 }
-            } else {
-                res.status(403).json({
-                    message: "require all field !"
-                })
-            }
+           
         } catch (error) {
             console.log(error);
             res.status(500).json({

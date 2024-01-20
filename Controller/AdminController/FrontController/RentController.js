@@ -195,7 +195,7 @@ class rentController {
         // res.send("listen rent  update ")
         try {
             const { projectName, propertyType, propertyName, city, state, address, price, area, availableDate, descripation, furnishing, builtYear, amenities, landmark, type } = req.body
-            if (projectName && propertyType && propertyName && city && state && address && price && area && availableDate && descripation && furnishing && builtYear && amenities && landmark && type) {
+          
                 if (req.files) {
                     if (req.files.frontImage && req.files.otherImage) {
                         const front = req.files.frontImage;
@@ -395,11 +395,7 @@ class rentController {
                         message: " data updated successfully ! "
                     })
                 }
-            } else {
-                res.status(204).json({
-                    message: " check your field no content !"
-                })
-            }
+           
         } catch (error) {
             console.log(error)
             res.status(500).json({

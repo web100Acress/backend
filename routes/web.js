@@ -52,6 +52,7 @@ router.post("/userUpdate/:id",projectController.userUpdate)
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
     // bhk detail routing 
 router.post('/bhk_insert/:id',projectController.bhk_insert)
+router.get('/bhk_view/:id',projectController.bhk_view)
 //contact
 // Customer Contact routing handler
 router.post('/contact_Insert', contactController.contact_Insert)

@@ -83,18 +83,20 @@ const projectSchema = new mongoose.Schema({
 
     Amenities: [{ type: String }],
     projectBgContent: {
-        type:String
+        type: String
     },
     projectReraNo: {
-        type:String
+        type: String
     },
     type: {
-        type:String
+        type: String
     },
-    city:{
-        type:String
+    city: {
+        type: String
     },
-
+    builderName: {
+        type: String
+    },
     BhK_Details: [bhk_Schema],
 
 },
