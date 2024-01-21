@@ -59,14 +59,17 @@ class projectController {
                     )
 
                     const project_floorplan = req.files.project_floorplan_Image;
+                    // console.log(req.files.project_floorplan_Image)
                     const floorplanLink = []
-                    if (project_floorplan.lenght >= 2) {
-                        for (let i = 0; i < project_floorplan; i++) {
-                            const project_floorplanResult = await cloudinary.uploader.upload(
-                                project_floorplan[i].tempFilePath, {
-                                folder:`100acre/project/${builderName}`
-                            }
-                            )
+                    if (project_floorplan.length>= 2) {
+                        for(let i=0;i<project_floorplan.length;i++){
+                            // console.log("h")
+                            const project_floorplanResult=await cloudinary.uploader.upload(
+                                project_floorplan[i].tempFilePath,{
+                                    folder:`100acre/projecr/${builderName}`
+                                }
+                            );
+
                             floorplanLink.push({
                                 public_id: project_floorplanResult.public_id,
                                 url: project_floorplanResult.secure_url
