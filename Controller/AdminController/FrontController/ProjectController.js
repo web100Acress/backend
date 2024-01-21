@@ -168,8 +168,8 @@ class projectController {
     static projectView = async (req, res) => {
         //console.log("hello")
         try {
-            const id = req.params.id
-            const data = await ProjectModel.find({ _id:id})
+            const projectName = req.params.projectName
+            const data = await ProjectModel.find({projectName:projectName})
             res.status(200).json({
                 message: " enable",
                 dataview: data
@@ -499,7 +499,7 @@ class projectController {
             // }
 
             const data = await ProjectModel.find()
-if(data){
+       if(data){
             res.status(200).json({
                 message: "All project Data get  !",
                 data
