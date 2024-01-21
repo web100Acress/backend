@@ -44,7 +44,7 @@ class projectController {
                         folder:`100acre/project/${builderName}`
                     }
                     )
-                    console.log(logo,logoResult)
+                  
                     const frontImage = req.files.frontImage
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
@@ -589,7 +589,7 @@ class projectController {
     const id=req.params.id
     const data=await ProjectModel.findOne(
         {"BhK_Details._id":id},{
-            
+
         }
     )
     }catch(error){
