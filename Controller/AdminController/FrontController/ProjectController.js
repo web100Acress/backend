@@ -597,16 +597,23 @@ class projectController {
     //console.log("chcoSJ")
     const id=req.params.id
     const data=await ProjectModel.findOne(
-        {"BhK_Details._id":id},{
-
-        }
+        {"BhK_Details._id":id},
+         {
+            BhK_Details:{
+                $elemMatch:{
+                    _id:id
+                }
+            }
+         }
+        
     )
+    console.log(data)
     }catch(error){
      console.log(error)
     }
         
     }
-
+    
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")
