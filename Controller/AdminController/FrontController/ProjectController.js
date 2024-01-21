@@ -490,20 +490,26 @@ class projectController {
     static projectviewAll = async (req, res) => {
 
         try {
-            const cachedData = cache.get('setData')
-            if (cachedData) {
-                return res.status(201).json({
-                    message: "data fetched from cache !",
-                    data: cachedData
-                })
-            }
+            // const cachedData = cache.get('setData')
+            // if (cachedData) {
+            //     return res.status(201).json({
+            //         message: "data fetched from cache !",
+            //         data: cachedData
+            //     })
+            // }
 
             const data = await ProjectModel.find()
-
+if(data){
             res.status(200).json({
                 message: "All project Data get  !",
                 data
             })
+        }else{
+            res.status(200).json({
+                message: "data not found  !",
+               
+            })  
+        }
         } catch (error) {
             console.log(error)
             res.status(500).json({
