@@ -402,14 +402,17 @@ class projectController {
                     })
                 } else if (req.files.project_floorplan_Image) {
                     const project_floorplan_Image = req.files.project_floorplan_Image;
+                    // console.log(project_floorplan_Image)
                     const floorplanLink = []
-                    if (project_floorplan_Image >= 2) {
-                        for (let i = 0; i < project_floorplan_Image; i++) {
+                    if (project_floorplan_Image.length >= 2) {
+
+                        for (let i = 0; i < project_floorplan_Image.length; i++) {
                             const project_floorplanResult = await cloudinary.uploader.upload(
                                 project_floorplan_Image[i].tempFilePath, {
                                 folder: `100acre/project/${projectName}`
                             }
                             )
+                           
                             floorplanLink.push({
                                 public_id: project_floorplanResult.public_id,
                                 url: project_floorplanResult.secure_url
@@ -581,7 +584,17 @@ class projectController {
     }
     // project bhk detail view 
     static bhk_view=async(req,res)=>{
-        // console.log("hello")
+    try{
+    //console.log("chcoSJ")
+    const id=req.params.id
+    const data=await ProjectModel.findOne(
+        {"BhK_Details._id":id},{
+            
+        }
+    )
+    }catch(error){
+     console.log(error)
+    }
         
     }
 
@@ -757,3 +770,32 @@ class projectController {
     }
 }
 module.exports = projectController                                                   
+
+
+
+  // const data=await ProjectModel.findOne()
+        // const query = { city:"delhi" };
+
+        //     const countCanada = await ProjectModel.countDocuments(query);
+        //     console.log(countCanada)
+
+    //     const fieldName = "city";
+    //     // specify an optional query document
+    //     const query = {  builderName:"Adani" };
+        
+    // const distinctValues = await ProjectModel.distinct(fieldName, query);
+    // console.log(distinctValues);
+    // const filter = {
+    //     meta_title:
+    //     "fwfw"};
+    // // increment every document matching the filter with 2 more comments
+    // const updateDoc = {
+    //   $set: {
+    //     meta_title: `After viewing I am ${
+    //       100 * Math.random()
+    //     }% more satisfied with life.`,
+    //   },
+    // };
+    // const result = await ProjectModel.updateMany(filter, updateDoc);
+    // console.log(`Updated ${result.modifiedCount} documents`);
+            

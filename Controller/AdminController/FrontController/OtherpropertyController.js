@@ -45,15 +45,17 @@ class otherpropertyController {
       }
 
       const data = new otherPropertyModel({
-        propertyOwnerEmail: propertyOwnerEmail,
-        propertyOwnerNumber: propertyOwnerNumber,
-        propertyType: propertyType,
-        propertyName: propertyName,
-        address: address,
+        // propertyOwnerEmail: propertyOwnerEmail,
+        // propertyOwnerNumber: propertyOwnerNumber,
+        // propertyType: propertyType,
+        // propertyName: propertyName,
+        // address: address,
         // city: city,
         // state: state,
         // price: price,
         // area: area,
+        propertyOwnerEmail:propertyOwnerEmail,
+        propertyOwnerNumber:propertyOwnerNumber,
         descripation: descripation,
         landMark: landMark,
         amenities: amenities,
@@ -61,10 +63,10 @@ class otherpropertyController {
         furnishing: furnishing,
         type: type,
         availableDate: availableDate,
-        city:city,
-        state:state,
-        price:price,
-        area:area,
+        city: city,
+        state: state,
+        price: price,
+        area: area,
         frontImage: {
           public_id: frontResult.public_id,
           url: frontResult.secure_url
@@ -91,14 +93,14 @@ class otherpropertyController {
       const id = req.params.id
       const data = await otherPropertyModel.find({ _id: id });
       res.status(200).json({
-        data:data,
-        message:"data get successfully !"
+        data: data,
+        message: "data get successfully !"
       })
     } catch (error) {
-     console.log(error)
-     res.status(500).json({
-      message:"internal server error !"
-     })
+      console.log(error)
+      res.status(500).json({
+        message: "internal server error !"
+      })
     }
   }
   // otherproperty data viewAll
@@ -400,7 +402,7 @@ class otherpropertyController {
           propertyName: propertyName,
           Prop_address: address,
           status: status
-       
+
         })
         // Connect with SMTP Gmail
         const transporter = await nodemailer.createTransport({
@@ -439,11 +441,11 @@ class otherpropertyController {
          </div>
 `,
         });
-       //console.log(data)
+        //console.log(data)
         await data.save()
         res.status(200).json({
-         message:"data submitted successfully !",
-         data:data
+          message: "data submitted successfully !",
+          data: data
         })
       } else {
         res.status(403).json({
@@ -479,7 +481,7 @@ class otherpropertyController {
         // console.log(data)
         await data.save()
         res.status(200).json({
-          message:" data updated successfully ! "
+          message: " data updated successfully ! "
         })
 
       } else {
@@ -508,7 +510,7 @@ class otherpropertyController {
       // If data is not in cache,fetch from the database
       const data = await rent_Model.find()
       // Store data in the cache for future use
-      cache.set('authorData',data);
+      cache.set('authorData', data);
       res.status(200).json({
         data,
         message: 'Data fetched from the database !',
@@ -540,7 +542,7 @@ class otherpropertyController {
       })
     }
   }
-// other property Enquiry delete
+  // other property Enquiry delete
   static otherEnquiry_delete = async (req, res) => {
     try {
       // console.log("hello")

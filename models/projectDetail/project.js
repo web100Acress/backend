@@ -16,7 +16,6 @@ const bhk_Schema = new mongoose.Schema({
 const projectSchema = new mongoose.Schema({
 
     project_floorplan_Image: [],
-
     frontImage: {
         public_id: {
             type: String,
@@ -33,7 +32,6 @@ const projectSchema = new mongoose.Schema({
             type: String,
         },
     },
-
     project_locationImage: {
         public_id: {
             type: String,
@@ -42,8 +40,6 @@ const projectSchema = new mongoose.Schema({
             type: String,
         },
     },
-
-
     state: {
         type: String
     },
@@ -96,6 +92,9 @@ const projectSchema = new mongoose.Schema({
     },
     builderName: {
         type: String
+    },
+    AboutDeveloper:{
+        type:String
     },
     BhK_Details: [bhk_Schema],
 
