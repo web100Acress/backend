@@ -168,8 +168,8 @@ class projectController {
     static projectView = async (req, res) => {
         //console.log("hello")
         try {
-            const projectName = req.params.projectName
-            const data = await ProjectModel.find({ projectName: projectName })
+            const id = req.params.id
+            const data = await ProjectModel.find({ _id:id})
             res.status(200).json({
                 message: " enable",
                 dataview: data

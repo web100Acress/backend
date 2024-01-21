@@ -39,7 +39,7 @@ router.get('/project', projectController.project)
 //projectDetail page 
      //page with detail 
 router.post('/projectInsert', projectController.projectInsert)
-router.get('/projectView/:projectName/view', projectController.projectView)
+router.get('/projectView/:id', projectController.projectView)
 router.get('/projectView/viewAll', projectController.projectviewAll)
 router.get('/projectEdit/:id', projectController.projectEdit)
 router.post('/projectUpdate/:id', projectController.projectUpdate)
