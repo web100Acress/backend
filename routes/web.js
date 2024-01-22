@@ -71,7 +71,7 @@ router.delete('/contact_pagedetail_delete/:id/delete', contactController.contact
 //Buy
 router.post('/property/buyInsert', BuyController.buycommercialInsert)
 // router.get('/property/buy/:type', BuyController.buycommercialView)
-router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
+// router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
 router.get("/property/buy/ViewAll", BuyController.viewAll)
 router.get('/property/view/:id',BuyController.buyView_id)
 router.get('/property/buy/edit/:id', BuyController.buycommercialEdit)

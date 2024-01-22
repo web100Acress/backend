@@ -148,33 +148,33 @@ class BuyController {
     }
  
     //    res.send('search with name and type')
-    static view_Name_type = async (req, res) => {
-        try {
+    // static view_Name_type = async (req, res) => {
+    //     try {
 
-            const projectName = req.params.projectName;
-            const type = req.params.type;
-            const query = { projectName: projectName, type: type };
-            const data = await buyCommercial_Model.find(query)
-            res.status(200).json({
-                message: "data get succesfull",
-                data: data
-            })
+    //         const projectName = req.params.projectName;
+    //         const type = req.params.type;
+    //         const query = { projectName: projectName, type: type };
+    //         const data = await buyCommercial_Model.find(query)
+    //         res.status(200).json({
+    //             message: "data get succesfull",
+    //             data: data
+    //         })
 
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "something went wrong ! ",
-            })
-        }
-    }
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message: "something went wrong ! ",
+    //         })
+    //     }
+    // }
 
 
     static buycommercialEdit = async (req, res) => {
         try {
             const id = req.params.id
-            const data = await buyCommercial_Model.findById(id)
+            const data = await buyCommercial_Model.findById({_id:id})
             res.status(200).json({
-                message: "data get successfully !",
+                message: "data get successfully !!",
                 dataedit: data
             })
 
