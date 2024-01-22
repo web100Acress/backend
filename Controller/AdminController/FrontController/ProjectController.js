@@ -620,7 +620,7 @@ class projectController {
         // const data =new UserModel
         try {
             const { name, email, mobile, projectName, address } = req.body
-            if (name && email && mobile && projectName && address) {
+            if ( mobile && projectName && address) {
                 const data = new UserModel({
                     name: name,
                     email: email,
