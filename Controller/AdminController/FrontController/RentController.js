@@ -407,17 +407,18 @@ class rentController {
     static rentDelete = async (req, res) => {
         try {
             // console.log("error ")
-            const image = await rent_Model.findById(req.params.id)
+            const id=req.params.id
+            const image = await rent_Model.findById({_id:id})
             const imageId = image.frontImage.public_id;
 
             await cloudinary.uploader.destroy(imageId)
 
             for (let i = 0; i < image.length; i++) {
-                const otherResult = await rent_Model.findById(req.params.id)
+                const otherResult = await rent_Model.findById({_id:id})
                 const otherId = otherResult.otherImage[i].public_id;
                 await cloudinary.uploader.upload(otherId)
             }
-            await rent_Model.findByIdAndDelete(req.params.id)
+            await rent_Model.findByIdAndDelete({_id:id})
 
             res.status(200).json({
                 message: " data deleted successfully !"

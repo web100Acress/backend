@@ -164,7 +164,7 @@ class projectController {
             })
         }
     }
-    // see project by id view details 
+    // see project by name view details 
     static projectView = async (req, res) => {
         //console.log("hello")
         try {
