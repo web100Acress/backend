@@ -629,8 +629,121 @@ class projectController {
      console.log(error)
     }
         
+    } 
+    //project bhk detail edit 
+    static bhk_edit=async(req,res)=>{
+        // console.log("hello")
+        try {
+            const id =req.params.id
+            if(id){
+              const data=await ProjectModel.findOne(  {"BhK_Details._id":id},
+              {
+                 BhK_Details:{
+                     $elemMatch:{
+                         _id:id
+                     }
+                 }
+              })
+              if(data){
+                  res.status(200).json({
+                    message:"data get successfully !",
+                    data
+                  })
+              }else{
+                res.status(200).json({
+                    message:"data not found !"
+                })
+              }
+            }else{
+                res.status(404).json({
+                    message:"check your id !"
+                })
+            }
+        } catch (error) {
+           console.log(error)
+           res.status(500).json({
+            message:"Internal server error ! "
+           }) 
+        }
     }
-    
+    //project bhk update 
+    static bhk_update=async(req,res)=>{
+        // console.log("hello")
+        try {
+            const{bhk_type,price,bhk_Area}=req.body
+            const id=req.params.id
+            const update={
+                bhk_type: bhk_type,
+                price: price,
+                bhk_Area: bhk_Area
+            }
+            if(update){
+            const data=await ProjectModel.findOneAndUpdate(
+                {"BhK_Details._id":id},
+                { $set: { "BhK_Details.$": update } }
+            )
+            if(data){
+                res.status(200).json({
+                    message:"data get successfully  !"
+                })
+            }else{
+                res.status(200).json({
+                    message:"data not found !"
+                })
+            }
+        }else{
+            res.status(200).json({
+                message:"check field !"
+            })
+        }
+            if(data){
+                res.status(200).json({
+                    message:"data updated successfully ! ",
+                    data
+                })
+            }else{
+
+            }
+        } catch (error) {
+           console.log(error)
+           res.status(500).json({
+            message:"Internal server error ! "
+           }) 
+        }
+    }
+    // project bhk delete 
+    static bhk_delete=async(req,res)=>{
+        // console.log("kas")
+        try {
+            const id=req.params.id
+            if(id){
+            const update = {
+                $pull: {
+                    BhK_Details: { _id: id }
+                }
+            };
+             if(update){
+            const data= await ProjectModel.updateOne(update)
+            res.status(200).json({
+                message:"delete successfully  !"
+            })
+             }else{
+                res.status(200).json({
+                    message:"not found in database !"
+                }) 
+             }
+
+        }else{  res.status(404).json({
+            message:"check id  !"
+        })}
+            
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message:"internal server error !"
+            })
+        }
+    }
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")

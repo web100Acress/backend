@@ -53,6 +53,9 @@ router.delete("/userdataDelete/delete/:id", projectController.userdataDelete)
     // bhk detail routing 
 router.post('/bhk_insert/:id',projectController.bhk_insert)
 router.get('/bhk_view/:id',projectController.bhk_view)
+router.get('/bhk_edit/:id',projectController.bhk_edit)
+router.post('/bhk_update/:id',projectController.bhk_update)
+router.delete('/bhk_delete/:id',projectController.bhk_delete)
 
 //contact
 // Customer Contact routing handler
