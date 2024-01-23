@@ -596,6 +596,7 @@ class projectController {
     try{
     //console.log("chcoSJ")
     const id=req.params.id
+    if(id){
     const data=await ProjectModel.findOne(
         {"BhK_Details._id":id},
          {
@@ -607,7 +608,23 @@ class projectController {
          }
         
     )
-    console.log(data)
+   if(data){
+    res.status(200).json({
+        message:"data get successfully",
+        data
+    })
+   }else{
+    res.status(200).json({
+        message:"data get successfully"
+    })
+   }
+   
+   }else{
+   res.status(404).json({
+    message:"check url id "
+   })
+  }
+   
     }catch(error){
      console.log(error)
     }
