@@ -33,6 +33,7 @@ class projectController {
                 projectReraNo,
                 type,
                 city,
+                projectOverview
             } = req.body
             // console.log(req.body)
             // console.log(req.files)
@@ -122,6 +123,7 @@ class projectController {
                         projectReraNo: projectReraNo,
                         type: type,
                         city: city,
+                        projectOverview:projectOverview
 
                     })
                     // console.log(data)
@@ -202,6 +204,7 @@ class projectController {
                 meta_title,
                 type,
                 city,
+              projectOverview
             } = req.body
             const id = req.params.id;
             if (req.files) {
@@ -284,6 +287,7 @@ class projectController {
                         meta_description: meta_description,
                         type: type,
                         city: city,
+                        projectOverview: projectOverview
 
                     })
                     // console.log(data)
@@ -324,6 +328,7 @@ class projectController {
                         projectReraNo: projectReraNo,
                         meta_title: meta_title,
                         meta_description: meta_description
+                        , projectOverview: projectOverview
                     })
                     // console.log(data)
                     await data.save()
@@ -361,6 +366,7 @@ class projectController {
                         meta_title: meta_title,
                         type: type,
                         city: city,
+                        projectOverview: projectOverview
                     })
                     // console.log(data)
                     await data.save()
@@ -395,7 +401,8 @@ class projectController {
                         meta_description: meta_description,
                         meta_title: meta_title,
                         city: city,
-                        type: type
+                        type: type,
+                        projectOverview: projectOverview
                     })
                     //  console.log(data)
                     await data.save()
@@ -449,7 +456,8 @@ class projectController {
                         meta_description: meta_description,
                         meta_title: meta_title,
                         city: city,
-                        type: type
+                        type: type,
+                        projectOverview: projectOverview
                     })
                     await data.save()
                     res.status(200).json({
@@ -472,7 +480,8 @@ class projectController {
                     meta_description: meta_description,
                     meta_title: meta_title,
                     city: city,
-                    type: type
+                    type: type,
+                    projectOverview: projectOverview
                 })
                 await data.save()
                 res.status(200).json({

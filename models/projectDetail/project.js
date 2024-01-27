@@ -96,10 +96,11 @@ const projectSchema = new mongoose.Schema({
     AboutDeveloper:{
         type:String
     },
-    BhK_Details: [bhk_Schema],
     projectOverview:{
         type:String
-    }
+    },
+    BhK_Details: [bhk_Schema],
+    
 
 },
 

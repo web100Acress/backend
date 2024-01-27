@@ -563,7 +563,8 @@ class PostPropertyController {
                         },
                         email: email,
                         number: number,
-                        verify: ''
+                        verify: '',
+                        propertyLooking:req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -637,7 +638,8 @@ class PostPropertyController {
                         otherImage: otherImagelink,
                         email: email,
                         number: number,
-                        verify: ''
+                        verify: '',
+                        propertyLooking:req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -683,7 +685,8 @@ class PostPropertyController {
                     availableDate: req.body.availableDate,
                     email: email,
                     number: number,
-                    verify: ""
+                    verify: "",
+                    propertyLooking:req.body.propertyLooking
 
                 }
                 // console.log(data)
