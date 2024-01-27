@@ -507,7 +507,8 @@ class PostPropertyController {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
                         },
-                        otherImage: otherImagelink
+                        otherImage: otherImagelink,
+                        propertyLooking:req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -804,7 +805,7 @@ class PostPropertyController {
 
         // res.send("post property listen")
         try {
-            const { propertyName, propertyType, address, area, city, state, price, descripation, furnishing, builtYear, type, amenities, landMark, availableDate, } = req.body
+            const { propertyName, propertyType, address, area, city, state, price, descripation, furnishing, builtYear, type, amenities, landMark, availableDate,propertyLooking } = req.body
             if (req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
                     const frontImage = req.files.frontImage;
@@ -876,7 +877,8 @@ class PostPropertyController {
                         builtYear: builtYear,
                         landMark: landMark,
                         type: type,
-                        amenities: amenities
+                        amenities: amenities,
+                        propertyLooking:propertyLooking
                     }
                     // console.log(update)
                     // console.log(otherImageLink)
@@ -930,7 +932,8 @@ class PostPropertyController {
                         builtYear: builtYear,
                         type: type,
                         landMark: landMark,
-                        descripation: descripation
+                        descripation: descripation,
+                        propertyLooking:propertyLooking
                     }
 
                     // console.log(update)
@@ -1017,7 +1020,8 @@ class PostPropertyController {
                         landMark: landMark,
                         descripation: descripation,
                         amenities: amenities,
-                        furnishing: furnishing
+                        furnishing: furnishing,
+                        propertyLooking:propertyLooking
 
                     }
                     // console.log(update)
@@ -1051,7 +1055,8 @@ class PostPropertyController {
                     landMark: landMark,
                     descripation: descripation,
                     amenities: amenities,
-                    furnishing: furnishing
+                    furnishing: furnishing,
+                    propertyLooking:propertyLooking
 
                 }
 

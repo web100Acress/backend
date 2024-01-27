@@ -712,38 +712,71 @@ class projectController {
         }
     }
     // project bhk delete 
-    static bhk_delete=async(req,res)=>{
-        // console.log("kas")
-        try {
-            const id=req.params.id
-            if(id){
-            const update = {
-                $pull: {
-                    BhK_Details: { _id: id }
-                }
-            };
-             if(update){
-            const data= await ProjectModel.updateOne(update)
-            res.status(200).json({
-                message:"delete successfully  !"
-            })
-             }else{
-                res.status(200).json({
-                    message:"not found in database !"
-                }) 
-             }
+    // static bhk_delete=async(req,res)=>{
+    //     // console.log("kas")
+    //     try {
+    //         const id=req.params.id
+    //         if(id){
+    //         const update = {
+    //             $pull: {
+    //                 BhK_Details: { _id: id }
+    //             }
+    //         };
+    //         console.log(update,"hiuid")
+    //          if(update){
+    //         const data= await ProjectModel.findOneAndUpdate(update, { new: true })
+    //         res.status(200).json({
+    //             message:"delete successfully  !"
+    //         })
+    //          }else{
+    //             res.status(200).json({
+    //                 message:"not found in database !"
+    //             }) 
+    //          }
 
-        }else{  res.status(404).json({
-            message:"check id  !"
-        })}
+    //     }else{  res.status(404).json({
+    //         message:"check id  !"
+    //     })}
             
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message:"internal server error !"
+    //         })
+    //     }
+    // }
+    static bhk_delete = async (req, res) => {
+        try {
+            const id = req.params.id;
+    
+            if (id) {
+
+                const update = {
+                    $pull: {
+                        BhK_Details: { _id: id }
+                    }
+                };
+    // console.log(update)
+                const data = await ProjectModel.updateOne( {},{ $pull: { BhK_Details: { _id: '65acf45188dd611195bdb006' } } })
+                    res.status(200).json({
+                        message: "Delete successful!",data
+                    });
+             
+                  
+                
+            } else {
+                res.status(400).json({
+                    message: "Invalid ID!"
+                });
+            }
         } catch (error) {
-            console.log(error)
+            console.log(error);
             res.status(500).json({
-                message:"internal server error !"
-            })
+                message: "Internal server error!"
+            });
         }
     }
+    
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
         // console.log("helo")

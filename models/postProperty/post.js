@@ -65,6 +65,9 @@ const property_Schema=new mongoose.Schema({
             },
             verify:{
                 type:String
+            },
+            propertyLooking:{
+                type:String
             }
         })
 
