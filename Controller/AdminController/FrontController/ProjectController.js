@@ -537,7 +537,7 @@ class projectController {
         // console.log("helo")
         try {
             const id = req.params.id
-            console.log(id)
+        
             const data = await ProjectModel.findByIdAndDelete({ _id: id })
             res.status(202).json({
                 message: 'data deleted sucessfully!',
@@ -571,7 +571,7 @@ class projectController {
                         )
                         
                         await dataPushed.save()
-                        console.log(dataPushed)
+                      
                         res.status(200).json({
                             message: "data pushed successfully !"
                         })
@@ -602,22 +602,14 @@ class projectController {
     try{
     //console.log("chcoSJ")
     const id=req.params.id
+    console.log(id)
     if(id){
-    const data=await ProjectModel.findOne(
-        {"BhK_Details._id":id},
-         {
-            BhK_Details:{
-                $elemMatch:{
-                    _id:id
-                }
-            }
-         }
-        
-    )
+    const data=await ProjectModel.findById({_id:id})
+    // console.log(data)
    if(data){
     res.status(200).json({
         message:"data get successfully",
-        data
+        data:data.BhK_Details
     })
    }else{
     res.status(200).json({
@@ -636,6 +628,7 @@ class projectController {
     }
         
     } 
+    
     //project bhk detail edit 
     static bhk_edit=async(req,res)=>{
         // console.log("hello")
