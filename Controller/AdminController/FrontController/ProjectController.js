@@ -37,6 +37,7 @@ class projectController {
             } = req.body
             // console.log(req.body)
             // console.log(req.files)
+            if(projectOverview){
             if (req.files) {
                 if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
                     const logo = req.files.logo
@@ -142,6 +143,11 @@ class projectController {
                     message: "check input field ! "
                 })
             }
+        }else{
+            res.status(403).json({
+                message: "projectOverview null ! "
+            })
+        }
         } catch (error) {
             console.log(error)
             res.status(500).json({
