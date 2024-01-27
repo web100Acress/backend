@@ -537,20 +537,11 @@ class projectController {
         // console.log("helo")
         try {
             const id = req.params.id
-            const result = await ProjectModel.findById({ _id: id })
-            const sliderId = result.sliderImage.public_id
-            await cloudinary.uploader.destroy(sliderId)
-
-            const siteId = result.sitePlan.public_id
-            await cloudinary.uploader.destroy(siteId)
-
-            const image2Id = result.Image2.public_id
-            await cloudinary.uploader.destroy(image2Id)
-
+            console.log(id)
             const data = await ProjectModel.findByIdAndDelete({ _id: id })
             res.status(202).json({
                 message: 'data deleted sucessfully!',
-                deletedata: data
+                // deletedata: data
             })
         } catch (error) {
             console.log(error)
