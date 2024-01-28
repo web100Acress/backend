@@ -44,6 +44,10 @@ router.get('/project/viewAll', projectController.projectviewAll)
 router.get('/project/Edit/:id', projectController.projectEdit)
 router.post('/project/Update/:id', projectController.projectUpdate)
 router.delete('/project/Delete/:id', projectController.projectDelete)
+
+router.get('/project/trending',projectController.project_trending)
+router.get('/project/featured',projectController.project_featured)
+
    //from
 router.post('/userInsert', projectController.userInsert)
 router.get("/userViewAll",projectController.userViewAll)

@@ -550,6 +550,37 @@ class projectController {
             })
         }
     }
+   static project_trending=async(req,res)=>{
+    // console.log("hello")
+    try {
+        const data =await ProjectModel.find({projectOverview:"trending"})
+        res.status(200).json({
+            message:"data get successfully !",
+            data
+        })
+    } catch (error) {
+     console.log(error) 
+     res.status(500).json({
+        message:"internal server error ! "
+     })  
+    }
+   }
+    static project_featured=async(req,res)=>{
+    // console.log("hello")
+    try {
+        const data =await ProjectModel.find({projectOverview:"featured"})
+        res.status(200).json({
+            message:"data get successfully !",
+            data
+        })
+    } catch (error) {
+     console.log(error) 
+     res.status(500).json({
+        message:"internal server error ! "
+     })  
+    }
+   }
+
     // project Bhk detail inter data
     static bhk_insert = async (req, res) => {
         try {
@@ -683,7 +714,7 @@ class projectController {
             )
             if(data){
                 res.status(200).json({
-                    message:"data get successfully  !"
+                    message:"data update successfully  !"
                 })
             }else{
                 res.status(200).json({
@@ -949,6 +980,8 @@ class projectController {
             console.log(error)
         }
     }
+
+
 }
 module.exports = projectController                                                   
 
