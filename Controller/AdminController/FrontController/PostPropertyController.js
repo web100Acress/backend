@@ -160,16 +160,12 @@ class PostPropertyController {
                                 token: token,
 
                             })
-                        } else if (User.role == "Admin") {
+                        } else {
                             const token = jwt.sign({ user_id: User._id }, 'amitchaudhary100')
                             res.status(200).json({
                                 message: " Admin login successfully done ! ",
                                 token: token,
 
-                            })
-                        } else {
-                            res.status(201).json({
-                                message: "sign Up before login !"
                             })
                         }
                     } else {
