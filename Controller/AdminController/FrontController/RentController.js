@@ -206,32 +206,32 @@ class rentController {
             // const data1 = await postPropertyModel.find({
             //     "postProperty.email": ".com"
             // });
-            const data1 = await postPropertyModel.aggregate([
-                {
-                    $match: {
-                        "postProperty.verify": "verified"
-                    }
-                },
-                {
-                    $project: {
-                        name: 1,
-                        // email: 1,
-                        // mobile: 1,
-                        // password: 1,
-                        // role: 1,
-                        // token: 1,
-                        // _id:1,
-                        postProperty: {
-                            $filter: {
-                                input: "$postProperty",
-                                as: "property",
-                                cond: { $eq: ["$$property.propertyLooking", "rent"] },
-                                cond: { $eq: ["$$property.verify", "verified"] }
-                            }
-                        }
-                    }
-                }
-            ]);
+            // const data1 = await postPropertyModel.aggregate([
+            //     {
+            //         $match: {
+            //             "postProperty.verify": "verified"
+            //         }
+            //     },
+            //     {
+            //         $project: {
+            //             name: 1,
+            //             // email: 1,
+            //             // mobile: 1,
+            //             // password: 1,
+            //             // role: 1,
+            //             // token: 1,
+            //             // _id:1,
+            //             postProperty: {
+            //                 $filter: {
+            //                     input: "$postProperty",
+            //                     as: "property",
+            //                     cond: { $eq: [["$$property.propertyLooking","rent"]&&["$$property.verify", "verified"]]}
+            //                     // cond: { $eq: ["$$property.verify", "verified"] }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // ]);
 
             // const done=data1.map(((x) => x.postProperty))
 
@@ -246,6 +246,32 @@ class rentController {
 
             // const collection = [ ...data,]
             // res.send(data)
+
+            const data1 = await postPropertyModel.aggregate([
+                {
+                    $match: {
+                        "postProperty.verify": "verified"
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        postProperty: {
+                            $filter: {
+                                input: "$postProperty",
+                                as: "property",
+                                cond: {
+                                    $and: [
+                                        { $eq: ["$$property.propertyLooking", "rent"] },
+                                        { $eq: ["$$property.verify", "verified"] }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+            
             if (data) {
                 res.status(200).json({
 

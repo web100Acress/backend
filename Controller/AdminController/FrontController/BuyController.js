@@ -110,24 +110,21 @@ class BuyController {
                 {
                     $project: {
                         name: 1,
-                        email: 1,
-                        mobile: 1,
-                        password: 1,
-                        role: 1,
-                        token: 1,
-                        _id:1,
                         postProperty: {
                             $filter: {
                                 input: "$postProperty",
                                 as: "property",
-                                cond: { $eq: ["$$property.propertyLooking", "Sell"] }
-                                // cond: { $eq: ["$$property.verify", "verified"] }
+                                cond: {
+                                    $and: [
+                                        { $eq: ["$$property.propertyLooking", "Sell"] },
+                                        { $eq: ["$$property.verify", "verified"] }
+                                    ]
+                                }
                             }
                         }
                     }
                 }
             ]);
-       
             res.status(200).json({
                data1,
                 message: 'Data fetched from the database!',
