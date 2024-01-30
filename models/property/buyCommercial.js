@@ -17,7 +17,7 @@ const buyCommercial_Schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    propertytype: {
+    propertyType: {
         type: String,//here we mention 1bhk or 
         required: true
     },
@@ -70,9 +70,6 @@ const buyCommercial_Schema = new mongoose.Schema({
     availableDate:{
         type:String
     },
- 
-
-
 })
 const buyCommercial_Model = mongoose.model('BuyCommercial_Property', buyCommercial_Schema)
 module.exports = buyCommercial_Model

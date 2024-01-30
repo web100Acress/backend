@@ -64,7 +64,7 @@ const rent_Schema=new mongoose.Schema({
         required:true
     }
   ],
-  landmark:{
+  landMark:{
     type:String,
     required:true
   },

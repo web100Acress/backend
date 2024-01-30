@@ -14,10 +14,10 @@ class rentController {
         try {
             // console.log("hello")
             const { propertyType, propertyName, price, area, availableDate, descripation,
-                furnishing, builtYear, amenities, landmark, type, city, state, address } = req.body
+                furnishing, builtYear, amenities, landMark, type, city, state, address } = req.body
 
             if ( propertyType && propertyName && price && area && availableDate && descripation
-                && furnishing && builtYear && amenities && landmark && type && city && state && address) {
+                && furnishing && builtYear && amenities && landMark && type && city && state && address) {
 
                 if (req.files.frontImage && req.files.otherImage) {
                     const frontImage = req.files.frontImage
@@ -59,7 +59,6 @@ class rentController {
                             url: frontResult.secure_url
                         },
                         otherImage: otherImageLink,
-                       
                         propertyType: propertyType,
                         propertyName: propertyName,
                         price: price,
@@ -69,7 +68,7 @@ class rentController {
                         furnishing: furnishing,
                         builtYear: builtYear,
                         amenities: amenities,
-                        landmark: landmark,
+                        landMark: landMark,
                         type: type,
                         city: city,
                         state: state,
@@ -96,7 +95,7 @@ class rentController {
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                error: "An error is occured",
+                error: "internal server error !",
             })
         }
     }

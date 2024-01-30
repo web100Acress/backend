@@ -8,9 +8,11 @@ class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
         try {
-            const { propertyName,propertytype,availabledate, price, state, city, address, type, descripation, amenities, area, furnishing
+            const { propertyName,propertyType,availableDate, price, state, city, address, type, descripation, amenities, area, furnishing
                 , landMark, builtYear } = req.body
-            if  (propertyName&&propertytype&&availabledate && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear && req.files) {
+                console.log(req.body)
+            if  (propertyName&&propertyType&&availableDate && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear) {
+                // console.log("kgha")
                 if (req.files.frontImage && req.files.otherImage) {
                     const front = req.files.frontImage;
                     const other = req.files.otherImage
@@ -20,7 +22,7 @@ class BuyController {
                     // console.log(otherImageLink)
                     const imageResult = await cloudinary.uploader.upload(
                         front.tempFilePath, {
-                        folder: `100acre/BuyCommercial/${projectName}`
+                        folder: `100acre/BuyCommercial/${propertyName}`
                     }
 
                     )
@@ -29,7 +31,7 @@ class BuyController {
                         for (let i = 0; i < other.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 other[i].tempFilePath, {
-                                folder: `100acre/BuyCommercial/${projectName}`
+                                folder: `100acre/BuyCommercial/${propertyName}`
                             }
                             );
                             otherImageLink.push({
@@ -40,7 +42,7 @@ class BuyController {
                     } else {
                         const otherResult = await cloudinary.uploader.upload(
                             other.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${projectName}`
+                            folder: `100acre/BuyCommercial/${propertyName}`
                         }
                         );
                         otherImageLink.push({
@@ -55,8 +57,8 @@ class BuyController {
                         },
                         otherImage: otherImageLink,
                         propertyName:propertyName,
-                        propertytype:propertytype,
-                        availabledate:availabledate,
+                        propertyType:propertyType,
+                        availabledate:availableDate,
                         price: price,
                         state: state,
                         city: city,
@@ -185,9 +187,9 @@ class BuyController {
     // static view_Name_type = async (req, res) => {
     //     try {
 
-    //         const projectName = req.params.projectName;
+    //         const propertyName = req.params.propertyName;
     //         const type = req.params.type;
-    //         const query = { projectName: projectName, type: type };
+    //         const query = { propertyName: propertyName, type: type };
     //         const data = await buyCommercial_Model.find(query)
     //         res.status(200).json({
     //             message: "data get succesfull",
@@ -237,14 +239,14 @@ class BuyController {
                         await cloudinary.uploader.destroy(frontId)
 
                         const frontResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${projectName}`
+                            folder: `100acre/BuyCommercial/${propertyName}`
                         })
 
 
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherResult = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: `100acre/BuyCommercial/${projectName}`
+                                    folder: `100acre/BuyCommercial/${propertyName}`
                                 });
                                 otherImageLink.push({
                                     public_id: otherResult.public_id,
@@ -253,7 +255,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: `100acre/BuyCommercial/${projectName}`
+                                folder: `100acre/BuyCommercial/${propertyName}`
                             });
 
                             otherImageLink.push({
@@ -302,7 +304,7 @@ class BuyController {
                         await cloudinary.uploader.destroy(imageId)
 
                         const imageResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${projectName}`
+                            folder: `100acre/BuyCommercial/${propertyName}`
                         })
 
                         const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
@@ -341,7 +343,7 @@ class BuyController {
                         if (other.length >= 2) {
                             for (let i = 0; i < other.length; i++) {
                                 const otherimage = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: `100acre/BuyCommercial/${projectName}`
+                                    folder: `100acre/BuyCommercial/${propertyName}`
                                 })
                                 otherImageLink.push({
                                     public_id: otherimage.public_id,
@@ -350,7 +352,7 @@ class BuyController {
                             }
                         } else {
                             const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: `100acre/BuyCommercial/${projectName}`
+                                folder: `100acre/BuyCommercial/${propertyName}`
                             });
 
                             otherImageLink.push({
