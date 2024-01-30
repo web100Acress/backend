@@ -134,6 +134,16 @@ class rentController {
             const id = req.params.id
             if (id) {
                 const data = await rent_Model.findById({ _id: id })
+
+                const postData= await postPropertyModel.findOne({ "postProperty._id": id },
+                {
+                    postProperty: {
+                        $elemMatch: {
+                            _id: id,
+                        },
+                    },
+                }
+            )
                 if (data) {
                     res.status(200).json({
                         message: 'data get successfully !',
@@ -141,7 +151,8 @@ class rentController {
                     })
                 } else {
                     res.status(200).json({
-                        message: "data not found ! "
+                        message: "data get successfully ! "
+                        , postData
                     })
                 }
             } else {
