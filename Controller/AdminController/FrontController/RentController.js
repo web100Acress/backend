@@ -239,7 +239,7 @@ class rentController {
 
                     done: data1,
                     message: "data get successfully !",
-                    // data
+                    data
 
                 })
             }
