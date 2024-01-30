@@ -685,7 +685,7 @@ class PostPropertyController {
                     availableDate: req.body.availableDate,
                     email: email,
                     number: number,
-                    verify: "",
+                    verify:"",
                     propertyLooking:req.body.propertyLooking
 
                 }

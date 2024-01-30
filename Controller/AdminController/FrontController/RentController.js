@@ -213,14 +213,14 @@ class rentController {
                             $filter: {
                                 input: "$postProperty",
                                 as: "property",
-                                cond: { $eq: ["$$property.email", ".com"] }
-                                // cond: { $eq: ["$$property.verify", "hello"] }
+                                cond: { $eq: ["$$property.propertyLooking", "rent"] },
+                                cond: { $eq: ["$$property.verify", "verified"] }
                             }
                         }
                     }
                 }
             ]);
-              
+
             // const done=data1.map(((x) => x.postProperty))
 
             // const collectionObjects = done.map(item => {
@@ -231,23 +231,22 @@ class rentController {
             // const cleanedCollectionObjects = collectionObjects.map((key,item )=> {
             //     return item["0"];
             // });
-      
+
             // const collection = [ ...data,]
             // res.send(data)
             if (data) {
                 res.status(200).json({
-                    // data1,
-                //    extractedData,
-          done:data1,
+
+                    done: data1,
                     message: "data get successfully !",
-          data
+                    // data
 
                 })
             }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"Internal server error ! "
+                message: "Internal server error ! "
             })
         }
     }

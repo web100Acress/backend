@@ -102,9 +102,12 @@ class BuyController {
             //     });
             // }
             // If data is not in cache, fetch from the database
-            const data = await buyCommercial_Model.find()
+            // const data = await buyCommercial_Model.find()
             // Store data in the cache for future use
             // cache.set('authorData', data);
+
+            const data = await buyCommercial_Model.find()
+            
             res.status(200).json({
                 message: 'Data fetched from the database!',
                 data
