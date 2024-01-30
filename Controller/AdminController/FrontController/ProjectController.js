@@ -550,6 +550,7 @@ class projectController {
             })
         }
     }
+    //project find trending data
    static project_trending=async(req,res)=>{
     // console.log("hello")
     try {
@@ -565,10 +566,12 @@ class projectController {
      })  
     }
    }
+   // project find featured data 
     static project_featured=async(req,res)=>{
     // console.log("hello")
     try {
-        const data =await ProjectModel.find({projectOverview:"featured"})
+      
+        const data =await ProjectModel.find({projectOverview:"featured"}).limit(4)
         res.status(200).json({
             message:"data get successfully !",
             data
@@ -580,7 +583,6 @@ class projectController {
      })  
     }
    }
-
     // project Bhk detail inter data
     static bhk_insert = async (req, res) => {
         try {
@@ -660,7 +662,7 @@ class projectController {
         
     } 
     
-    //project bhk detail edit 
+   //project bhk edit data get
     static bhk_edit=async(req,res)=>{
         // console.log("hello")
         try {
@@ -754,7 +756,7 @@ class projectController {
     //         };
     //         console.log(update,"hiuid")
     //          if(update){
-    //         const data= await ProjectModel.findOneAndUpdate(update, { new: true })
+    //         const data= await ProjectModel.updateOne({},update, { new: true })
     //         res.status(200).json({
     //             message:"delete successfully  !"
     //         })
@@ -786,14 +788,12 @@ class projectController {
                         BhK_Details: { _id: id }
                     }
                 };
-    // console.log(update)
-                const data = await ProjectModel.updateOne( {},{ $pull: { BhK_Details: { _id: '65acf45188dd611195bdb006' } } })
+            // console.log(id)
+                const data = await ProjectModel.updateOne(update)
                     res.status(200).json({
-                        message: "Delete successful!",data
+                        message: "Delete successful!",
+                        data
                     });
-             
-                  
-                
             } else {
                 res.status(400).json({
                     message: "Invalid ID!"
@@ -860,7 +860,7 @@ class projectController {
                 await data.save()
                 res.status(201).json({
                     message: "User data submitted successfully , and the data has been sent via email",
-                    dataInsert: data
+                    // dataInsert: data
                 })
             } else {
                 res.status(403).json({
@@ -990,7 +990,7 @@ module.exports = projectController
   // const data=await ProjectModel.findOne()
         // const query = { city:"delhi" };
 
-        //     const countCanada = await ProjectModel.countDocuments(query);
+        //     const countCanada = await ProjectModel. countDocuments(query);
         //     console.log(countCanada)
 
     //     const fieldName = "city";

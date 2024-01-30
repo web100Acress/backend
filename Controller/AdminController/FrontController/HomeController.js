@@ -215,7 +215,7 @@ class homeController {
   }
 
   // filter data by projectname, city,buildername,minPrice,maxprice
-  //type=== resident or commercial
+  // type===residential and Commercial 
   //area or state 
   // furnishing === select box fully or semi furnished 
 
@@ -224,7 +224,7 @@ class homeController {
 
       const { projectName, city,
         builderName, minPrice, maxPrice, state, area, type, furnishing } = req.query;
-      // console.log(projectName,city,builderName)
+      // console.log(projectName)
       
       const filter_data = []
       const query = {};

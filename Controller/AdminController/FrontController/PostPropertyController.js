@@ -966,6 +966,8 @@ class PostPropertyController {
 
                     // console.log(data)
                     // const otherId=data.postProperty[0].frontImage.public_id
+                    // const otherId=data.postProperty[0].frontImage.public_id
+                    // console.log(otherId)
                     // console.log(otherId)
                     const otherImageLink = []
                     if (otherImage.length >= 2) {

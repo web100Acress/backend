@@ -163,10 +163,10 @@ router.get("/rentproperty/search",homeController.search_rent)
 router.get("/buyproperty/search",homeController.search_buy)
 
 //new launch 
-router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
-router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
-router.get("/newlaunch/viewAll", newlaunchController.newlaunch_viewAll)
-router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
+// router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
+// router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
+// router.get("/newlaunch/viewAll", newlaunchController.newlaunch_viewAll)
+// router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
 // router.post("/newlaunch/update/:id", newlaunchController.newlaunch_update)
 // router.delete("/newlaunch/delete/:id", newlaunchController.newlaunch_delete)
 //other Propertyc

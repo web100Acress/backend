@@ -1,3 +1,4 @@
+const postPropertyModel = require('../../../models/postProperty/post');
 const rent_Model = require('../../../models/property/rent');
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
@@ -130,28 +131,28 @@ class rentController {
         // console.log("helllo")
         try {
             // console.log("hello")
-            const id =req.params.id
-            if(id){
-            const data =await rent_Model.findById({_id:id})
-            if(data){
-               res.status(200).json({
-                message:'data get successfully !',
-                data:data
-               })
-            }else{
-              res.status(200).json({
-              message:"data not found ! "
-            })
-            }
-            }else{
+            const id = req.params.id
+            if (id) {
+                const data = await rent_Model.findById({ _id: id })
+                if (data) {
+                    res.status(200).json({
+                        message: 'data get successfully !',
+                        data: data
+                    })
+                } else {
+                    res.status(200).json({
+                        message: "data not found ! "
+                    })
+                }
+            } else {
                 res.status(200).json({
-                    message:"data not found !"
+                    message: "data not found !"
                 })
             }
         } catch (error) {
             console.log(error)
             res.status(500).json({
-                message:"internal server error ! "
+                message: "internal server error ! "
             })
         }
     }
@@ -179,15 +180,75 @@ class rentController {
         try {
             // console.log("hello")
             const data = await rent_Model.find()
+            const query = {}
+            // const data1=await postPropertyModel.find(
+            //     {
+            //         "postProperty":{
+            //             $elemMatch: {
+            //                 // "looking": { $exists: true },
+            //                 "email": { "petalsviews@gmail.com" }
+            //                 }
+            //         }
+            //     }
+            // )
+            // const data1 = await postPropertyModel.find({
+            //     "postProperty.email": ".com"
+            // });
+            const data1 = await postPropertyModel.aggregate([
+                {
+                    $match: {
+                        "postProperty.email": ".com"
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        // email: 1,
+                        // mobile: 1,
+                        // password: 1,
+                        // role: 1,
+                        // token: 1,
+                        // _id:1,
+                        postProperty: {
+                            $filter: {
+                                input: "$postProperty",
+                                as: "property",
+                                cond: { $eq: ["$$property.email", ".com"] }
+                                // cond: { $eq: ["$$property.verify", "hello"] }
+                            }
+                        }
+                    }
+                }
+            ]);
+              
+            // const done=data1.map(((x) => x.postProperty))
+
+            // const collectionObjects = done.map(item => {
+            //     const obj = { ...item };
+            //     return obj;
+            // });
+
+            // const cleanedCollectionObjects = collectionObjects.map((key,item )=> {
+            //     return item["0"];
+            // });
+      
+            // const collection = [ ...data,]
             // res.send(data)
-            if(data){
+            if (data) {
                 res.status(200).json({
-                    message:"data get successfully !",
-                    data
+                    // data1,
+                //    extractedData,
+          done:data1,
+                    message: "data get successfully !",
+          data
+
                 })
             }
         } catch (error) {
-          console.log(error)
+            console.log(error)
+            res.status(500).json({
+                message:"Internal server error ! "
+            })
         }
     }
     // rental property upadted api 
@@ -195,183 +256,97 @@ class rentController {
         // res.send("listen rent  update ")
         try {
             const { projectName, propertyType, propertyName, city, state, address, price, area, availableDate, descripation, furnishing, builtYear, amenities, landmark, type } = req.body
-          
-                if (req.files) {
-                    if (req.files.frontImage && req.files.otherImage) {
-                        const front = req.files.frontImage;
-                        const other = req.files.otherImage
-                        const otherImageLink = []
-                        const data = await rent_Model.findById(req.params.id)
-                        const frontId = data.frontImage.public_id;
-                        await cloudinary.uploader.destroy(frontId)
 
-                        const frontResult = await cloudinary.uploader.upload(
-                            front.tempFilePath, {
-                            folder: "100acre/Rental_Property"
-                        }
-                        )
-                        //  console.log(frontResult)
-                        if (other.length >= 2) {
-                            for (let i = 0; i < other.length; i++) {
-                                const otherResult = await cloudinary.uploader.upload(
-                                    other[i].tempFilePath, {
-                                    folder: "100acre/Rental_Property"
-                                })
+            if (req.files) {
+                if (req.files.frontImage && req.files.otherImage) {
+                    const front = req.files.frontImage;
+                    const other = req.files.otherImage
+                    const otherImageLink = []
+                    const data = await rent_Model.findById(req.params.id)
+                    const frontId = data.frontImage.public_id;
+                    await cloudinary.uploader.destroy(frontId)
 
-                                otherImageLink.push({
-                                    public_id: otherResult.public_id,
-                                    url: otherResult.secure_url
-                                })
-                            }
-                        } else {
+                    const frontResult = await cloudinary.uploader.upload(
+                        front.tempFilePath, {
+                        folder: "100acre/Rental_Property"
+                    }
+                    )
+                    //  console.log(frontResult)
+                    if (other.length >= 2) {
+                        for (let i = 0; i < other.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
-                                other.tempFilePath, {
+                                other[i].tempFilePath, {
                                 folder: "100acre/Rental_Property"
                             })
+
                             otherImageLink.push({
-                                public_id: otherResult.public_id
-                            })
-                        }
-                        const result = await rent_Model.findById(req.params.id)
-                        for (let i = 0; i < result.otherImage.length; i++) {
-
-                            otherImageLink.push(
-                                result.otherImage[i]
-                            )
-                        }
-
-                        const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
-                            frontImage: {
-                                public_id: frontResult.public_id,
-                                url: frontResult.secure_url
-                            },
-                            otherImage: otherImageLink,
-                            projectName: projectName,
-                            propertyType: propertyType,
-                            propertyname: propertyName,
-                            city: city,
-                            state: state,
-                            address: address,
-                            price: price,
-                            area: area,
-                            availableDate: availableDate,
-                            descripation: descripation,
-                            furnishing: furnishing,
-                            builtYear: builtYear,
-                            amenities: amenities,
-                            landmark: landmark,
-                            type: type
-
-                        })
-                        // console.log(dataUpdate)
-                        res.status(200).json({
-                            message: "update successfully !",
-                            dataUpdate
-                        })
-
-                    } else if (req.files.frontImage) {
-                        const front = req.files.frontImage;
-                        const data = await rent_Model.findById(req.params.id)
-                        const frontId = data.frontImage.public_id;
-                        await cloudinary.uploader.destroy(frontId)
-
-                        const frontResult = await cloudinary.uploader.upload(
-                            front.tempFilePath, {
-                            folder: "100acre/Rental_Property"
-                        }
-                        )
-
-                        const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
-                            frontImage: {
-                                public_id: frontResult.public_id,
-                                url: frontResult.secure_url
-                            },
-                            projectName: projectName,
-                            propertyType: propertyType,
-                            propertyName: propertyName,
-                            city: city,
-                            state: state,
-                            address: address,
-                            price: price,
-                            area: area,
-                            availableDate: availableDate,
-                            descripation: descripation,
-                            furnishing: furnishing,
-                            builtYear: builtYear,
-                            amenities: amenities,
-                            landmark: landmark,
-                            type: type
-
-
-                        })
-                        // console.log(dataUpdate)
-                        res.status(200).json({
-                            message: "update successfull !",
-                            dataUpdate
-                        })
-
-                    } else if (req.files.otherImage) {
-                        const other = req.files.otherImage
-                        const otherImagelink = []
-
-                        if (other.length >= 2) {
-                            for (let i = 0; i < other.length; i++) {
-
-                                const otherResult = await cloudinary.uploader.upload(
-                                    other[i].tempFilepath,
-                                    {
-                                        folder: "100acre/Rental_Property"
-                                    }
-                                )
-                                otherImagelink.push({
-                                    public_id: otherResult.public_id,
-                                    url: otherResult.secure_url
-                                })
-                            }
-                        } else {
-                            const otherResult = await cloudinary.uploader.upload(
-                                other.tempFilePath, {
-                                folder: "100acre/Rental_Property"
-                            }
-                            )
-                            otherImagelink.push({
                                 public_id: otherResult.public_id,
                                 url: otherResult.secure_url
                             })
                         }
-                        const result = await rent_Model.findById(req.params.id)
-                        for (let i = 0; i < result.otherImage.length; i++) {
-                            otherImagelink.push(
-                                result.otherImage[i]
-                            )
-                        }
-
-                        const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
-                            otherImage: otherImagelink,
-                            projectName: projectName,
-                            propertyType: propertyType,
-                            propertyName: propertyName,
-                            city: city,
-                            state: state,
-                            address: address,
-                            area: area,
-                            availableDate: availableDate,
-                            descripation: descripation,
-                            furnishing: furnishing,
-                            builtYear: builtYear,
-                            amenities: amenities,
-                            landmark: landmark,
-                            type: type
+                    } else {
+                        const otherResult = await cloudinary.uploader.upload(
+                            other.tempFilePath, {
+                            folder: "100acre/Rental_Property"
                         })
-                        // console.log(dataUpdate)
-                        await dataUpdate.save()
-                        res.status(200).json({
-                            message: "updated successfuly !",
-                            dataUpdate
+                        otherImageLink.push({
+                            public_id: otherResult.public_id
                         })
                     }
-                } else {
+                    const result = await rent_Model.findById(req.params.id)
+                    for (let i = 0; i < result.otherImage.length; i++) {
+
+                        otherImageLink.push(
+                            result.otherImage[i]
+                        )
+                    }
+
                     const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
+                        frontImage: {
+                            public_id: frontResult.public_id,
+                            url: frontResult.secure_url
+                        },
+                        otherImage: otherImageLink,
+                        projectName: projectName,
+                        propertyType: propertyType,
+                        propertyname: propertyName,
+                        city: city,
+                        state: state,
+                        address: address,
+                        price: price,
+                        area: area,
+                        availableDate: availableDate,
+                        descripation: descripation,
+                        furnishing: furnishing,
+                        builtYear: builtYear,
+                        amenities: amenities,
+                        landmark: landmark,
+                        type: type
+
+                    })
+                    // console.log(dataUpdate)
+                    res.status(200).json({
+                        message: "update successfully !",
+                        dataUpdate
+                    })
+
+                } else if (req.files.frontImage) {
+                    const front = req.files.frontImage;
+                    const data = await rent_Model.findById(req.params.id)
+                    const frontId = data.frontImage.public_id;
+                    await cloudinary.uploader.destroy(frontId)
+
+                    const frontResult = await cloudinary.uploader.upload(
+                        front.tempFilePath, {
+                        folder: "100acre/Rental_Property"
+                    }
+                    )
+
+                    const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
+                        frontImage: {
+                            public_id: frontResult.public_id,
+                            url: frontResult.secure_url
+                        },
                         projectName: projectName,
                         propertyType: propertyType,
                         propertyName: propertyName,
@@ -388,14 +363,100 @@ class rentController {
                         landmark: landmark,
                         type: type
 
+
                     })
-                    // console.log(dataUpdaate)
+                    // console.log(dataUpdate)
+                    res.status(200).json({
+                        message: "update successfull !",
+                        dataUpdate
+                    })
+
+                } else if (req.files.otherImage) {
+                    const other = req.files.otherImage
+                    const otherImagelink = []
+
+                    if (other.length >= 2) {
+                        for (let i = 0; i < other.length; i++) {
+
+                            const otherResult = await cloudinary.uploader.upload(
+                                other[i].tempFilepath,
+                                {
+                                    folder: "100acre/Rental_Property"
+                                }
+                            )
+                            otherImagelink.push({
+                                public_id: otherResult.public_id,
+                                url: otherResult.secure_url
+                            })
+                        }
+                    } else {
+                        const otherResult = await cloudinary.uploader.upload(
+                            other.tempFilePath, {
+                            folder: "100acre/Rental_Property"
+                        }
+                        )
+                        otherImagelink.push({
+                            public_id: otherResult.public_id,
+                            url: otherResult.secure_url
+                        })
+                    }
+                    const result = await rent_Model.findById(req.params.id)
+                    for (let i = 0; i < result.otherImage.length; i++) {
+                        otherImagelink.push(
+                            result.otherImage[i]
+                        )
+                    }
+
+                    const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
+                        otherImage: otherImagelink,
+                        projectName: projectName,
+                        propertyType: propertyType,
+                        propertyName: propertyName,
+                        city: city,
+                        state: state,
+                        address: address,
+                        area: area,
+                        availableDate: availableDate,
+                        descripation: descripation,
+                        furnishing: furnishing,
+                        builtYear: builtYear,
+                        amenities: amenities,
+                        landmark: landmark,
+                        type: type
+                    })
+                    // console.log(dataUpdate)
                     await dataUpdate.save()
                     res.status(200).json({
-                        message: " data updated successfully ! "
+                        message: "updated successfuly !",
+                        dataUpdate
                     })
                 }
-           
+            } else {
+                const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
+                    projectName: projectName,
+                    propertyType: propertyType,
+                    propertyName: propertyName,
+                    city: city,
+                    state: state,
+                    address: address,
+                    price: price,
+                    area: area,
+                    availableDate: availableDate,
+                    descripation: descripation,
+                    furnishing: furnishing,
+                    builtYear: builtYear,
+                    amenities: amenities,
+                    landmark: landmark,
+                    type: type
+
+                })
+                // console.log(dataUpdaate)
+                await dataUpdate.save()
+                res.status(200).json({
+                    message: " data updated successfully ! "
+                })
+            }
+
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -407,18 +468,18 @@ class rentController {
     static rentDelete = async (req, res) => {
         try {
             // console.log("error ")
-            const id=req.params.id
-            const image = await rent_Model.findById({_id:id})
+            const id = req.params.id
+            const image = await rent_Model.findById({ _id: id })
             const imageId = image.frontImage.public_id;
 
             await cloudinary.uploader.destroy(imageId)
 
             for (let i = 0; i < image.length; i++) {
-                const otherResult = await rent_Model.findById({_id:id})
+                const otherResult = await rent_Model.findById({ _id: id })
                 const otherId = otherResult.otherImage[i].public_id;
                 await cloudinary.uploader.upload(otherId)
             }
-            await rent_Model.findByIdAndDelete({_id:id})
+            await rent_Model.findByIdAndDelete({ _id: id })
 
             res.status(200).json({
                 message: " data deleted successfully !"
@@ -431,6 +492,8 @@ class rentController {
             })
         }
     }
+
+
 
 }
 module.exports = rentController
