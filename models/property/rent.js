@@ -14,10 +14,6 @@ const rent_Schema=new mongoose.Schema({
     otherImage:[
 
     ],
-    projectName:{
-     type:String,
-     required:true
-    },
     propertyType:{
         type:String,
         required:true

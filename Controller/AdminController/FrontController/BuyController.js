@@ -1,14 +1,16 @@
+const postPropertyModel = require('../../../models/postProperty/post');
 const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const cloudinary = require('cloudinary').v2;
 const NodeCache = require("node-cache");
+
 const cache = new NodeCache();
 class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
         try {
-            const { projectName, propertyTitle, price, state, city, address, type, descripation, amenities, area, furnishing
+            const { propertyName,propertytype,availabledate, price, state, city, address, type, descripation, amenities, area, furnishing
                 , landMark, builtYear } = req.body
-            if (projectName && propertyTitle && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear && req.files) {
+            if  (propertyName&&propertytype&&availabledate && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear && req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
                     const front = req.files.frontImage;
                     const other = req.files.otherImage
@@ -52,8 +54,9 @@ class BuyController {
                             url: imageResult.secure_url
                         },
                         otherImage: otherImageLink,
-                        projectName: projectName,
-                        propertyTitle: propertyTitle,
+                        propertyName:propertyName,
+                        propertytype:propertytype,
+                        availabledate:availabledate,
                         price: price,
                         state: state,
                         city: city,
@@ -65,6 +68,7 @@ class BuyController {
                         furnishing: furnishing,
                         landMark: landMark,
                         builtYear: builtYear
+
                     })
                     // cconsole.log(data)
                     await data.save()
@@ -93,22 +97,39 @@ class BuyController {
 
     static viewAll = async (req, res) => {
         try {
-            // const cachedData = cache.get('authorData');
-            // if (cachedData) {
-            //     // If data is in cache, return cached data
-            //     return res.json({
-            //         data: cachedData,
-            //         message: 'Data retrieved from cache!',
-            //     });
-            // }
-            // If data is not in cache, fetch from the database
-            // const data = await buyCommercial_Model.find()
-            // Store data in the cache for future use
-            // cache.set('authorData', data);
+           
 
             const data = await buyCommercial_Model.find()
-            
+
+            const data1 = await postPropertyModel.aggregate([
+                {
+                    $match: {
+                        "postProperty.verify": "verified"
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        email: 1,
+                        mobile: 1,
+                        password: 1,
+                        role: 1,
+                        token: 1,
+                        _id:1,
+                        postProperty: {
+                            $filter: {
+                                input: "$postProperty",
+                                as: "property",
+                                cond: { $eq: ["$$property.propertyLooking", "Sell"] }
+                                // cond: { $eq: ["$$property.verify", "verified"] }
+                            }
+                        }
+                    }
+                }
+            ]);
+       
             res.status(200).json({
+               data1,
                 message: 'Data fetched from the database!',
                 data
               
@@ -126,6 +147,18 @@ class BuyController {
             const id = req.params.id;
             if (id) {
                 const data = await buyCommercial_Model.findById({ _id: id })
+
+                 const data1=await postPropertyModel.findOne(
+                    { "postProperty._id": id },
+                {
+                    postProperty: {
+                        $elemMatch: {
+                            _id: id,
+                        },
+                    },
+                }
+                 )
+                 const postdata=data1.postProperty
                 if (data) {
                     res.status(200).json({
                         message: "data get successfully ! ",
@@ -133,7 +166,8 @@ class BuyController {
                     })
                 } else {
                     res.status(200).json({
-                        message: "data not found ! "
+                        message: "data get successfully ! ",
+                        postdata
                     })
                 }
             }else{
@@ -192,7 +226,7 @@ class BuyController {
     static buycommercialUpdate = async (req, res) => {
         // res.send("listen update")
         try {
-            const { projectName, propertyTitle, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
+            const {propertyName, propertytype, availabledate, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
            
                 if (req.files) {
 
@@ -243,8 +277,9 @@ class BuyController {
                                 url: frontResult.secure_url
                             },
                             otherImage: otherImageLink,
-                            projectName: projectName,
-                            propertyTitle: propertyTitle,
+                            propertyName:propertyName,
+                            propertytype:propertytype,
+                            availabledate:availabledate,
                             price: price,
                             state: state,
                             city: city,
@@ -278,8 +313,9 @@ class BuyController {
                                 public_id: imageResult.public_id,
                                 url: imageResult.secure_url
                             },
-                            projectName: projectName,
-                            propertyTitle: propertyTitle,
+                            propertyName:propertyName,
+                            propertytype:propertytype,
+                            availabledate:availabledate,
                             price: price,
                             state: state,
                             city: city,
@@ -336,8 +372,9 @@ class BuyController {
                         const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
 
                             otherImage: otherImageLink,
-                            projectName: projectName,
-                            propertyTitle: propertyTitle,
+                            propertyName:propertyName,
+                            propertytype:propertytype,
+                            availabledate:availabledate,
                             price: price,
                             state: state,
                             city: city,
@@ -360,8 +397,9 @@ class BuyController {
 
                 } else {
                     const dataset = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
-                        projectName: projectName,
-                        propertyTitle: propertyTitle,
+                        propertyName:propertyName,
+                        propertytype:propertytype,
+                        availabledate:availabledate,
                         price: price,
                         state: state,
                         city: city,

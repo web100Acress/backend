@@ -12,13 +12,12 @@ const buyCommercial_Schema = new mongoose.Schema({
         }
     },
     otherImage: [
-       
     ],
-    projectName: {
+    propertyName: {
         type: String,
         required: true
     },
-    propertyTitle: {
+    propertytype: {
         type: String,//here we mention 1bhk or 
         required: true
     },
@@ -67,7 +66,11 @@ const buyCommercial_Schema = new mongoose.Schema({
     builtYear:{
         type:String,
         required:true
-    }
+    },
+    availableDate:{
+        type:String
+    },
+ 
 
 
 })

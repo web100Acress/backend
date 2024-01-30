@@ -13,10 +13,10 @@ class rentController {
         // res.send("listen rent insert ! ")
         try {
             // console.log("hello")
-            const { projectName, propertyType, propertyName, price, area, availableDate, descripation,
+            const { propertyType, propertyName, price, area, availableDate, descripation,
                 furnishing, builtYear, amenities, landmark, type, city, state, address } = req.body
 
-            if (projectName && propertyType && propertyName && price && area && availableDate && descripation
+            if ( propertyType && propertyName && price && area && availableDate && descripation
                 && furnishing && builtYear && amenities && landmark && type && city && state && address) {
 
                 if (req.files.frontImage && req.files.otherImage) {
@@ -59,7 +59,7 @@ class rentController {
                             url: frontResult.secure_url
                         },
                         otherImage: otherImageLink,
-                        projectName: projectName,
+                       
                         propertyType: propertyType,
                         propertyName: propertyName,
                         price: price,
@@ -144,6 +144,7 @@ class rentController {
                     },
                 }
             )
+            //  const data1=postData.postProperty[0]
                 if (data) {
                     res.status(200).json({
                         message: 'data get successfully !',
@@ -208,7 +209,7 @@ class rentController {
             const data1 = await postPropertyModel.aggregate([
                 {
                     $match: {
-                        "postProperty.email": ".com"
+                        "postProperty.verify": "verified"
                     }
                 },
                 {
@@ -265,7 +266,7 @@ class rentController {
     static rentUpdate = async (req, res) => {
         // res.send("listen rent  update ")
         try {
-            const { projectName, propertyType, propertyName, city, state, address, price, area, availableDate, descripation, furnishing, builtYear, amenities, landmark, type } = req.body
+            const {  propertyType, propertyName, city, state, address, price, area, availableDate, descripation, furnishing, builtYear, amenities, landmark, type } = req.body
 
             if (req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
@@ -317,7 +318,6 @@ class rentController {
                             url: frontResult.secure_url
                         },
                         otherImage: otherImageLink,
-                        projectName: projectName,
                         propertyType: propertyType,
                         propertyname: propertyName,
                         city: city,
@@ -357,7 +357,6 @@ class rentController {
                             public_id: frontResult.public_id,
                             url: frontResult.secure_url
                         },
-                        projectName: projectName,
                         propertyType: propertyType,
                         propertyName: propertyName,
                         city: city,
@@ -419,7 +418,6 @@ class rentController {
 
                     const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
                         otherImage: otherImagelink,
-                        projectName: projectName,
                         propertyType: propertyType,
                         propertyName: propertyName,
                         city: city,
@@ -443,7 +441,6 @@ class rentController {
                 }
             } else {
                 const dataUpdate = await rent_Model.findByIdAndUpdate(req.params.id, {
-                    projectName: projectName,
                     propertyType: propertyType,
                     propertyName: propertyName,
                     city: city,
