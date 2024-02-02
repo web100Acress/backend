@@ -188,7 +188,7 @@ router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherE
 
 
 
-router.get("/join",rentController.joined)
+
 
 
 module.exports = router
