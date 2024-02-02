@@ -184,4 +184,11 @@ router.get("/otherproperty/enquiry/viewAll",otherpropertyController.otherEnquiry
 router.get("/otherproperty/enquiry/view/:id",otherpropertyController.otherEnquiry_view)
 router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherEnquiry_delete)
 
+
+
+
+
+router.get("/join",rentController.joined)
+
+
 module.exports = router

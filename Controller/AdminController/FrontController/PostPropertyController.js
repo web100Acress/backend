@@ -4,8 +4,17 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer")
 // const otpGenerator = require('otp-generator')
 const cloudinary = require('cloudinary').v2;
-const NodeCache = require("node-cache");
-const cache = new NodeCache();
+const cache = require('memory-cache');
+
+// Function to get all project data and cache it
+const getAllProjects = async () => {
+    try {
+        const data = await postPropertyModel.find();
+        cache.put('allProjects', data, 3600000); // Cache for 1 hour (in milliseconds)
+    } catch (error) {
+        console.error("Error caching projects:", error);
+    }
+};
 
 
 const generateToken = () => {
@@ -302,23 +311,47 @@ class PostPropertyController {
         }
     }
     //viewAll
+    // static postPerson_View = async (req, res) => {
+    //     // console.log("hello")
+    //     try {
+    //         const data = await postPropertyModel.find()
+    //         res.status(200).json({
+    //             message: "data get successfully ! ",
+    //             data
+    //         })
+
+
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message: " Internal server error ! "
+    //         })
+    //     }
+    // }
     static postPerson_View = async (req, res) => {
-        // console.log("hello")
         try {
-            const data = await postPropertyModel.find()
-            res.status(200).json({
-                message: "data get successfully ! ",
-                data
-            })
-
-
+            const cachedData = cache.get('allProjects');
+            if (cachedData) {
+                return res.status(200).json({
+                    message: "Data fetched from cache!",
+                    data: cachedData
+                });
+            } else {
+                // If data is not cached, fetch it and cache it
+                await getAllProjects();
+                const newData = cache.get('allProjects');
+                return res.status(200).json({
+                    message: "Data fetched and cached!",
+                    data: newData
+                });
+            }
         } catch (error) {
-            console.log(error)
+            console.error("Error fetching projects:", error);
             res.status(500).json({
-                message: " Internal server error ! "
-            })
+                message: "Internal server error!"
+            });
         }
-    }
+    };
     // edit
     static postPerson_Edit = async (req, res) => {
         try {
@@ -780,7 +813,7 @@ class PostPropertyController {
             // console.log(req.params.id)
             const id = req.params.id
 
-            const data = await postPropertyModel.findOne({}, {
+            const data = await postPropertyModel.findOne({ "postProperty._id": id }, {
                 postProperty: {
                     $elemMatch: {
                         _id: id

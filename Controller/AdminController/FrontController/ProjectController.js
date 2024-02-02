@@ -3,8 +3,20 @@ const UserModel = require("../../../models/projectDetail/user");
 const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv').config()
-const NodeCache = require("node-cache");
-const cache = new NodeCache();
+
+const cache = require('memory-cache');
+
+// Function to get all project data and cache it
+const getAllProjects = async () => {
+    try {
+        const data = await ProjectModel.find();
+        cache.put('allProjects', data, 3600000); // Cache for 1 hour (in milliseconds)
+    } catch (error) {
+        console.error("Error caching projects:", error);
+    }
+};
+
+
 
 class projectController {
 
@@ -177,11 +189,17 @@ class projectController {
         //console.log("hello")
         try {
             const projectName = req.params.projectName
+            if(projectName){
             const data = await ProjectModel.find({projectName:projectName})
             res.status(200).json({
                 message: " enable",
                 dataview: data
             })
+        }else{
+            res.status(200).json({
+                message:"Internal server error ! "
+            })
+        }
         } catch (error) {
             console.log(error)
             res.status(500).json({
@@ -216,6 +234,7 @@ class projectController {
             if (req.files) {
                 // console.log("hellofile")
                 if (req.files.logo && req.files.frontImage && req.files.project_locationImage && req.files.project_floorplan_Image) {
+                    // console.log("hello")
                     const logo = req.files.logo;
                     // console.log("hello")
                     const logoResult = await cloudinary.uploader.upload(
@@ -223,28 +242,33 @@ class projectController {
                         folder: `100acre/projectName/${projectName}`
                     }
                     )
+                  
                     const frontImage = req.files.frontImage;
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
                         folder: `100acre/project/${projectName}`
                     }
                     )
+                  
                     const project_locationImage = req.files.project_locationImage;
                     const projectlocationResult = await cloudinary.uploader.upload(
                         project_locationImage.tempFilePath, {
                         folder: `100acre/projectName/${projectName}`
                     }
                     )
-
-                    const floorplan = req.files.project_floorplan_Image;
+                   
+                    const project_floorplan_Image = req.files.project_floorplan_Image;
                     const floorplanLink = []
-                    if (floorplan.lenght >= 2) {
-                        for (let i = 0; i < floorplan.lenght; i++) {
+               
+                    if (project_floorplan_Image.length >= 2) {
+
+                        for (let i = 0; i < project_floorplan_Image.length; i++) {
                             const project_floorplanResult = await cloudinary.uploader.upload(
-                                floorplan[i].tempFilePath, {
+                                project_floorplan_Image[i].tempFilePath, {
                                 folder: `100acre/project/${projectName}`
                             }
                             )
+                           
                             floorplanLink.push({
                                 public_id: project_floorplanResult.public_id,
                                 url: project_floorplanResult.secure_url
@@ -252,7 +276,7 @@ class projectController {
                         }
                     } else {
                         const project_floorplanResult = await cloudinary.uploader.upload(
-                            floorplan.tempFilePath, {
+                            project_floorplan_Image.tempFilePath, {
                             folder: `100acre/project/${projectName}`
                         }
                         )
@@ -261,7 +285,7 @@ class projectController {
                             url: project_floorplanResult.secure_url
                         })
                     }
-
+                 
                     const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
                         logo: {
                             public_id: logoResult.public_id,
@@ -502,36 +526,63 @@ class projectController {
         }
     }
     //findAll
-    static projectviewAll = async (req, res) => {
+    // static projectviewAll = async (req, res) => {
 
-        try {
-            // const cachedData = cache.get('setData')
-            // if (cachedData) {
-            //     return res.status(201).json({
-            //         message: "data fetched from cache !",
-            //         data: cachedData
-            //     })
-            // }
+    //     try {
+    //         const cachedData = cache.get('setData')
+    //         if (cachedData) {
+    //             return res.status(201).json({
+    //                 message: "data fetched from cache !",
+    //                 data: cachedData
+    //             })
+    //         }
 
-            const data = await ProjectModel.find()
-       if(data){
-            res.status(200).json({
-                message: "All project Data get  !",
-                data
-            })
-        }else{
-            res.status(200).json({
-                message: "data not found  !",
+    //         const data = await ProjectModel.find()
+    //         cache.set(data,'setData')
+    //    if(data){
+    //         res.status(200).json({
+    //             message: "All project Data get  !",
+    //             data
+    //         })
+    //     }else{
+    //         res.status(200).json({
+    //             message: "data not found  !",
                
-            })  
+    //         })  
+    //     }
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message: "internal server error ! "
+    //         })
+    //     }
+    // }
+
+// Route handler to get all project data
+static projectviewAll = async (req, res) => {
+    try {
+        const cachedData = cache.get('allProjects');
+        if (cachedData) {
+            return res.status(200).json({
+                message: "Data fetched from cache!",
+                data: cachedData
+            });
+        } else {
+            // If data is not cached, fetch it and cache it
+            await getAllProjects();
+            const newData = cache.get('allProjects');
+            return res.status(200).json({
+                message: "Data fetched and cached!",
+                data: newData
+            });
         }
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "internal server error ! "
-            })
-        }
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        res.status(500).json({
+            message: "Internal server error!"
+        });
     }
+}; 
     //  project data delete 
     static projectDelete = async (req, res) => {
         // console.log("helo")
@@ -635,7 +686,7 @@ class projectController {
     try{
     //console.log("chcoSJ")
     const id=req.params.id
-    console.log(id)
+    // console.log(id)
     if(id){
     const data=await ProjectModel.findById({_id:id})
     // console.log(data)
@@ -646,7 +697,7 @@ class projectController {
     })
    }else{
     res.status(200).json({
-        message:"data get successfully"
+        message:"data not found "
     })
    }
    
@@ -983,7 +1034,7 @@ class projectController {
 
 
 }
-module.exports = projectController                                                   
+module.exports = projectController                                       
 
 
 

@@ -1,4 +1,5 @@
 const postPropertyModel = require('../../../models/postProperty/post');
+const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const rent_Model = require('../../../models/property/rent');
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
@@ -187,65 +188,8 @@ class rentController {
     }
     // ViewAll
     static rentViewAll = async (req, res) => {
-        // console.log("helj")
         try {
-            // console.log("hello")
             const data = await rent_Model.find()
-            const query = {}
-            // const data1=await postPropertyModel.find(
-            //     {
-            //         "postProperty":{
-            //             $elemMatch: {
-            //                 // "looking": { $exists: true },
-            //                 "email": { "petalsviews@gmail.com" }
-            //                 }
-            //         }
-            //     }
-            // )
-            // const data1 = await postPropertyModel.find({
-            //     "postProperty.email": ".com"
-            // });
-            // const data1 = await postPropertyModel.aggregate([
-            //     {
-            //         $match: {
-            //             "postProperty.verify": "verified"
-            //         }
-            //     },
-            //     {
-            //         $project: {
-            //             name: 1,
-            //             // email: 1,
-            //             // mobile: 1,
-            //             // password: 1,
-            //             // role: 1,
-            //             // token: 1,
-            //             // _id:1,
-            //             postProperty: {
-            //                 $filter: {
-            //                     input: "$postProperty",
-            //                     as: "property",
-            //                     cond: { $eq: [["$$property.propertyLooking","rent"]&&["$$property.verify", "verified"]]}
-            //                     // cond: { $eq: ["$$property.verify", "verified"] }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // ]);
-
-            // const done=data1.map(((x) => x.postProperty))
-
-            // const collectionObjects = done.map(item => {
-            //     const obj = { ...item };
-            //     return obj;
-            // });
-
-            // const cleanedCollectionObjects = collectionObjects.map((key,item )=> {
-            //     return item["0"];
-            // });
-
-            // const collection = [ ...data,]
-            // res.send(data)
-
             const data1 = await postPropertyModel.aggregate([
                 {
                     $match: {
@@ -270,7 +214,6 @@ class rentController {
                     }
                 }
             ]);
-            
             if (data) {
                 res.status(200).json({
 
@@ -525,6 +468,10 @@ class rentController {
         }
     }
 
+
+
+
+    
 
 
 }
