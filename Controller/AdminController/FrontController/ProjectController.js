@@ -526,63 +526,54 @@ class projectController {
         }
     }
     //findAll
-    // static projectviewAll = async (req, res) => {
+    static projectviewAll = async (req, res) => {
 
-    //     try {
-    //         const cachedData = cache.get('setData')
-    //         if (cachedData) {
-    //             return res.status(201).json({
-    //                 message: "data fetched from cache !",
-    //                 data: cachedData
-    //             })
-    //         }
-
-    //         const data = await ProjectModel.find()
-    //         cache.set(data,'setData')
-    //    if(data){
-    //         res.status(200).json({
-    //             message: "All project Data get  !",
-    //             data
-    //         })
-    //     }else{
-    //         res.status(200).json({
-    //             message: "data not found  !",
+        try {
+            const data = await ProjectModel.find()
+       if(data){
+            res.status(200).json({
+                message: "All project Data get  !",
+                data
+            })
+        }else{
+            res.status(200).json({
+                message: "data not found  !",
                
-    //         })  
-    //     }
-    //     } catch (error) {
-    //         console.log(error)
-    //         res.status(500).json({
-    //             message: "internal server error ! "
-    //         })
-    //     }
-    // }
+            })  
+        }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({
+                message: "internal server error ! "
+            })
+        }
+    }
 
 // Route handler to get all project data
-static projectviewAll = async (req, res) => {
-    try {
-        const cachedData = cache.get('allProjects');
-        if (cachedData) {
-            return res.status(200).json({
-                message: "Data fetched from cache!",
-                data: cachedData
-            });
-        } else {
-            // If data is not cached, fetch it and cache it
-            await getAllProjects();
-            const newData = cache.get('allProjects');
-            return res.status(200).json({
-                message: "Data fetched and cached!",
-                data: newData
-            });
-        }
-    } catch (error) {
-        console.error("Error fetching projects:", error);
-        res.status(500).json({
-            message: "Internal server error!"
-        });
-    }
-}; 
+// static projectviewAll = async (req, res) => {
+//     try {
+//         const cachedData = cache.get('allProjects');
+//         if (cachedData) {
+//             return res.status(200).json({
+//                 message: "Data fetched from cache!",
+//                 data: cachedData
+//             });
+//         } else {
+//             // If data is not cached, fetch it and cache it
+//             await getAllProjects();
+//             const newData = cache.get('allProjects');
+//             return res.status(200).json({
+//                 message: "Data fetched and cached!",
+//                 data: newData
+//             });
+//         }
+//     } catch (error) {
+//         console.error("Error fetching projects:", error);
+//         res.status(500).json({
+//             message: "Internal server error!"
+//         });
+//     }
+// }; 
     //  project data delete 
     static projectDelete = async (req, res) => {
         // console.log("helo")

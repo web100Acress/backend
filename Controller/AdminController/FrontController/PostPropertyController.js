@@ -310,48 +310,48 @@ class PostPropertyController {
             })
         }
     }
-    //viewAll
-    // static postPerson_View = async (req, res) => {
-    //     // console.log("hello")
-    //     try {
-    //         const data = await postPropertyModel.find()
-    //         res.status(200).json({
-    //             message: "data get successfully ! ",
-    //             data
-    //         })
-
-
-    //     } catch (error) {
-    //         console.log(error)
-    //         res.status(500).json({
-    //             message: " Internal server error ! "
-    //         })
-    //     }
-    // }
+    // viewAll
     static postPerson_View = async (req, res) => {
+        // console.log("hello")
         try {
-            const cachedData = cache.get('allProjects');
-            if (cachedData) {
-                return res.status(200).json({
-                    message: "Data fetched from cache!",
-                    data: cachedData
-                });
-            } else {
-                // If data is not cached, fetch it and cache it
-                await getAllProjects();
-                const newData = cache.get('allProjects');
-                return res.status(200).json({
-                    message: "Data fetched and cached!",
-                    data: newData
-                });
-            }
+            const data = await postPropertyModel.find()
+            res.status(200).json({
+                message: "data get successfully ! ",
+                data
+            })
+
+
         } catch (error) {
-            console.error("Error fetching projects:", error);
+            console.log(error)
             res.status(500).json({
-                message: "Internal server error!"
-            });
+                message: " Internal server error ! "
+            })
         }
-    };
+    }
+    // static postPerson_View = async (req, res) => {
+    //     try {
+    //         const cachedData = cache.get('allProjects');
+    //         if (cachedData) {
+    //             return res.status(200).json({
+    //                 message: "Data fetched from cache!",
+    //                 data: cachedData
+    //             });
+    //         } else {
+    //             // If data is not cached, fetch it and cache it
+    //             await getAllProjects();
+    //             const newData = cache.get('allProjects');
+    //             return res.status(200).json({
+    //                 message: "Data fetched and cached!",
+    //                 data: newData
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching projects:", error);
+    //         res.status(500).json({
+    //             message: "Internal server error!"
+    //         });
+    //     }
+    // };
     // edit
     static postPerson_Edit = async (req, res) => {
         try {
