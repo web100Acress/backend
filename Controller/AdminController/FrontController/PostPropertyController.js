@@ -834,8 +834,6 @@ class PostPropertyController {
     }
     // postproperty data upate 
     static postProperty_Update = async (req, res) => {
-
-        // res.send("post property listen")
         try {
             const { propertyName, propertyType, address, area, city, state, price, descripation, furnishing, builtYear, type, amenities, landMark, availableDate,propertyLooking } = req.body
             if (req.files) {
@@ -845,27 +843,13 @@ class PostPropertyController {
                     const otherImageLink = []
 
                     const id = req.params.id
-                    const data = await postPropertyModel.findOne({}, {
-                        postProperty: {
-                            $elemMatch: {
-                                _id: id
-                            }
-                        }
-                    })
-                    const frontId = data.postProperty[0].frontImage.public_id;
-                    console.log(frontId)
-                    await cloudinary.uploader.destroy(frontId)
+                  
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
                         folder: `100acre/Postproperty/${propertyName}`
                     }
                     )
 
-                    const Id = data['postProperty'][0]._id
-                    // console.log(Id)
-
-                    // const otherImageArray = data.postProperty[0].otherImage;
-                    // const publicIds = otherImageArray.map(image => image.public_id);
                     if (otherImage.length >= 2) {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
@@ -890,35 +874,36 @@ class PostPropertyController {
                         })
 
                     }
-                    const update = {
-                        frontImage: {
-                            public_id: frontResult.public_id,
-                            url: frontResult.secure_url
-                        },
-                        otherImage: otherImageLink,
-                        propertyName: propertyName,
-                        propertyType: propertyType,
-                        area: area,
-                        city: city,
-                        state: state,
-                        address: address,
-                        availabledate: availableDate,
-                        price: price,
-                        descripation: descripation,
-                        furnishing: furnishing,
-                        builtYear: builtYear,
-                        landMark: landMark,
-                        type: type,
-                        amenities: amenities,
-                        propertyLooking:propertyLooking
-                    }
-                    // console.log(update)
+                   
                     // console.log(otherImageLink)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
-                        { 'postProperty._id': Id },
-                        { $set: { 'postProperty.$': update } },
+                        { "postProperty._id": id },
+                        {
+                            $set: {
+                                "postProperty.$.frontImage": {
+                                    public_id: frontResult.public_id,
+                                    url: frontResult.secure_url
+                                },
+                                "postProperty.$.otherImage":otherImageLink,
+                                "postProperty.$.propertyName": propertyName,
+                                "postProperty.$.propertyType": propertyType,
+                                "postProperty.$.area": area,
+                                "postProperty.$.city": city,
+                                "postProperty.$.state": state,
+                                "postProperty.$.address": address,
+                                "postProperty.$.availabledate": availableDate,
+                                "postProperty.$.price": price,
+                                "postProperty.$.descripation": descripation,
+                                "postProperty.$.furnishing": furnishing,
+                                "postProperty.$.builtYear": builtYear,
+                                "postProperty.$.landMark": landMark,
+                                "postProperty.$.type": type,
+                                "postProperty.$.amenities": amenities,
+                                "postProperty.$.propertyLooking": propertyLooking
+                            }
+                        },
                         { new: true }
-                    )
+                    );
                     res.status(200).json({
                         message: "postProperty successfully update ! ",
                         dataUpdate
@@ -929,52 +914,40 @@ class PostPropertyController {
                     const frontImage = req.files.frontImage;
 
                     const id = req.params.id;
-                    const data = await postPropertyModel.findOne({}, {
-                        postProperty: {
-                            $elemMatch: {
-                                _id: id
-                            }
-                        }
-                    })
 
-                    // console.log("hello", data)
-                    const frontId = data.postProperty[0].frontImage.public_id;
-
-                    await cloudinary.uploader.destroy(frontId)
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath,
                         { folder: `100acre/Postproperty/${propertyName}` }
                     )
 
-                    const update = {
-                        frontImage: {
-                            public_id: frontResult.public_id,
-                            url: frontResult.secure_url
-                        },
-                        propertyName: propertyName,
-                        propertyType: propertyType,
-                        area: area,
-                        city: city,
-                        state: state,
-                        address: address,
-                        availableDate: availableDate,
-                        price: price,
-                        amenities: amenities,
-                        furnishing: furnishing,
-                        builtYear: builtYear,
-                        type: type,
-                        landMark: landMark,
-                        descripation: descripation,
-                        propertyLooking:propertyLooking
-                    }
-
                     // console.log(update)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
                         { "postProperty._id": id },
                         {
-                            $set: { 'postProperty.$': update }
-                        }
-                    )
+                            $set: {
+                                "postProperty.$.frontImage": {
+                                    public_id: frontResult.public_id,
+                                    url: frontResult.secure_url
+                                },
+                                "postProperty.$.propertyName": propertyName,
+                                "postProperty.$.propertyType": propertyType,
+                                "postProperty.$.area": area,
+                                "postProperty.$.city": city,
+                                "postProperty.$.state": state,
+                                "postProperty.$.address": address,
+                                "postProperty.$.availabledate": availableDate,
+                                "postProperty.$.price": price,
+                                "postProperty.$.descripation": descripation,
+                                "postProperty.$.furnishing": furnishing,
+                                "postProperty.$.builtYear": builtYear,
+                                "postProperty.$.landMark": landMark,
+                                "postProperty.$.type": type,
+                                "postProperty.$.amenities": amenities,
+                                "postProperty.$.propertyLooking": propertyLooking
+                            }
+                        },
+                        { new: true }
+                    );
                     // res.send(dataUpdate)
                     res.status(200).json({
                         message: "data updated",
@@ -984,20 +957,7 @@ class PostPropertyController {
                     // res.send("listn other")
                     const otherImage = req.files.otherImage;
                     const id = req.params.id;
-                    //   console.log(id,otherImage)
-                    // const data = await postPropertyModel.findOne({}, {
-                    //     postProperty: {
-                    //         $elemMatch: {
-                    //             _id: id
-                    //         }
-                    //     }
-                    // })
-
-                    // console.log(data)
-                    // const otherId=data.postProperty[0].frontImage.public_id
-                    // const otherId=data.postProperty[0].frontImage.public_id
-                    // console.log(otherId)
-                    // console.log(otherId)
+                  
                     const otherImageLink = []
                     if (otherImage.length >= 2) {
                         for (let i = 0; i < otherImage.length; i++) {
@@ -1024,81 +984,66 @@ class PostPropertyController {
                             url: otherResult.secure_url
                         })
                     }
-                    const data = await postPropertyModel.findOne({}, {
-                        postProperty: {
-                            $elemMatch: {
-                                _id: id
-                            }
-                        }
-                    })
-                    const other = data.postProperty[0]
-                    // console.log(other)
-                    for (let i = 0; i < other.otherImage.length; i++) {
-                        otherImageLink.push(
-                            other.otherImage[i]
-                        )
-                    }
-
-                    const update = {
-                        otherImage: otherImageLink,
-                        propertyName: propertyName,
-                        propertyType: propertyType,
-                        area: area,
-                        city: city,
-                        state: state,
-                        address: address,
-                        availableDate: availableDate,
-                        builtYear: builtYear,
-                        type: type,
-                        price: price,
-                        landMark: landMark,
-                        descripation: descripation,
-                        amenities: amenities,
-                        furnishing: furnishing,
-                        propertyLooking:propertyLooking
-
-                    }
                     // console.log(update)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
                         { "postProperty._id": id },
                         {
-                            $set: { "postProperty.$": update }
-                        }
-                    )
+                            $set: {
+                                "postProperty.$.otherImage": otherImageLink,
+                                "postProperty.$.propertyName": propertyName,
+                                "postProperty.$.propertyType": propertyType,
+                                "postProperty.$.area": area,
+                                "postProperty.$.city": city,
+                                "postProperty.$.state": state,
+                                "postProperty.$.address": address,
+                                "postProperty.$.availabledate": availableDate,
+                                "postProperty.$.price": price,
+                                "postProperty.$.descripation": descripation,
+                                "postProperty.$.furnishing": furnishing,
+                                "postProperty.$.builtYear": builtYear,
+                                "postProperty.$.landMark": landMark,
+                                "postProperty.$.type": type,
+                                "postProperty.$.amenities": amenities,
+                                "postProperty.$.propertyLooking": propertyLooking
+                            }
+                        },
+                        { new: true }
+                    );
+                    
                     res.status(200).json({
-                        message: " Data updated successfully  ! ",
+                        message: "Data updated successfully!",
                         dataUpdate
-                    })
+                    });
+                    
 
                 }
             } else {
-
-
                 const id = req.params.id;
-                const update = {
-                    propertyName: propertyName,
-                    propertyType: propertyType,
-                    area: area,
-                    city: city,
-                    state: state,
-                    address: address,
-                    availableDate: availableDate,
-                    builtYear: builtYear,
-                    type: type,
-                    price: price,
-                    landMark: landMark,
-                    descripation: descripation,
-                    amenities: amenities,
-                    furnishing: furnishing,
-                    propertyLooking:propertyLooking
-
-                }
-
+               
                 // console.log(update)
                 const dataUpdate = await postPropertyModel.findOneAndUpdate(
                     { "postProperty._id": id },
-                    { $set: { "postProperty.$": update } }
-                )
+                    {
+                        $set: {
+                            "postProperty.$.propertyName": propertyName,
+                            "postProperty.$.propertyType": propertyType,
+                            "postProperty.$.area": area,
+                            "postProperty.$.city": city,
+                            "postProperty.$.state": state,
+                            "postProperty.$.address": address,
+                            "postProperty.$.availabledate": availableDate,
+                            "postProperty.$.price": price,
+                            "postProperty.$.descripation": descripation,
+                            "postProperty.$.furnishing": furnishing,
+                            "postProperty.$.builtYear": builtYear,
+                            "postProperty.$.landMark": landMark,
+                            "postProperty.$.type": type,
+                            "postProperty.$.amenities": amenities,
+                            "postProperty.$.propertyLooking": propertyLooking
+                        }
+                    },
+                    { new: true }
+                );
                 res.status(200).json({
                     message: "updated successfully ! ",
                     dataUpdate
