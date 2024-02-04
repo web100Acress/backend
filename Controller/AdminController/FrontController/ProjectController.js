@@ -16,7 +16,8 @@ const cache = require('memory-cache');
 //     }
 // };
  // Connect with SMTP Gmail
- const sendPostEmail = async (email) => {
+ const sendPostEmail = async (data,email) => {
+    console.log(data ,"ldhas")
  const transporter = await nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -900,7 +901,7 @@ class projectController {
                 })
                 const email = data.email
                if(email){
-                await sendPostEmail(email)
+                await sendPostEmail(data,email)
                }
                 await data.save()
                 res.status(201).json({
