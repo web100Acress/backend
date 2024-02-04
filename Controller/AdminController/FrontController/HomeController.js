@@ -83,7 +83,7 @@ class homeController {
             }
           ]);
           
-          console.log(data4);
+          // console.log(data4);
           
 
           const getdata = [...data,...data2,...data3, ...data4]
