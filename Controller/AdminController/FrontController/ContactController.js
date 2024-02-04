@@ -22,7 +22,7 @@ class contactController {
         // console.log(req.body)
         try {
             const { name, email, mobile, message, status } = req.body
-            if (name && email && mobile && message && status) {
+            if ( mobile ) {
                 const userData = new contactModel({
                     name: name,
                     email: email,
