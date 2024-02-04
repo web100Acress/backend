@@ -512,7 +512,7 @@ class PostPropertyController {
                     const personData = await postPropertyModel.findById({ _id: id })
                     const email = personData.email;
                     const number = personData.mobile;
-                   
+
 
                     const data = {
                         propertyType: req.body.propertyType,
@@ -537,7 +537,7 @@ class PostPropertyController {
                             url: frontResult.secure_url
                         },
                         otherImage: otherImagelink,
-                        propertyLooking:req.body.propertyLooking
+                        propertyLooking: req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -593,7 +593,7 @@ class PostPropertyController {
                         email: email,
                         number: number,
                         verify: '',
-                        propertyLooking:req.body.propertyLooking
+                        propertyLooking: req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -668,7 +668,7 @@ class PostPropertyController {
                         email: email,
                         number: number,
                         verify: '',
-                        propertyLooking:req.body.propertyLooking
+                        propertyLooking: req.body.propertyLooking
                     }
                     // console.log(data)
 
@@ -714,8 +714,8 @@ class PostPropertyController {
                     availableDate: req.body.availableDate,
                     email: email,
                     number: number,
-                    verify:"",
-                    propertyLooking:req.body.propertyLooking
+                    verify: "",
+                    propertyLooking: req.body.propertyLooking
 
                 }
                 // console.log(data)
@@ -835,7 +835,7 @@ class PostPropertyController {
     // postproperty data upate 
     static postProperty_Update = async (req, res) => {
         try {
-            const { propertyName, propertyType, address, area, city, state, price, descripation, furnishing, builtYear, type, amenities, landMark, availableDate,propertyLooking } = req.body
+            const { propertyName, propertyType, address, area, city, state, price, descripation, furnishing, builtYear, type, amenities, landMark, availableDate, propertyLooking } = req.body
             if (req.files) {
                 if (req.files.frontImage && req.files.otherImage) {
                     const frontImage = req.files.frontImage;
@@ -843,7 +843,7 @@ class PostPropertyController {
                     const otherImageLink = []
 
                     const id = req.params.id
-                  
+
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
                         folder: `100acre/Postproperty/${propertyName}`
@@ -874,7 +874,7 @@ class PostPropertyController {
                         })
 
                     }
-                   
+
                     // console.log(otherImageLink)
                     const dataUpdate = await postPropertyModel.findOneAndUpdate(
                         { "postProperty._id": id },
@@ -884,7 +884,7 @@ class PostPropertyController {
                                     public_id: frontResult.public_id,
                                     url: frontResult.secure_url
                                 },
-                                "postProperty.$.otherImage":otherImageLink,
+                                "postProperty.$.otherImage": otherImageLink,
                                 "postProperty.$.propertyName": propertyName,
                                 "postProperty.$.propertyType": propertyType,
                                 "postProperty.$.area": area,
@@ -957,7 +957,7 @@ class PostPropertyController {
                     // res.send("listn other")
                     const otherImage = req.files.otherImage;
                     const id = req.params.id;
-                  
+
                     const otherImageLink = []
                     if (otherImage.length >= 2) {
                         for (let i = 0; i < otherImage.length; i++) {
@@ -1009,12 +1009,12 @@ class PostPropertyController {
                         },
                         { new: true }
                     );
-                    
+
                     res.status(200).json({
                         message: "Data updated successfully!",
                         dataUpdate
                     });
-                    
+
 
                 }
             } else {
@@ -1059,34 +1059,26 @@ class PostPropertyController {
     // postproperty delete
     static postProperty_Delete = async (req, res) => {
         try {
-             try {
-  
-    const propertyId = req.params.id;
+            const propertyId = req.params.id;
+            // Find the user by ID
+            const user = await postPropertyModel.findOne({ 'postProperty._id': propertyId });
+            if (!user) {
+                return res.status(404).json({ error: 'Post property not found' });
+            }
+            // Find  index of the postProperty object with  ID
+            const index = user.postProperty.findIndex(postProperty => postProperty._id.toString() === propertyId);
+            if (index === -1) {
+                return res.status(404).json({ error: 'Post property not found' });
+            }
+            user.postProperty.splice(index, 1);
+            await user.save();
+            res.status(200).json({ message: 'Post property deleted successfully' });
 
-    // Find the user document by ID
-    const user = await postPropertyModel.findOne({ 'postProperty._id': propertyId });
-    if (!user) {
-      return res.status(404).json({ error: 'Post property not found' });
-    }
-    // Find the index of the postProperty object with the specified ID
-    const index = user.postProperty.findIndex(postProperty => postProperty._id.toString() === propertyId);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Post property not found' });
-    }
-    user.postProperty.splice(index, 1);
-    await user.save();
-    res.status(200).json({ message: 'Post property deleted successfully' });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
         } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "Internal server error ! "
-            })
+            console.error(error);
+            res.status(500).json({ error: 'Internal server error' });
         }
+
     }
 }
 module.exports = PostPropertyController

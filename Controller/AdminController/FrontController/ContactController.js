@@ -51,7 +51,6 @@ class contactController {
     }
     // method for view the customer detail
     static contact_view = async (req, res) => {
-      
         try {
             const data = await contactModel.findById(req.params.id)
             res.status(201).json({
