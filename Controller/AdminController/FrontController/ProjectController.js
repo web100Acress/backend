@@ -16,20 +16,20 @@ const cache = require('memory-cache');
 //     }
 // };
  // Connect with SMTP Gmail
- const sendPostEmail = async (data,email) => {
+ const sendPostEmail = async (email) => {
   
  const transporter = await nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    host:'smtp.gmail.com',
+    port:587,
     auth: {
         user: process.env.Email,
         pass: process.env.EmailPass
     },
+    // debug: true // Enable debugging
 });
 // Send mail with defined transport object
 let info = await transporter.sendMail({
-    from: 'amit100acre@gmail.com', // Sender address
+    from: process.env.Email, // Sender address
     to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
     subject: 'New User Enquiry Detail', // Subject line
     text: '', // Plain text body
@@ -42,11 +42,7 @@ let info = await transporter.sendMail({
     </div>
     <center>
     <div>  Customer Contact  Detail:</div>
-    <div><h3>UserName:${data.name}</h3></div>
-    <div><h3>UserEmailId:${data.email}</h3></div>
-    <div><h3>UserMobileNo.:${data.mobile}</h3></div>
-    <div><h3>ProjectName:${data.projectName}</h3></div>
-    <div><h3>Address:${data.address}</h3></div>
+
     <center>
 
      <br>
@@ -901,9 +897,9 @@ class projectController {
                     address: address
                 })
                 const email = data.email
-               if(email){
-                await sendPostEmail(data,email)
-               }
+          
+                await sendPostEmail(email)
+               
                 await data.save()
                 res.status(201).json({
                     message: "User data submitted successfully , and the data has been sent via email",
