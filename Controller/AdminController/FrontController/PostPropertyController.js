@@ -509,10 +509,10 @@ class PostPropertyController {
 
                     }
 
-                    const personData = await postPropertyModel.findOne({ _id: id })
+                    const personData = await postPropertyModel.findById({ _id: id })
                     const email = personData.email;
                     const number = personData.mobile;
-                    // console.log(email, number)
+                   
 
                     const data = {
                         propertyType: req.body.propertyType,
@@ -891,7 +891,7 @@ class PostPropertyController {
                                 "postProperty.$.city": city,
                                 "postProperty.$.state": state,
                                 "postProperty.$.address": address,
-                                "postProperty.$.availabledate": availableDate,
+                                "postProperty.$.availableDate": availableDate,
                                 "postProperty.$.price": price,
                                 "postProperty.$.descripation": descripation,
                                 "postProperty.$.furnishing": furnishing,
@@ -996,7 +996,7 @@ class PostPropertyController {
                                 "postProperty.$.city": city,
                                 "postProperty.$.state": state,
                                 "postProperty.$.address": address,
-                                "postProperty.$.availabledate": availableDate,
+                                "postProperty.$.availableDate": availableDate,
                                 "postProperty.$.price": price,
                                 "postProperty.$.descripation": descripation,
                                 "postProperty.$.furnishing": furnishing,
@@ -1019,8 +1019,6 @@ class PostPropertyController {
                 }
             } else {
                 const id = req.params.id;
-               
-                // console.log(update)
                 const dataUpdate = await postPropertyModel.findOneAndUpdate(
                     { "postProperty._id": id },
                     {
@@ -1031,7 +1029,7 @@ class PostPropertyController {
                             "postProperty.$.city": city,
                             "postProperty.$.state": state,
                             "postProperty.$.address": address,
-                            "postProperty.$.availabledate": availableDate,
+                            "postProperty.$.availableDate": availableDate,
                             "postProperty.$.price": price,
                             "postProperty.$.descripation": descripation,
                             "postProperty.$.furnishing": furnishing,
@@ -1061,41 +1059,28 @@ class PostPropertyController {
     // postproperty delete
     static postProperty_Delete = async (req, res) => {
         try {
-            // console.log("hello")
-            const id = req.params.id
-            const data = await postPropertyModel.findOne({},
-                {
-                    postProperty: {
-                        $elemMatch: {
-                            _id: id
-                        }
-                    }
-                })
-            // console.log(data)
-            const frontId = data.postProperty[0].frontImage.public_id;
-            // console.log(frontId)
-            if (frontId != null) {
-                await cloudinary.uploader.destroy(frontId);
-            }
-            const otherImage = data.postProperty[0].otherImage
-            for (let i = 0; i < otherImage.length; i++) {
-                const frontId = data.postProperty[0].otherImage[i].public_id;
-                if (frontId != null) {
-                    await cloudinary.uploader.destroy(frontId)
-                }
-            }
-            const update = {
-                $pull: {
-                    postProperty: { _id: id }
-                }
-            };
-            // Perform the update operation
-            const result = await postPropertyModel.updateOne(update);
-            // const result = await postPropertyModel.deleteOne({ 'postProperty._id': id });
-            res.status(200).json({
-                message: "delete",
-                result
-            })
+             try {
+  
+    const propertyId = req.params.id;
+
+    // Find the user document by ID
+    const user = await postPropertyModel.findOne({ 'postProperty._id': propertyId });
+    if (!user) {
+      return res.status(404).json({ error: 'Post property not found' });
+    }
+    // Find the index of the postProperty object with the specified ID
+    const index = user.postProperty.findIndex(postProperty => postProperty._id.toString() === propertyId);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Post property not found' });
+    }
+    user.postProperty.splice(index, 1);
+    await user.save();
+    res.status(200).json({ message: 'Post property deleted successfully' });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
         } catch (error) {
             console.log(error)
             res.status(500).json({

@@ -7,14 +7,14 @@ const dotenv = require('dotenv').config()
 const cache = require('memory-cache');
 
 // Function to get all project data and cache it
-const getAllProjects = async () => {
-    try {
-        const data = await ProjectModel.find();
-        cache.put('allProjects', data, 3600000); // Cache for 1 hour (in milliseconds)
-    } catch (error) {
-        console.error("Error caching projects:", error);
-    }
-};
+// const getAllProjects = async () => {
+//     try {
+//         const data = await ProjectModel.find();
+//         cache.put('allProjects', data, 3600000); // Cache for 1 hour (in milliseconds)
+//     } catch (error) {
+//         console.error("Error caching projects:", error);
+//     }
+// };
 
 
 
@@ -822,9 +822,7 @@ class projectController {
     static bhk_delete = async (req, res) => {
         try {
             const id = req.params.id;
-    
             if (id) {
-
                 const update = {
                     $pull: {
                         BhK_Details: { _id: id }

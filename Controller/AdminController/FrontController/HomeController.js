@@ -4,8 +4,9 @@ const otherPropertyModel = require("../../../models/otherProperty/otherpropertyM
 const buyCommercial_Model = require("../../../models/property/buyCommercial")
 const rent_Model = require("../../../models/property/rent")
 // const prelaunchModel=require("..")
-const prelaunchModel = require('../../../models/newlaunch/prelaunch');
+
 const ProjectModel = require("../../../models/projectDetail/project");
+const postPropertyModel = require("../../../models/postProperty/post");
 
 
 
@@ -14,20 +15,21 @@ class homeController {
   // search in buy and rent 
   static search = async (req, res) => {
     const searchTerm = req.params.key;
-
+         console.log()
     if (searchTerm.length) {
       const words = searchTerm.split(' ');
+
       const searchdata = []
 
       try {
 
         for (let i = 0; i < words.length; i++) {
-
+               console.log(words[i])
           let data = await buyCommercial_Model.find(
             {
               "$or": [
                 { "projectName": { $regex: words[i], $options: 'i' } },
-                { "propertyTitle": { $regex: words[i], $options: 'i' } },
+                { "propertytype": { $regex: words[i], $options: 'i' } },
                 { "address": { $regex: words[i], $options: 'i' } }
               ]
             }
@@ -37,13 +39,13 @@ class homeController {
             {
               "$or": [
                 { "projectName": { $regex: words[i], $options: 'i' } },
-                { "propertyTitle": { $regex: words[i], $options: 'i' } },
+                { "propertytype": { $regex: words[i], $options: 'i' } },
                 { "address": { $regex: words[i], $options: 'i' } },
                 { "type": { $regex: words[i], $options: 'i' } }
               ]
             }
           )
-          let data3 = await prelaunchModel.find(
+          let data3 = await ProjectModel.find(
             {
               "$or": [
                 { "projectName": { $regex: words[i], $options: "i" } },
@@ -52,8 +54,39 @@ class homeController {
               ]
             }
           )
+          let data4 = await postPropertyModel.aggregate([
+            {
+              $match: {
+                // Match conditions  user document
+              }
+            },
+             {
+               $unwind: "$postProperty" // Deconstruct  postProperty array
+            
+            },
+            {
+              $match: {
+                //  search criteria here
+                "postProperty.city": { $regex: words[i], $options: "i" }
+              }
+            },
+            {
+              $group: {
+                _id: "$_id",
+                name: { $first: "$name" }, // You can include other fields from the user document if needed
+                email: { $first: "$email" },
+                mobile: { $first: "$mobile" },
+                role: { $first: "$role" },
+                token: { $first: "$token" },
+                postProperty: { $push: "$postProperty" } // Collect the filtered postProperty documents
+              }
+            }
+          ]);
+          
+          console.log(data4);
+          
 
-          const getdata = [...data2, ...data, ...data3]
+          const getdata = [...data,...data2,...data3, ...data4]
           if (getdata.length > 0) {
             searchdata.push(...getdata)
           }
@@ -323,31 +356,6 @@ class homeController {
 
   // ///////////////////
 
-  static join=async(req,res)=>{
-  console.log("hello")
-  const projectName = req.body.projectName;
-    const state = req.body.state;
-
-    const result = await prelaunchModel.aggregate([
-      {
-        $lookup: {
-          from: "ProjectModel", // Assuming "ProjectModel" is the name of the collection
-          localField: "projectName", // Field from prelaunchModel
-          foreignField: "state", // Field from ProjectModel
-          as: "joinedData"
-        }
-      },
-      {
-        $match: {
-          $and: [
-            { "projectName": projectName },
-            { "state": state }
-          ]
-        }
-      }
-    ]);
-    res.json(result);
-  }
 
 }
 module.exports = homeController
