@@ -20,8 +20,8 @@ const cache = require('memory-cache');
   
  const transporter = await nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.Email,
         pass: process.env.EmailPass
