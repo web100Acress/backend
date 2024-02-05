@@ -25,7 +25,7 @@ class rentController {
                     const otherImage = req.files.otherImage
 
                     const frontResult = await cloudinary.uploader.upload(frontImage.tempFilePath, {
-                        folder: "100acre/Rental_Property"
+                        folder:`100acre/Rental_Property/${propertyName}`
                     })
 
                     const otherImageLink = []
@@ -34,7 +34,7 @@ class rentController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder: "100acre/Rental_Property"
+                                folder:`100acre/Rental_Property/${propertyName}`
                             }
                             );
                             otherImageLink.push({
@@ -45,7 +45,7 @@ class rentController {
                     } else {
                         const otherResult = await cloudinary.uploader.upload(
                             otherImage.tempFilePath, {
-                            folder: "100acre/Rental_Property"
+                            folder: `100acre/Rental_Property/${propertyName}`
                         }
                         );
                         otherImageLink.push({
@@ -358,7 +358,7 @@ class rentController {
                             const otherResult = await cloudinary.uploader.upload(
                                 other[i].tempFilepath,
                                 {
-                                    folder: "100acre/Rental_Property"
+                                    folder: `100acre/Rental_Property/${propertyName}`
                                 }
                             )
                             otherImagelink.push({

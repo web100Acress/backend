@@ -11,36 +11,32 @@ const postPropertyModel = require("../../../models/postProperty/post");
 
 
 class homeController {
-
   // search in buy and rent 
   static search = async (req, res) => {
     const searchTerm = req.params.key;
-         console.log()
     if (searchTerm.length) {
       const words = searchTerm.split(' ');
-
       const searchdata = []
-
       try {
 
         for (let i = 0; i < words.length; i++) {
-               console.log(words[i])
+              //  console.log(words[i])
           let data = await buyCommercial_Model.find(
             {
               "$or": [
                 { "projectName": { $regex: words[i], $options: 'i' } },
                 { "propertytype": { $regex: words[i], $options: 'i' } },
-                { "address": { $regex: words[i], $options: 'i' } }
+                { "address": { $regex: words[i], $options: 'i' } },
+                { "city": { $regex: words[i], $options: 'i' } },
               ]
             }
           )
-
           let data2 = await rent_Model.find(
             {
               "$or": [
                 { "projectName": { $regex: words[i], $options: 'i' } },
                 { "propertytype": { $regex: words[i], $options: 'i' } },
-                { "address": { $regex: words[i], $options: 'i' } },
+                { "city": { $regex: words[i], $options: 'i' } },
                 { "type": { $regex: words[i], $options: 'i' } }
               ]
             }
@@ -67,7 +63,10 @@ class homeController {
             {
               $match: {
                 //  search criteria here
-                "postProperty.city": { $regex: words[i], $options: "i" }
+                "postProperty.city": { $regex: words[i], $options: "i" },
+                "postProperty.projectName": { $regex: words[i], $options: "i" },
+                "postProperty.builderName": { $regex: words[i], $options: "i" },
+                
               }
             },
             {
@@ -82,10 +81,8 @@ class homeController {
               }
             }
           ]);
-          
-          // console.log(data4);
-          
 
+          // console.log(data4);
           const getdata = [...data,...data2,...data3, ...data4]
           if (getdata.length > 0) {
             searchdata.push(...getdata)
@@ -98,10 +95,18 @@ class homeController {
             searchdata
           })
         } else {
+         const data=await ProjectModel.find()
+         const getdata = [...data]
+         if (getdata.length > 0) {
+          searchdata.push(...getdata)
+        }
+         if (searchdata.length > 0) {
           res.status(200).json({
-            message: "data not found !!",
-
+            message: "data found ! .",
+            searchdata
           })
+        } 
+        
         }
 
       } catch (error) {
