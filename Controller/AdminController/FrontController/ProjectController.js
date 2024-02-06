@@ -892,47 +892,43 @@ class projectController {
     
     //Enquiry for the project page 
     static userInsert = async (req, res) => {
+        // console.log("helo")
+        // const data =new UserModel
         try {
-            // Check if required fields are present
-            if (req.body.mobile && req.body.projectName && req.body.address) {
-                // Create a new UserModel instance
+            const { name,email, mobile, projectName, address } = req.body
+            const ema=email
+        // const ema=email
+            if ( mobile && projectName && address) {
                 const data = new UserModel({
-                    name: req.body.name,
-                    email: req.body.email,
-                    mobile: req.body.mobile,
-                    projectName: req.body.projectName,
-                    address: req.body.address
-                });
-    
-                // Send email if the email field is provided
-                if (req.body.email) {
-                    await sendPostEmail(req.body.email);
-                }
-    
-                // Save the data to the database
-                await data.save();
-    
-                // Return success response
-                return res.status(201).json({
-                    message: "User data submitted successfully, and the data has been sent via email",
+                    name: name,
+                    email:ema,
+                    mobile: mobile,
+                    projectName: projectName,
+                    address: address
+                })
+                const email = data.email
+          
+               if(email){
+                await sendPostEmail(email)
+               }
+               
+                await data.save()
+                res.status(201).json({
+                    message: "User data submitted successfully , and the data has been sent via email",
                     // dataInsert: data
-                });
+                })
             } else {
-                // If required fields are missing, return a 403 Forbidden response
-                return res.status(403).json({
-                    message: "Required fields are missing"
-                });
+                res.status(403).json({
+                    message: "not success"
+                })
             }
         } catch (error) {
-            // Log the error for debugging purposes
-            console.error("Error in userInsert:", error);
-            // Return a 500 Internal Server Error response
-            return res.status(500).json({
-                message: "Internal server error"
-            });
+           console.log(error)
+           res.status(500).json({
+            message:"Internal server error ! "
+           })
         }
-    };
-    
+    }
     // Enquiry viewAll
     static userViewAll = async (req, res) => {
         // console.log("hello")
