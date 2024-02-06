@@ -908,9 +908,9 @@ class projectController {
                 })
                 const email = data.email
           
-            //    if(email){
-            //     await sendPostEmail(email)
-            //    }
+        
+                await sendPostEmail()
+           
                
                 await data.save()
                 res.status(201).json({
