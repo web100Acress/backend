@@ -107,8 +107,6 @@ const projectSchema = new mongoose.Schema({
     type:String
       },
     BhK_Details: [bhk_Schema],
-    
-
 },
 
     {
