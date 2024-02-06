@@ -71,7 +71,11 @@ const rent_Schema=new mongoose.Schema({
 type:{
   type:String,
   required:true
-}
+},
+schema_type:{
+  type: String,
+  default:"rent"
+},
 
 },
 {timestamps:true}

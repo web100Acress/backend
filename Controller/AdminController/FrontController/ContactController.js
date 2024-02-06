@@ -21,14 +21,13 @@ class contactController {
         //  console.log("hello post ")
         // console.log(req.body)
         try {
-            const { name, email, mobile, message, status } = req.body
+            const { name, email, mobile, message} = req.body
             if ( mobile ) {
                 const userData = new contactModel({
                     name: name,
                     email: email,
                     mobile: mobile,
                     message: message,
-                    status: status
                 })
                 // console.log(userData)
                 await userData.save()

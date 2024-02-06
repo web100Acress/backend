@@ -70,6 +70,10 @@ const buyCommercial_Schema = new mongoose.Schema({
     availableDate:{
         type:String
     },
+    schema_type:{
+        type: String,
+        default:"buy"
+      },
 })
 const buyCommercial_Model = mongoose.model('BuyCommercial_Property', buyCommercial_Schema)
 module.exports = buyCommercial_Model

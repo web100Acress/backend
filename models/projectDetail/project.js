@@ -99,6 +99,13 @@ const projectSchema = new mongoose.Schema({
     projectOverview:{
         type:String
     },
+    schema_type:{
+        type: String,
+        default:"project"
+      },
+      project_url:{
+    type:String
+      },
     BhK_Details: [bhk_Schema],
     
 

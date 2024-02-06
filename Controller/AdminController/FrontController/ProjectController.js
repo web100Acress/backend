@@ -79,7 +79,8 @@ class projectController {
                 projectReraNo,
                 type,
                 city,
-                projectOverview
+                projectOverview,
+                project_url
             } = req.body
             // console.log(req.body)
             // console.log(req.files)
@@ -170,7 +171,8 @@ class projectController {
                         projectReraNo: projectReraNo,
                         type: type,
                         city: city,
-                        projectOverview:projectOverview
+                        projectOverview:projectOverview,
+                        project_url:project_url
 
                     })
                     // console.log(data)
@@ -262,7 +264,8 @@ class projectController {
                 meta_title,
                 type,
                 city,
-              projectOverview
+              projectOverview,
+              project_url
             } = req.body
             const id = req.params.id;
             if (req.files) {
@@ -351,7 +354,8 @@ class projectController {
                         meta_description: meta_description,
                         type: type,
                         city: city,
-                        projectOverview: projectOverview
+                        projectOverview: projectOverview,
+                        project_url:project_url
 
                     })
                     // console.log(data)
@@ -392,7 +396,8 @@ class projectController {
                         projectReraNo: projectReraNo,
                         meta_title: meta_title,
                         meta_description: meta_description
-                        , projectOverview: projectOverview
+                        , projectOverview: projectOverview,
+                        project_url:project_url
                     })
                     // console.log(data)
                     await data.save()
@@ -430,7 +435,8 @@ class projectController {
                         meta_title: meta_title,
                         type: type,
                         city: city,
-                        projectOverview: projectOverview
+                        projectOverview: projectOverview,
+                        project_url:project_url
                     })
                     // console.log(data)
                     await data.save()
@@ -466,7 +472,8 @@ class projectController {
                         meta_title: meta_title,
                         city: city,
                         type: type,
-                        projectOverview: projectOverview
+                        projectOverview: projectOverview,
+                        project_url:project_url
                     })
                     //  console.log(data)
                     await data.save()
@@ -521,7 +528,8 @@ class projectController {
                         meta_title: meta_title,
                         city: city,
                         type: type,
-                        projectOverview: projectOverview
+                        projectOverview: projectOverview,
+                        project_url:project_url
                     })
                     await data.save()
                     res.status(200).json({
@@ -545,7 +553,8 @@ class projectController {
                     meta_title: meta_title,
                     city: city,
                     type: type,
-                    projectOverview: projectOverview
+                    projectOverview: projectOverview,
+                    project_url:project_url
                 })
                 await data.save()
                 res.status(200).json({
