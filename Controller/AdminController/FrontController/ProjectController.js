@@ -895,12 +895,12 @@ class projectController {
         // console.log("helo")
         // const data =new UserModel
         try {
-            const { name,email, mobile, projectName, address } = req.body
-        const ema=email
+            const { name, mobile, projectName, address } = req.body
+        // const ema=email
             if ( mobile && projectName && address) {
                 const data = new UserModel({
                     name: name,
-                    email: ema,
+                    email:req.body.email,
                     mobile: mobile,
                     projectName: projectName,
                     address: address
