@@ -147,7 +147,7 @@ class contactController {
             const id = req.params.id
             const data = await contactPagedetailModel.findById({ _id: id })
             res.status(201).json({
-                message: "data editing is enable !",
+                message: "data editing is enable ",
                 dataedit: data
             })
 
