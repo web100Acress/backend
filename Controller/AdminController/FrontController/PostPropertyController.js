@@ -73,7 +73,7 @@ const sendPostEmail = async (email) => {
             pass: process.env.EmailPass
         },
     });
-    // Send mail with defined transport object
+    // Send mail with defined transport objec
     let info = await transporter.sendMail({
         from: 'amit100acre@gmail.com', // Sender address
         to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
