@@ -222,7 +222,7 @@ class projectController {
     }
     // see project by name view details 
     static projectView = async (req, res) => {
-        console.log("hello")
+        // console.log("hello")
         try {
             const project_url = req.params.project_url
            
