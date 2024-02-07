@@ -548,7 +548,7 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        const email = dataPushed.email
+                        // const email = dataPushed.email
 
                         // await sendPostEmail(email)
                         res.status(200).json({
@@ -604,7 +604,7 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        const email = dataPushed.email
+                        // const email = dataPushed.email
                        
                         // await sendPostEmail(email)
                         res.status(200).json({
@@ -679,8 +679,8 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        const email = dataPushed.email
-                        console.log(email, "hello")
+                        // const email = dataPushed.email
+                        // console.log(email, "hello")
                         // await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
@@ -727,7 +727,7 @@ class PostPropertyController {
                         { $push: { postProperty: data } },
                         { new: true })
 
-                    const email = dataPushed.email
+                    // const email = dataPushed.email
                     // console.log(email, "hello")
                     // await sendPostEmail(email)
                     res.status(200).json({

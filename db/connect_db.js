@@ -10,7 +10,6 @@ const connectDb=()=>{
 
 
     // return mongoose.connect("mongodb+srv://Amit:Amit123@cluster0.7jljtxl.mongodb.net/")
-
   return mongoose.connect("mongodb+srv://amit100acre:Amit123@cluster0.ffg8qyf.mongodb.net/?retryWrites=true&w=majority")
   .then(() =>{
     console.log('Connected!')
