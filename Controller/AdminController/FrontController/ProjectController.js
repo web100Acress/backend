@@ -222,11 +222,12 @@ class projectController {
     }
     // see project by name view details 
     static projectView = async (req, res) => {
-        //console.log("hello")
+        console.log("hello")
         try {
-            const projectName = req.params.projectName
-            if(projectName){
-            const data = await ProjectModel.find({projectName:projectName})
+            const project_url = req.params.project_url
+           
+            if(project_url){
+            const data = await ProjectModel.find({project_url:project_url})
             res.status(200).json({
                 message: " enable",
                 dataview: data
@@ -909,7 +910,7 @@ class projectController {
                 const email = data.email
           
         
-                await sendPostEmail()
+                await sendPostEmail(email)
            
                
                 await data.save()
