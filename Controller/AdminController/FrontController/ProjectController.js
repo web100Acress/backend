@@ -225,7 +225,6 @@ class projectController {
         // console.log("hello")
         try {
             const project_url = req.params.project_url
-           
             if(project_url){
             const data = await ProjectModel.find({project_url:project_url})
             res.status(200).json({
@@ -814,14 +813,7 @@ class projectController {
                 message:"check field !"
             })
         }
-            if(data){
-                res.status(200).json({
-                    message:"data updated successfully ! ",
-                    data
-                })
-            }else{
-
-            }
+            
         } catch (error) {
            console.log(error)
            res.status(500).json({
