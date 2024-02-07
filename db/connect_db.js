@@ -6,7 +6,7 @@ const connectDb=()=>{
 
   //  return mongoose.connect("mongodb://localhost:27017/100_Acr~e")
 
-  return mongoose.connect(process.env.DB_URL)
+  return mongoose.connect("mongodb+srv://web100acress:Amit100@cluster0.lcaufzm.mongodb.net/")
 
 
     // return mongoose.connect("mongodb+srv://Amit:Amit123@cluster0.7jljtxl.mongodb.net/")
