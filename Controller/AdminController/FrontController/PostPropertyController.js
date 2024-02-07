@@ -101,7 +101,7 @@ const sendPostEmail = async (email) => {
 }
 
 class PostPropertyController {
-    // seller work Registration work    
+    // seller work Registration 
     static postPerson_Register = async (req, res) => {
         try {
             const { name, email, mobile, password, cpassword } = req.body
