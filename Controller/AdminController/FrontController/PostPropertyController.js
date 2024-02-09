@@ -66,12 +66,21 @@ const sendResetEmail = async (email, token) => {
 }
 const sendPostEmail = async (email) => {
     const transporter = await nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
+        service:'gmail',
+        port:465,
+        secure:true,
+        logger:true,
+        debug:true,
+        secureConnection:false,
         auth: {
-            user: process.env.Email,
-            pass: process.env.EmailPass
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user:"web.100acress@gmail.com",
+            pass:"txww gexw wwpy vvda"
         },
+        tls:{
+            rejectUnAuthorized:true
+        }
     });
     // Send mail with defined transport objec
     let info = await transporter.sendMail({
@@ -479,7 +488,7 @@ class PostPropertyController {
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/Postproperty/${propertyName}`
+                        folder:"100acre/Postproperty"
                     }
                     )
                     const otherImage = req.files.otherImage;
@@ -488,7 +497,7 @@ class PostPropertyController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder: `100acre/Postproperty/${propertyName}`
+                                folder:"100acre/Postproperty"
                             }
                             );
                             otherImagelink.push({
@@ -499,7 +508,7 @@ class PostPropertyController {
                     } else {
                         const otherResult = await cloudinary.uploader.upload(
                             otherImage.tempFilePath, {
-                            folder: `100acre/Postproperty/${propertyName}`
+                            folder: "100acre/Postproperty"
                         }
                         );
                         otherImagelink.push({
@@ -568,7 +577,7 @@ class PostPropertyController {
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/Postproperty/${propertyName}`
+                        folder:"100acre/Postproperty"
                     }
                     )
                     const data = {
@@ -627,7 +636,7 @@ class PostPropertyController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder: `100acre/Postproperty/${propertyName}`
+                                folder:"100acre/Postproperty"
                             }
                             );
                             otherImagelink.push({
@@ -638,7 +647,7 @@ class PostPropertyController {
                     } else {
                         const otherResult = await cloudinary.uploader.upload(
                             otherImage.tempFilePath, {
-                            folder: `100acre/Postproperty/${propertyName}`
+                            folder: "100acre/Postproperty"
                         }
                         );
                         otherImagelink.push({
@@ -729,7 +738,7 @@ class PostPropertyController {
 
                     // const email = dataPushed.email
                     // console.log(email, "hello")
-                    // await sendPostEmail(email)
+                    await sendPostEmail()
                     res.status(200).json({
                         message: "Data pushed successfully ! "
                     })

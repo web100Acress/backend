@@ -188,7 +188,7 @@ router.delete("/otherproperty/enquiry/delete/:id",otherpropertyController.otherE
 
 
 
-
+// router.post("/mail",rentController.email)
 
 
 module.exports = router

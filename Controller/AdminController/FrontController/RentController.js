@@ -3,9 +3,48 @@ const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const rent_Model = require('../../../models/property/rent');
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
-
+const nodemailer = require('nodemailer');
 
 const cloudinary = require('cloudinary').v2;
+
+
+
+const sendPostEmail = async (email) => {
+  
+    const transporter = await nodemailer.createTransport({
+       host:'smtp.gmail.com',
+       port:587,
+       auth: {
+           user: process.env.Email,
+           pass: process.env.EmailPass
+       },
+       // debug: true // Enable debugging
+   });
+   // Send mail with defined transport object
+   let info = await transporter.sendMail({
+       from: "web.100acress@gmail.com", // Sender address
+       to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+       subject: 'New User Enquiry Detail', // Subject line
+       text: '', // Plain text body
+       html: `
+       <div class="card">
+        <div>
+       <div class="header">
+       <h2>Customer Contact Detail</h2>
+       </div>
+       </div>
+       <center>
+       <div>  Customer Contact  Detail:</div>
+   
+       <center>
+   
+        <br>
+   
+        </div>
+   `,
+   });
+    }
+
 class rentController {
 
     // Rent Property Insert Edit view delete
@@ -470,7 +509,57 @@ class rentController {
 
 
 
-
+// static email=async(req,res)=>{
+//     console.log("hello")
+//     try {
+//         // await sendPostEmail()
+//         console.log("hello email")
+//         const transporter = await nodemailer.createTransport({
+//             service:'gmail',
+//             port:465,
+//             secure:true,
+//             logger:true,
+//             debug:true,
+//             secureConnection:false,
+//             auth: {
+//                 // user: process.env.Email,
+//                 // pass: process.env.EmailPass
+//                 user:"web.100acress@gmail.com",
+//                 pass:"txww gexw wwpy vvda"
+//             },
+//             tls:{
+//                 rejectUnAuthorized:true
+//             }
+//             // debug: true // Enable debugging
+//         });
+//         // Send mail with defined transport object
+//         let info = await transporter.sendMail({
+//             from: "web.100acress@gmail.com", // Sender address
+//             to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+//             subject: 'New User Enquiry Detail', // Subject line
+//             text: '', // Plain text body
+//             html: `
+//             <div class="card">
+//              <div>
+//             <div class="header">
+//             <h2>Customer Contact Detail</h2>
+//             </div>
+//             </div>
+//             <center>
+//             <div>  Customer Contact  Detail:</div>
+        
+//             <center>
+        
+//              <br>
+        
+//              </div>
+//         `,
+//         });
+//         res.send("sdhgiuhfiuweh" )
+//     } catch (error) {
+//       res.send(error,"dkwgd")  
+//     }
+// }
     
 
 
