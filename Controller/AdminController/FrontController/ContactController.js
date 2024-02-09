@@ -2,10 +2,53 @@
 const cloudinary = require('cloudinary').v2;
 // contac page   models
 const contactModel = require("../../../models/contact")
-
+const nodemailer = require('nodemailer');
 const contactPagedetailModel = require("../../../models/contactdetail")
 
+const sendPostEmail = async (email ,mobile) => {
+    const transporter = await nodemailer.createTransport({
+        service:'gmail',
+        port:465,
+        secure:true,
+        logger:true,
+        debug:true,
+        secureConnection:false,
+        auth: {
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user:"web.100acress@gmail.com",
+            pass:"txww gexw wwpy vvda"
+        },
+        tls:{
+            rejectUnAuthorized:true
+        }
+    });
+    // Send mail with defined transport objec
+    let info = await transporter.sendMail({
+        from: 'amit100acre@gmail.com', // Sender address
+        to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        subject: 'Project Enquiry',
+        html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>New Project Submission</title>
+        </head>
+        <body>
+            <h1>New Lead</h1>
+            <p>A new Enquiry : ${email}</p>
+            <p>A new Enquiry : ${mobile}</p>
+            <p>Please review the details and take necessary actions.</p>
+            <p>Thank you!</p>
+        </body>
+        </html>
+`
+    });
 
+}
 class contactController {
 
     static contact = async (req, res) => {
@@ -31,6 +74,8 @@ class contactController {
                 })
                 // console.log(userData)
                 await userData.save()
+
+              await sendPostEmail(email,mobile)
                 res.status(200).json({
                     message: "your message send !",
                     data: userData

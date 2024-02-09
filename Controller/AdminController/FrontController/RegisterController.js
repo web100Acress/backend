@@ -6,54 +6,54 @@ const nodemailer = require("nodemailer")
 
 
 
-const generateToken = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
+// const generateToken = () => {
+//     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+// };
 
-const sendResetEmail = async (email, token) => {
-    // Connect with SMTP Gmail
-    const transporter = await nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        auth: {
-            user: process.env.Email,
-            pass: process.env.EmailPass
-        },
-    });
-    // Send mail with defined transport object
-    let info = await transporter.sendMail({
-        from: 'test@gmail.com', // Sender address
-        to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
-        subject: 'Password Reset',
-        html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>Forgot Password</title>
-        </head>
-        <body>
-        <p>Dear User,</p>
-        <p>Click the following link to reset your password : </p>
+// const sendResetEmail = async (email, token) => {
+//     // Connect with SMTP Gmail
+//     const transporter = await nodemailer.createTransport({
+//         host: 'smtp.gmail.com',
+//         port: 587,
+//         auth: {
+//             user: process.env.Email,
+//             pass: process.env.EmailPass
+//         },
+//     });
+//     // Send mail with defined transport object
+//     let info = await transporter.sendMail({
+//         from: 'test@gmail.com', // Sender address
+//         to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+//         subject: 'Password Reset',
+//         html: `
+//         <!DOCTYPE html>
+//         <html lang:"en>
+//         <head>
+//         <meta charset:"UTF-8">
+//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+//         <title>Forgot Password</title>
+//         </head>
+//         <body>
+//         <p>Dear User,</p>
+//         <p>Click the following link to reset your password : </p>
 
-        <p>
+//         <p>
         
-        <a href="http://localhost:3500/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
-        </p>
+//         <a href="http://localhost:3500/reset/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
+//         </p>
 
-         <p>If you didn't request to password reset , please ingore this email  </p>
+//          <p>If you didn't request to password reset , please ingore this email  </p>
 
-        <p>Best regrads ,
-             <br>https://www.100acress.com/
-        </p>
-        </body>
-        </html>
-`
-    });
+//         <p>Best regrads ,
+//              <br>https://www.100acress.com/
+//         </p>
+//         </body>
+//         </html>
+// `
+//     });
    
-}
+// }
 class registerController {
 
     static register = async (req, res) => {
@@ -226,7 +226,8 @@ class registerController {
             // const token=user.token;
 
             res.json({ message: 'Password reset successful' });
-        } catch (error) {
+        }
+     } catch (error) {
             console.log(error)
             res.status(500).json({
                 message: 'Internal server error'

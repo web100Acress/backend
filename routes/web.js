@@ -135,7 +135,7 @@ router.get('/postPerson/propertyoneView/:id', PostPropertyController.postPropert
 router.get('/postPerson/propertyoneEdit/:id', PostPropertyController.postProperty_Edit)
 router.post('/postPerson/propertyoneUpdate/:id', PostPropertyController.postProperty_Update)
 router.delete('/postPerson/propertyDelete/:id', PostPropertyController.postProperty_Delete)
-// router.get("/findAll",PostPropertyController.findAll)
+router.post("/postEnquiry",PostPropertyController.postPropertyEnquiry)
 
 
 //Blog

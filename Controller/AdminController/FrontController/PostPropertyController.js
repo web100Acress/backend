@@ -5,6 +5,7 @@ const nodemailer = require("nodemailer")
 // const otpGenerator = require('otp-generator')
 const cloudinary = require('cloudinary').v2;
 const cache = require('memory-cache');
+const postEnquiryModel = require("../../../models/postProperty/enquiry");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -23,12 +24,21 @@ const generateToken = () => {
 const sendResetEmail = async (email, token) => {
     // Connect with SMTP Gmail
     const transporter = await nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
+        service: 'gmail',
+        port: 465,
+        secure: true,
+        logger: true,
+        debug: true,
+        secureConnection: false,
         auth: {
-            user: process.env.Email,
-            pass: process.env.EmailPass
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user: "web.100acress@gmail.com",
+            pass: "txww gexw wwpy vvda"
         },
+        tls: {
+            rejectUnAuthorized: true
+        }
     });
     // Send mail with defined transport object
     let info = await transporter.sendMail({
@@ -66,26 +76,26 @@ const sendResetEmail = async (email, token) => {
 }
 const sendPostEmail = async (email) => {
     const transporter = await nodemailer.createTransport({
-        service:'gmail',
-        port:465,
-        secure:true,
-        logger:true,
-        debug:true,
-        secureConnection:false,
+        service: 'gmail',
+        port: 465,
+        secure: true,
+        logger: true,
+        debug: true,
+        secureConnection: false,
         auth: {
             // user: process.env.Email,
             // pass: process.env.EmailPass
-            user:"web.100acress@gmail.com",
-            pass:"txww gexw wwpy vvda"
+            user: "web.100acress@gmail.com",
+            pass: "txww gexw wwpy vvda"
         },
-        tls:{
-            rejectUnAuthorized:true
+        tls: {
+            rejectUnAuthorized: true
         }
     });
     // Send mail with defined transport objec
     let info = await transporter.sendMail({
         from: 'amit100acre@gmail.com', // Sender address
-        to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        to: 'vinay.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
         subject: 'Post Property',
         html: `
         <!DOCTYPE html>
@@ -108,6 +118,52 @@ const sendPostEmail = async (email) => {
     });
 
 }
+// const PostEnquiryEmail = async (agentEmail,agentNumber,custNumber,custEmail,propertyAddress) => {
+//     const transporter = await nodemailer.createTransport({
+//         service: 'gmail',
+//         port: 465,
+//         secure: true,
+//         logger: true,
+//         debug: true,
+//         secureConnection: false,
+//         auth: {
+//             // user: process.env.Email,
+//             // pass: process.env.EmailPass
+//             user: "web.100acress@gmail.com",
+//             pass: "txww gexw wwpy vvda"
+//         },
+//         tls: {
+//             rejectUnAuthorized: true
+//         }
+//     });
+//     // Send mail with defined transport objec
+//     let info = await transporter.sendMail({
+//         from: 'amit100acre@gmail.com', // Sender address
+//         to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+//         subject: 'Post Property',
+//         html: `
+//         <!DOCTYPE html>
+//         <html lang:"en>
+//         <head>
+//         <meta charset:"UTF-8">
+//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+//         <title>New Project Submission</title>
+//         </head>
+//         <body>
+//             <h1>New Project Submission</h1>
+//             <p>Hello,</p>
+//             <p>A new project has been submitted on your website by : ${email}</p>
+//             <p>Please review the details and take necessary actions.</p>
+//             <p>Thank you!</p>
+//         </body>
+//         </html>
+// `
+//     });
+  
+
+// }
+
 
 class PostPropertyController {
     // seller work Registration 
@@ -488,7 +544,7 @@ class PostPropertyController {
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder:"100acre/Postproperty"
+                        folder: "100acre/Postproperty"
                     }
                     )
                     const otherImage = req.files.otherImage;
@@ -497,7 +553,7 @@ class PostPropertyController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder:"100acre/Postproperty"
+                                folder: "100acre/Postproperty"
                             }
                             );
                             otherImagelink.push({
@@ -557,9 +613,9 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        // const email = dataPushed.email
+                        const email = dataPushed.email
 
-                        // await sendPostEmail(email)
+                        await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
                         })
@@ -577,7 +633,7 @@ class PostPropertyController {
                     const frontImage = req.files.frontImage;
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder:"100acre/Postproperty"
+                        folder: "100acre/Postproperty"
                     }
                     )
                     const data = {
@@ -613,9 +669,9 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        // const email = dataPushed.email
-                       
-                        // await sendPostEmail(email)
+                        const email = dataPushed.email
+
+                        await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
                         })
@@ -636,7 +692,7 @@ class PostPropertyController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder:"100acre/Postproperty"
+                                folder: "100acre/Postproperty"
                             }
                             );
                             otherImagelink.push({
@@ -688,9 +744,9 @@ class PostPropertyController {
                             { $push: { postProperty: data } },
                             { new: true })
 
-                        // const email = dataPushed.email
+                        const email = dataPushed.email
                         // console.log(email, "hello")
-                        // await sendPostEmail(email)
+                        await sendPostEmail(email)
                         res.status(200).json({
                             message: "Data pushed successfully ! "
                         })
@@ -736,9 +792,9 @@ class PostPropertyController {
                         { $push: { postProperty: data } },
                         { new: true })
 
-                    // const email = dataPushed.email
+                    const email = dataPushed.email
                     // console.log(email, "hello")
-                    await sendPostEmail()
+                    await sendPostEmail(email)
                     res.status(200).json({
                         message: "Data pushed successfully ! "
                     })
@@ -759,7 +815,6 @@ class PostPropertyController {
     static postProperty_View = async (req, res) => {
         try {
             const id = req.params.id
-            if (id) {
                 const data = await postPropertyModel.findById({ _id: id })
                 if (data) {
                     res.status(200).json({
@@ -772,12 +827,7 @@ class PostPropertyController {
 
                     })
                 }
-            } else {
-                res.status(200).json({
-                    message: "Id not found  !",
-
-                })
-            }
+        
         } catch (error) {
             res.status(500).json({
                 message: "internal server error ! "
@@ -855,7 +905,7 @@ class PostPropertyController {
 
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/Postproperty/${propertyName}`
+                        folder: "100acre/Postproperty"
                     }
                     )
 
@@ -863,7 +913,7 @@ class PostPropertyController {
                         for (let i = 0; i < otherImage.length; i++) {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath, {
-                                folder: `100acre/Postproperty/${propertyName}`
+                                folder: "100acre/Postproperty"
                             }
                             );
                             otherImageLink.push({
@@ -874,7 +924,7 @@ class PostPropertyController {
                     } else {
                         const otherResult = await cloudinary.uploader.upload(
                             otherImage.tempFilePath, {
-                            folder: `100acre/Postproperty/${propertyName}`
+                            folder:  "100acre/Postproperty"
                         }
                         );
                         otherImageLink.push({
@@ -926,7 +976,7 @@ class PostPropertyController {
 
                     const frontResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath,
-                        { folder: `100acre/Postproperty/${propertyName}` }
+                        { folder:  "100acre/Postproperty"}
                     )
 
                     // console.log(update)
@@ -973,7 +1023,7 @@ class PostPropertyController {
                             const otherResult = await cloudinary.uploader.upload(
                                 otherImage[i].tempFilePath,
                                 {
-                                    folder: `100acre/Postproperty/${propertyName}`
+                                    folder: "100acre/Postproperty"
                                 }
                             )
                             otherImageLink.push({
@@ -985,7 +1035,7 @@ class PostPropertyController {
                         const otherResult = await cloudinary.uploader.upload(
                             otherImage.tempFilePath,
                             {
-                                folder: `100acre/Postproperty/${propertyName}`
+                                folder:  "100acre/Postproperty"
                             }
                         )
                         otherImageLink.push({
@@ -1089,5 +1139,41 @@ class PostPropertyController {
         }
 
     }
+
+    static postPropertyEnquiry = async (req, res) => {
+        try {
+            const { agentEmail, agentNumber, custName, custEmail, custNumber, propertyAddress } = req.body
+            if (req.body) {
+                const data = new postEnquiryModel({
+                    agentEmail: agentEmail,
+                    agentNumber: agentNumber,
+                    custName: custName,
+                    custEmail: custEmail,
+                    custNumber: custNumber,
+                    propertyAddress: propertyAddress,
+                })
+                // console.log(data)
+               
+                // await AgentEnquiryEmail(agentEmail,agentNumber,custNumber,custEmail,propertyAddress) 
+                // await sendPostEmail()
+                 await data.save()
+                //  if(data){
+                //  await PostEnquiryEmail(agentEmail,agentNumber,custNumber,custEmail,propertyAddress) 
+                //  }
+                 res.status(200).json({
+                    message:"data sent successfully ! "
+                 })
+            } else {
+                res.status(200).json({
+                    message: "please fill the form !"
+                })
+            }
+        } catch (error) {
+
+        }
+    }
+
+
+
 }
 module.exports = PostPropertyController

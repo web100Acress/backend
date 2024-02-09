@@ -1,57 +1,55 @@
 const ProjectModel = require("../../../models/projectDetail/project");
 const UserModel = require("../../../models/projectDetail/user");
 const cloudinary = require('cloudinary').v2;
-const nodemailer = require('nodemailer');
 const dotenv = require('dotenv').config()
-
 const cache = require('memory-cache');
 
-// Function to get all project data and cache it
-// const getAllProjects = async () => {
-//     try {
-//         const data = await ProjectModel.find();
-//         cache.put('allProjects', data, 3600000); // Cache for 1 hour (in milliseconds)
-//     } catch (error) {
-//         console.error("Error caching projects:", error);
-//     }
-// };
- // Connect with SMTP Gmail
- const sendPostEmail = async (email) => {
-  
- const transporter = await nodemailer.createTransport({
-    host:'smtp.gmail.com',
-    port:587,
-    auth: {
-        user: process.env.Email,
-        pass: process.env.EmailPass
-    },
-    // debug: true // Enable debugging
-});
-// Send mail with defined transport object
-let info = await transporter.sendMail({
-    from: process.env.Email, // Sender address
-    to: 'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
-    subject: 'New User Enquiry Detail', // Subject line
-    text: '', // Plain text body
-    html: `
-    <div class="card">
-     <div>
-    <div class="header">
-    <h2>Customer Contact Detail</h2>
-    </div>
-    </div>
-    <center>
-    <div>  Customer Contact  Detail:</div>
 
-    <center>
 
-     <br>
+const sendPostEmail = async (email ,number) => {
+    const transporter = await nodemailer.createTransport({
+        service:'gmail',
+        port:465,
+        secure:true,
+        logger:true,
+        debug:true,
+        secureConnection:false,
+        auth: {
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user:"web.100acress@gmail.com",
+            pass:"txww gexw wwpy vvda"
+        },
+        tls:{
+            rejectUnAuthorized:true
+        }
+    });
+    // Send mail with defined transport objec
+    let info = await transporter.sendMail({
+        from: 'amit100acre@gmail.com', // Sender address
+        to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        subject: 'Project Enquiry',
+        html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>New Project Submission</title>
+        </head>
+        <body>
+            <h1>New Lead</h1>
+            <p>A new Enquiry : ${email}</p>
+            <p>A new Enquiry : ${number}</p>
+            <p>Please review the details and take necessary actions.</p>
+            <p>Thank you!</p>
+        </body>
+        </html>
+`
+    });
 
-     </div>
-`,
-});
- }
-
+}
 class projectController {
 
     static project = async (req, res) => {
@@ -90,20 +88,20 @@ class projectController {
                     const logo = req.files.logo
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
-                        folder:`100acre/project/${builderName}`
+                        folder:"100acre/project"
                     }
                     )
                   
                     const frontImage = req.files.frontImage
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder:`100acre/project/${builderName}`
+                        folder:"100acre/project"
                     }
                     )
                     const project_locationImage = req.files.project_locationImage;
                     const projectLocationResult = await cloudinary.uploader.upload(
                         project_locationImage.tempFilePath, {
-                        folder:`100acre/project/${builderName}`
+                        folder:"100acre/project"
                     }
                     )
 
@@ -115,7 +113,7 @@ class projectController {
                             // console.log("h")
                             const project_floorplanResult=await cloudinary.uploader.upload(
                                 project_floorplan[i].tempFilePath,{
-                                    folder:`100acre/projecr/${builderName}`
+                                    folder:"100acre/project"
                                 }
                             );
 
@@ -128,7 +126,7 @@ class projectController {
                     } else {
                         const project_floorplanResult = await cloudinary.uploader.upload(
                             project_floorplan.tempFilePath, {
-                            folder:`100acre/project/${builderName}`
+                            folder:"100acre/project"
                         }
                         )
                         floorplanLink.push({
@@ -276,21 +274,21 @@ class projectController {
                     // console.log("hello")
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
-                        folder: `100acre/projectName/${projectName}`
+                        folder: "100acre/project"
                     }
                     )
                   
                     const frontImage = req.files.frontImage;
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:"100acre/project"
                     }
                     )
                   
                     const project_locationImage = req.files.project_locationImage;
                     const projectlocationResult = await cloudinary.uploader.upload(
                         project_locationImage.tempFilePath, {
-                        folder: `100acre/projectName/${projectName}`
+                        folder: "100acre/project"
                     }
                     )
                    
@@ -302,7 +300,7 @@ class projectController {
                         for (let i = 0; i < project_floorplan_Image.length; i++) {
                             const project_floorplanResult = await cloudinary.uploader.upload(
                                 project_floorplan_Image[i].tempFilePath, {
-                                folder: `100acre/project/${projectName}`
+                                folder: "100acre/project"
                             }
                             )
                            
@@ -314,7 +312,7 @@ class projectController {
                     } else {
                         const project_floorplanResult = await cloudinary.uploader.upload(
                             project_floorplan_Image.tempFilePath, {
-                            folder: `100acre/project/${projectName}`
+                            folder: "100acre/project"
                         }
                         )
                         floorplanLink.push({
@@ -369,7 +367,7 @@ class projectController {
                     // console.log("hello")
                     const logoResult = await cloudinary.uploader.upload(
                         logo.tempFilePath, {
-                        folder: `100acre/projectName/${projectName}`
+                        folder: "100acre/project"
                     }
                     )
 
@@ -410,7 +408,7 @@ class projectController {
                     const frontImage = req.files.frontImage;
                     const projectBgResult = await cloudinary.uploader.upload(
                         frontImage.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:"100acre/project"
                     }
                     )
                     const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
@@ -447,7 +445,7 @@ class projectController {
                     const projectLocation = req.files.project_locationImage;
                     const projectLocationResult = await cloudinary.uploader.upload(
                         projectLocation.tempFilePath, {
-                        folder: `100acre/project/${projectName}`
+                        folder:"100acre/project"
                     }
                     )
                     const data = await ProjectModel.findByIdAndUpdate({ _id: id }, {
@@ -490,7 +488,7 @@ class projectController {
                         for (let i = 0; i < project_floorplan_Image.length; i++) {
                             const project_floorplanResult = await cloudinary.uploader.upload(
                                 project_floorplan_Image[i].tempFilePath, {
-                                folder: `100acre/project/${projectName}`
+                                folder:"100acre/project"
                             }
                             )
                            
@@ -502,7 +500,7 @@ class projectController {
                     } else {
                         const project_floorplanResult = await cloudinary.uploader.upload(
                             project_floorplan_Image.tempFilePath, {
-                            folder: `100acre/project/${projectName}`
+                            folder: "100acre/project"
                         }
                         )
                         floorplanLink.push({
@@ -900,11 +898,9 @@ class projectController {
                     address: address
                 })
                 const email = data.email
-          
-        
-                await sendPostEmail(email)
+                const number = data.mobile
+                await sendPostEmail(email,number)
            
-               
                 await data.save()
                 res.status(201).json({
                     message: "User data submitted successfully , and the data has been sent via email",
