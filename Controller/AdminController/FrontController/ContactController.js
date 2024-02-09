@@ -15,7 +15,7 @@ const sendPostEmail = async (email ,mobile) => {
         secureConnection:false,
         auth: {
             // user: process.env.Email,
-            // pass: process.env.EmailPass
+            //pass: process.env.EmailPass
             user:"web.100acress@gmail.com",
             pass:"txww gexw wwpy vvda"
         },
