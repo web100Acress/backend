@@ -5,7 +5,6 @@ const rent_Model = require('../../../models/property/rent');
 
 const cloudinary = require('cloudinary').v2;
 class aboutController {
-
     static about = async (req, res) => {
         res.send("about page listen")
     }
