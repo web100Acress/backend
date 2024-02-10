@@ -169,7 +169,7 @@ class BuyController {
             )
                 if (data) {
                     res.status(200).json({
-                        message: "data get successfully ! ",
+                        message: "data get successfully !! ",
                         data
                     })
                 } else {
