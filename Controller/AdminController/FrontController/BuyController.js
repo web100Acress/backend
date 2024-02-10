@@ -158,6 +158,15 @@ class BuyController {
                 // }
                 //  )
                 //  const postdata=data1.postProperty
+                const postData= await postPropertyModel.findOne({ "postProperty._id": id },
+                {
+                    postProperty: {
+                        $elemMatch: {
+                            _id: id,
+                        },
+                    },
+                }
+            )
                 if (data) {
                     res.status(200).json({
                         message: "data get successfully ! ",
@@ -166,7 +175,7 @@ class BuyController {
                 } else {
                     res.status(200).json({
                         message: "data get successfully ! ",
-                        postdata
+                        postData
                     })
                 }
             }else{
