@@ -106,7 +106,8 @@ class BuyController {
             const data1 = await postPropertyModel.aggregate([
                 {
                     $match: {
-                        "postProperty.verify": "verified"
+                        "postProperty.verify": "verified",
+                        "postProperty.propertyLooking": "Sell"
                     }
                 },
                 {
@@ -127,10 +128,12 @@ class BuyController {
                     }
                 }
             ]);
+
+            const collectdata=[...data,...data1]
             res.status(200).json({
-               data1,
+             
                 message: 'Data fetched from the database!',
-                data
+                collectdata
               
             });
         } catch (error) {

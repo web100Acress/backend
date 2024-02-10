@@ -232,7 +232,8 @@ class rentController {
             const data1 = await postPropertyModel.aggregate([
                 {
                     $match: {
-                        "postProperty.verify": "verified"
+                        "postProperty.verify": "verified",
+                        "postProperty.propertyLooking": "rent"
                     }
                 },
                 {
@@ -253,12 +254,18 @@ class rentController {
                     }
                 }
             ]);
-            if (data) {
+            const  ost =data1.postProperty
+             const collectdata=[...data,...data1]
+            if (collectdata) {
                 res.status(200).json({
-
-                    done: data1,
                     message: "data get successfully !",
-                    data
+                    collectdata
+
+                })
+            }else{
+                res.status(200).json({
+                    message: "data not  found !",
+                 
 
                 })
             }
