@@ -3,7 +3,7 @@ const UserModel = require("../../../models/projectDetail/user");
 const cloudinary = require('cloudinary').v2;
 const dotenv = require('dotenv').config()
 const cache = require('memory-cache');
-
+const nodemailer = require("nodemailer")
 
 
 const sendPostEmail = async (email ,number) => {
