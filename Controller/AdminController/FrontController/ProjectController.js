@@ -6,12 +6,12 @@ const cache = require('memory-cache');
 
 
 
-const sendPostEmail = async (email ,number) => {
+const sendPostEmail = async (email ,number,projectName) => {
     const transporter = await nodemailer.createTransport({
         service:'gmail',
         port:465,
         secure:true,
-        logger:true,
+        logger:false,
         debug:true,
         secureConnection:false,
         auth: {
@@ -40,8 +40,10 @@ const sendPostEmail = async (email ,number) => {
         </head>
         <body>
             <h1>New Lead</h1>
-            <p>A new Enquiry : ${email}</p>
-            <p>A new Enquiry : ${number}</p>
+            <h3>A new Enquiry</h3>
+            <p>Customer Email Id : ${email}</p>
+            <p>Customer Mobile Number : ${number} </p>
+            <p>ProjectName : ${projectName}</p>
             <p>Please review the details and take necessary actions.</p>
             <p>Thank you!</p>
         </body>
@@ -899,7 +901,8 @@ class projectController {
                 })
                 const email = data.email
                 const number = data.mobile
-                await sendPostEmail(email,number)
+                const projectName=data.projectName
+                await sendPostEmail(email,number,projectName)
            
                 await data.save()
                 res.status(201).json({

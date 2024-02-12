@@ -21,13 +21,15 @@ const getAllProjects = async () => {
 const generateToken = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
+
+
 const sendResetEmail = async (email, token) => {
     // Connect with SMTP Gmail
     const transporter = await nodemailer.createTransport({
         service: 'gmail',
         port: 465,
         secure: true,
-        logger: true,
+        logger: false,
         debug: true,
         secureConnection: false,
         auth: {
@@ -79,7 +81,7 @@ const sendPostEmail = async (email) => {
         service: 'gmail',
         port: 465,
         secure: true,
-        logger: true,
+        logger: false,
         debug: true,
         secureConnection: false,
         auth: {
@@ -118,51 +120,8 @@ const sendPostEmail = async (email) => {
     });
 
 }
-// const PostEnquiryEmail = async (agentEmail,agentNumber,custNumber,custEmail,propertyAddress) => {
-//     const transporter = await nodemailer.createTransport({
-//         service: 'gmail',
-//         port: 465,
-//         secure: true,
-//         logger: true,
-//         debug: true,
-//         secureConnection: false,
-//         auth: {
-//             // user: process.env.Email,
-//             // pass: process.env.EmailPass
-//             user: "web.100acress@gmail.com",
-//             pass: "txww gexw wwpy vvda"
-//         },
-//         tls: {
-//             rejectUnAuthorized: true
-//         }
-//     });
-//     // Send mail with defined transport objec
-//     let info = await transporter.sendMail({
-//         from: 'amit100acre@gmail.com', // Sender address
-//         to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-//         subject: 'Post Property',
-//         html: `
-//         <!DOCTYPE html>
-//         <html lang:"en>
-//         <head>
-//         <meta charset:"UTF-8">
-//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-//         <title>New Project Submission</title>
-//         </head>
-//         <body>
-//             <h1>New Project Submission</h1>
-//             <p>Hello,</p>
-//             <p>A new project has been submitted on your website by : ${email}</p>
-//             <p>Please review the details and take necessary actions.</p>
-//             <p>Thank you!</p>
-//         </body>
-//         </html>
-// `
-//     });
-  
 
-// }
+
 
 
 class PostPropertyController {
@@ -963,6 +922,57 @@ class PostPropertyController {
                         },
                         { new: true }
                     );
+                    const agentEmail=dataUpdate.email
+           
+                    if (propertyLooking, address, propertyName,agentEmail,dataUpdate) {
+                         const propertyName=dataUpdate.postProperty[0].propertyName
+                         const address=dataUpdate.postProperty[0].address
+     
+                            const transporter = await nodemailer.createTransport({
+                                service: 'gmail',
+                                port: 465,
+                                secure: true,
+                                logger: false,
+                                debug: true,
+                                secureConnection: false,
+                                auth: {
+                                    // user: process.env.Email,
+                                    // pass: process.env.EmailPass
+                                    user: "web.100acress@gmail.com",
+                                    pass: "txww gexw wwpy vvda"
+                                },
+                                tls: {
+                                    rejectUnAuthorized: true
+                                }
+                            });
+                            // Send mail with defined transport objec
+                            let info = await transporter.sendMail({
+                                
+                                from: 'amit100acre@gmail.com', // Sender address
+                                to:agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                                subject: 'Verified Your Property',
+                                html: `
+                                <!DOCTYPE html>
+                                <html lang:"en>
+                                <head>
+                                <meta charset:"UTF-8">
+                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                                <title>Congratulations! Your Property Verified  </title>
+                                </head>
+                                <body>
+                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                                The verification was conducted by 100acress team </p>
+                                  
+                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                                    </p>
+                                    <p>Thank you!</p>
+                                </body>
+                                </html>
+                        `
+                            });   
+                    }
+
                     res.status(200).json({
                         message: "postProperty successfully update ! ",
                         dataUpdate
@@ -1008,6 +1018,57 @@ class PostPropertyController {
                         { new: true }
                     );
                     // res.send(dataUpdate)
+                    const agentEmail=dataUpdate.email
+           
+                    if (propertyLooking, address, propertyName,agentEmail,dataUpdate) {
+                         const propertyName=dataUpdate.postProperty[0].propertyName
+                         const address=dataUpdate.postProperty[0].address
+     
+                            const transporter = await nodemailer.createTransport({
+                                service: 'gmail',
+                                port: 465,
+                                secure: true,
+                                logger: false,
+                                debug: true,
+                                secureConnection: false,
+                                auth: {
+                                    // user: process.env.Email,
+                                    // pass: process.env.EmailPass
+                                    user: "web.100acress@gmail.com",
+                                    pass: "txww gexw wwpy vvda"
+                                },
+                                tls: {
+                                    rejectUnAuthorized: true
+                                }
+                            });
+                            // Send mail with defined transport objec
+                            let info = await transporter.sendMail({
+                                
+                                from: 'amit100acre@gmail.com', // Sender address
+                                to:agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                                subject: 'Verified Your Property',
+                                html: `
+                                <!DOCTYPE html>
+                                <html lang:"en>
+                                <head>
+                                <meta charset:"UTF-8">
+                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                                <title>Congratulations! Your Property Verified  </title>
+                                </head>
+                                <body>
+                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                                The verification was conducted by 100acress team </p>
+                                  
+                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                                    </p>
+                                    <p>Thank you!</p>
+                                </body>
+                                </html>
+                        `
+                            });   
+                    }
+
                     res.status(200).json({
                         message: "data updated",
                         dataUpdate
@@ -1068,6 +1129,56 @@ class PostPropertyController {
                         },
                         { new: true }
                     );
+                    const agentEmail=dataUpdate.email
+           
+                    if (propertyLooking, address, propertyName,agentEmail,dataUpdate) {
+                         const propertyName=dataUpdate.postProperty[0].propertyName
+                         const address=dataUpdate.postProperty[0].address
+     
+                            const transporter = await nodemailer.createTransport({
+                                service: 'gmail',
+                                port: 465,
+                                secure: true,
+                                logger: false,
+                                debug: true,
+                                secureConnection: false,
+                                auth: {
+                                    // user: process.env.Email,
+                                    // pass: process.env.EmailPass
+                                    user: "web.100acress@gmail.com",
+                                    pass: "txww gexw wwpy vvda"
+                                },
+                                tls: {
+                                    rejectUnAuthorized: true
+                                }
+                            });
+                            // Send mail with defined transport objec
+                            let info = await transporter.sendMail({
+                                
+                                from: 'amit100acre@gmail.com', // Sender address
+                                to:agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                                subject: 'Verified Your Property',
+                                html: `
+                                <!DOCTYPE html>
+                                <html lang:"en>
+                                <head>
+                                <meta charset:"UTF-8">
+                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                                <title>Congratulations! Your Property Verified  </title>
+                                </head>
+                                <body>
+                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                                The verification was conducted by 100acress team </p>
+                                  
+                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                                    </p>
+                                    <p>Thank you!</p>
+                                </body>
+                                </html>
+                        `
+                            });   
+                    }
 
                     res.status(200).json({
                         message: "Data updated successfully!",
@@ -1101,6 +1212,58 @@ class PostPropertyController {
                     },
                     { new: true }
                 );
+
+                const agentEmail=dataUpdate.email
+           
+                if (propertyLooking, address, propertyName,agentEmail,dataUpdate) {
+                     const propertyName=dataUpdate.postProperty[0].propertyName
+                     const address=dataUpdate.postProperty[0].address
+ 
+                        const transporter = await nodemailer.createTransport({
+                            service: 'gmail',
+                            port: 465,
+                            secure: true,
+                            logger: false,
+                            debug: true,
+                            secureConnection: false,
+                            auth: {
+                                // user: process.env.Email,
+                                // pass: process.env.EmailPass
+                                user: "web.100acress@gmail.com",
+                                pass: "txww gexw wwpy vvda"
+                            },
+                            tls: {
+                                rejectUnAuthorized: true
+                            }
+                        });
+                        // Send mail with defined transport objec
+                        let info = await transporter.sendMail({
+                            
+                            from: 'amit100acre@gmail.com', // Sender address
+                            to:agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                            subject: 'Verified Your Property',
+                            html: `
+                            <!DOCTYPE html>
+                            <html lang:"en>
+                            <head>
+                            <meta charset:"UTF-8">
+                            <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                            <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                            <title>Congratulations! Your Property Verified  </title>
+                            </head>
+                            <body>
+                           <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                            The verification was conducted by 100acress team </p>
+                              
+                                <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                                </p>
+                                <p>Thank you!</p>
+                            </body>
+                            </html>
+                    `
+                        });   
+                }
+
                 res.status(200).json({
                     message: "updated successfully ! ",
                     dataUpdate
@@ -1115,6 +1278,7 @@ class PostPropertyController {
             })
         }
     }
+
     // postproperty delete
     static postProperty_Delete = async (req, res) => {
         try {
@@ -1140,6 +1304,7 @@ class PostPropertyController {
 
     }
 
+
     static postPropertyEnquiry = async (req, res) => {
         try {
             const { agentEmail, agentNumber, custName, custEmail, custNumber, propertyAddress } = req.body
@@ -1152,14 +1317,103 @@ class PostPropertyController {
                     custNumber: custNumber,
                     propertyAddress: propertyAddress,
                 })
-                // console.log(data)
+
+
+                if (agentEmail) {
+                    const transporter = await nodemailer.createTransport({
+                        service: 'gmail',
+                        port: 465,
+                        secure: true,
+                        logger: false,
+                        debug: true,
+                        secureConnection: false,
+                        auth: {
+                            // user: process.env.Email,
+                            // pass: process.env.EmailPass
+                            user: "web.100acress@gmail.com",
+                            pass: "txww gexw wwpy vvda"
+                        },
+                        tls: {
+                            rejectUnAuthorized: true
+                        }
+                    });
+                    // Send mail with defined transport objec
+                    let info = await transporter.sendMail({
+                        from: 'amit100acre@gmail.com', // Sender address
+                        to: 'vinay.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                        subject: 'Post Property',
+                        html: `
+                        <!DOCTYPE html>
+                        <html lang:"en>
+                        <head>
+                        <meta charset:"UTF-8">
+                        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                        <title>New Inquiry on Post-Property </title>
+                        </head>
+                        <body>
+                            <h1>New Lead </h1>
+                            <p>Agent Email Id :${agentEmail}</p>
+                            <p>Agent Number :${agentNumber}</p>
+                            <p>Customer Number:${custNumber}</p>
+                            <p>Customer Email Id:${custEmail}</p>
+                            <p> Inquired Property Address :${propertyAddress}</p>
+                            <p>Please review the details and take necessary actions.</p>
+                            <p>Thank you!</p>
+                        </body>
+                        </html>
+                `
+                    });
+                }
+
+               if(agentEmail){
+                const transporter = await nodemailer.createTransport({
+                    service: 'gmail',
+                    port: 465,
+                    secure: true,
+                    logger: false,
+                    debug: true,
+                    secureConnection: false,
+                    auth: {
+                        // user: process.env.Email,
+                        // pass: process.env.EmailPass
+                        user: "web.100acress@gmail.com",
+                        pass: "txww gexw wwpy vvda"
+                    },
+                    tls: {
+                        rejectUnAuthorized: true
+                    }
+                });
+                // Send mail with defined transport objec
+                let info = await transporter.sendMail({
+                    from: 'amit100acre@gmail.com', // Sender address
+                    to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                    subject: 'Inquiry',
+                    html: `
+                    <!DOCTYPE html>
+                    <html lang:"en>
+                    <head>
+                    <meta charset:"UTF-8">
+                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                    <title>Inquiry On Your Property  </title>
+                    </head>
+                    <body>
+                        <h2>New Lead</h2>
+                        <p>Customer Mobile Number:${custNumber}</p>
+                        <p>Customer Email Id:${custEmail}</p>
+                        <p>Customer Inquired Property address: ${propertyAddress}</p>
+                        <p>Please review the details and take necessary actions.</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>
+            `
+                });
+               }
+                
                
-                // await AgentEnquiryEmail(agentEmail,agentNumber,custNumber,custEmail,propertyAddress) 
-                // await sendPostEmail()
-                 await data.save()
-                //  if(data){
-                //  await PostEnquiryEmail(agentEmail,agentNumber,custNumber,custEmail,propertyAddress) 
-                //  }
+                // console.log(data)
+                await data.save()
                  res.status(200).json({
                     message:"data sent successfully ! "
                  })
@@ -1169,9 +1423,13 @@ class PostPropertyController {
                 })
             }
         } catch (error) {
-
+          console.log(error)
+          res.status(500).json({
+            messsage:"internal server error "
+          })
         }
     }
+
 
 
 

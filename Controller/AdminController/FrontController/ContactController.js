@@ -10,7 +10,7 @@ const sendPostEmail = async (email ,mobile) => {
         service:'gmail',
         port:465,
         secure:true,
-        logger:true,
+        logger:false,
         debug:true,
         secureConnection:false,
         auth: {
@@ -35,10 +35,10 @@ const sendPostEmail = async (email ,mobile) => {
         <meta charset:"UTF-8">
         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>New Project Submission</title>
+        <title>New Customer Message </title>
         </head>
         <body>
-            <h1>New Lead</h1>
+            <h1>Customer Message</h1>
             <p>A new Enquiry : ${email}</p>
             <p>A new Enquiry : ${mobile}</p>
             <p>Please review the details and take necessary actions.</p>
@@ -47,6 +47,7 @@ const sendPostEmail = async (email ,mobile) => {
         </html>
 `
     });
+
 
 }
 class contactController {

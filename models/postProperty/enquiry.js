@@ -11,7 +11,7 @@ const postEnquiry_Schema = new mongoose.Schema({
     },
     custName: {
         type: String,
-        required: true
+        
     },
     custEmail: {
         type: String,
