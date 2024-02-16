@@ -149,18 +149,6 @@ class BuyController {
             const id = req.params.id;
             if (id) {
                 const data = await buyCommercial_Model.findById({ _id: id })
-
-                //  const data1=await postPropertyModel.findOne(
-                //     { "postProperty._id": id },
-                // {
-                //     postProperty: {
-                //         $elemMatch: {
-                //             _id: id,
-                //         },
-                //     },
-                // }
-                //  )
-                //  const postdata=data1.postProperty
                 const postData= await postPropertyModel.findOne({ "postProperty._id": id },
                 {
                     postProperty: {
@@ -177,7 +165,7 @@ class BuyController {
                     })
                 } else {
                     res.status(200).json({
-                        message: "data get successfully ! ",
+                        message: "data get  successfully ! ",
                         postData
                     })
                 }

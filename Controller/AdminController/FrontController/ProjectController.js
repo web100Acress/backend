@@ -639,7 +639,7 @@ class projectController {
    static project_trending=async(req,res)=>{
     // console.log("hello")
     try {
-        const data =await ProjectModel.find({projectOverview:"trending"})
+        const data =await ProjectModel.find({projectOverview:"trending"}).limit(8)
         res.status(200).json({
             message:"data get successfully !",
             data
@@ -656,7 +656,7 @@ class projectController {
     // console.log("hello")
     try {
       
-        const data =await ProjectModel.find({projectOverview:"featured"}).limit(4)
+        const data =await ProjectModel.find({projectOverview:"featured"})
         res.status(200).json({
             message:"data get successfully !",
             data
@@ -899,10 +899,62 @@ class projectController {
                     projectName: projectName,
                     address: address
                 })
-                const email = data.email
+                // const email = data.email
+                // const number = data.mobile
+                // const projectName=data.projectName
+                // await sendPostEmail(email,number,projectName)
+
+
+                const custName = data.name
                 const number = data.mobile
-                const projectName=data.projectName
-                await sendPostEmail(email,number,projectName)
+                const emaildata = data.email
+                const project = data.projectName
+                
+             
+                // await sendPostEmail(email,number,projectName)
+                const transporter = await nodemailer.createTransport({
+                    service:'gmail',
+                    port:465,
+                    secure:true,
+                    logger:false,
+                    debug:true,
+                    secureConnection:false,
+                    auth: {
+                        // user: process.env.Email,
+                        // pass: process.env.EmailPass
+                        user:"web.100acress@gmail.com",
+                        pass:"txww gexw wwpy vvda"
+                    },
+                    tls:{
+                        rejectUnAuthorized:true
+                    }
+                });
+                // Send mail with defined transport objec
+                let info = await transporter.sendMail({
+                    from: 'amit100acre@gmail.com', // Sender address
+                    to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                    subject: 'Project Enquiry',
+                    html: `
+                    <!DOCTYPE html>
+                    <html lang:"en>
+                    <head>
+                    <meta charset:"UTF-8">
+                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                    <title>New Project Lead</title>
+                    </head>
+                    <body>
+                        <h3>A new Enquiry</h3>
+                        <p>Customer Name : ${custName}</p>
+                        <p>Customer Email Id : ${emaildata}</p>
+                        <p>Customer Mobile Number : ${number} </p>
+                        <p>ProjectName : ${project}</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>
+            `
+                });
+               
            
                 await data.save()
                 res.status(201).json({
