@@ -96,7 +96,7 @@ const post_Schema =new mongoose.Schema({
 
     role: {
         type: String,
-        default: "Seller"
+        required: true,
     },
     token: {
         type: String,

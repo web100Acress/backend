@@ -128,7 +128,7 @@ class PostPropertyController {
     // seller work Registration 
     static postPerson_Register = async (req, res) => {
         try {
-            const { name, email, mobile, password, cpassword } = req.body
+            const { name, email, mobile, password, cpassword ,role} = req.body
             // console.log(req.body
             const verify = await postPropertyModel.findOne({ email: email })
             if (verify) {
@@ -137,7 +137,7 @@ class PostPropertyController {
                 })
             }
             else {
-                if (name && email && password && cpassword && mobile) {
+                if (name && email && password && cpassword && mobile &&role) {
                     if (password.length < 5) {
                         res.status(400).json({
                             message: " Password must be atleast 8 character ! "
@@ -150,6 +150,7 @@ class PostPropertyController {
                                 email: email,
                                 password: hashpassword,
                                 mobile: mobile,
+                                role:role
                             })
                             // console.log(data)
                             await data.save()
