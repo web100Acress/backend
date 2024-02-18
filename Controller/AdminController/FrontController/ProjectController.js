@@ -668,6 +668,36 @@ class projectController {
      })  
     }
    }
+   static project_City=async(req,res)=>{
+    // console.log("delhi")
+    try{
+      const data= await ProjectModel.find({city:"Delhi"}).limit(4)
+      res.status(200).json({
+        message:"data get successfully !",
+        data
+      })
+    }catch(error){
+      console.log(error)
+      res.status(500).json({
+        message:"Internal server error !"
+      })
+    }
+}
+static project_Upcoming=async(req,res)=>{
+    // console.log("hello")
+    try{
+      const data=await ProjectModel.find({projectOverview:"upcoming"})
+      res.status(200).json({
+        message:"data get successfully !",
+        data
+      })
+    }catch(error){
+     console.log(error)
+     res.status(500).json({
+        message:"Internal server error !"
+     })
+    }
+}
     // project Bhk detail inter data
     static bhk_insert = async (req, res) => {
         try {
@@ -933,7 +963,7 @@ class projectController {
                 let info = await transporter.sendMail({
                     from: 'amit100acre@gmail.com', // Sender address
                     to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-                    subject: 'Project Enquiry',
+                    subject: '100acress.com Enquiry',
                     html: `
                     <!DOCTYPE html>
                     <html lang:"en>
@@ -941,10 +971,10 @@ class projectController {
                     <meta charset:"UTF-8">
                     <meta http-equiv="X-UA-Compatible"  content="IE=edge">
                     <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                    <title>New Project Lead</title>
+                    <title>New Enquiry</title>
                     </head>
                     <body>
-                        <h3>A new Enquiry</h3>
+                        <h3>Project Enquiry</h3>
                         <p>Customer Name : ${custName}</p>
                         <p>Customer Email Id : ${emaildata}</p>
                         <p>Customer Mobile Number : ${number} </p>
