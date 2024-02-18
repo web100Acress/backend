@@ -671,7 +671,7 @@ class projectController {
    static project_City=async(req,res)=>{
     // console.log("delhi")
     try{
-      const data= await ProjectModel.find({city:"Delhi"}).limit(4)
+      const data= await ProjectModel.find({city:"Delhi",projectOverview:"delhi"}).limit(4)
       res.status(200).json({
         message:"data get successfully !",
         data
