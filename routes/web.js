@@ -62,6 +62,9 @@ router.get('/bhk_view/:id',projectController.bhk_view)
 router.get('/bhk_edit/:id',projectController.bhk_edit)
 router.post('/bhk_update/:id',projectController.bhk_update)
 router.delete('/bhk_delete/:id',projectController.bhk_delete)
+      ///project highlight
+      router.post('/highlight/:id',projectController.highlightPoint)
+      router.get("/highlight/view/:id",projectController.highlightPoint_view)
 
 //contact
 // Customer Contact routing handler

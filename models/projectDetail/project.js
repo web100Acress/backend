@@ -12,7 +12,11 @@ const bhk_Schema = new mongoose.Schema({
     }
 
 })
-
+const highlight_Schema=new mongoose.Schema({
+    highlight_Point:{
+       type:String
+    }
+   })
 const projectSchema = new mongoose.Schema({
 
     project_floorplan_Image: [],
@@ -99,6 +103,17 @@ const projectSchema = new mongoose.Schema({
     projectOverview:{
         type:String
     },
+    project_Brochure:{
+        public_id: {
+            type: String,
+        },
+        url: {
+            type: String,
+        },  
+    },
+    project_Status:{
+     type:String
+    },
     schema_type:{
         type: String,
         default:"project"
@@ -107,6 +122,24 @@ const projectSchema = new mongoose.Schema({
     type:String
       },
     BhK_Details: [bhk_Schema],
+    highlight:[highlight_Schema],
+    
+  highlightImage:{  
+    public_id: {
+        type: String,
+    },
+    url: {
+        type: String,
+    }, 
+    }, 
+projectGallery:{
+    public_id: {
+        type: String,
+    },
+    url: {
+        type: String,
+    },
+} 
 },
 
     {
