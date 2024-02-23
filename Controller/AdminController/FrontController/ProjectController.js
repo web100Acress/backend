@@ -245,8 +245,8 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
             });
-            console.log(data);
-            // await data.save()
+           
+             await data.save()
             res.status(200).json({
               message: "data inserted successfully ! ",
             });
@@ -400,7 +400,7 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
             });
-            console.log(data);
+           
             await data.save();
             res.status(200).json({
               message: "data inserted successfully ! ",
