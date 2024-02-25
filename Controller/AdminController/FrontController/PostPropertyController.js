@@ -182,16 +182,16 @@ class PostPropertyController {
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
           if (email == email && isMatch) {
-            if (User.role == "Seller") {
+            if (User.role == "admin") {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
               res.status(200).json({
-                message: " login successfully done  ! ",
+                message: " Admin login successfully ! ",
                 token: token,
               });
             } else {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
               res.status(200).json({
-                message: " Admin login successfully done ! ",
+                message: " login successfully done  ! ",
                 token: token,
               });
             }
