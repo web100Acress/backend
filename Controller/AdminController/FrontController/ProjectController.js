@@ -916,7 +916,10 @@ class projectController {
           const data = await ProjectModel.findByIdAndUpdate(
             { _id: id },
             {
-              highlightImage: highlightImageResult,
+              highlightImage:{
+                public_id:highlightImageResult.public_id,
+                url:highlightImageResult.secure_url
+              } ,
               projectName: projectName,
               state: state,
               projectAddress: projectAddress,
