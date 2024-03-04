@@ -1187,6 +1187,23 @@ class projectController {
       });
     }
   };
+  static projectAffordable=async(req,res)=>{
+    try{
+     const affordable="Affordable Homes";
+   const data=await ProjectModel.find({type:affordable})
+  //  console.log(data)
+  res.status(200).json({
+      message:"data get successfully ! ",
+      data
+  })
+  // res.send(data)
+  }catch(error){
+      console.log(error)
+      res.status(500).json({
+          message:"Internal server error !"
+      })
+    }
+  }
   ///highlight
   static highlightPoint = async (req, res) => {
     try {

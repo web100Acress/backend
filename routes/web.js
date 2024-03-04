@@ -49,6 +49,7 @@ router.get('/project/trending',projectController.project_trending)
 router.get('/project/featured',projectController.project_featured)
 router.get('/project/city',projectController.project_City)
 router.get('/project/upcoming',projectController.project_Upcoming)
+router.get('/project/affordable',projectController.projectAffordable)
 
    //from
 router.post('/userInsert', projectController.userInsert)
