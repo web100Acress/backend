@@ -1297,6 +1297,21 @@ class PostPropertyController {
       const user = await postPropertyModel.findOne({
         "postProperty._id": propertyId,
       });
+
+      const matchedPostProperties = user.postProperty.find(postProperty => postProperty._id.toString() === propertyId);
+      const frontId=matchedPostProperties.frontImage.public_id
+      if(frontId){
+         await cloudinary.uploader.destroy(frontId)
+      }
+      const other=matchedPostProperties.otherImage
+    for(let i=0 ; i<other.length; i++){
+      const id=matchedPostProperties.otherImage[i].public_id;
+      if(id){
+          await cloudinary.uploader.destroy(id)
+      }
+
+    }
+   
       if (!user) {
         return res.status(404).json({ error: "Post property not found" });
       }
