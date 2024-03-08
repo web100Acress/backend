@@ -1106,7 +1106,10 @@ class projectController {
   static projectDelete = async (req, res) => {
     // console.log("helo")
     try {
-      const id = req.params.id;
+      const id = req.params.id
+      const data_id=await ProjectModel.findById({_id:id})
+      // console.log(data_id)
+      if(data_id){
       const logoId=data_id.logo.public_id;
       if(logoId){
           await cloudinary.uploader.destroy(logoId)
@@ -1146,18 +1149,23 @@ class projectController {
       if(masterId){
           await cloudinary.uploader.destroy(masterId)
       }
-      
-      const data = await ProjectModel.findByIdAndDelete({ _id: id });
+      const data = await ProjectModel.findByIdAndDelete({ _id: id })
       res.status(202).json({
-        message: "data deleted sucessfully!",
-        // deletedata: data
-      });
-    } catch (error) {
-      console.log(error);
+          message: 'data deleted sucessfully!',
+          // deletedata: data
+      })
+  }else{
+     res.status(200).json({
+      message:"Project alredy deleted"
+     })
+  }
+  } catch (error) {
+      console.log(error)
       res.status(500).json({
-        message: "internal server error !",
-      });
-    }
+          message: "internal server error !"
+      })
+  }  
+  
   };
   //project find trending data
   static project_trending = async (req, res) => {

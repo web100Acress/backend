@@ -145,18 +145,10 @@ router.post("/postEnquiry",PostPropertyController.postPropertyEnquiry)
 
 
 //Blog
-router.post("/blog/insert", blogController.blog_Insert)
-router.get("/blog/blogviewAll", blogController.blogviewAll)
-router.get('/blog/view/:id', blogController.blog_View)
-router.get('/blog/edit/:id', blogController.blog_Edit)
-router.post('/blog/update/:id', blogController.blog_Update)
-router.delete('/blog/delete/:id', blogController.blog_delete)
-//BlogPost routing
-router.post("/blogPost/insert/:id", blogController.blogPost_insert)
-router.get('/blogPost/view/:id', blogController.blogPost_view)
-router.get("/blogPost/edit/:id", blogController.blogPost_edit)
-router.post("/blogPost/update/:id", blogController.blogPost_update)
-router.delete('/blogPost/delete/:id', blogController.blogPost_delete)
+router.post("/blog/insert",blogController.blog_insert)
+router.get("/blog/view",blogController.blog_view)
+router.get("/blog/view/:id",blogController.blog_viewId)
+    
 
 //Searching routing
 // searching rent and buy
