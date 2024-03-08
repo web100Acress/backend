@@ -1108,21 +1108,21 @@ class projectController {
     try {
       const id = req.params.id
       const data_id=await ProjectModel.findById({_id:id})
-      // console.log(data_id)
+    
       if(data_id){
-      const logoId=data_id.logo.public_id;
-      if(logoId){
-          await cloudinary.uploader.destroy(logoId)
-      }
-      const frontId = data_id.frontImage.public_id;
-      if (frontId != null) {
-          await cloudinary.uploader.destroy(frontId);
-      }
-      const locationId=data_id.project_locationImage.public_id;
-      if(locationId){
-          await cloudinary.uploader.destroy(locationId)
-      }
-      const floorId=data_id.project_floorplan_Image
+        const logoId=data_id.logo.public_id;
+        if(logoId){
+            await cloudinary.uploader.destroy(logoId)
+        }
+        const frontId = data_id.frontImage.public_id;
+        if (frontId != null) {
+            await cloudinary.uploader.destroy(frontId);
+        }
+        const locationId=data_id.project_locationImage.public_id;
+        if(locationId){
+            await cloudinary.uploader.destroy(locationId)
+        }
+        const floorId=data_id.project_floorplan_Image
       for(let i=0; i< floorId.length ; i++){
           const id=data_id.project_floorplan_Image[i].public_id;
 
@@ -1130,11 +1130,11 @@ class projectController {
          await cloudinary.uploader.destroy(id) 
       }
   }
-      const highlightId=data_id.highlightImage.public_id;
-      if(highlightId){
-          await cloudinary.uploader.destroy(highlightId)
-      }
-      const BrochureId=data_id.project_Brochure.public_id;
+  const highlightId=data_id.highlightImage.public_id;
+  if(highlightId){
+      await cloudinary.uploader.destroy(highlightId)
+  }
+  const BrochureId=data_id.project_Brochure.public_id;
       if(BrochureId){
           await cloudinary.uploader.destroy(BrochureId)
       }
@@ -1145,7 +1145,7 @@ class projectController {
               await cloudinary.uploader.destroy(id)
           }
       }
-      const masterId=data_id.projectMaster_Image.public_id;
+      const masterId=data_id.projectMaster_plan.public_id;
       if(masterId){
           await cloudinary.uploader.destroy(masterId)
       }
