@@ -148,6 +148,9 @@ router.post("/postEnquiry",PostPropertyController.postPropertyEnquiry)
 router.post("/blog/insert",blogController.blog_insert)
 router.get("/blog/view",blogController.blog_view)
 router.get("/blog/view/:id",blogController.blog_viewId)
+router.get("/blog/edit/:id",blogController.blog_edit)
+router.put("/blog/update/:id",blogController.blog_update)
+router.delete("/blog/delete/:id",blogController.blog_delete)
     
 
 //Searching routing
