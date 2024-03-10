@@ -1058,7 +1058,7 @@ class projectController {
   //findAll
   static projectviewAll = async (req, res) => {
     try {
-      const data = await ProjectModel.find();
+      const data = await ProjectModel.find().sort({createdAt:-1});
       if (data) {
         res.status(200).json({
           message: "All project Data get  !",

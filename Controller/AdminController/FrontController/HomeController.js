@@ -19,7 +19,6 @@ class homeController {
         message: "Please enter your query!"
       });
     }
-
     try {
       const searchResults = await Promise.all([
         buyCommercial_Model.find({
@@ -71,15 +70,75 @@ class homeController {
 
       if (searchdata.length > 0) {
         return res.status(200).json({
-          message: "Data found!",
+          message: "Data found-1!",
           searchdata
         });
-      } else {
+      } else{
+        const words = searchTerm.split(' ');
+        const searchPromises = [];
+        words.forEach(word => {
+          searchPromises.push(
+              buyCommercial_Model.find({
+                  $or: [
+                      { "projectName": { $regex: word, $options: 'i' } },
+                      { "propertytype": { $regex: word, $options: 'i' } },
+                      { "address": { $regex: word, $options: 'i' } },
+                      { "city": { $regex: word, $options: 'i' } },
+                  ]
+              }),
+              rent_Model.find({
+                  $or: [
+                      { "projectName": { $regex: word, $options: 'i' } },
+                      { "propertytype": { $regex: word, $options: 'i' } },
+                      { "city": { $regex: word, $options: 'i' } },
+                      { "type": { $regex: word, $options: 'i' } }
+                  ]
+              }),
+              ProjectModel.find({
+                  $or: [
+                      { "projectName": { $regex: word, $options: "i" } },
+                      { "city": { $regex: word, $options: "i" } },
+                      { "builderName": { $regex: word, $options: "i" } }
+                  ]
+              }),
+              postPropertyModel.aggregate([
+                  {
+                      $match: {
+                          "postProperty.city": { $regex: word, $options: "i" },
+                          "postProperty.propertyName": { $regex: word, $options: "i" },
+                          "postProperty.builderName": { $regex: word, $options: "i" },
+                      }
+                  },
+                  {
+                      $group: {
+                          _id: "$_id",
+                          name: { $first: "$name" },
+                          email: { $first: "$email" },
+                          mobile: { $first: "$mobile" },
+                          role: { $first: "$role" },
+                          token: { $first: "$token" },
+                          postProperty: { $push: "$postProperty" }
+                      }
+                  }
+              ])
+          );
+      });
+      const searchResults = await Promise.all(searchPromises);
+      const searchdata = searchResults.flat();
+
+      if (searchdata.length > 0) {
+          return res.status(200).json({
+              message: "Data found-2!",
+              searchdata
+          });
+      }else{
         const data = await ProjectModel.find();
-        return res.status(200).json({
-          message: "No data found.",
-          searchdata: data
-        });
+              return res.status(200).json({
+                  message: "No data found-3.",
+                  searchdata: data
+              });
+      }
+
       }
     } catch (error) {
       console.error(error);
