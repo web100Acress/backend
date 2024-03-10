@@ -14,110 +14,80 @@ class homeController {
   // search in buy and rent 
   static search = async (req, res) => {
     const searchTerm = req.params.key;
-    if (searchTerm.length) {
-      const words = searchTerm.split(' ');
-      const searchdata = []
-      try {
-
-        for (let i = 0; i < words.length; i++) {
-              //  console.log(words[i])
-          let data = await buyCommercial_Model.find(
-            {
-              "$or": [
-                { "projectName": { $regex: words[i], $options: 'i' } },
-                { "propertytype": { $regex: words[i], $options: 'i' } },
-                { "address": { $regex: words[i], $options: 'i' } },
-                { "city": { $regex: words[i], $options: 'i' } },
-              ]
-            }
-          )
-          let data2 = await rent_Model.find(
-            {
-              "$or": [
-                { "projectName": { $regex: words[i], $options: 'i' } },
-                { "propertytype": { $regex: words[i], $options: 'i' } },
-                { "city": { $regex: words[i], $options: 'i' } },
-                { "type": { $regex: words[i], $options: 'i' } }
-              ]
-            }
-          )
-          let data3 = await ProjectModel.find(
-            {
-              "$or": [
-                { "projectName": { $regex: words[i], $options: "i" } },
-                { "city": { $regex: words[i], $options: "i" } },
-                { "builderName": { $regex: words[i], $options: "i" } }
-              ]
-            }
-          )
-          let data4 = await postPropertyModel.aggregate([
-            {
-              $match: {
-                // Match conditions  user document
-              }
-            },
-             {
-               $unwind: "$postProperty" // Deconstruct  postProperty array
-            
-            },
-            {
-              $match: {
-                //  search criteria here
-                "postProperty.city": { $regex: words[i], $options: "i" },
-                "postProperty.projectName": { $regex: words[i], $options: "i" },
-                "postProperty.builderName": { $regex: words[i], $options: "i" },
-                
-              }
-            },
-            {
-              $group: {
-                _id: "$_id",
-                name: { $first: "$name" }, // You can include other fields from the user document if needed
-                email: { $first: "$email" },
-                mobile: { $first: "$mobile" },
-                role: { $first: "$role" },
-                token: { $first: "$token" },
-                postProperty: { $push: "$postProperty" } // Collect the filtered postProperty documents
-              }
-            }
-          ]);
-
-          // console.log(data4);
-          const getdata = [...data,...data2,...data3, ...data4]
-          if (getdata.length > 0) {
-            searchdata.push(...getdata)
-          }
-        }
-
-        if (searchdata.length > 0) {
-          res.status(200).json({
-            message: "data found ! .",
-            searchdata
-          })
-        } else {
-         const data=await ProjectModel.find()
-         const getdata = [...data]
-         if (getdata.length > 0) {
-          searchdata.push(...getdata)
-        }
-         if (searchdata.length > 0) {
-          res.status(200).json({
-            message: "data found ! .",
-            searchdata
-          })
-        } 
-        
-        }
-
-      } catch (error) {
-        console.log(error)
-      }
-    } else {
-      res.status(200).json({
-        message: "Please inter your query! "
-      })
+    if (!searchTerm) {
+      return res.status(200).json({
+        message: "Please enter your query!"
+      });
     }
-  }
+
+    try {
+      const searchResults = await Promise.all([
+        buyCommercial_Model.find({
+          $or: [
+            { "projectName": { $regex: searchTerm, $options: 'i' } },
+            { "propertytype": { $regex: searchTerm, $options: 'i' } },
+            { "address": { $regex: searchTerm, $options: 'i' } },
+            { "city": { $regex: searchTerm, $options: 'i' } },
+          ]
+        }),
+        rent_Model.find({
+          $or: [
+            { "projectName": { $regex: searchTerm, $options: 'i' } },
+            { "propertytype": { $regex: searchTerm, $options: 'i' } },
+            { "city": { $regex: searchTerm, $options: 'i' } },
+            { "type": { $regex: searchTerm, $options: 'i' } }
+          ]
+        }),
+        ProjectModel.find({
+          $or: [
+            { "projectName": { $regex: searchTerm, $options: "i" } },
+            { "city": { $regex: searchTerm, $options: "i" } },
+            { "builderName": { $regex: searchTerm, $options: "i" } }
+          ]
+        }),
+        postPropertyModel.aggregate([
+          {
+            $match: {
+              "postProperty.city": { $regex: searchTerm, $options: "i" },
+              "postProperty.projectName": { $regex: searchTerm, $options: "i" },
+              "postProperty.builderName": { $regex: searchTerm, $options: "i" },
+            }
+          },
+          {
+            $group: {
+              _id: "$_id",
+              name: { $first: "$name" },
+              email: { $first: "$email" },
+              mobile: { $first: "$mobile" },
+              role: { $first: "$role" },
+              token: { $first: "$token" },
+              postProperty: { $push: "$postProperty" }
+            }
+          }
+        ])
+      ]);
+
+      const searchdata = searchResults.flat();
+
+      if (searchdata.length > 0) {
+        return res.status(200).json({
+          message: "Data found!",
+          searchdata
+        });
+      } else {
+        const data = await ProjectModel.find();
+        return res.status(200).json({
+          message: "No data found.",
+          searchdata: data
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        message: "Internal server error"
+      });
+    }
+  };
   //search for otherproperty 
   static search_other = async (req, res) => {
     const { query } = req.query
