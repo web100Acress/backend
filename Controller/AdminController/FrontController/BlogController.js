@@ -28,7 +28,7 @@ class blogController {
                         public_id: blogResult.public_id,
                         url: blogResult.secure_url
                     },
-                    blog_Title: blog_Title.trim(),
+                    blog_Title: Title,
                     blog_Description,
                     author,
                     blog_Category

@@ -1,44 +1,34 @@
 const mongoose = require('mongoose');
 
-const postSchema = new mongoose.Schema({
-    blogImage: {
-        public_id: {
-            type: String,
-        },
-        url: {
-            type: String,
-        },
-    },
-    title: {
-        type: String,
-    },
-    descripation: {
-        type: String,
-    }
-});
-
 const blogSchema = new mongoose.Schema({
-    sliderImage: {
+    blog_Image: {
         public_id: {
             type: String,
-            required: true
+           
         },
         url: {
-            type: String,
-            required: true
+            type: String,  
         }
     },
-    title: {
+    blog_Title: {
         type: String,
-        required: true
+      
     },
-    descripation: {
+    blog_Description: {
         type: String,
-        required: true
+     
     },
-    blog: [postSchema] // Using the subdocument schema as an array in the main schema
+    author:{
+        type: String,
+     
+    },
+    blog_Category:{
+        type: String,
+     
+    }
+    // Using the csdkccn subdocument schema as an array in the main schema
 });
 
-const BlogModel = mongoose.model('Blog', blogSchema);
+const blogModel = mongoose.model('Blog', blogSchema);
 
-module.exports = BlogModel;
+module.exports = blogModel;
