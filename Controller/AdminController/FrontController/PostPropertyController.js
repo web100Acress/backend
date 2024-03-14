@@ -864,6 +864,7 @@ class PostPropertyController {
         landMark,
         availableDate,
         propertyLooking,
+         verifiy
       } = req.body;
       if (req.files) {
         if (req.files.frontImage && req.files.otherImage) {
@@ -931,6 +932,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
+                "postProperty.$.verifiy":verifiy
               },
             },
             { new: true }
@@ -1026,6 +1028,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
+                "postProperty.$.verifiy":verifiy
               },
             },
             { new: true }
@@ -1139,6 +1142,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
+                "postProperty.$.verifiy":verifiy
               },
             },
             { new: true }
@@ -1221,6 +1225,7 @@ class PostPropertyController {
               "postProperty.$.type": type,
               "postProperty.$.amenities": amenities,
               "postProperty.$.propertyLooking": propertyLooking,
+              "postProperty.$.verifiy":verifiy
             },
           },
           { new: true }

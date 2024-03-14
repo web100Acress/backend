@@ -1257,7 +1257,7 @@ class projectController {
     try {
       const id = req.params.id;
       const highlight_Point = req.body.highlight_Point;
-      console.log(highlight_Point);
+      // console.log(highlight_Point);
       if (highlight_Point) {
         const data = {
           highlight_Point: highlight_Point,
