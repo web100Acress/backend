@@ -184,32 +184,26 @@ class PostPropertyController {
           if (email == email && isMatch) {
             if (User.role == "admin") {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
+            
               res.status(200).json({
                 message: " Admin login successfully ! ",
-                token: token,
+                token, User
               });
             } else {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
-              const totalProperty=User.postProperty.length
-              const Property = User.postProperty;
-              const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
-              const selltotal=SellProperty.length
-              const RentProperty = Property.filter(property => property.propertyLooking === "rent");
-              const Renttotal=RentProperty.length
+              // const totalProperty=User.postProperty.length
+              // const Property = User.postProperty;
+              // const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
+              // const selltotal=SellProperty.length
+              // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
+              // const Renttotal=RentProperty.length
+              
+
               res.status(200).json({
                 message: " login successfully done  ! ",
-                token: token,
-                User,
-                totalProperty,
-                SellProperty,
-                selltotal,
-                RentProperty,
-                Renttotal
+                token, User 
               });
-              res.status(200).json({
-                message: " login successfully done  ! ",
-                token: token,
-              });
+             
             }
           } else {
             res.status(401).json({
