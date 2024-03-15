@@ -190,6 +190,22 @@ class PostPropertyController {
               });
             } else {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
+              const totalProperty=User.postProperty.length
+              const Property = User.postProperty;
+              const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
+              const selltotal=SellProperty.length
+              const RentProperty = Property.filter(property => property.propertyLooking === "rent");
+              const Renttotal=RentProperty.length
+              res.status(200).json({
+                message: " login successfully done  ! ",
+                token: token,
+                User,
+                totalProperty,
+                SellProperty,
+                selltotal,
+                RentProperty,
+                Renttotal
+              });
               res.status(200).json({
                 message: " login successfully done  ! ",
                 token: token,

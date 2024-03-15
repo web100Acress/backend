@@ -489,6 +489,7 @@ class projectController {
         city,
         projectOverview,
         project_url,
+        project_Status
       } = req.body;
       const id = req.params.id;
       if (req.files) {
@@ -656,6 +657,7 @@ class projectController {
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           // console.log(data)
@@ -699,6 +701,7 @@ class projectController {
               meta_description: meta_description,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           // console.log(data)
@@ -741,6 +744,7 @@ class projectController {
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           // console.log(data)
@@ -782,6 +786,7 @@ class projectController {
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           //  console.log(data)
@@ -842,6 +847,7 @@ class projectController {
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           await data.save();
@@ -899,6 +905,7 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status: project_Status,
+              project_Status:project_Status,
             }
           );
           await data.save();
@@ -1012,6 +1019,7 @@ class projectController {
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
+              project_Status:project_Status,
             }
           );
           await data.save();
@@ -1040,6 +1048,7 @@ class projectController {
             type: type,
             projectOverview: projectOverview,
             project_url: project_url,
+            project_Status:project_Status,
           }
         );
         await data.save();
