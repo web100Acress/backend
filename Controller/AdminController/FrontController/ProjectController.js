@@ -4,7 +4,7 @@ const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
-
+const { isValidObjectId } = require("mongoose");
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
     service: "gmail",
@@ -1266,7 +1266,7 @@ class projectController {
     try {
       const id = req.params.id;
       const highlight_Point = req.body.highlight_Point;
-      // console.log(highlight_Point);
+      // console.log(highlight_Point,id);
       if (highlight_Point) {
         const data = {
           highlight_Point: highlight_Point,
@@ -1322,6 +1322,100 @@ class projectController {
       });
     }
   };
+  static highlightedit = async (req, res) => {
+    // console.log("hello")
+    try {
+      const id = req.params.id
+      // console.log(id)
+      if (isValidObjectId(id)) {
+        const data = await ProjectModel.findOne(
+          { "highlight._id": id },
+          {
+            highlight: {
+              $elemMatch: {
+                _id: id
+              }
+            }
+          }
+        )
+        res.status(200).json({
+          message: "data get Successfully ! ",
+          data
+        })
+      } else {
+        res.status(200).json({
+          message: "check Your Id ",
+
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({
+        message: "Internal server error ! "
+      })
+    }
+  }
+  static highlightupdate=async(req,res)=>{
+  // console.log("hello")
+  try{
+    //  console.log(req.params.id)
+    const id=req.params.id;
+    const highlight_Point=req.body.highlight_Point
+    if(isValidObjectId(id)){
+      const data=await ProjectModel.findOneAndUpdate(
+        {"highlight._id":id},
+        {
+          $set:{
+      "highlight.$.highlight_Point":highlight_Point
+        }},
+        {new:true}
+      )
+      res.status(200).json({
+        message:"data update successfully !",
+        data
+      })
+    }else{
+      res.status(200).json({
+        error:"check your field !"
+      })
+    }
+  }catch(error){
+    console.log(error)
+  }
+  }
+  static highlightdelete=async(req,res)=>{
+    // console.log("hello")
+    try{
+   const id=req.params.id
+   if(isValidObjectId(id)){
+    const data=await ProjectModel.findOne({
+      "highlight._id":id
+    })
+   if(!data){
+    res.status(404).json({
+      error: "Post property not found"
+    })
+   }else{
+    const index=data.highlight.findIndex(
+      (highlight) => highlight._id.toString() ===id
+    )
+    if (index === -1) {
+      return res.status(404).json({ error: "Post property not found" });
+    }
+    data.highlight.splice(index, 1);
+    await data.save();
+    res.status(200).json({ message: "Post property deleted successfully" });
+   }
+
+   }
+  }catch(error){
+console.log(error)
+res.status(500).json({
+  message:"Internal server error !"
+})
+  }
+  }
+
 
   // project Bhk detail inter data
   static bhk_insert = async (req, res) => {

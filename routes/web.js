@@ -64,6 +64,9 @@ router.delete("/bhk_delete/:id", projectController.bhk_delete);
 ///project highlight
 router.post("/highlight/:id", projectController.highlightPoint);
 router.get("/highlight/view/:id", projectController.highlightPoint_view);
+router.get("/highlight/edit/:id",projectController.highlightedit)
+router.post("/highlight/update/:id",projectController.highlightupdate)
+router.delete("/highlight/delete/:id",projectController.highlightdelete)
 
 //contact
 // Customer Contact routing handler
