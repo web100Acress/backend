@@ -387,6 +387,56 @@ class homeController {
   }
 
 
+  static dataSnapshot = async (req, res) => {
+    try {
+      // Count PostProperty data 
+      const postDat = await postPropertyModel.find();
+     
+      let total = 0;
+      let rent = 0;
+      let sell = 0;
+      for (let postData of postDat) {
+        const data = postData.postProperty;
+        for (let property of data) {
+          if (property.propertyLooking === "rent") {
+            rent++; // Increment rent count if type is "rent"
+          } else {
+            sell++;
+          }
+        }
+        const count = data.length;
+        if (count != 0) {
+          total =total + count;
+        }
+      }
+      // Count ProjectData 
+      const buyCount = (await buyCommercial_Model.find()).length; 
+      const BuyTotal = (buyCount + sell)*10;
+  
+      const rentCount = (await rent_Model.find()).length;
+      const torent =( rentCount + rent)*10;
+  
+      const projectCount = (await ProjectModel.find()).length; 
+    
+      res.status(200).json({
+        message:"data get successfull !",
+        totalUser:total*10,
+        totalRentposted:rent*10,
+        totalSellposted:sell*10,
+         
+        buyAddon:BuyTotal,
+        total:torent,
+        totalProject:projectCount*15,
+      })
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message:"Internal server error !"
+      })
+    }
+  }
+
+
 
   // ///////////////////
 

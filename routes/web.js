@@ -217,7 +217,7 @@ router.post("/postPerson/search", homeController.search_other);
 router.get("/rentproperty/search", homeController.search_rent);
 //searching buy
 router.get("/buyproperty/search", homeController.search_buy);
-
+router.get("/data/Snapshot",homeController.dataSnapshot)
 //new launch
 // router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
 // router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
