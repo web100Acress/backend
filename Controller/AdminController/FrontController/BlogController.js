@@ -12,23 +12,23 @@ class blogController {
             const { blog_Title, blog_Description, author, blog_Category } = req.body
 
             //    const title=blog_Title.trim()
+            if (blog_Title && blog_Description && author && blog_Category) {
             const Title = blog_Title.trim();
+            if(req.files){
             const BlogImage = req.files.blog_Image;
-            if (!BlogImage) {
-                return res.status(400).json({ message: "No file uploaded" });
-            }
+           
             const blogResult = await cloudinary.uploader.upload(
                 BlogImage.tempFilePath, {
                 folder: `100acre/blog/${Title}`
             }
             )
-            if (blog_Title && blog_Description && author && blog_Category) {
+            
                 const data = new blogModel({
                     blog_Image: {
                         public_id: blogResult.public_id,
                         url: blogResult.secure_url
                     },
-                    blog_Title: Title,
+                    blog_Title: blog_Title.trim(),
                     blog_Description,
                     author,
                     blog_Category
@@ -37,6 +37,9 @@ class blogController {
                 res.status(200).json({
                     message: "Data Inserted successfully !"
                 })
+            }else{
+                return res.status(400).json({ message: "Image field empty !" });
+            }
             }else{
                 return res.status(400).json({ message: "field empty " }); 
             }

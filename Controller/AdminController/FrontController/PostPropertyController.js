@@ -98,7 +98,7 @@ const sendPostEmail = async (email) => {
   // Send mail with defined transport objec
   let info = await transporter.sendMail({
     from: "amit100acre@gmail.com", // Sender address
-    to: "vinay.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
     subject: "Post Property",
     html: `
         <!DOCTYPE html>
