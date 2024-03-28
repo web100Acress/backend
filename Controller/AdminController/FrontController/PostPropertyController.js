@@ -1319,6 +1319,7 @@ class PostPropertyController {
          await cloudinary.uploader.destroy(frontId)
       }
       const other=matchedPostProperties.otherImage
+      if(other){
     for(let i=0 ; i<other.length; i++){
       const id=matchedPostProperties.otherImage[i].public_id;
       if(id){
@@ -1326,6 +1327,7 @@ class PostPropertyController {
       }
 
     }
+  }
    
       if (!user) {
         return res.status(404).json({ error: "Post property not found" });
