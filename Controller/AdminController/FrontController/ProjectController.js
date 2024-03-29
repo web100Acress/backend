@@ -5,6 +5,7 @@ const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
+
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
     service: "gmail",
@@ -50,6 +51,16 @@ const sendPostEmail = async (email, number, projectName) => {
 `,
   });
 };
+
+const fetchDataFromDatabase = async () => {
+  try {
+      const data = await ProjectModel.find();
+      return data;
+  } catch (error) {
+      throw error;
+  }
+};
+
 class projectController {
   static project = async (req, res) => {
     res.send("project");
@@ -1065,26 +1076,56 @@ class projectController {
   };
 
   //findAll
+  // static projectviewAll = async (req, res) => {
+  //   try {
+  //     const data = await ProjectModel.find()
+  //     if (data) {
+  //       res.status(200).json({
+  //         message: "All project Data get  !",
+  //         data,
+  //       });
+  //     } else {
+  //       res.status(200).json({
+  //         message: "data not found  !",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       message: "internal server error ! ",
+  //     });
+  //   }
+  // };
+
   static projectviewAll = async (req, res) => {
     try {
-      const data = await ProjectModel.find()
-      if (data) {
-        res.status(200).json({
-          message: "All project Data get  !",
-          data,
-        });
-      } else {
-        res.status(200).json({
-          message: "data not found  !",
-        });
-      }
+        // Check if data is available in cache
+        let data = cache.get("projectData");
+
+        // If not available in cache, fetch from the database and cache it
+        if (!data) {
+            data = await fetchDataFromDatabase();
+            const expirationTime = 10 * 60 * 1000; 
+            cache.put("projectData", data,expirationTime );
+        }
+
+        if (data && data.length > 0) {
+            res.status(200).json({
+                message: "All project data retrieved successfully!",
+                data
+            });
+        } else {
+            res.status(404).json({
+                message: "No data found!"
+            });
+        }
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        message: "internal server error ! ",
-      });
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error!"
+        });
     }
-  };
+};
 
   // Route handler to get all project data
   // static projectviewAll = async (req, res) => {
