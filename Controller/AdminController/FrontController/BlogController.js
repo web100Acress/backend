@@ -119,14 +119,13 @@ class blogController {
             })
         }
     }
-
     static blog_update = async (req, res) => {
         // console.log("hellobfiu")
         try {
             const id = req.params.id
             if (ObjectId.isValid(id)) {
                 const { blog_Title, blog_Description, author, blog_Category } = req.body
-                if (req.files.blog_Image) {
+                if (req.files) {
                     const data = await blogModel.findById({ _id: id })
                     const Title = data.blog_Title.trim()
                     const blogImage = req.files.blog_Image
@@ -174,6 +173,7 @@ class blogController {
             })
         }
     }
+    
 
     static blog_delete=async(req,res)=>{
         try{
