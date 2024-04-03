@@ -874,7 +874,7 @@ class PostPropertyController {
         landMark,
         availableDate,
         propertyLooking,
-         verifiy
+         verify
       } = req.body;
       if (req.files) {
         if (req.files.frontImage && req.files.otherImage) {
@@ -942,7 +942,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verifiy":verifiy
+                "postProperty.$.verify":verify
               },
             },
             { new: true }
@@ -1001,7 +1001,7 @@ class PostPropertyController {
 
           res.status(200).json({
             message: "postProperty successfully update ! ",
-            dataUpdate,
+           
           });
         } else if (req.files.frontImage) {
           // res.send("front image")
@@ -1038,7 +1038,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verifiy":verifiy
+                "postProperty.$.verify":verify
               },
             },
             { new: true }
@@ -1098,7 +1098,7 @@ class PostPropertyController {
 
           res.status(200).json({
             message: "data updated",
-            dataUpdate,
+            
           });
         } else if (req.files.otherImage) {
           // res.send("listn other")
@@ -1152,7 +1152,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verifiy":verifiy
+                "postProperty.$.verify":verify
               },
             },
             { new: true }
@@ -1211,7 +1211,7 @@ class PostPropertyController {
 
           res.status(200).json({
             message: "Data updated successfully!",
-            dataUpdate,
+            
           });
         }
       } else {
@@ -1235,7 +1235,7 @@ class PostPropertyController {
               "postProperty.$.type": type,
               "postProperty.$.amenities": amenities,
               "postProperty.$.propertyLooking": propertyLooking,
-              "postProperty.$.verifiy":verifiy
+              "postProperty.$.verify":verify
             },
           },
           { new: true }
@@ -1293,7 +1293,7 @@ class PostPropertyController {
 
         res.status(200).json({
           message: "updated successfully ! ",
-          dataUpdate,
+        
         });
       }
     } catch (error) {
