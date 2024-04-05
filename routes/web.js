@@ -14,9 +14,9 @@ const rentController = require("../Controller/AdminController/FrontController/Re
 // const authAdmin = require('../middleware/registerAuth')
 const PostPropertyController = require("../Controller/AdminController/FrontController/PostPropertyController");
 const newlaunchController = require("../Controller/AdminController/FrontController/NewlauchController");
-const otherpropertyController = require("../Controller/AdminController/FrontController/OtherpropertyController");
 const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
+const CareerController = require("../Controller/AdminController/FrontController/CareerController");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -219,60 +219,12 @@ router.get("/rentproperty/search", homeController.search_rent);
 router.get("/buyproperty/search", homeController.search_buy);
 router.get("/data/Snapshot",homeController.dataSnapshot)
 //new launch
-// router.post("/newlaunch/insert", newlaunchController.newlaunch_Insert)
-// router.get("/newlaunch/view/:id", newlaunchController.newlaunch_view)
-// router.get("/newlaunch/viewAll", newlaunchController.newlaunch_viewAll)
-// router.get("/newlaunch/edit/:id", newlaunchController.newlaunch_edit)
-// router.post("/newlaunch/update/:id", newlaunchController.newlaunch_update)
-// router.delete("/newlaunch/delete/:id", newlaunchController.newlaunch_delete)
-//other Propertyc
 
-router.post(
-  "/otherproperty/insert",
-  otherpropertyController.otherproperty_Insert
-);
-router.get(
-  "/otherproperty/viewAll",
-  otherpropertyController.otherproperty_viewAll
-);
-router.get(
-  "/otherproperty/view/:id",
-  otherpropertyController.otherproperty_view
-);
-router.get(
-  "/otherproperty/edit/:id",
-  otherpropertyController.otherproperty_edit
-);
-router.post(
-  "/otherproperty/update/:id",
-  otherpropertyController.otherproperty_update
-);
-router.delete(
-  "/otherproperty/delete/:id",
-  otherpropertyController.otherproperty_delete
-);
-// other property Enquiry
-router.post(
-  "/otherproperty/enquiry/insert",
-  otherpropertyController.otherEnquiry_insert
-);
-router.post(
-  "/otherproperty/enquiry/update/:id",
-  otherpropertyController.otherEnquiry_Update
-);
-router.get(
-  "/otherproperty/enquiry/viewAll",
-  otherpropertyController.otherEnquiry_viewAll
-);
-router.get(
-  "/otherproperty/enquiry/view/:id",
-  otherpropertyController.otherEnquiry_view
-);
-router.delete(
-  "/otherproperty/enquiry/delete/:id",
-  otherpropertyController.otherEnquiry_delete
-);
-
+//career
+router.post("/career/page/Insert",CareerController.careerInsert)
+router.get("/career/page/View",CareerController.careerView)
+router.get("/career/page/edit/:id",CareerController.careerEdit)
+router.put("/career/page/update/:id",CareerController.careerUpdate)
 // router.post("/mail",rentController.email)
 
 module.exports = router;

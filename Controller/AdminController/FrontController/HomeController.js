@@ -1,6 +1,4 @@
 //home controller  for handling operations routing 
-
-const otherPropertyModel = require("../../../models/otherProperty/otherpropertyModel");
 const buyCommercial_Model = require("../../../models/property/buyCommercial")
 const rent_Model = require("../../../models/property/rent")
 // const prelaunchModel=require("..")
