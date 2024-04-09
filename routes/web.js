@@ -38,7 +38,7 @@ router.get("/project", projectController.project);
 //page with detail
 router.post("/projectInsert", projectController.projectInsert);
 router.get("/projectView/:project_url", projectController.projectView);
-router.get("/project/viewAll", projectController.projectviewAll);
+router.get("/project/viewAll/data", projectController.projectviewAll);
 router.get("/project/Edit/:id", projectController.projectEdit);
 router.post("/project/Update/:id", projectController.projectUpdate);
 router.delete("/project/Delete/:id", projectController.projectDelete);
