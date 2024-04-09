@@ -112,22 +112,16 @@ class CareerController {
   static careerView = async (req, res) => {
     // console.log("hello nfuih")
     try {
-      let cachedata = cache.get("careerData");
-      if (!cachedata) {
+     
+     
         const data = await careerModal.find();
-        const expirationTime = 5 * 60 * 1000;
-        cache.put("projectData", data, expirationTime);
+      
         res.status(200).json({
           message: "data get successfully ! ",
           data,
         });
-      }
-      if (cachedata && cachedata.length > 0) {
-        res.status(200).json({
-          message: "data retrived successfully ! ",
-          data,
-        });
-      }
+    
+      
     } catch (error) {
       console.log(error);
       res.status(500).json({
