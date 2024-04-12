@@ -228,4 +228,12 @@ router.put("/career/page/update/:id",CareerController.careerUpdate)
 router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 // router.post("/mail",rentController.email)
 
+//Job Opening
+router.post("/career/opening/Insert", CareerController.openingInsert)
+router.get("/career/opening/ViewAll", CareerController.openingView_all)
+router.get("/career/opening/View/:id", CareerController.openingView_id)
+router.get("/career/opening/edit/:id",CareerController.openingEdit)
+router.put('/career/opening/update/:id',CareerController.openingUpdate)
+router.delete('/career/opening/delete/:id',CareerController.openingDelete)
+
 module.exports = router;
