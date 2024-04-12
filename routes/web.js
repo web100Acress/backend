@@ -225,6 +225,7 @@ router.post("/career/page/Insert",CareerController.careerInsert)
 router.get("/career/page/View",CareerController.careerView)
 router.get("/career/page/edit/:id",CareerController.careerEdit)
 router.put("/career/page/update/:id",CareerController.careerUpdate)
+router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 // router.post("/mail",rentController.email)
 
 module.exports = router;

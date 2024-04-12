@@ -112,16 +112,12 @@ class CareerController {
   static careerView = async (req, res) => {
     // console.log("hello nfuih")
     try {
-     
-     
-        const data = await careerModal.find();
-      
-        res.status(200).json({
-          message: "data get successfully ! ",
-          data,
-        });
-    
-      
+      const data = await careerModal.find();
+
+      res.status(200).json({
+        message: "data get successfully ! ",
+        data,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -429,12 +425,179 @@ class CareerController {
     }
   };
   /////////////Openings API/////////////
-
-  static openingInsert = (req, res) => {};
-  static openingView_all = (req, res) => {};
-  static openingView_id = (req, res) => {};
-  static openingEdit = (req, res) => {};
-  static openingUpdate = (req, res) => {};
-  static openingDelete = (req, res) => {};
+  static openingInsert = async (req, res) => {
+    try {
+      const {
+        jobLocation,
+        jobTitle,
+        responsibility,
+        experience,
+        skill,
+        jobProfile,
+      } = req.body;
+      if (
+        jobLocation &&
+        jobTitle &&
+        responsibility &&
+        experience &&
+        skill &&
+        jobProfile
+      ) {
+        const data = new openModal({
+          jobLocation: jobLocation,
+          jobTitle: jobTitle,
+          responsibility: responsibility,
+          experience: experience,
+          skill: skill,
+          jobProfile: jobProfile,
+        });
+        // console.log(data,"lkwehdqxNZL")
+        await data.save();
+        res.status(200).json({
+          message: "Data Sent successfully ! ",
+        });
+      } else {
+        res.status(200).json({
+          message: "Check field !",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+  static openingView_all = async (req, res) => {
+    try {
+      let cacheData = cache.get("jobOpens");
+      if (!cacheData) {
+        const data = await openModal.find();
+        const expirationTime = 5 * 60 * 1000;
+        cache.put("jobOpens", data, expirationTime);
+        res.status(200).json({
+          message: "data get successfully !",
+          data,
+        });
+      }
+      if (cacheData && cacheData.length > 0) {
+        res.status(200).json({
+          message: "data retrived successfully ! ",
+          data,
+        });
+      }
+    } catch (error) {
+      console.log(error).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+  static openingView_id = async (req, res) => {
+    try {
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
+        const data = await openModal.findById({ _id: id });
+        res.status(200).json({
+          message: "data get successfully !",
+          data,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+  static openingEdit = async (req, res) => {
+    // console.log("hello")
+    try {
+      const id = req.params.id;
+      // console.log(id)
+      if (isValidObjectId(id)) {
+        const data = await openModal.findById({ _id: id });
+        res.status(200).json({
+          message: "data get successfully !",
+        });
+      } else {
+        res.status(400).json({
+          message: "Invalid id !",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+  static openingUpdate = async (req, res) => {
+    try {
+      const {
+        jobLocation,
+        jobTitle,
+        responsibility,
+        experience,
+        skill,
+        jobProfile,
+      } = req.body;
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
+        if (
+          jobLocation &&
+          jobTitle &&
+          responsibility &&
+          experience &&
+          skill &&
+          jobProfile
+        ) {
+          const data = await openModal.findByIdAndUpdate(
+            { _id: id },
+            {
+              jobLocation: jobLocation,
+              jobTitle: jobTitle,
+              responsibility: responsibility,
+              experience: experience,
+              skill: skill,
+              jobProfile: jobProfile,
+            }
+          );
+          await data.save();
+          res.status(200).json({
+            message: "Data updated successfully !",
+          });
+        } else {
+          res.status(400).json({
+            message: "data missing!",
+          });
+        }
+      } else {
+        res.status(400).json({
+          message: "invalid object id pass !",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error ! ",
+      });
+    }
+  };
+  static openingDelete =async (req, res) => {
+    try{
+      const id=req.params.id
+    if(isValidObjectId(id)){
+     const data=await openModal.findByIdAndDelete({_id:id})
+     res.status(200).json({
+         message:"Data deleted successfully !"
+     })
+    }
+    }catch(error){
+     console.log(error)
+     res.status(500).json({
+        message:"Internal server error !"   
+     })
+    }
+ }
 }
 module.exports = CareerController;
