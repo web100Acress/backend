@@ -471,23 +471,18 @@ class CareerController {
   };
   static openingView_all = async (req, res) => {
     try {
-      let cacheData = cache.get("jobOpens");
-      if (!cacheData) {
+     
         const data = await openModal.find();
-        const expirationTime = 5 * 60 * 1000;
-        cache.put("jobOpens", data, expirationTime);
+      
+       
         res.status(200).json({
           message: "data get successfully !",
           data,
         });
       }
-      if (cacheData && cacheData.length > 0) {
-        res.status(200).json({
-          message: "data retrived successfully ! ",
-          data,
-        });
-      }
-    } catch (error) {
+      
+      
+     catch (error) {
       console.log(error).json({
         message: "Internal server error !",
       });
