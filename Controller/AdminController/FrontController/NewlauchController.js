@@ -559,8 +559,8 @@ class newlaunchController {
                 auth: {
                   // user: process.env.Email,
                   // pass: process.env.EmailPass
-                  user: "web.100acress@gmail.com",
-                  pass: "txww gexw wwpy vvda",
+                  user: "shoppingcomplexdelhi@gmail.com",
+                  pass: "iynp scri fsyq cpuu",
                 },
                 tls: {
                   rejectUnAuthorized: true,
@@ -568,9 +568,9 @@ class newlaunchController {
               });
               // Send mail with defined transport objec
               let info = await transporter.sendMail({
-                from: "query.aadharhomes@gail.com", // Sender address
-                to: "query.aadharhomes@gail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-                subject: "100acress.com Enquiry",
+                from: "query.aadharhomes@gmail.com", // Sender address
+                to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "Shopping Complex Delhi",
                 html: `
                           <!DOCTYPE html>
                           <html lang:"en>
@@ -578,10 +578,10 @@ class newlaunchController {
                           <meta charset:"UTF-8">
                           <meta http-equiv="X-UA-Compatible"  content="IE=edge">
                           <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                          <title>New Enquiry</title>
+                          <title>Shopping Complex</title>
                           </head>
                           <body>
-                              <h3>Project Enquiry</h3>
+                              <h3>Shopping Complex Query</h3>
                               <p>Customer Name: ${salutation} ${name} ${surname}</p>
                               <p>Customer Email Id: ${email}</p>
                               <p>Date of Birth: ${dob}</p>
