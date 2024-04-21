@@ -568,8 +568,8 @@ class newlaunchController {
               });
               // Send mail with defined transport objec
               let info = await transporter.sendMail({
-                from: "amit100acre@gmail.com", // Sender address
-                to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                from: "query.aadharhomes@gail.com", // Sender address
+                to: "query.aadharhomes@gail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
                 subject: "100acress.com Enquiry",
                 html: `
                           <!DOCTYPE html>
