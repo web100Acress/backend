@@ -1,5 +1,5 @@
 const newlaunchModel = require('../../../models/newlaunch/newProject');
-
+const nodemailer = require("nodemailer");
 const cloudinary = require('cloudinary').v2;
 class newlaunchController {
 
@@ -542,7 +542,144 @@ class newlaunchController {
         }
     }
     
-
+    static pahleGhar=async(req,res)=>{
+        try {
+            const {salutation,name,surname,email,dob,pan,contact,city,state,address,pincode,ofContact,floor,area,unit,paymentPlan } = req.body;
+           
+            // const ema=email
+     
+              // await sendPostEmail(email,number,projectName)
+              const transporter = await nodemailer.createTransport({
+                service: "gmail",
+                port: 465,
+                secure: true,
+                logger: false,
+                debug: true,
+                secureConnection: false,
+                auth: {
+                  // user: process.env.Email,
+                  // pass: process.env.EmailPass
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
+                },
+                tls: {
+                  rejectUnAuthorized: true,
+                },
+              });
+              // Send mail with defined transport objec
+              let info = await transporter.sendMail({
+                from: "amit100acre@gmail.com", // Sender address
+                to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "100acress.com Enquiry",
+                html: `
+                          <!DOCTYPE html>
+                          <html lang:"en>
+                          <head>
+                          <meta charset:"UTF-8">
+                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                          <title>New Enquiry</title>
+                          </head>
+                          <body>
+                              <h3>Project Enquiry</h3>
+                              <p>Customer Name: ${salutation} ${name} ${surname}</p>
+                              <p>Customer Email Id: ${email}</p>
+                              <p>Date of Birth: ${dob}</p>
+                              <p>PAN Number: ${pan}</p>
+                              <p>Address: ${address}, ${city}, ${state} - ${pincode}</p>
+                              <p>Contact Number: ${contact}</p>
+                              <p>Alternate Contact Number: ${ofContact}</p>
+                              <p>Floor: ${floor}</p>
+                              <p>Area: ${area}</p>
+                              <p>Unit: ${unit}</p>
+                              <p>Thank you!</p>
+                          </body>
+                          </html>
+                  `,
+              });
+      
+          
+              res.status(201).json({
+                message:
+                  "User data submitted successfully , and the data has been sent via email",
+                // dataInsert: data
+              });
+            
+          } catch (error) {
+            console.log(error);
+            res.status(500).json({
+              message: "Internal server error ! ",
+            });
+          }
+    }
+    static Valley=async(req,res)=>{
+        try {
+            const { username, email, mobile } = req.body;
+           
+            // const ema=email
+            if (mobile && username&&email) {
+              // await sendPostEmail(email,number,projectName)
+              const transporter = await nodemailer.createTransport({
+                service: "gmail",
+                port: 465,
+                secure: true,
+                logger: false,
+                debug: true,
+                secureConnection: false,
+                auth: {
+                  // user: process.env.Email,
+                  // pass: process.env.EmailPass
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
+                },
+                tls: {
+                  rejectUnAuthorized: true,
+                },
+              });
+              // Send mail with defined transport objec
+              let info = await transporter.sendMail({
+                from: "amit100acre@gmail.com", // Sender address
+                to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "100acress.com Enquiry",
+                html: `
+                          <!DOCTYPE html>
+                          <html lang:"en>
+                          <head>
+                          <meta charset:"UTF-8">
+                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                          <title>New Enquiry</title>
+                          </head>
+                          <body>
+                              <h3>Project Enquiry</h3>
+                              <p>Customer Name : ${username}</p>
+                              <p>Customer Email Id : ${email}</p>
+                              <p>Customer Mobile Number : ${mobile} </p>
+                             
+                              <p>Thank you!</p>
+                          </body>
+                          </html>
+                  `,
+              });
+      
+          
+              res.status(201).json({
+                message:
+                  "User data submitted successfully , and the data has been sent via email",
+                // dataInsert: data
+              });
+            } else {
+              res.status(403).json({
+                message: "not success",
+              });
+            }
+          } catch (error) {
+            console.log(error);
+            res.status(500).json({
+              message: "Internal server error ! ",
+            });
+          }
+    }
 }
 module.exports = newlaunchController
 

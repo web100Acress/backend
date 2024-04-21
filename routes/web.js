@@ -236,4 +236,10 @@ router.get("/career/opening/edit/:id",CareerController.openingEdit)
 router.put('/career/opening/update/:id',CareerController.openingUpdate)
 router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 
+
+
+
+router.post('/pahleGhar',newlaunchController.pahleGhar)
+router.post('/Valley',newlaunchController.Valley)
+
 module.exports = router;
