@@ -48,7 +48,7 @@ router.get("/project/featured", projectController.project_featured);
 router.get("/project/city", projectController.project_City);
 router.get("/project/upcoming", projectController.project_Upcoming);
 router.get("/project/affordable", projectController.projectAffordable);
-router.delete("/floorImage/:id",projectController.floorImage)
+router.delete("/floorImage/:id/:indexNumber",projectController.floorImage)
   
 //from
 router.post("/userInsert", projectController.userInsert);

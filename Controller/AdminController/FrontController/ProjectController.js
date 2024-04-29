@@ -1867,7 +1867,9 @@ res.status(500).json({
   static floorImage = async (req, res) => {
     try {
       const id = req.params.id
-      const { indexNumber } = req.body
+      const  indexNumber  =req.params.indexNumber
+      console.log(id,indexNumber,"snkkwhvs")
+     
       if (isValidObjectId) {
         const data = await ProjectModel.findById({ _id:id})
         const floorplan = data.project_floorplan_Image
@@ -1884,7 +1886,8 @@ res.status(500).json({
         }
         }else{
           res.status(200).json({
-            message:"Object Index number not found !"
+            message:"Object Index number not found !",
+            indexNumber
           })
         }
 
