@@ -44,6 +44,7 @@ class CareerController {
                 folder: "100acre/Career",
               }
             );
+            
             highlight.push({
               public_id: highlightResult.public_id,
               url: highlightResult.secure_url,
@@ -378,6 +379,7 @@ class CareerController {
       });
     }
   };
+
   static careerDelete = async (req, res) => {
     try {
       const id = req.params.id;

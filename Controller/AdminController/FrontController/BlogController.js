@@ -119,6 +119,7 @@ class blogController {
             })
         }
     }
+
     static blog_update = async (req, res) => {
         // console.log("hellobfiu")
         try {
@@ -200,9 +201,7 @@ class blogController {
            })
         }
     }
-    
-    
-    
+      
     
 }
 module.exports = blogController

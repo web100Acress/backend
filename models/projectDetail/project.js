@@ -11,11 +11,13 @@ const bhk_Schema = new mongoose.Schema({
     type: String,
   },
 });
+
 const highlight_Schema = new mongoose.Schema({
   highlight_Point: {
     type: String,
   },
 });
+
 const projectSchema = new mongoose.Schema(
   {
     project_floorplan_Image: [],

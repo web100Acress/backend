@@ -1536,7 +1536,6 @@ res.status(500).json({
 
   //project bhk edit data get
   static bhk_edit = async (req, res) => {
-    // console.log("hello")
     try {
       const id = req.params.id;
       if (id) {
@@ -1550,6 +1549,7 @@ res.status(500).json({
             },
           }
         );
+
         if (data) {
           res.status(200).json({
             message: "data get successfully !",
@@ -1863,6 +1863,40 @@ res.status(500).json({
       console.log(error);
     }
   };
+
+  static floorImage = async (req, res) => {
+    try {
+      const id = req.params.id
+      const { indexNumber } = req.body
+      if (isValidObjectId) {
+        const data = await ProjectModel.findById({ _id:id})
+        const floorplan = data.project_floorplan_Image
+        const Imagelength = floorplan.length
+        // console.log(Imagelength)
+        if (indexNumber < Imagelength) {
+          const public_id =floorplan[0].public_id;
+          if (public_id) {
+            await cloudinary.uploader.destroy(public_id); 
+            floorplan.splice(indexNumber, 1);
+            // Update the data in the database
+            await ProjectModel.findByIdAndUpdate({_id:id}, { project_floorplan_Image: floorplan });
+            return res.status(200).json({ message: "Image removed successfully", floorplan });
+        }
+        }else{
+          res.status(200).json({
+            message:"Object Index number not found !"
+          })
+        }
+
+      } else {
+    res.status(400).json({
+      message:"object id is invalid !"
+    })
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 }
 module.exports = projectController;
 
