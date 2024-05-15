@@ -236,49 +236,88 @@ class homeController {
     }
   }
   //search in buy property
-  static search_buy = async (req, res) => {
-    const { query } = req.body
-    // console.log(query)
-    const words = query.split(" ")
-    try {
-      console.log(words)
-      for (let i = 0; i < words.length; i++) {
-        const data = await buyCommercial_Model.find(
-          {
-            "$or": [
-              { "city": { $regex: words[i], $options: 'i' } },
-              { "state": { $regex: words[i], $options: 'i' } },
-              { "type": { $regex: words[i], $options: 'i' } },
-              { "projectName": { $regex: words[i], $options: 'i' } }
-            ]
-          }
-        )
-        const searchData = []
+ 
+static search_buy = async (req, res) => {
+  try {
+    const key = req.params.key;
+    // const words = key.split(" ");
+    // const orConditions = [];
 
-        if (data.length > 0) {
-          searchData.push(...data)
+    // Create regex conditions for each word
+    // for (let i = 0; i < words.length; i++) {
+    //   const word = words[i];
+    //   const regex = new RegExp(word, "i");
+
+    //   orConditions.push(
+    //     { "postProperty.propertyName": { $regex: regex } },
+    //     { "postProperty.propertyType": { $regex: regex } },
+    //     { "postProperty.address": { $regex: regex } },
+    //     { "postProperty.city": { $regex: regex } },
+    //     { "postProperty.price": { $regex: regex } }
+    //   );
+    // }
+
+    // const query = {
+    //   $or: orConditions
+    // };
+
+    const data1 = await postPropertyModel.aggregate([
+      {
+        $match: {
+          "postProperty.verify": "verified",
+          "postProperty.propertyLooking": "Sell"
         }
-        if (searchData.length > 0) {
-          res.status(200).json({
-            message: "data found ! ",
-            searchData
-          })
-        } else {
-          res.status(200).json({
-            message: " data not found ,search again ! "
-          })
+      },
+      {
+        $project: {
+          // name: 1,
+          postProperty: {
+            $filter: {
+              input: "$postProperty",
+              as: "property",
+              cond: {
+                $and: [
+                  { $eq: ["$$property.propertyLooking", "Sell"] },
+                  { $eq: ["$$property.verify", "verified"] },
+                  {
+                    $or: [
+                      { $regexMatch: { input: "$$property.propertyName", regex: new RegExp(key, "i") } },
+                      { $regexMatch: { input: "$$property.propertyType", regex: new RegExp(key, "i") } },
+                      { $regexMatch: { input: "$$property.address", regex: new RegExp(key, "i") } },
+                      { $regexMatch: { input: "$$property.city", regex: new RegExp(key, "i") } },
+                      { $regexMatch: { input: "$$property.price", regex: new RegExp(key, "i") } }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          "postProperty.0": { $exists: true }  // Ensure the array is not empty after filtering
         }
       }
+    ]);
 
+    if (data1.length > 0) {
+      res.status(200).json({
+        message: "Data retrieved successfully!",
+        data: data1
+      });
+    } else {
+      res.status(404).json({
+        message: "No data found!"
+      });
     }
-
-    catch (error) {
-      res.status(500).json({
-        message: "Internal server error ! "
-      })
-    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error!"
+    });
   }
-
+};
   // filter data by projectname, city,buildername,minPrice,maxprice
   // type===residential and Commercial 
   //area or state 
@@ -383,8 +422,6 @@ class homeController {
       })
     }
   }
-
-
   static dataSnapshot = async (req, res) => {
     try {
       // Count PostProperty data 
@@ -433,9 +470,6 @@ class homeController {
       })
     }
   }
-
-
-
   // ///////////////////
 
 

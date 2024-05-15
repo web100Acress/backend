@@ -212,13 +212,9 @@ router.delete("/blog/delete/:id", blogController.blog_delete);
 //Searching routing
 // searching rent and buy
 router.get("/property/search/:key", homeController.search);
-//searching otherproperty
-router.post("/postPerson/search", homeController.search_other);
-//searching rent
-router.get("/rentproperty/search", homeController.search_rent);
 //searching buy
-router.get("/buyproperty/search", homeController.search_buy);
-router.get("/data/Snapshot",homeController.dataSnapshot)
+router.get("/buyproperty/search/:key", homeController.search_buy);
+
 //new launch
 
 //career
