@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
+const mongoose=require("mongoose")
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -123,55 +124,126 @@ const sendPostEmail = async (email) => {
 
 class PostPropertyController {
   // seller work Registration
+  // static postPerson_Register = async (req, res) => {
+  //   try {
+  //     const { name, email, mobile, password, cpassword, role } = req.body;
+  //     // console.log(req.body
+  //     const verify = await postPropertyModel.findOne({ email: email });
+  //     if (verify) {
+  //       res.status(409).json({
+  //         message: " User already exists !",
+  //       });
+  //     } else {
+  //       if (name && email && password && cpassword && mobile && role) {
+  //         if (password.length < 5) {
+  //           res.status(400).json({
+  //             message: " Password must be atleast 8 character ! ",
+  //           });
+  //         } else {
+  //           if (password == cpassword) {
+  //             const hashpassword = await bcrypt.hash(password, 10);
+  //             const data = new postPropertyModel({
+  //               name: name,
+  //               email: email,
+  //               password: hashpassword,
+  //               mobile: mobile,
+  //               role: role,
+  //             });
+  //             // console.log(data)
+  //             await data.save();
+  //             res.status(200).json({
+  //               message: "Registration successfully done ! ",
+  //             });
+  //           } else {
+  //             res.status(401).json({
+  //               message: "Password and Confirm password does not match  ! ",
+  //             });
+  //           }
+  //         }
+  //       } else {
+  //         res.status(204).json({
+  //           message: "check yur field ! ",
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       message: "Internal server error !",
+  //     });
+  //   }
+  // };
   static postPerson_Register = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-      // console.log(req.body
-      const verify = await postPropertyModel.findOne({ email: email });
+  
+      const verify = await postPropertyModel.findOne({ email: email }).session(session);
+      console.log(verify);
+  
       if (verify) {
         res.status(409).json({
-          message: " User already exists !",
+          message: "User already exists!",
         });
-      } else {
-        if (name && email && password && cpassword && mobile && role) {
-          if (password.length < 5) {
-            res.status(400).json({
-              message: " Password must be atleast 8 character ! ",
-            });
-          } else {
-            if (password == cpassword) {
-              const hashpassword = await bcrypt.hash(password, 10);
-              const data = new postPropertyModel({
-                name: name,
-                email: email,
-                password: hashpassword,
-                mobile: mobile,
-                role: role,
-              });
-              // console.log(data)
-              await data.save();
-              res.status(200).json({
-                message: "Registration successfully done ! ",
-              });
-            } else {
-              res.status(401).json({
-                message: "Password and Confirm password does not match  ! ",
-              });
-            }
-          }
-        } else {
-          res.status(204).json({
-            message: "check yur field ! ",
-          });
-        }
+        await session.abortTransaction();
+        session.endSession();
+        return;
       }
+  
+      if (!name || !email || !password || !cpassword || !mobile || !role) {
+        res.status(400).json({
+          message: "Please fill in all fields!",
+        });
+        await session.abortTransaction();
+        session.endSession();
+        return;
+      }
+  
+      if (password.length < 8) {
+        res.status(400).json({
+          message: "Password must be at least 8 characters!",
+        });
+        await session.abortTransaction();
+        session.endSession();
+        return;
+      }
+  
+      if (password !== cpassword) {
+        res.status(400).json({
+          message: "Password and Confirm Password do not match!",
+        });
+        await session.abortTransaction();
+        session.endSession();
+        return;
+      }
+  
+      const hashpassword = await bcrypt.hash(password, 10);
+      const data = new postPropertyModel({
+        name: name,
+        email: email,
+        password: hashpassword,
+        mobile: mobile,
+        role: role,
+      });
+      await data.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.status(201).json({
+        message: "Registration successfully done!",
+      });
     } catch (error) {
       console.log(error);
+      await session.abortTransaction();
+      session.endSession();
       res.status(500).json({
-        message: "Internal server error !",
+        message: "Internal server error!",
       });
     }
   };
+  
   // verify login for seller
   static postPerson_VerifyLogin = async (req, res) => {
     try {

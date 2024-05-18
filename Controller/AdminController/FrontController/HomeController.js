@@ -307,9 +307,12 @@ static search_buy = async (req, res) => {
         data: data1
       });
     } else {
-      res.status(404).json({
-        message: "No data found!"
-      });
+    const data=await postPropertyModel.find()
+    res.status(200).send({
+      success:true,
+      message:"data get Succcessfully!",
+      data
+    })
     }
   } catch (error) {
     console.error(error);
