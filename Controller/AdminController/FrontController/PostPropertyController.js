@@ -1026,7 +1026,7 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-
+            if(verify){
             const transporter = await nodemailer.createTransport({
               service: "gmail",
               port: 465,
@@ -1069,6 +1069,7 @@ class PostPropertyController {
                                 </html>
                         `,
             });
+          }
           }
 
           res.status(200).json({
@@ -1123,7 +1124,7 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-
+             if(verify){
             const transporter = await nodemailer.createTransport({
               service: "gmail",
               port: 465,
@@ -1166,6 +1167,7 @@ class PostPropertyController {
                                 </html>
                         `,
             });
+          }
           }
 
           res.status(200).json({
@@ -1236,7 +1238,7 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-
+           if(verify){
             const transporter = await nodemailer.createTransport({
               service: "gmail",
               port: 465,
@@ -1280,6 +1282,7 @@ class PostPropertyController {
                         `,
             });
           }
+          }
 
           res.status(200).json({
             message: "Data updated successfully!",
@@ -1318,7 +1321,7 @@ class PostPropertyController {
         if ((propertyLooking, address, propertyName, agentEmail, dataUpdate)) {
           const propertyName = dataUpdate.postProperty[0].propertyName;
           const address = dataUpdate.postProperty[0].address;
-
+         if(verify){
           const transporter = await nodemailer.createTransport({
             service: "gmail",
             port: 465,
@@ -1361,6 +1364,7 @@ class PostPropertyController {
                             </html>
                     `,
           });
+        }
         }
 
         res.status(200).json({
