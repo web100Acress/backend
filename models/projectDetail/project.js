@@ -145,6 +145,30 @@ const projectSchema = new mongoose.Schema(
           },
     },
     projectGallery: [],
+    towerNumber: {
+      type: Number
+    },
+    totalUnit: {
+      type: Number
+    },
+    totalLandArea: {
+      type: Number
+    },
+    launchingDate: {
+       type: Date 
+    },
+    mobileNumber: {
+      type: Number
+    },
+    possessionDate: {
+       type: Date 
+    },
+    minPrice: {
+      type: Number
+    },
+    maxPrice: {
+      type: Number
+    }
   },
 
   {

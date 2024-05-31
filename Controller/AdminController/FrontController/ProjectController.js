@@ -91,6 +91,14 @@ class projectController {
         projectOverview,
         project_url,
         project_Status,
+        towerNumber,
+        totalUnit,
+        totalLandArea,
+        launchingDate,
+        mobileNumber,
+        possessionDate,
+        minPrice,
+        maxPrice
       } = req.body;
 
       if (projectOverview) {
@@ -255,6 +263,14 @@ class projectController {
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             });
            
              await data.save()
@@ -410,6 +426,14 @@ class projectController {
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
+              towerNumber: towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             });
            
             await data.save();
@@ -500,7 +524,15 @@ class projectController {
         city,
         projectOverview,
         project_url,
-        project_Status
+        project_Status,
+        towerNumber,
+        totalUnit,
+        totalLandArea,
+        launchingDate,
+        mobileNumber,
+        possessionDate,
+        minPrice,
+        maxPrice
       } = req.body;
       const id = req.params.id;
       if (req.files) {
@@ -669,6 +701,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber: towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           // console.log(data)
@@ -713,6 +753,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           // console.log(data)
@@ -756,6 +804,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           // console.log(data)
@@ -798,6 +854,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           //  console.log(data)
@@ -859,6 +923,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           await data.save();
@@ -956,6 +1028,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status: project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           await data.save();
@@ -996,6 +1076,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           await data.save();
@@ -1031,6 +1119,14 @@ class projectController {
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status:project_Status,
+              towerNumber:  towerNumber,
+              totalUnit:totalUnit,
+              totalLandArea:totalLandArea,
+              launchingDate:launchingDate,
+              mobileNumber:mobileNumber,
+              possessionDate:possessionDate,
+              minPrice:minPrice,
+              maxPrice:maxPrice
             }
           );
           await data.save();
@@ -1060,6 +1156,14 @@ class projectController {
             projectOverview: projectOverview,
             project_url: project_url,
             project_Status:project_Status,
+            towerNumber: towerNumber,
+            totalUnit:totalUnit,
+            totalLandArea:totalLandArea,
+            launchingDate:launchingDate,
+            mobileNumber:mobileNumber,
+            possessionDate:possessionDate,
+            minPrice:minPrice,
+            maxPrice:maxPrice
           }
         );
         await data.save();
