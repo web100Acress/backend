@@ -638,7 +638,7 @@ class newlaunchController {
                 tls: {
                   rejectUnAuthorized: true,
                 },
-              });t
+              });
               // Send mail with defined transport object
               let info = await transporter.sendMail({
                 from: "query.aadharhomes@gmail.com", // Sender address
