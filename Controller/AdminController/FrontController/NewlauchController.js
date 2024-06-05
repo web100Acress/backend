@@ -542,9 +542,82 @@ class newlaunchController {
         }
     }
     
+    // static pahleGhar=async(req,res)=>{
+    //     try {
+    //         const {salutation,name,surname,email,dob,pan,contact,city,state,address,pincode,ofContact,floor,area,unit,paymentPlan } = req.body;
+           
+    //         // const ema=email
+     
+    //           // await sendPostEmail(email,number,projectName)
+    //           const transporter = await nodemailer.createTransport({
+    //             service: "gmail",
+    //             port: 465,
+    //             secure: true,
+    //             logger: false,
+    //             debug: true,
+    //             secureConnection: false,
+    //             auth: {
+    //               // user: process.env.Email,
+    //               // pass: process.env.EmailPass
+    //               user: "shoppingcomplexdelhi@gmail.com",
+    //               pass: "iynp scri fsyq cpuu",
+    //             },
+    //             tls: {
+    //               rejectUnAuthorized: true,
+    //             },
+    //           });
+    //           // Send mail with defined transport objec
+    //           let info = await transporter.sendMail({
+    //             from: "query.aadharhomes@gmail.com", // Sender address
+    //             to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+    //             subject: "Shopping Complex Delhi",
+    //             html: `
+    //                       <!DOCTYPE html>
+    //                       <html lang:"en>
+    //                       <head>
+    //                       <meta charset:"UTF-8">
+    //                       <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+    //                       <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+    //                       <title>Shopping Complex</title>
+    //                       </head>
+    //                       <body>
+    //                           <h3>Shopping Complex Query</h3>
+    //                           <p>Customer Name: ${salutation} ${name} ${surname}</p>
+    //                           <p>Customer Email Id: ${email}</p>
+    //                           <p>Date of Birth: ${dob}</p>
+    //                           <p>PAN Number: ${pan}</p>
+    //                           <p>Address: ${address}, ${city}, ${state} - ${pincode}</p>
+    //                           <p>Contact Number: ${contact}</p>
+    //                           <p>Alternate Contact Number: ${ofContact}</p>
+    //                           <p>Floor: ${floor}</p>
+    //                           <p>Area: ${area}</p>
+    //                           <p>Unit: ${unit}</p>
+    //                           <p>Thank you!</p>
+    //                       </body>
+    //                       </html>
+    //               `,
+    //           });
+
+      
+          
+    //           res.status(201).json({
+    //             message:
+    //               "User data submitted successfully , and the data has been sent via email",
+    //             // dataInsert: data
+    //           });
+            
+    //       } catch (error) {
+    //         console.log(error);
+    //         res.status(500).json({
+    //           message: "Internal server error ! ",
+    //         });
+    //       }
+    // }
+
+
     static pahleGhar=async(req,res)=>{
         try {
-            const {salutation,name,surname,email,dob,pan,contact,city,state,address,pincode,ofContact,floor,area,unit,paymentPlan } = req.body;
+            const {salutation,lastname,name,email,mobile,floor,area,unit,paymentPlan} = req.body;
            
             // const ema=email
      
@@ -559,14 +632,14 @@ class newlaunchController {
                 auth: {
                   // user: process.env.Email,
                   // pass: process.env.EmailPass
-                  user: "shoppingcomplexdelhi@gmail.com",
-                  pass: "iynp scri fsyq cpuu",
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
                 },
                 tls: {
                   rejectUnAuthorized: true,
                 },
-              });
-              // Send mail with defined transport objec
+              });t
+              // Send mail with defined transport object
               let info = await transporter.sendMail({
                 from: "query.aadharhomes@gmail.com", // Sender address
                 to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
@@ -578,20 +651,17 @@ class newlaunchController {
                           <meta charset:"UTF-8">
                           <meta http-equiv="X-UA-Compatible"  content="IE=edge">
                           <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                          <title>Shopping Complex</title>
+                          <title>New Enquiry-Shopping Complex Delhi </title>
                           </head>
                           <body>
-                              <h3>Shopping Complex Query</h3>
-                              <p>Customer Name: ${salutation} ${name} ${surname}</p>
+                              <h3>Project Enquiry</h3>
+                              <p>Customer Name: ${salutation} ${name} ${lastname}</p>
                               <p>Customer Email Id: ${email}</p>
-                              <p>Date of Birth: ${dob}</p>
-                              <p>PAN Number: ${pan}</p>
-                              <p>Address: ${address}, ${city}, ${state} - ${pincode}</p>
-                              <p>Contact Number: ${contact}</p>
-                              <p>Alternate Contact Number: ${ofContact}</p>
+                              <p>Contact Number: ${mobile}</p>
                               <p>Floor: ${floor}</p>
                               <p>Area: ${area}</p>
                               <p>Unit: ${unit}</p>
+                              <p>Payment Plan:${paymentPlan}</p>
                               <p>Thank you!</p>
                           </body>
                           </html>
@@ -612,6 +682,7 @@ class newlaunchController {
             });
           }
     }
+
     static Valley=async(req,res)=>{
         try {
             const { username, email, mobile } = req.body;
