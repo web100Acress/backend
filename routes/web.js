@@ -214,6 +214,7 @@ router.delete("/blog/delete/:id", blogController.blog_delete);
 router.get("/property/search/:key", homeController.search);
 //searching buy
 router.get("/buyproperty/search/:key", homeController.search_buy);
+router.get("/data/filter",homeController.filter_data)
 
 //new launch
 
