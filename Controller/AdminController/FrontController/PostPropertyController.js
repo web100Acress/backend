@@ -1553,5 +1553,20 @@ class PostPropertyController {
       });
     }
   };
+
+  static postEnquiry_view=async(req,res)=>{
+    try {
+       const data=await postEnquiryModel.find()
+       res.status(200).json({
+        message:"data get successfully !",
+        data
+       })
+    } catch (error) {
+     console.log(error);
+     res.status(500).json({
+      message:"Internal server error !"
+     })
+    }
+  }
 }
 module.exports = PostPropertyController;

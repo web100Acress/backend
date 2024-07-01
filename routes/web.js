@@ -199,6 +199,7 @@ router.delete(
   "/postPerson/propertyDelete/:id",
   PostPropertyController.postProperty_Delete
 );
+router.get("/postEnq_view",PostPropertyController.postEnquiry_view)
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
 //Blog
