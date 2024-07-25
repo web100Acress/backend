@@ -2,8 +2,8 @@ const postPropertyModel = require('../../../models/postProperty/post');
 const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const cloudinary = require('cloudinary').v2;
 const NodeCache = require("node-cache");
-
-const cache = new NodeCache();
+const cache = require("memory-cache");
+// const cache = new NodeCache();
 class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
@@ -97,53 +97,128 @@ class BuyController {
 
     }
 
+    // static viewAll = async (req, res) => {
+    //     try {
+    //         const data = await buyCommercial_Model.find()
+
+    //         const data1 = await postPropertyModel.aggregate([
+    //             {
+    //                 $match: {
+    //                     "postProperty.verify": "verified",
+    //                     "postProperty.propertyLooking": "Sell"
+    //                 }
+    //             },
+    //             {
+    //                 $project: {
+    //                     name: 1,
+    //                     postProperty: {
+    //                         $filter: {
+    //                             input: "$postProperty",
+    //                             as: "property",
+    //                             cond: {
+    //                                 $and: [
+    //                                     { $eq: ["$$property.propertyLooking", "Sell"] },
+    //                                     { $eq: ["$$property.verify", "verified"] }
+    //                                 ]
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         ]);
+
+    //         const collectdata=[...data,...data1]
+    //         res.status(200).json({
+             
+    //             message: 'Data fetched from the database!',
+    //             collectdata
+              
+    //         });
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).json({
+    //             message: 'internal server error'
+    //         })
+    //     }
+    // }
+    // view by id 
     static viewAll = async (req, res) => {
         try {
-           
-
-            const data = await buyCommercial_Model.find()
-
-            const data1 = await postPropertyModel.aggregate([
-                {
-                    $match: {
-                        "postProperty.verify": "verified",
-                        "postProperty.propertyLooking": "Sell"
-                    }
-                },
-                {
-                    $project: {
-                        name: 1,
-                        postProperty: {
-                            $filter: {
-                                input: "$postProperty",
-                                as: "property",
-                                cond: {
-                                    $and: [
-                                        { $eq: ["$$property.propertyLooking", "Sell"] },
-                                        { $eq: ["$$property.verify", "verified"] }
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-
-            const collectdata=[...data,...data1]
-            res.status(200).json({
-             
-                message: 'Data fetched from the database!',
-                collectdata
-              
+          // Check if data is in cache
+          const cachedData = cache.get("buyData");
+          if (cachedData) {
+            return res.status(200).json({
+              message: 'Data fetched from the cache!',
+              collectdata: cachedData
             });
+          }
+    
+          // Fetch data from the database
+          const data1 = await postPropertyModel.aggregate([
+            {
+              $match: {
+                "postProperty.verify": "verified",
+                "postProperty.propertyLooking": "Sell"
+              }
+            },
+            {
+              $project: {
+                name: 1, // Include name
+                role: 1, // Include role
+                postProperty: {
+                  $filter: {
+                    input: "$postProperty",
+                    as: "property",
+                    cond: {
+                      $and: [
+                        { $eq: ["$$property.propertyLooking", "Sell"] },
+                        { $eq: ["$$property.verify", "verified"] }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              $addFields: {
+                "postProperty": {
+                  $map: {
+                    input: "$postProperty",
+                    as: "property",
+                    in: {
+                      $mergeObjects: ["$$property", { name: "$name", role: "$role" }]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              $project: {
+                name: 0, // Remove name from root level
+                role: 0 // Remove role from root level
+              }
+            }
+          ]);
+    
+          const collectdata = [...data1];
+          const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+    
+          // Store the data in cache
+          cache.put("buyData", collectdata, expirationTime);
+    
+          // Send the response with the fetched data
+          res.status(200).json({
+            message: 'Data fetched from the database!',
+            collectdata: collectdata
+          });
         } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: 'internal server error'
-            })
+          console.log(error);
+          res.status(500).json({
+            message: 'Internal server error'
+          });
         }
-    }
-    // view by id 
+      };
+      
     static buyView_id = async (req, res) => {
         try {
             const id = req.params.id;

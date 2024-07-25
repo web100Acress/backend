@@ -1864,26 +1864,51 @@ res.status(500).json({
     }
   };
   // Enquiry viewAll
-  static userViewAll = async (req, res) => {
-    // console.log("hello")
-    try {
-      // console.log("hellcadco")
+  // static userViewAll = async (req, res) => {
+  //   // console.log("hello")
+  //   try {
+  //     // console.log("hellcadco")
 
-      const data = await UserModel.find();
-      if (data) {
-        res.status(200).json({
-          message: "data get successfully !",
-          data: data,
-        });
-      } else {
-        res.status(200).json({
-          message: "data not found ! ",
+  //     const data = await UserModel.find();
+  //     if (data) {
+  //       res.status(200).json({
+  //         message: "data get successfully !",
+  //         data: data,
+  //       });
+  //     } else {
+  //       res.status(200).json({
+  //         message: "data not found ! ",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       message: "Internal server error ! ",
+  //     });
+  //   }
+  // };
+  static userViewAll = async (req, res) => {
+    try {
+      // Check if data is in cache
+      const cacheData = cache.get('projectEnquiry');
+      if (cacheData) {
+        return res.status(200).json({
+          message: "Data retrieved successfully from cache!",
+          data: cacheData,
         });
       }
+      // If data is not in cache, fetch from database
+      const data = await UserModel.find();
+      const expirationTime = 5 * 60 * 1000; 
+      cache.put('projectEnquiry', data, expirationTime);
+      res.status(200).json({
+        message: "Data retrieved successfully from database!",
+        data: data,
+      });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       res.status(500).json({
-        message: "Internal server error ! ",
+        message: "Internal server error!",
       });
     }
   };
@@ -1909,6 +1934,8 @@ res.status(500).json({
       }
     } catch (error) {}
   };
+ 
+
   // Enquiry update
   static userUpdate = async (req, res) => {
     //
