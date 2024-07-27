@@ -412,17 +412,29 @@ class PostPropertyController {
   };
   // viewAll
   static postPerson_View = async (req, res) => {
-    // console.log("hello")
     try {
+      // Check cache first
+      const cachedData = cache.get("allUser");
+      if (cachedData) {
+        return res.status(200).json({
+          message: "Data from cache",
+          data: cachedData
+        });
+      }
+      // If cache is empty, fetch from database
       const data = await postPropertyModel.find();
-      res.status(200).json({
-        message: "data get successfully ! ",
-        data,
+      // Cache the data with an expiration time of 5 minutes
+      const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+      cache.put("allUser", data, expirationTime);
+
+      return res.status(200).json({
+        message: "Data fetched successfully",
+        data
       });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        message: " Internal server error ! ",
+      console.error('Error fetching data:', error); // Better logging
+      return res.status(500).json({
+        message: "Internal server error"
       });
     }
   };
