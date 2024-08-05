@@ -145,7 +145,7 @@ router.delete(
 // Post Property
 
 //post person
-
+// router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
 router.post("/postPerson/register", PostPropertyController.postPerson_Register);
 router.get(
   "/postPerson/Role/:email",
@@ -240,5 +240,8 @@ router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 
 router.post('/pahleGhar',newlaunchController.pahleGhar)
 router.post('/Valley',newlaunchController.Valley)
+
+// try code 
+router.get("/projectCount",projectController.projectCount_city)
 
 module.exports = router;

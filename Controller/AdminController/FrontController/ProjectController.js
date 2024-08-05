@@ -1887,31 +1887,31 @@ res.status(500).json({
   //     });
   //   }
   // };
-  static userViewAll = async (req, res) => {
-    try {
-      // Check if data is in cache
-      const cacheData = cache.get('projectEnquiry');
-      if (cacheData) {
-        return res.status(200).json({
-          message: "Data retrieved successfully from cache!",
-          data: cacheData,
-        });
-      }
-      // If data is not in cache, fetch from database
-      const data = await UserModel.find();
-      const expirationTime = 5 * 60 * 1000; 
-      cache.put('projectEnquiry', data, expirationTime);
-      res.status(200).json({
-        message: "Data retrieved successfully from database!",
-        data: data,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        message: "Internal server error!",
-      });
-    }
-  };
+  // static userViewAll = async (req, res) => {
+  //   try {
+  //     // Check if data is in cache
+  //     const cacheData = cache.get('projectEnquiry');
+  //     if (cacheData) {
+  //       return res.status(200).json({
+  //         message: "Data retrieved successfully from cache!",
+  //         data: cacheData,
+  //       });
+  //     }
+  //     // If data is not in cache, fetch from database
+  //     const data = await UserModel.find();
+  //     const expirationTime = 5 * 60 * 1000; 
+  //     cache.put('projectEnquiry', data, expirationTime);
+  //     res.status(200).json({
+  //       message: "Data retrieved successfully from database!",
+  //       data: data,
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).json({
+  //       message: "Internal server error!",
+  //     });
+  //   }
+  // };
   // Enquiry user detail view
   static userViewDetail = async (req, res) => {
     // console.log("hello")
@@ -2031,6 +2031,84 @@ res.status(500).json({
       console.log(error)
     }
   }
+
+
+
+    // trying something new from here
+
+    static userViewAll = async (req, res) => {
+      try {
+        //Get page and limit from query parameters, with default values
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) ||50;
+        const skip = (page - 1) * limit;
+  
+        // Create a unique cache key for each page
+        const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+        // Check if data is in cache
+        const cacheData = cache.get(cacheKey);
+        if (cacheData) {
+          return res.status(200).json({
+            message: "Data retrieved successfully from cache!",
+            data: cacheData,
+          });
+        }
+  
+        // If data is not in cache, fetch from database
+        const data = await UserModel.find().skip(skip).limit(limit);
+  
+        // Calculate cache expiration time (5 minutes in milliseconds)
+        const expirationTime = 5 * 60 * 1000;
+        cache.put(cacheKey, data, expirationTime);
+  
+        res.status(200).json({
+          message: "Data retrieved successfully from database!",
+          data: data,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({
+          message: "Internal server error!",
+        });
+      }
+    };
+  
+    // count project according to the city
+  
+    static projectCount_city = async (req, res) => {
+      try {
+        const data = await ProjectModel.aggregate([
+          {
+            $group: {
+              _id: "$builderName",
+              count: { $sum: 1 }
+            }
+  
+          }
+        ])
+        const data2=await ProjectModel.aggregate([
+          {
+            $group:{
+  
+              _id:"$city",
+              count:{$sum:1}
+            }
+          }
+        ])
+        // console.log(data,data2)
+        res.status(200).json({
+          message:"get data",
+          data,
+          data2
+        })
+      } catch (error) {
+        console.error(error)
+        res.status(500).json({
+          message: "Internal server log"
+        })
+      }
+    }
+  
 }
 module.exports = projectController;
 

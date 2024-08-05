@@ -1580,5 +1580,61 @@ class PostPropertyController {
      })
     }
   }
+// verify email
+  // static verifyEmail = async (req, res) => {
+  //   const { email } = req.body;
+  //   // send 
+  //   try {
+  //     const data = await Email_verify.find({ email: email })
+  //     // console.log(data,"ljive")
+  //     if (data.length == 0) {
+  //       const transporter = nodemailer.createTransport({
+  //         // SMTP configuration
+  //         service: 'gmail',
+  //         auth: {
+  //           user: "web.100acress@gmail.com",
+  //           pass: "txww gexw wwpy vvda",
+  //         },
+  //       });
+  //       const mailOptions = {
+  //         from: 'web.100acress@gmail.com',
+  //         to: email,
+  //         subject: 'Email Verification',
+  //         text: `Thank you for registering with 100acress.com. We are sending this email only to verify that it is indeed your email address. To complete your registration, please click the link below:${verifyEmail}`
+  //       };
+  //       let info = await transporter.sendMail(mailOptions, (error, info) => {
+  //         if (error) {
+  //           console.error("Error sending verification email:", error);
+  //           return res.status(500).json({
+  //             message: "Error sending verification email check email!",
+  //           });
+  //         }
+  //         const data = new Email_verify({
+  //           email: email,
+  //         });
+
+  //         data.save();
+  //         res.status(200).json({
+  //           message: "Verification email sent and saved successfully!"
+  //         });
+
+  //       });
+  //     } else {
+  //       res.status(200).json({
+  //         message: "email is already verify !"
+  //       })
+  //     }
+  //   } catch (error) {
+  //     console.error(error)
+  //     res.status(500).json({
+  //       message: error
+  //     })
+  //   }
+
+
+
+  // }
+  
+  
 }
 module.exports = PostPropertyController;
