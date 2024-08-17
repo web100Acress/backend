@@ -145,7 +145,8 @@ router.delete(
 // Post Property
 
 //post person
-// router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
+router.post("/postPerson/otp",PostPropertyController.otpVerify)
+router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
 router.post("/postPerson/register", PostPropertyController.postPerson_Register);
 router.get(
   "/postPerson/Role/:email",

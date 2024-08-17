@@ -6,7 +6,8 @@ const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
-const mongoose=require("mongoose")
+const Email_verify = require("../../../models/postProperty/emailVerify");
+const mongoose = require("mongoose");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -19,10 +20,7 @@ const getAllProjects = async () => {
 };
 
 const generateToken = () => {
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  );
+  return Math.floor(Math.random() * 1000000);
 };
 
 const sendResetEmail = async (email, token) => {
@@ -176,13 +174,15 @@ class PostPropertyController {
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
-    
+
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-  
-      const verify = await postPropertyModel.findOne({ email: email }).session(session);
+
+      const verify = await postPropertyModel
+        .findOne({ email: email })
+        .session(session);
       console.log(verify);
-  
+
       if (verify) {
         res.status(409).json({
           message: "User already exists!",
@@ -191,7 +191,7 @@ class PostPropertyController {
         session.endSession();
         return;
       }
-  
+
       if (!name || !email || !password || !cpassword || !mobile || !role) {
         res.status(400).json({
           message: "Please fill in all fields!",
@@ -200,8 +200,8 @@ class PostPropertyController {
         session.endSession();
         return;
       }
-  
-      if (password.length <5) {
+
+      if (password.length < 5) {
         res.status(400).json({
           message: "Password must be at least 8 characters!",
         });
@@ -209,7 +209,7 @@ class PostPropertyController {
         session.endSession();
         return;
       }
-  
+
       if (password !== cpassword) {
         res.status(400).json({
           message: "Password and Confirm Password do not match!",
@@ -218,7 +218,7 @@ class PostPropertyController {
         session.endSession();
         return;
       }
-  
+
       const hashpassword = await bcrypt.hash(password, 10);
       const data = new postPropertyModel({
         name: name,
@@ -230,7 +230,7 @@ class PostPropertyController {
       await data.save({ session });
       await session.commitTransaction();
       session.endSession();
-  
+
       res.status(201).json({
         message: "Registration successfully done!",
       });
@@ -243,7 +243,7 @@ class PostPropertyController {
       });
     }
   };
-  
+
   // verify login for seller
   static postPerson_VerifyLogin = async (req, res) => {
     try {
@@ -256,10 +256,11 @@ class PostPropertyController {
           if (email == email && isMatch) {
             if (User.role == "admin") {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
-            
+
               res.status(200).json({
                 message: " Admin login successfully ! ",
-                token, User
+                token,
+                User,
               });
             } else {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
@@ -269,13 +270,12 @@ class PostPropertyController {
               // const selltotal=SellProperty.length
               // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
               // const Renttotal=RentProperty.length
-              
 
               res.status(200).json({
                 message: " login successfully done  ! ",
-                token, User 
+                token,
+                User,
               });
-             
             }
           } else {
             res.status(401).json({
@@ -418,7 +418,7 @@ class PostPropertyController {
       if (cachedData) {
         return res.status(200).json({
           message: "Data from cache",
-          data: cachedData
+          data: cachedData,
         });
       }
       // If cache is empty, fetch from database
@@ -429,12 +429,12 @@ class PostPropertyController {
 
       return res.status(200).json({
         message: "Data fetched successfully",
-        data
+        data,
       });
     } catch (error) {
-      console.error('Error fetching data:', error); // Better logging
+      console.error("Error fetching data:", error); // Better logging
       return res.status(500).json({
-        message: "Internal server error"
+        message: "Internal server error",
       });
     }
   };
@@ -827,7 +827,7 @@ class PostPropertyController {
           email: email,
           number: number,
           verify: "",
-         
+
           propertyLooking: req.body.propertyLooking,
         };
         // console.log(data)
@@ -958,7 +958,7 @@ class PostPropertyController {
         landMark,
         availableDate,
         propertyLooking,
-         verify
+        verify,
       } = req.body;
       if (req.files) {
         if (req.files.frontImage && req.files.otherImage) {
@@ -1026,7 +1026,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify":verify
+                "postProperty.$.verify": verify,
               },
             },
             { new: true }
@@ -1038,30 +1038,30 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-            if(verify){
-            const transporter = await nodemailer.createTransport({
-              service: "gmail",
-              port: 465,
-              secure: true,
-              logger: false,
-              debug: true,
-              secureConnection: false,
-              auth: {
-                // user: process.env.Email,
-                // pass: process.env.EmailPass
-                user: "web.100acress@gmail.com",
-                pass: "txww gexw wwpy vvda",
-              },
-              tls: {
-                rejectUnAuthorized: true,
-              },
-            });
-            // Send mail with defined transport objec
-            let info = await transporter.sendMail({
-              from: "amit100acre@gmail.com", // Sender address
-              to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-              subject: "Verified Your Property",
-              html: `
+            if (verify) {
+              const transporter = await nodemailer.createTransport({
+                service: "gmail",
+                port: 465,
+                secure: true,
+                logger: false,
+                debug: true,
+                secureConnection: false,
+                auth: {
+                  // user: process.env.Email,
+                  // pass: process.env.EmailPass
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
+                },
+                tls: {
+                  rejectUnAuthorized: true,
+                },
+              });
+              // Send mail with defined transport objec
+              let info = await transporter.sendMail({
+                from: "amit100acre@gmail.com", // Sender address
+                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "Verified Your Property",
+                html: `
                                 <!DOCTYPE html>
                                 <html lang:"en>
                                 <head>
@@ -1080,13 +1080,12 @@ class PostPropertyController {
                                 </body>
                                 </html>
                         `,
-            });
-          }
+              });
+            }
           }
 
           res.status(200).json({
             message: "postProperty successfully update ! ",
-           
           });
         } else if (req.files.frontImage) {
           // res.send("front image")
@@ -1123,7 +1122,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify":verify
+                "postProperty.$.verify": verify,
               },
             },
             { new: true }
@@ -1136,30 +1135,30 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-             if(verify){
-            const transporter = await nodemailer.createTransport({
-              service: "gmail",
-              port: 465,
-              secure: true,
-              logger: false,
-              debug: true,
-              secureConnection: false,
-              auth: {
-                // user: process.env.Email,
-                // pass: process.env.EmailPass
-                user: "web.100acress@gmail.com",
-                pass: "txww gexw wwpy vvda",
-              },
-              tls: {
-                rejectUnAuthorized: true,
-              },
-            });
-            // Send mail with defined transport objec
-            let info = await transporter.sendMail({
-              from: "amit100acre@gmail.com", // Sender address
-              to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-              subject: "Verified Your Property",
-              html: `
+            if (verify) {
+              const transporter = await nodemailer.createTransport({
+                service: "gmail",
+                port: 465,
+                secure: true,
+                logger: false,
+                debug: true,
+                secureConnection: false,
+                auth: {
+                  // user: process.env.Email,
+                  // pass: process.env.EmailPass
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
+                },
+                tls: {
+                  rejectUnAuthorized: true,
+                },
+              });
+              // Send mail with defined transport objec
+              let info = await transporter.sendMail({
+                from: "amit100acre@gmail.com", // Sender address
+                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "Verified Your Property",
+                html: `
                                 <!DOCTYPE html>
                                 <html lang:"en>
                                 <head>
@@ -1178,13 +1177,12 @@ class PostPropertyController {
                                 </body>
                                 </html>
                         `,
-            });
-          }
+              });
+            }
           }
 
           res.status(200).json({
             message: "data updated",
-            
           });
         } else if (req.files.otherImage) {
           // res.send("listn other")
@@ -1238,7 +1236,7 @@ class PostPropertyController {
                 "postProperty.$.type": type,
                 "postProperty.$.amenities": amenities,
                 "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify":verify
+                "postProperty.$.verify": verify,
               },
             },
             { new: true }
@@ -1250,30 +1248,30 @@ class PostPropertyController {
           ) {
             const propertyName = dataUpdate.postProperty[0].propertyName;
             const address = dataUpdate.postProperty[0].address;
-           if(verify){
-            const transporter = await nodemailer.createTransport({
-              service: "gmail",
-              port: 465,
-              secure: true,
-              logger: false,
-              debug: true,
-              secureConnection: false,
-              auth: {
-                // user: process.env.Email,
-                // pass: process.env.EmailPass
-                user: "web.100acress@gmail.com",
-                pass: "txww gexw wwpy vvda",
-              },
-              tls: {
-                rejectUnAuthorized: true,
-              },
-            });
-            // Send mail with defined transport objec
-            let info = await transporter.sendMail({
-              from: "amit100acre@gmail.com", // Sender address
-              to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-              subject: "Verified Your Property",
-              html: `
+            if (verify) {
+              const transporter = await nodemailer.createTransport({
+                service: "gmail",
+                port: 465,
+                secure: true,
+                logger: false,
+                debug: true,
+                secureConnection: false,
+                auth: {
+                  // user: process.env.Email,
+                  // pass: process.env.EmailPass
+                  user: "web.100acress@gmail.com",
+                  pass: "txww gexw wwpy vvda",
+                },
+                tls: {
+                  rejectUnAuthorized: true,
+                },
+              });
+              // Send mail with defined transport objec
+              let info = await transporter.sendMail({
+                from: "amit100acre@gmail.com", // Sender address
+                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+                subject: "Verified Your Property",
+                html: `
                                 <!DOCTYPE html>
                                 <html lang:"en>
                                 <head>
@@ -1292,13 +1290,12 @@ class PostPropertyController {
                                 </body>
                                 </html>
                         `,
-            });
-          }
+              });
+            }
           }
 
           res.status(200).json({
             message: "Data updated successfully!",
-            
           });
         }
       } else {
@@ -1322,7 +1319,7 @@ class PostPropertyController {
               "postProperty.$.type": type,
               "postProperty.$.amenities": amenities,
               "postProperty.$.propertyLooking": propertyLooking,
-              "postProperty.$.verify":verify
+              "postProperty.$.verify": verify,
             },
           },
           { new: true }
@@ -1333,30 +1330,30 @@ class PostPropertyController {
         if ((propertyLooking, address, propertyName, agentEmail, dataUpdate)) {
           const propertyName = dataUpdate.postProperty[0].propertyName;
           const address = dataUpdate.postProperty[0].address;
-         if(verify){
-          const transporter = await nodemailer.createTransport({
-            service: "gmail",
-            port: 465,
-            secure: true,
-            logger: false,
-            debug: true,
-            secureConnection: false,
-            auth: {
-              // user: process.env.Email,
-              // pass: process.env.EmailPass
-              user: "web.100acress@gmail.com",
-              pass: "txww gexw wwpy vvda",
-            },
-            tls: {
-              rejectUnAuthorized: true,
-            },
-          });
-          // Send mail with defined transport objec
-          let info = await transporter.sendMail({
-            from: "amit100acre@gmail.com", // Sender address
-            to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "Verified Your Property",
-            html: `
+          if (verify) {
+            const transporter = await nodemailer.createTransport({
+              service: "gmail",
+              port: 465,
+              secure: true,
+              logger: false,
+              debug: true,
+              secureConnection: false,
+              auth: {
+                // user: process.env.Email,
+                // pass: process.env.EmailPass
+                user: "web.100acress@gmail.com",
+                pass: "txww gexw wwpy vvda",
+              },
+              tls: {
+                rejectUnAuthorized: true,
+              },
+            });
+            // Send mail with defined transport objec
+            let info = await transporter.sendMail({
+              from: "amit100acre@gmail.com", // Sender address
+              to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+              subject: "Verified Your Property",
+              html: `
                             <!DOCTYPE html>
                             <html lang:"en>
                             <head>
@@ -1375,13 +1372,12 @@ class PostPropertyController {
                             </body>
                             </html>
                     `,
-          });
-        }
+            });
+          }
         }
 
         res.status(200).json({
           message: "updated successfully ! ",
-        
         });
       }
     } catch (error) {
@@ -1401,22 +1397,23 @@ class PostPropertyController {
         "postProperty._id": propertyId,
       });
 
-      const matchedPostProperties = user.postProperty.find(postProperty => postProperty._id.toString() === propertyId);
-      const frontId=matchedPostProperties.frontImage.public_id
-      if(frontId){
-         await cloudinary.uploader.destroy(frontId)
+      const matchedPostProperties = user.postProperty.find(
+        (postProperty) => postProperty._id.toString() === propertyId
+      );
+      const frontId = matchedPostProperties.frontImage.public_id;
+      if (frontId) {
+        await cloudinary.uploader.destroy(frontId);
       }
-      const other=matchedPostProperties.otherImage
-      if(other){
-    for(let i=0 ; i<other.length; i++){
-      const id=matchedPostProperties.otherImage[i].public_id;
-      if(id){
-          await cloudinary.uploader.destroy(id)
+      const other = matchedPostProperties.otherImage;
+      if (other) {
+        for (let i = 0; i < other.length; i++) {
+          const id = matchedPostProperties.otherImage[i].public_id;
+          if (id) {
+            await cloudinary.uploader.destroy(id);
+          }
+        }
       }
 
-    }
-  }
-   
       if (!user) {
         return res.status(404).json({ error: "Post property not found" });
       }
@@ -1566,75 +1563,100 @@ class PostPropertyController {
     }
   };
 
-  static postEnquiry_view=async(req,res)=>{
+  static postEnquiry_view = async (req, res) => {
     try {
-       const data=await postEnquiryModel.find()
-       res.status(200).json({
-        message:"data get successfully !",
-        data
-       })
+      const data = await postEnquiryModel.find();
+      res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
     } catch (error) {
-     console.log(error);
-     res.status(500).json({
-      message:"Internal server error !"
-     })
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
     }
-  }
-// verify email
-  // static verifyEmail = async (req, res) => {
-  //   const { email } = req.body;
-  //   // send 
-  //   try {
-  //     const data = await Email_verify.find({ email: email })
-  //     // console.log(data,"ljive")
-  //     if (data.length == 0) {
-  //       const transporter = nodemailer.createTransport({
-  //         // SMTP configuration
-  //         service: 'gmail',
-  //         auth: {
-  //           user: "web.100acress@gmail.com",
-  //           pass: "txww gexw wwpy vvda",
-  //         },
-  //       });
-  //       const mailOptions = {
-  //         from: 'web.100acress@gmail.com',
-  //         to: email,
-  //         subject: 'Email Verification',
-  //         text: `Thank you for registering with 100acress.com. We are sending this email only to verify that it is indeed your email address. To complete your registration, please click the link below:${verifyEmail}`
-  //       };
-  //       let info = await transporter.sendMail(mailOptions, (error, info) => {
-  //         if (error) {
-  //           console.error("Error sending verification email:", error);
-  //           return res.status(500).json({
-  //             message: "Error sending verification email check email!",
-  //           });
-  //         }
-  //         const data = new Email_verify({
-  //           email: email,
-  //         });
+  };
+  // verify email
+  static verifyEmail = async (req, res) => {
+    const { email } = req.body;
+    const otpNumber=generateToken()
+    try {
+      const checkEmail = await postPropertyModel.findOne({ email: email });
+      if (checkEmail !== null) {
+      return  res.status(200).json({
+          message: "this email alredy exist !",
+        });
+      }
+      const otpEmail = await Email_verify.findOne({ email: email });
+      if (otpEmail) {
+     return   res.status(200).json({
+          message: "check your email otp sent already!",
+          
+        });
+      }
+      const transporter = nodemailer.createTransport({
+        // SMTP configuration
+        service: "gmail",
+        auth: {
+          user: "web.100acress@gmail.com",
+          pass: "txww gexw wwpy vvda",
+        },
+      });
+      const mailOptions = {
+        from: "web.100acress@gmail.com",
+        to: email,
+        subject: "Email Verification",
+        text: `Thank you for registering with 100acress.com. We are sending this email only to verify that it is indeed your email address. To complete your registration, verify otp : ${otpNumber}`,
+      };
+      try {
+        // Send the email using async/await
+        let info = await transporter.sendMail(mailOptions);
+        // If sending the email succeeds, proceed to save the data
+        const data = new Email_verify({
+          email: email,
+          otp: otpNumber,
+        });
+        await data.save();
+        return res.status(200).json({
+          message: "Verification email sent and saved successfully!",
+        });
+      } catch (error) {
+        return res.status(500).json({
+          message: "Error!",
+          error: error.message || error,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: error,
+      });
+    }
+  };
 
-  //         data.save();
-  //         res.status(200).json({
-  //           message: "Verification email sent and saved successfully!"
-  //         });
-
-  //       });
-  //     } else {
-  //       res.status(200).json({
-  //         message: "email is already verify !"
-  //       })
-  //     }
-  //   } catch (error) {
-  //     console.error(error)
-  //     res.status(500).json({
-  //       message: error
-  //     })
-  //   }
-
-
-
-  // }
-  
-  
+  static otpVerify = async (req, res) => {
+    try {
+      const { otp } = req.body;
+      console.log(otp)
+      if (otp) {
+        const data = await Email_verify.findOne({ otp: otp });
+        if (data) {
+         return res.status(200).json({
+            message: "Email successfully verified !",
+            data,
+          });
+        } else {
+        return  res.status(200).json({
+            message: "Check entered otp !",
+          });
+        }
+      }
+    } catch (error) {
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
 }
 module.exports = PostPropertyController;
