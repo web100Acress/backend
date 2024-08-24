@@ -52,15 +52,29 @@ const sendPostEmail = async (email, number, projectName) => {
   });
 };
 
+// const fetchDataFromDatabase = async () => {
+//   try {
+//       const data = await ProjectModel.find();
+//       return data;
+//   } catch (error) {
+//       throw error;
+//   }
+// };
+
 const fetchDataFromDatabase = async () => {
   try {
-      const data = await ProjectModel.find();
-      return data;
+    const limit = 50;  // Split into more chunks
+    const dataPromises = [];
+    for (let i = 0; i < 6; i++) {
+      dataPromises.push(ProjectModel.find().skip(i * limit).limit(limit).lean());
+    }
+    const dataArrays = await Promise.all(dataPromises);
+    const data = [].concat(...dataArrays);
+    return data;
   } catch (error) {
-      throw error;
+    throw error;
   }
 };
-
 class projectController {
   static project = async (req, res) => {
     res.send("project");
