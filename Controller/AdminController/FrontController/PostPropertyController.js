@@ -1647,7 +1647,7 @@ class PostPropertyController {
             data,
           });
         } else {
-        return  res.status(200).json({
+        return  res.status(401).json({
             message: "Check entered otp !",
           });
         }
