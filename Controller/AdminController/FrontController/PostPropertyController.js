@@ -1584,7 +1584,7 @@ class PostPropertyController {
     try {
       const checkEmail = await postPropertyModel.findOne({ email: email });
       if (checkEmail !== null) {
-      return  res.status(200).json({
+      return  res.status(401).json({
           message: "this email alredy exist !",
         });
       }
