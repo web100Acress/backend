@@ -1658,5 +1658,7 @@ class PostPropertyController {
       });
     }
   };
+
+  
 }
 module.exports = PostPropertyController;

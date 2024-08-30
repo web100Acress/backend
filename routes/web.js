@@ -241,6 +241,7 @@ router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 
 router.post('/pahleGhar',newlaunchController.pahleGhar)
 router.post('/Valley',newlaunchController.Valley)
+router.get("/snapShot",homeController.dataSnapshot)
 
 // try code 
 router.get("/projectCount",projectController.projectCount_city)

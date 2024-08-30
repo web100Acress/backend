@@ -5,6 +5,7 @@ const rent_Model = require("../../../models/property/rent");
 
 const ProjectModel = require("../../../models/projectDetail/project");
 const postPropertyModel = require("../../../models/postProperty/post");
+const UserModel=require('../../../models/projectDetail/user')
 
 class homeController {
   // search in buy and rent
@@ -590,10 +591,56 @@ class homeController {
 
   static dataSnapshot = async (req, res) => {
     try {
-      // Count PostProperty data
-      const postDat = await postPropertyModel.find();
+      // Count PostProperty data 
+      const postDat = await postPropertyModel.find().lean();
+      // buy property
+      // const buyCount = (await buyCommercial_Model.find()).length;
+      // rent property
+      // const rentCount = (await rent_Model.find()).length;
+      // total project count
+      const projectCount = await ProjectModel.countDocuments();
+      // total leads till date
+       const projectLeads=await UserModel.find().lean()
+      //  leads count according to the month
+       const monthlyLeads = await UserModel.aggregate([
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $sort: {
+            "_id.year": -1,
+            "_id.month": -1
+          }
+        }
+      ]).exec();
 
-      let total = 0;
+      // const mothlyuserRegister= await postPropertyModel.aggregate([
+      //   {
+      //     $group: {
+      //       _id: {
+      //         year: { $year: "$createdAt" },
+      //         month: { $month: "$createdAt" }
+      //       },
+      //       count: { $sum: 1 }
+      //     }
+      //   },
+      //   {
+      //     $sort: {
+      //       "_id.year": -1,
+      //       "_id.month": -1
+      //     }
+      //   }
+      // ]).exec();
+    
+       const totalprojectLeads=projectLeads.length
+
+  
       let rent = 0;
       let sell = 0;
       for (let postData of postDat) {
@@ -605,37 +652,29 @@ class homeController {
             sell++;
           }
         }
-        const count = data.length;
-        if (count != 0) {
-          total = total + count;
-        }
+       
       }
-      // Count ProjectData
-      const buyCount = (await buyCommercial_Model.find()).length;
-      const BuyTotal = (buyCount + sell) * 10;
+      // Count ProjectData 
 
-      const rentCount = (await rent_Model.find()).length;
-      const torent = (rentCount + rent) * 10;
 
-      const projectCount = (await ProjectModel.find()).length;
-
+      // const torent = (rentCount + rent) ;
       res.status(200).json({
         message: "data get successfull !",
-        totalUser: total * 10,
-        totalRentposted: rent * 10,
-        totalSellposted: sell * 10,
+        monthlyLeads,
+        totalprojectLeads,
 
-        buyAddon: BuyTotal,
-        total: torent,
-        totalProject: projectCount * 15,
-      });
+        totalUser:postDat.length ,
+        totalRentposted: rent ,
+        totalSellposted: sell ,
+        totalProject: projectCount ,
+      })
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        message: "Internal server error !",
-      });
+        message: "Internal server error !"
+      })
     }
-  };
+  } 
   // ///////////////////
 }
 module.exports = homeController;
