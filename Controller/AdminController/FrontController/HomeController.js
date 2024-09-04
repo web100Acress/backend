@@ -184,47 +184,134 @@ class homeController {
     }
   };
   //search in rental property
-  static search_rent = async (req, res) => {
-    // console.log("heloo")
-    // console.log("listening the search rent ! ")
-    const { query } = req.query;
-    const words = query.split(" ");
-    // console.log(words)
+    //search in rental property
+    static search_rent = async (req, res) => {
+      const  query = req.params.key;
+   const data=await postPropertyModel.aggregate([
+    {
+      $match:{
+        "postProperty.verify":"verified",
+        "postProperty.propertyLooking":"rent"
+  
+      }
+    },
+  
+    {
+      $project: {
+        // name: 1,
+        postProperty: {
+          $filter: {
+            input: "$postProperty",
+            as: "property",
+            cond: {
+              $and: [
+                { $eq: ["$$property.propertyLooking", "rent"] },
+                { $eq: ["$$property.verify", "verified"] },
+                {
+                  $or: [
+                    {
+                      $regexMatch: {
+                        input: "$$property.propertyName",
+                        regex: new RegExp(query, "i"),
+                      },
+                    },
+                    {
+                      $regexMatch: {
+                        input: "$$property.propertyType",
+                        regex: new RegExp(query, "i"),
+                      },
+                    },
+                    {
+                      $regexMatch: {
+                        input: "$$property.address",
+                        regex: new RegExp(query, "i"),
+                      },
+                    },
+                    {
+                      $regexMatch: {
+                        input: "$$property.city",
+                        regex: new RegExp(query, "i"),
+                      },
+                    },
+                    {
+                      $regexMatch: {
+                        input: "$$property.price",
+                        regex: new RegExp(query, "i"),
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  
+    {
+      $match: {
+        "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
+      },
+    },
+  
+   ])
+   if(!data){
+    res.status(200).json({
+      message:"data get !",
+      data
+    })
+   }else{
+    console.log("vlwnnef")
     try {
-      for (let i = 0; i < words.length; i++) {
-        // console.log(words[i])
-        const data = await rent_Model.find({
-          $or: [
-            { projectName: { $regex: words[i], $options: "i" } },
-            { propertyTitle: { $regex: words[i], $options: "i" } },
-            { address: { $regex: words[i], $options: "i" } },
-            { type: { $regex: words[i], $options: "i" } },
-          ],
-        });
-        // console.log(data)
-        const searchData = [];
-        if (data.length > 0) {
-          searchData.push(...data);
-        }
+      // const data = await rent_Model.find()
+      const data1 = await postPropertyModel.aggregate([
+          {
+              $match: {
+                  "postProperty.verify": "verified",
+                  "postProperty.propertyLooking": "rent"
+              }
+          },
+          {
+              $project: {
+                  name: 1,
+                  postProperty: {
+                      $filter: {
+                          input: "$postProperty",
+                          as: "property",
+                          cond: {
+                              $and: [
+                                  { $eq: ["$$property.propertyLooking", "rent"] },
+                                  { $eq: ["$$property.verify", "verified"] }
+                              ]
+                          }
+                      }
+                  }
+              }
+          }
+      ]);
+      // const  ost =data1.postProperty
+       const collectdata=[...data1]
+      if (collectdata) {
+          res.status(200).json({
+              message: "data get successfully !",
+              collectdata
+  
+          })
+      }else{
+          res.status(200).json({
+              message: "data not  found !",
+           
+  
+          })
       }
-
-      if (searchData.length > 0) {
-        res.status(200).json({
-          message: "data found ! ",
-          searchData,
-        });
-      } else {
-        res.status(200).json({
-          message: "data not found ! ",
-        });
-      }
-    } catch (error) {
-      console.log(error);
+  } catch (error) {
+      console.log(error)
       res.status(500).json({
-        message: "Internal server error ! ",
-      });
-    }
-  };
+          message: "Internal server error ! "
+      })
+  }
+   }
+    };
   //search in buy property
 
   static search_buy = async (req, res) => {

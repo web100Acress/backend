@@ -217,6 +217,7 @@ router.get("/property/search/:key", homeController.search);
 //searching buy
 router.get("/buyproperty/search/:key", homeController.search_buy);
 router.get("/data/filter",homeController.filter_data)
+router.get('/rentproperty/search/:key',homeController.search_rent)
 
 //new launch
 
