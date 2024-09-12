@@ -6,7 +6,20 @@ const rent_Model = require("../../../models/property/rent");
 const ProjectModel = require("../../../models/projectDetail/project");
 const postPropertyModel = require("../../../models/postProperty/post");
 const UserModel = require("../../../models/projectDetail/user");
-
+const nodemailer = require('nodemailer');
+const LeadModel = require("../../../models/projectDetail/website");
+const tarnsporter = nodemailer.createTransport({
+  service: "gmail",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "web.100acress@gmail.com",
+    pass: "txww gexw wwpy vvda",
+  },
+  tls: {
+    rejectUnauthorized: true,
+  },
+});
 class homeController {
   // search in buy and rent
   static search = async (req, res) => {
@@ -749,5 +762,50 @@ class homeController {
     }
   };
   // ///////////////////
+
+   // Enquiry for Other domain's
+   static leadSumbit = async (req, res) => {
+    try {
+      const { name, email, number, projectName, projectAddress } = req.body
+      if (!number) {
+        return res.status(400).json({ error: "Input field is missing or undefined" });
+      }
+
+         // Respond to client first
+         res.status(200).json({ message: "data received. " });
+
+         // Save the lead data and send email concurrently
+         const leadData = new LeadModel({
+           name,
+           email,
+           number,
+           projectName,
+           projectAddress,
+         });
+   
+         const emailPromise = tarnsporter.sendMail({
+           from: "amit100acre@gmail.com",
+           to: "vinay.aadharhomes@gmail.com",
+           subject: `New Lead on ${projectName}`,
+           html: `
+             <h1>New Lead - ${projectName}</h1>
+             <p>Customer Name: ${name}</p>
+             <p>Customer Number: ${number}</p>
+             <p>Customer Email Id: ${email}</p>
+             <p>Inquired Property Address: ${projectAddress}</p>
+             <p>Please review the details and take necessary actions.</p>
+             <p>Thank you!</p>
+           `,
+         });
+   
+         await Promise.all([leadData.save(), emailPromise]);
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({
+        message:"Internal server error !"
+      })
+    }
+  }
+  
 }
 module.exports = homeController;

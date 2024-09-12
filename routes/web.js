@@ -246,5 +246,6 @@ router.get("/snapShot",homeController.dataSnapshot)
 
 // try code 
 router.get("/projectCount",projectController.projectCount_city)
-
+// This routes used for the navigate leads from other domains 
+router.post('/submit',homeController.leadSumbit)
 module.exports = router;
