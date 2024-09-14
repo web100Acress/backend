@@ -1465,35 +1465,62 @@ class PostPropertyController {
           propertyAddress: propertyAddress,
         });
         const info = await transporter.sendMail({
-            from: "amit100acre@gmail.com", // Sender address
-            to: "vinay.aadharhomes@gmail.com",
-            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            cc: agentEmail,
-             subject: "Post Property",
-            html: `
-                        <!DOCTYPE html>
-                        <html lang:"en>
-                        <head>
-                        <meta charset:"UTF-8">
-                        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                        <title>New Inquiry on Post-Property </title>
-                        </head>
-                        <body>
-                            <h1>New Lead </h1>
-                            <p>Agent Email Id :${agentEmail}</p>
-                            <p>Agent Number :${agentNumber}</p>
-                            <p>Customer Number:${custNumber}</p>
-                            <p>Customer Email Id:${custEmail}</p>
-                            <p> Inquired Property Address :${propertyAddress}</p>
-                            <p>Please review the details and take necessary actions.</p>
-                            <p>Thank you!</p>
-                        </body>
-                        </html>
-                `,
-          });
-        // await data.save();
-        await Promise.all([data.save(),info])
+          from: "amit100acre@gmail.com", // Sender address
+          to: "vinay.aadharhomes@gmail.com",
+          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+           subject: "Post Property",
+          html: `
+                      <!DOCTYPE html>
+                      <html lang:"en>
+                      <head>
+                      <meta charset:"UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Inquiry on Post-Property </title>
+                      </head>
+                      <body>
+                          <h1>New Lead </h1>
+                          <p>Agent Email Id :${agentEmail}</p>
+                          <p>Agent Number :${agentNumber}</p>
+                          <p>Customer Number:${custNumber}</p>
+                          <p>Customer Email Id:${custEmail}</p>
+                          <p> Inquired Property Address :${propertyAddress}</p>
+                          <p>Please review the details and take necessary actions.</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>
+              `,
+        });
+        const info2 = await transporter.sendMail({
+          from: "amit100acre@gmail.com", // Sender address
+          to: agentEmail,
+          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+         
+           subject: "Post Property",
+          html: `
+                      <!DOCTYPE html>
+                      <html lang:"en>
+                      <head>
+                      <meta charset:"UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Inquiry on Post-Property </title>
+                      </head>
+                      <body>
+                          <h1>New Lead </h1>
+                          <p>Agent Email Id :${agentEmail}</p>
+                          <p>Agent Number :${agentNumber}</p>
+                          <p>Customer Number:${custNumber}</p>
+                          <p>Customer Email Id:${custEmail}</p>
+                          <p> Inquired Property Address :${propertyAddress}</p>
+                          <p>Please review the details and take necessary actions.</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>
+              `,
+        });
+      // await data.save();
+      await Promise.all([data.save(),info,info2])
       } else {
         res.status(200).json({
           message: "please fill the form !",
