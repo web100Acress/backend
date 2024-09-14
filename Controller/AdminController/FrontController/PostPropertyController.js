@@ -22,7 +22,23 @@ const getAllProjects = async () => {
 const generateToken = () => {
   return Math.floor(Math.random() * 1000000);
 };
-
+const transporter =  nodemailer.createTransport({
+  service: "gmail",
+  port: 465,
+  secure: true,
+  logger: false,
+  debug: true,
+  secureConnection: false,
+  auth: {
+    // user: process.env.Email,
+    // pass: process.env.EmailPass
+    user: "web.100acress@gmail.com",
+    pass: "txww gexw wwpy vvda",
+  },
+  tls: {
+    rejectUnAuthorized: true,
+  },
+});
 const sendResetEmail = async (email, token) => {
   // Connect with SMTP Gmail
   const transporter = await nodemailer.createTransport({
@@ -1435,15 +1451,11 @@ class PostPropertyController {
 
   static postPropertyEnquiry = async (req, res) => {
     try {
-      const {
-        agentEmail,
-        agentNumber,
-        custName,
-        custEmail,
-        custNumber,
-        propertyAddress,
-      } = req.body;
+      const {agentEmail, agentNumber, custName, custEmail, custNumber, propertyAddress,} = req.body;
       if (req.body) {
+        res.status(200).json({
+          message: "data sent successfully ! ",
+        });
         const data = new postEnquiryModel({
           agentEmail: agentEmail,
           agentNumber: agentNumber,
@@ -1452,30 +1464,12 @@ class PostPropertyController {
           custNumber: custNumber,
           propertyAddress: propertyAddress,
         });
-
-        if (agentEmail) {
-          const transporter = await nodemailer.createTransport({
-            service: "gmail",
-            port: 465,
-            secure: true,
-            logger: false,
-            debug: true,
-            secureConnection: false,
-            auth: {
-              // user: process.env.Email,
-              // pass: process.env.EmailPass
-              user: "web.100acress@gmail.com",
-              pass: "txww gexw wwpy vvda",
-            },
-            tls: {
-              rejectUnAuthorized: true,
-            },
-          });
-          // Send mail with defined transport objec
-          let info = await transporter.sendMail({
+        const info = await transporter.sendMail({
             from: "amit100acre@gmail.com", // Sender address
-            to: "vinay.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "Post Property",
+            to: "vinay.aadharhomes@gmail.com",
+            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+            cc: agentEmail,
+             subject: "Post Property",
             html: `
                         <!DOCTYPE html>
                         <html lang:"en>
@@ -1498,58 +1492,8 @@ class PostPropertyController {
                         </html>
                 `,
           });
-        }
-
-        if (agentEmail) {
-          const transporter = await nodemailer.createTransport({
-            service: "gmail",
-            port: 465,
-            secure: true,
-            logger: false,
-            debug: true,
-            secureConnection: false,
-            auth: {
-              // user: process.env.Email,
-              // pass: process.env.EmailPass
-              user: "web.100acress@gmail.com",
-              pass: "txww gexw wwpy vvda",
-            },
-            tls: {
-              rejectUnAuthorized: true,
-            },
-          });
-          // Send mail with defined transport objec
-          let info = await transporter.sendMail({
-            from: "amit100acre@gmail.com", // Sender address
-            to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "Inquiry",
-            html: `
-                    <!DOCTYPE html>
-                    <html lang:"en>
-                    <head>
-                    <meta charset:"UTF-8">
-                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                    <title>Inquiry On Your Property  </title>
-                    </head>
-                    <body>
-                        <h2>New Lead</h2>
-                        <p>Customer Mobile Number:${custNumber}</p>
-                        <p>Customer Email Id:${custEmail}</p>
-                        <p>Customer Inquired Property address: ${propertyAddress}</p>
-                        <p>Please review the details and take necessary actions.</p>
-                        <p>Thank you!</p>
-                    </body>
-                    </html>
-            `,
-          });
-        }
-
-        // console.log(data)
-        await data.save();
-        res.status(200).json({
-          message: "data sent successfully ! ",
-        });
+        // await data.save();
+        await Promise.all([data.save(),info])
       } else {
         res.status(200).json({
           message: "please fill the form !",
@@ -1562,6 +1506,8 @@ class PostPropertyController {
       });
     }
   };
+
+
 
   static postEnquiry_view = async (req, res) => {
     try {
