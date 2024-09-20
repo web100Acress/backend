@@ -21,141 +21,206 @@ const tarnsporter = nodemailer.createTransport({
   },
 });
 class homeController {
-  // search in buy and rent
-  static search = async (req, res) => {
-    const searchTerm = req.params.key;
-    if (!searchTerm) {
-      return res.status(200).json({
-        message: "Please enter your query!",
-      });
-    }
-    try {
-      const searchResults = await Promise.all([
-        buyCommercial_Model.find({
-          $or: [
-            { projectName: { $regex: searchTerm, $options: "i" } },
-            { propertytype: { $regex: searchTerm, $options: "i" } },
-            { address: { $regex: searchTerm, $options: "i" } },
-            { city: { $regex: searchTerm, $options: "i" } },
-          ],
-        }),
-        rent_Model.find({
-          $or: [
-            { projectName: { $regex: searchTerm, $options: "i" } },
-            { propertytype: { $regex: searchTerm, $options: "i" } },
-            { city: { $regex: searchTerm, $options: "i" } },
-            { type: { $regex: searchTerm, $options: "i" } },
-          ],
-        }),
-        ProjectModel.find({
-          $or: [
-            { projectName: { $regex: searchTerm, $options: "i" } },
-            { city: { $regex: searchTerm, $options: "i" } },
-            { builderName: { $regex: searchTerm, $options: "i" } },
-          ],
-        }),
-        postPropertyModel.aggregate([
-          {
-            $match: {
-              "postProperty.city": { $regex: searchTerm, $options: "i" },
-              "postProperty.projectName": { $regex: searchTerm, $options: "i" },
-              "postProperty.builderName": { $regex: searchTerm, $options: "i" },
+ // search in buy and rent
+ static search = async (req, res) => {
+  const searchTerm = req.params.key;
+  if (!searchTerm) {
+    return res.status(200).json({
+      message: "Please enter your query!",
+    });
+  }
+  try {
+    const searchResults = await Promise.all([
+      ProjectModel.find({
+        $or: [
+          { projectName: { $regex: searchTerm, $options: "i" } },
+          { city: { $regex: searchTerm, $options: "i" } },
+          { builderName: { $regex: searchTerm, $options: "i" } },
+          { type: { $regex: searchTerm, $options: "i" } },
+          {project_discripation:{$regex:searchTerm,$options:'i'}}
+        ],
+      }),
+      postPropertyModel.aggregate([
+        {
+          $match: {
+            "postProperty.verify": "verified",
+            $or: [
+              { "postProperty.propertyLooking": "Sell" },
+              { "postProperty.propertyLooking": "rent" }
+            ]
+          },
+        },
+        {
+          $project: {
+            postProperty: {
+              $filter: {
+                input: "$postProperty",
+                as: "property",
+                cond: {
+                  $and: [
+                    { $eq: ["$$property.verify", "verified"] },
+                    {
+                      $or: [
+                        {
+                          $regexMatch: {
+                            input: "$$property.propertyName",
+                            regex: new RegExp(searchTerm, "i"),
+                          },
+                        },
+                        {
+                          $regexMatch: {
+                            input: "$$property.propertyType",
+                            regex: new RegExp(searchTerm, "i"),
+                          },
+                        },
+                        {
+                          $regexMatch: {
+                            input: "$$property.address",
+                            regex: new RegExp(searchTerm, "i"),
+                          },
+                        },
+                        {
+                          $regexMatch: {
+                            input: "$$property.city",
+                            regex: new RegExp(searchTerm, "i"),
+                          },
+                        },
+                        {
+                          $regexMatch: {
+                            input: "$$property.price",
+                            regex: new RegExp(searchTerm, "i"),
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
             },
           },
-          {
-            $group: {
-              _id: "$_id",
-              name: { $first: "$name" },
-              email: { $first: "$email" },
-              mobile: { $first: "$mobile" },
-              role: { $first: "$role" },
-              token: { $first: "$token" },
-              postProperty: { $push: "$postProperty" },
-            },
+        },
+        {
+          $match: {
+            "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
           },
-        ]),
-      ]);
+        },
+     
+    ])
+  ]);
 
+    const searchdata = searchResults.flat();
+
+    if (searchdata.length > 0) {
+      return res.status(200).json({
+        message: "Data found-1!",
+        searchdata,
+      });
+    } else {
+      const words = searchTerm.split(" ");
+      const searchPromises = [];
+      words.forEach((word) => {
+        searchPromises.push(
+
+          ProjectModel.find({
+            $or: [
+              { projectName: { $regex: word, $options: "i" } },
+              { city: { $regex: word, $options: "i" } },
+              { builderName: { $regex: word, $options: "i" } },
+              { type: { $regex: word, $options: "i" } },
+              {project_discripation:{$regex:word,$options:'i'}}
+            ],
+          }),
+          postPropertyModel.aggregate([
+            {
+              $match: {
+                "postProperty.verify": "verified",
+                $or: [
+                  { "postProperty.propertyLooking": "Sell" },
+                  { "postProperty.propertyLooking": "rent" }
+                ]
+              },
+            },
+            {
+              $project: {
+                postProperty: {
+                  $filter: {
+                    input: "$postProperty",
+                    as: "property",
+                    cond: {
+                      $and: [
+                        { $eq: ["$$property.verify", "verified"] },
+                        {
+                          $or: [
+                            {
+                              $regexMatch: {
+                                input: "$$property.propertyName",
+                                regex: new RegExp(word, "i"),
+                              },
+                            },
+                            {
+                              $regexMatch: {
+                                input: "$$property.propertyType",
+                                regex: new RegExp(word, "i"),
+                              },
+                            },
+                            {
+                              $regexMatch: {
+                                input: "$$property.address",
+                                regex: new RegExp(word, "i"),
+                              },
+                            },
+                            {
+                              $regexMatch: {
+                                input: "$$property.city",
+                                regex: new RegExp(word, "i"),
+                              },
+                            },
+                            {
+                              $regexMatch: {
+                                input: "$$property.price",
+                                regex: new RegExp(word, "i"),
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $match: {
+                "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
+              },
+            },
+         
+        ])
+        );
+      });
+      const searchResults = await Promise.all(searchPromises);
       const searchdata = searchResults.flat();
 
       if (searchdata.length > 0) {
         return res.status(200).json({
-          message: "Data found-1!",
+          message: "Data found-2!",
           searchdata,
         });
       } else {
-        const words = searchTerm.split(" ");
-        const searchPromises = [];
-        words.forEach((word) => {
-          searchPromises.push(
-            buyCommercial_Model.find({
-              $or: [
-                { projectName: { $regex: word, $options: "i" } },
-                { propertytype: { $regex: word, $options: "i" } },
-                { address: { $regex: word, $options: "i" } },
-                { city: { $regex: word, $options: "i" } },
-              ],
-            }),
-            rent_Model.find({
-              $or: [
-                { projectName: { $regex: word, $options: "i" } },
-                { propertytype: { $regex: word, $options: "i" } },
-                { city: { $regex: word, $options: "i" } },
-                { type: { $regex: word, $options: "i" } },
-              ],
-            }),
-            ProjectModel.find({
-              $or: [
-                { projectName: { $regex: word, $options: "i" } },
-                { city: { $regex: word, $options: "i" } },
-                { builderName: { $regex: word, $options: "i" } },
-              ],
-            }),
-            postPropertyModel.aggregate([
-              {
-                $match: {
-                  "postProperty.city": { $regex: word, $options: "i" },
-                  "postProperty.propertyName": { $regex: word, $options: "i" },
-                  "postProperty.builderName": { $regex: word, $options: "i" },
-                },
-              },
-              {
-                $group: {
-                  _id: "$_id",
-                  name: { $first: "$name" },
-                  email: { $first: "$email" },
-                  mobile: { $first: "$mobile" },
-                  role: { $first: "$role" },
-                  token: { $first: "$token" },
-                  postProperty: { $push: "$postProperty" },
-                },
-              },
-            ])
-          );
+        const data = await ProjectModel.find();
+        return res.status(200).json({
+          message: "No data found-3.",
+          searchdata: data,
         });
-        const searchResults = await Promise.all(searchPromises);
-        const searchdata = searchResults.flat();
-
-        if (searchdata.length > 0) {
-          return res.status(200).json({
-            message: "Data found-2!",
-            searchdata,
-          });
-        } else {
-          const data = await ProjectModel.find();
-          return res.status(200).json({
-            message: "No data found-3.",
-            searchdata: data,
-          });
-        }
       }
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        message: "Internal server error",
-      });
     }
-  };
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
   //search for otherproperty
   static search_other = async (req, res) => {
     const { query } = req.query;
