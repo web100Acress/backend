@@ -40,72 +40,72 @@ class homeController {
           {project_discripation:{$regex:searchTerm,$options:'i'}}
         ],
       }),
-      postPropertyModel.aggregate([
-        {
-          $match: {
-            "postProperty.verify": "verified",
-            $or: [
-              { "postProperty.propertyLooking": "Sell" },
-              { "postProperty.propertyLooking": "rent" }
-            ]
-          },
-        },
-        {
-          $project: {
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.verify", "verified"] },
-                    {
-                      $or: [
-                        {
-                          $regexMatch: {
-                            input: "$$property.propertyName",
-                            regex: new RegExp(searchTerm, "i"),
-                          },
-                        },
-                        {
-                          $regexMatch: {
-                            input: "$$property.propertyType",
-                            regex: new RegExp(searchTerm, "i"),
-                          },
-                        },
-                        {
-                          $regexMatch: {
-                            input: "$$property.address",
-                            regex: new RegExp(searchTerm, "i"),
-                          },
-                        },
-                        {
-                          $regexMatch: {
-                            input: "$$property.city",
-                            regex: new RegExp(searchTerm, "i"),
-                          },
-                        },
-                        {
-                          $regexMatch: {
-                            input: "$$property.price",
-                            regex: new RegExp(searchTerm, "i"),
-                          },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-        },
-        {
-          $match: {
-            "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
-          },
-        },
+    //   postPropertyModel.aggregate([
+    //     {
+    //       $match: {
+    //         "postProperty.verify": "verified",
+    //         $or: [
+    //           { "postProperty.propertyLooking": "Sell" },
+    //           { "postProperty.propertyLooking": "rent" }
+    //         ]
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         postProperty: {
+    //           $filter: {
+    //             input: "$postProperty",
+    //             as: "property",
+    //             cond: {
+    //               $and: [
+    //                 { $eq: ["$$property.verify", "verified"] },
+    //                 {
+    //                   $or: [
+    //                     {
+    //                       $regexMatch: {
+    //                         input: "$$property.propertyName",
+    //                         regex: new RegExp(searchTerm, "i"),
+    //                       },
+    //                     },
+    //                     {
+    //                       $regexMatch: {
+    //                         input: "$$property.propertyType",
+    //                         regex: new RegExp(searchTerm, "i"),
+    //                       },
+    //                     },
+    //                     {
+    //                       $regexMatch: {
+    //                         input: "$$property.address",
+    //                         regex: new RegExp(searchTerm, "i"),
+    //                       },
+    //                     },
+    //                     {
+    //                       $regexMatch: {
+    //                         input: "$$property.city",
+    //                         regex: new RegExp(searchTerm, "i"),
+    //                       },
+    //                     },
+    //                     {
+    //                       $regexMatch: {
+    //                         input: "$$property.price",
+    //                         regex: new RegExp(searchTerm, "i"),
+    //                       },
+    //                     },
+    //                   ],
+    //                 },
+    //               ],
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     {
+    //       $match: {
+    //         "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
+    //       },
+    //     },
      
-    ])
+    // ])
   ]);
 
     const searchdata = searchResults.flat();
@@ -130,72 +130,72 @@ class homeController {
               {project_discripation:{$regex:word,$options:'i'}}
             ],
           }),
-          postPropertyModel.aggregate([
-            {
-              $match: {
-                "postProperty.verify": "verified",
-                $or: [
-                  { "postProperty.propertyLooking": "Sell" },
-                  { "postProperty.propertyLooking": "rent" }
-                ]
-              },
-            },
-            {
-              $project: {
-                postProperty: {
-                  $filter: {
-                    input: "$postProperty",
-                    as: "property",
-                    cond: {
-                      $and: [
-                        { $eq: ["$$property.verify", "verified"] },
-                        {
-                          $or: [
-                            {
-                              $regexMatch: {
-                                input: "$$property.propertyName",
-                                regex: new RegExp(word, "i"),
-                              },
-                            },
-                            {
-                              $regexMatch: {
-                                input: "$$property.propertyType",
-                                regex: new RegExp(word, "i"),
-                              },
-                            },
-                            {
-                              $regexMatch: {
-                                input: "$$property.address",
-                                regex: new RegExp(word, "i"),
-                              },
-                            },
-                            {
-                              $regexMatch: {
-                                input: "$$property.city",
-                                regex: new RegExp(word, "i"),
-                              },
-                            },
-                            {
-                              $regexMatch: {
-                                input: "$$property.price",
-                                regex: new RegExp(word, "i"),
-                              },
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-            {
-              $match: {
-                "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
-              },
-            },
+        //   postPropertyModel.aggregate([
+        //     {
+        //       $match: {
+        //         "postProperty.verify": "verified",
+        //         $or: [
+        //           { "postProperty.propertyLooking": "Sell" },
+        //           { "postProperty.propertyLooking": "rent" }
+        //         ]
+        //       },
+        //     },
+        //     {
+        //       $project: {
+        //         postProperty: {
+        //           $filter: {
+        //             input: "$postProperty",
+        //             as: "property",
+        //             cond: {
+        //               $and: [
+        //                 { $eq: ["$$property.verify", "verified"] },
+        //                 {
+        //                   $or: [
+        //                     {
+        //                       $regexMatch: {
+        //                         input: "$$property.propertyName",
+        //                         regex: new RegExp(word, "i"),
+        //                       },
+        //                     },
+        //                     {
+        //                       $regexMatch: {
+        //                         input: "$$property.propertyType",
+        //                         regex: new RegExp(word, "i"),
+        //                       },
+        //                     },
+        //                     {
+        //                       $regexMatch: {
+        //                         input: "$$property.address",
+        //                         regex: new RegExp(word, "i"),
+        //                       },
+        //                     },
+        //                     {
+        //                       $regexMatch: {
+        //                         input: "$$property.city",
+        //                         regex: new RegExp(word, "i"),
+        //                       },
+        //                     },
+        //                     {
+        //                       $regexMatch: {
+        //                         input: "$$property.price",
+        //                         regex: new RegExp(word, "i"),
+        //                       },
+        //                     },
+        //                   ],
+        //                 },
+        //               ],
+        //             },
+        //           },
+        //         },
+        //       },
+        //     },
+        //     {
+        //       $match: {
+        //         "postProperty.0": { $exists: true }, // Ensure the array is not empty after filtering
+        //       },
+        //     },
          
-        ])
+        // ])
         );
       });
       const searchResults = await Promise.all(searchPromises);
