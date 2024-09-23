@@ -176,15 +176,15 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-const ProjectModel = mongoose.model("projectData", projectSchema);
-ProjectModel.createIndexes({
+projectSchema.index({
   projectName: "text",
   projectAddress: "text",
   project_discripation: "text",
   type:"text",
   city:"text",
   state:"text",
-  builderName: "text"
+  builderName: "text",
+  project_Status:'text'
 }, {
   weights: {
     projectName: 6, // updated weight
@@ -193,8 +193,10 @@ ProjectModel.createIndexes({
     type:3,
     city:2,
     state:2,
+    project_Status:3,
     builderName: 1
   }
 })
 
+const ProjectModel = mongoose.model("projectData", projectSchema);
 module.exports = ProjectModel;
