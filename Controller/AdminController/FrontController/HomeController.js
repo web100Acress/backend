@@ -135,7 +135,9 @@ class homeController {
           metaScore: -1
         }
       },
-    
+      {
+        $unwind:"$postProperty"
+      },
       {
         $match: {
           "postProperty.verify": "verified", // verified after unwinding
@@ -223,7 +225,9 @@ try {
           metaScore: -1
         }
       },
-    
+    {
+      $unwind:"$postProperty"
+    },
       {
         $match: {
           "postProperty.verify": "verified", // verified after unwinding
