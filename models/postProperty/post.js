@@ -70,7 +70,18 @@ const property_Schema=new mongoose.Schema({
                 type:String
             }
         })
-
+// Define a text index on propertyName
+property_Schema.index({
+    propertyName: 'text' ,
+    propertyType:'text',
+    address:'text',
+    city:'text',
+    price:"text",
+    state:'text',
+    type:"text",
+    landMark:"text",
+    descripation:'text',
+   });
 const post_Schema =new mongoose.Schema({
     name: {
         type: String,
