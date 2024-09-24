@@ -32,7 +32,7 @@ class homeController {
     try {
       const searchResults = await ProjectModel.find(
         { $text: { $search: searchTerm } }
-      ).limit(20).sort({ score: { $meta: "textScore" } });
+      ).limit(20)
       // const searchdata = searchResults.flat();
       if (searchResults.length > 0) {
         return res.status(200).json({
@@ -135,9 +135,7 @@ class homeController {
           metaScore: -1
         }
       },
-      {
-        $unwind: "$postProperty"
-      },
+    
       {
         $match: {
           "postProperty.verify": "verified", // verified after unwinding
@@ -225,9 +223,7 @@ try {
           metaScore: -1
         }
       },
-      {
-        $unwind: "$postProperty"
-      },
+    
       {
         $match: {
           "postProperty.verify": "verified", // verified after unwinding
