@@ -8,6 +8,7 @@ const postPropertyModel = require("../../../models/postProperty/post");
 const UserModel = require("../../../models/projectDetail/user");
 const nodemailer = require('nodemailer');
 const LeadModel = require("../../../models/projectDetail/website");
+const cache=require('memory-cache')
 const tarnsporter = nodemailer.createTransport({
   service: "gmail",
   port: 465,
@@ -25,52 +26,70 @@ class homeController {
   static search = async (req, res) => {
     const searchTerm = req.params.key;
     if (!searchTerm) {
-      return res.status(200).json({
+      return res.status(400).json({
         message: "Please enter your query!",
       });
     }
+  
+    // Generate a unique cache key for the search term
+    const cacheKey = `findData:${searchTerm}`;
+  
+    // Check if the data is in cache
+    const cachedData = await cache.get(cacheKey);
+    if (cachedData) {
+ 
+      return res.status(200).json({
+        message: "Data found in cache!",
+        searchdata: JSON.parse(cachedData),
+      });
+    }
+  
     try {
+      // First try the text search
       const searchResults = await ProjectModel.find(
         { $text: { $search: searchTerm } }
-      ).limit(20)
-      // const searchdata = searchResults.flat();
+      ).limit(16).lean();
+  
+      // Cache the results if found
       if (searchResults.length > 0) {
+        const time = 3 * 60 * 1000; // Cache for 3 minutes
+        cache.put(cacheKey, JSON.stringify(searchResults), time);
         return res.status(200).json({
           message: "Data found-1!",
           searchdata: searchResults,
         });
       } else {
+        // If no results, split the search term and perform regex search
         const words = searchTerm.split(" ");
-        const searchPromises = [];
-        words.forEach((word) => {
-          searchPromises.push(
-
-            ProjectModel.find({
-              $or: [
-                { projectName: { $regex: word, $options: "i" } },
-                // { city: { $regex: word, $options: "i" } },
-                // { builderName: { $regex: word, $options: "i" } },
-                // { type: { $regex: word, $options: "i" } },
-                {project_discripation:{$regex:word,$options:'i'}}
-              ],
-            }),
-         
-          );
+        const searchPromises = words.map(word => {
+          return ProjectModel.find({
+            $or: [
+              { projectName: { $regex: word, $options: "i" } },
+              { project_discripation: { $regex: word, $options: 'i' } },
+            ],
+          }).lean();
         });
-        const searchResults = await Promise.all(searchPromises);
-        const searchdata = searchResults.flat();
+  
+        const regexResults = await Promise.all(searchPromises);
+        const combinedResults = [...new Set(regexResults.flat())]; // Remove duplicates
+  
+        // Cache the results from regex search
+        if (combinedResults.length > 0) {
+          const time = 3 * 60 * 1000; // Cache for 3 minutes
+          cache.put(cacheKey, JSON.stringify(combinedResults), time);
           return res.status(200).json({
             message: "Data found-2!",
-            searchdata,
-          }); 
+            searchdata: combinedResults,
+          });
+        }
+  
+        return res.status(404).json({ message: "No data found!" });
       }
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        message: "Internal server error",
-      });
+      console.error('Search error:', error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-  };
+  }
   
   //search for otherproperty
   static search_other = async (req, res) => {
