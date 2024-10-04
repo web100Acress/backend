@@ -35,11 +35,11 @@ app.use(limiter);
 
 // cloudinary config
 cloudinary.config({
-  cloud_name: process.env.ClOUDINARY_NAME,
+  cloud_name: process.env.ClOUDINARY_NAME || 'dm5yrsqdc',
   //  'dm5yrsqdc',
-  api_key: process.env.ClOUDINARY_API_KEY,
+  api_key: process.env.ClOUDINARY_API_KEY || '696133393222185',
   // '696133393222185',
-  api_secret: process.env.ClOUDINARY_API_SECRET,
+  api_secret: process.env.ClOUDINARY_API_SECRET || 'nUn6R9b9CA2Bg44sNTWtfRhvVFQ',
   // 'nUn6R9b9CA2Bg44sNTWtfRhvVFQ',
   secure: true,
 });
