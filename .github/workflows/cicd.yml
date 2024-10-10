@@ -30,4 +30,4 @@ jobs:
                 docker rm -f hundredacress-backend-container
               fi
       - name: Run Docker Container
-        run: docker run -d -p 3005:3005 --name hundredacress-backend-container -e MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}' hunderedacress/100acressbackend
+        run: docker run -d -p 3500:3500 --name hundredacress-backend-container -e MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}' hunderedacress/100acressbackend
