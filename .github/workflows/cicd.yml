@@ -1,4 +1,4 @@
-name: Deploy web100Acress-100acressFront
+name: Deploy web100Acress-backend
 on: 
   push:
     branches:
