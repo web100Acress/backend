@@ -1,6 +1,6 @@
 
 const mongoose = require('mongoose');
-const dotenv = require('dotenv').config()
+require('dotenv').config(); 
 
 const connectDb=()=>{
 
@@ -10,7 +10,7 @@ const connectDb=()=>{
 
 
     // return mongoose.connect("mongodb+srv://Amit:Amit123@cluster0.7jljtxl.mongodb.net/")li
-  return mongoose.connect("mongodb+srv://amit100acre:Amit123@cluster0.ffg8qyf.mongodb.net/?retryWrites=true&w=majority")
+  return mongoose.connect(process.env.MONGO_URI||"mongodb+srv://amit100acre:Amit123@cluster0.ffg8qyf.mongodb.net/?retryWrites=true&w=majority")
   .then(() =>{
     console.log('Connected!')
   })
