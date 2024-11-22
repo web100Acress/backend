@@ -44,11 +44,10 @@ cloudinary.config({
   secure: true,
 });
 
-// parse application/x-www-form-urlencoded
+// Middleware
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-// parse application/json
 app.use(bodyParser.json());
-app.use(fileUpload({ useTempFiles: true }));
 
 // database connection
 connectDB();

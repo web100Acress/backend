@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const upload=require('../aws/multerConfig')
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -204,7 +204,7 @@ router.get("/postEnq_view",PostPropertyController.postEnquiry_view)
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
 //Blog
-router.post("/blog/insert", blogController.blog_insert);
+router.post("/blog/insert",upload.single('blog_Image'), blogController.blog_insert);
 router.get("/blog/view", blogController.blog_view);
 router.get("/blog/view/:id", blogController.blog_viewId);
 router.get("/blog/edit/:id", blogController.blog_edit);

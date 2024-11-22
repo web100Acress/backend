@@ -3,52 +3,41 @@ const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
 const cloudinary = require('cloudinary').v2;
   const ObjectId = require('mongodb').ObjectId;
+  const fs = require("fs");
+  const path = require("path");
+  const uploadFile = require("../../../aws/s3Helper");
 class blogController {
 
     static blog_insert = async (req, res) => {
-        // console.log("hello")
-        // res.send("listen blog")
         try {
-            const { blog_Title, blog_Description, author, blog_Category } = req.body
-
-            //    const title=blog_Title.trim()
-            if (blog_Title && blog_Description && author && blog_Category) {
-            const Title = blog_Title.trim();
-            if(req.files){
-            const BlogImage = req.files.blog_Image;
-           
-            const blogResult = await cloudinary.uploader.upload(
-                BlogImage.tempFilePath, {
-                folder: `100acre/blog/${Title}`
+            if (!req.file) {
+              return res.status(400).json({ message: 'No image uploaded' });
             }
-            )
-            
-                const data = new blogModel({
-                    blog_Image: {
-                        public_id: blogResult.public_id,
-                        url: blogResult.secure_url
-                    },
-                    blog_Title: blog_Title.trim(),
-                    blog_Description,
-                    author,
-                    blog_Category
-                })
-                await data.save()
-                res.status(200).json({
-                    message: "Data Inserted successfully !"
-                })
-            }else{
-                return res.status(400).json({ message: "Image field empty !" });
+            const { blog_Title, blog_Description, author, blog_Category } = req.body;
+            if (!blog_Title || !blog_Description || !author || !blog_Category) {
+              return res.status(400).json({ message: 'Missing fields' });
             }
-            }else{
-                return res.status(400).json({ message: "field empty " }); 
-            }
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                message: "Internal server error !"
-            })
-        }
+            // Upload file to S3
+            const imageData = await uploadFile(req.file);
+            // Save blog entry
+            const newBlog = new blogModel({
+              blog_Image: {
+                public_id: imageData.Key,
+                url: imageData.Location,
+              },
+              blog_Title,
+              blog_Description,
+              author,
+              blog_Category,
+            });
+            await newBlog.save();
+            // Clean up local file
+            fs.unlinkSync(req.file.path);
+            res.status(200).json({ message: 'Blog inserted successfully', data: newBlog });
+          } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal server error' });
+          }
     }
 
     static blog_view=async(req,res)=>{
@@ -201,8 +190,7 @@ class blogController {
            })
         }
     }
-      
-    
+       
 }
 module.exports = blogController
 
