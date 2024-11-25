@@ -208,7 +208,7 @@ router.post("/blog/insert",upload.single('blog_Image'), blogController.blog_inse
 router.get("/blog/view", blogController.blog_view);
 router.get("/blog/view/:id", blogController.blog_viewId);
 router.get("/blog/edit/:id", blogController.blog_edit);
-router.put("/blog/update/:id", blogController.blog_update);
+router.put("/blog/update/:id",upload.single('blog_Image'), blogController.blog_update);
 router.delete("/blog/delete/:id", blogController.blog_delete);
 
 //Searching routing
