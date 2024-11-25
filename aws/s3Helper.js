@@ -27,3 +27,18 @@ const uploadFile=(file)=>{
 
 }
 module.exports=uploadFile;
+
+const updateFile=(file,objectKey)=>{
+  const fileContent = fs.readFileSync(file.path);
+
+  const params = {
+    Bucket: '100acress-media-bucket', // You can use environment variables for sensitive data like bucket name
+    Key: objectKey,  // Store the file with a unique name in the 'uploads/' folder
+    Body: fileContent,
+    ContentType: file.mimetype,
+  };
+
+  // Return the promise from s3.upload
+  return s3.upload(params).promise();
+}
+module.exports=updateFile

@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
   const fs = require("fs");
   const path = require("path");
   const uploadFile = require("../../../aws/s3Helper");
+  const updateFile=require('../../../aws/s3Helper')
 class blogController {
 
     static blog_insert = async (req, res) => {
@@ -110,24 +111,23 @@ class blogController {
     }
 
     static blog_update = async (req, res) => {
-        // console.log("hellobfiu")
+        console.log("hellobfiu1")
         try {
             const id = req.params.id
             if (ObjectId.isValid(id)) {
                 const { blog_Title, blog_Description, author, blog_Category } = req.body
-                if (req.files) {
+                if (req.file) {
+            
                     const data = await blogModel.findById({ _id: id })
-                    const Title = data.blog_Title.trim()
-                    const blogImage = req.files.blog_Image
-                    const blogResult = await cloudinary.uploader.upload(
-                        blogImage.tempFilePath, {
-                        folder: `100acre/blog/${Title}`
-                    }
-                    )
+                   const objectKey=data.blog_Image.public_id;
+               
+                   const imageData=await updateFile(req.file,objectKey)
+                
+
                     const update = await blogModel.findByIdAndUpdate({ _id: id }, {
                         blog_Image: {
-                            public_id: blogResult.public_id,
-                            url: blogResult.secure_url
+                            public_id:imageData.Key,
+                            url: imageData.Location
                         },
                         blog_Title: blog_Title,
                         blog_Description: blog_Description,
@@ -135,10 +135,13 @@ class blogController {
                         blog_Category: blog_Category
                     })
                     await update.save()
+                  // Clean up local file
+            fs.unlinkSync(req.file.path);
                     res.status(200).json({
                         message: "data updated successfully !"
                     })
                 } else {
+                    console.log("hellobfiu3")
                     const update = await blogModel.findByIdAndUpdate({ _id: id }, {
                         blog_Title: blog_Title,
                         blog_Description: blog_Description,
