@@ -1,15 +1,17 @@
 const fs=require('fs');
 const AWS=require('aws-sdk');
 require("dotenv").config();
+
 AWS.config.update({
-    secretAccessKey: process.env.secretAccessKey,
-    accessKeyId: process.env.accessKeyId,
-  region:process.env.region,
+  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+  region:process.env.AWS_REGION,
 })
 
 const s3=new AWS.S3();
 
-const uploadFile=(file)=>{
+
+const uploadFFile=(file)=>{
 
   // Read the file content
   // console.log(file)
@@ -17,7 +19,7 @@ const uploadFile=(file)=>{
 
   const params = {
     Bucket: '100acress-media-bucket', // You can use environment variables for sensitive data like bucket name
-    Key: `uploads/${file.filename}`,  // Store the file with a unique name in the 'uploads/' folder
+    Key:`uploads/${Date.now()}-${file.originalname}`,   // Store the file with a unique name in the 'uploads/' folder
     Body: fileContent,
     ContentType: file.mimetype,
   };
@@ -26,9 +28,9 @@ const uploadFile=(file)=>{
   return s3.upload(params).promise();
 
 }
-module.exports=uploadFile;
+module.exports=uploadFFile;
 
-const updateFile=(file,objectKey)=>{
+const updateFEile=(file,objectKey)=>{
   const fileContent = fs.readFileSync(file.path);
 
   const params = {
@@ -41,4 +43,4 @@ const updateFile=(file,objectKey)=>{
   // Return the promise from s3.upload
   return s3.upload(params).promise();
 }
-module.exports=updateFile
+module.exports=updateFEile

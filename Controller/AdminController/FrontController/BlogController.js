@@ -40,7 +40,6 @@ class blogController {
             res.status(500).json({ message: 'Internal server error' });
           }
     }
-
     static blog_view=async(req,res)=>{
        try{
         // res.send("bsdbk.kkjnc cnf")
@@ -62,7 +61,6 @@ class blogController {
         })
        }
     }
-
     static blog_viewId = async (req, res) => {
         // console.log("hsbasdjk")
         try {
@@ -85,7 +83,6 @@ class blogController {
             })
         }
     }
-
     static blog_edit = async (req, res) => {
         try {
             //    res.send(req.params.id)
@@ -109,7 +106,6 @@ class blogController {
             })
         }
     }
-
     static blog_update = async (req, res) => {
         console.log("hellobfiu1")
         try {
@@ -166,8 +162,6 @@ class blogController {
             })
         }
     }
-    
-
     static blog_delete=async(req,res)=>{
         try{
             const id=req.params.id
