@@ -5,41 +5,69 @@ const cloudinary = require('cloudinary').v2;
   const ObjectId = require('mongodb').ObjectId;
   const fs = require("fs");
   const path = require("path");
-  const uploadFile = require("../../../aws/s3Helper");
+//   const uploadFile = require("../../../aws/s3Helper");
   const updateFile=require('../../../aws/s3Helper')
+  const AWS=require('aws-sdk');
+  require("dotenv").config();
+  
+  AWS.config.update({
+    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+  })
+//   console.log( process.env.AWS_S3_SECRET_ACESS_KEY)
+  const s3=new AWS.S3();
+  const uploadFile=(file)=>{
+
+    // Read the file content
+    console.log("F.KAWHFIOQFJ")
+    const fileContent = fs.readFileSync(file.path);
+  
+    const params = {
+      Bucket: '100acress-media-bucket', // You can use environment variables for sensitive data like bucket name
+      Key:`uploads/${Date.now()}-${file.originalname}`,   // Store the file with a unique name in the 'uploads/' folder
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+  
+    // Return the promise from s3.upload
+    return s3.upload(params).promise();
+  
+  }
 class blogController {
 
-    static blog_insert = async (req, res) => {
-        try {
-            if (!req.file) {
-              return res.status(400).json({ message: 'No image uploaded' });
-            }
-            const { blog_Title, blog_Description, author, blog_Category } = req.body;
-            if (!blog_Title || !blog_Description || !author || !blog_Category) {
-              return res.status(400).json({ message: 'Missing fields' });
-            }
-            // Upload file to S3
-            const imageData = await uploadFile(req.file);
-            // Save blog entry
-            const newBlog = new blogModel({
-              blog_Image: {
-                public_id: imageData.Key,
-                url: imageData.Location,
-              },
-              blog_Title,
-              blog_Description,
-              author,
-              blog_Category,
-            });
-            await newBlog.save();
-            // Clean up local file
-            fs.unlinkSync(req.file.path);
-            res.status(200).json({ message: 'Blog inserted successfully', data: newBlog });
-          } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Internal server error' });
-          }
-    }
+  
+static blog_insert = async (req, res) => {
+    try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'No image uploaded' });
+        }
+        const { blog_Title, blog_Description, author, blog_Category } = req.body;
+        if (!blog_Title || !blog_Description || !author || !blog_Category) {
+          return res.status(400).json({ message: 'Missing fields' });
+        }
+        // Upload file to S3
+        const imageData = await uploadFile(req.file);
+        // Save blog entry
+        const newBlog = new blogModel({
+          blog_Image: {
+            public_id: imageData.Key,
+            url: imageData.Location,
+          },
+          blog_Title,
+          blog_Description,
+          author,
+          blog_Category,
+        });
+        await newBlog.save();
+        // Clean up local file
+        fs.unlinkSync(req.file.path);
+        res.status(200).json({ message: 'Blog inserted successfully', data: newBlog });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+}
     static blog_view=async(req,res)=>{
        try{
         // res.send("bsdbk.kkjnc cnf")

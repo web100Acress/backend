@@ -2,108 +2,111 @@ const { isValidObjectId } = require("mongoose");
 const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
-
+const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 
+const AWS = require("aws-sdk");
+require("dotenv").config();
+
+AWS.config.update({
+  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+const s3 = new AWS.S3();
+const uploadFile = (file) => {
+  // Read the file content
+  // console.log("F.KAWHFIOQFJ");
+  const fileContent = fs.readFileSync(file.path);
+
+  const params = {
+    Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+    Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+    Body: fileContent,
+    ContentType: file.mimetype,
+  };
+
+  // Return the promise from s3.upload
+  return s3.upload(params).promise();
+};
+const update=(file,objectKey)=>{
+  const fileContent=fs.readFileSync(file.path)
+  if(objectKey!=null){
+    const params={
+      Bucket:"100acress-media-bucket",
+      Key:objectKey,
+      Body:fileContent,
+      ContentType:file.mimetype,
+    }
+    return s3.upload(params).promise()
+  }else{
+    const params = {
+      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+  
+    // Return the promise from s3.upload
+    return s3.upload(params).promise();
+  }
+
+}
 class CareerController {
   static careerInsert = async (req, res) => {
+    console.log(req.files, "jhfuirehiu");
     try {
       const { whyAcress, driveCulture, inHouse, lifeAcress } = req.body;
-      if (req.files) {
-        if (
-          req.files.highlightImage &&
-          req.files.activityImage &&
-          req.files.bannerImage
-        ) {
-          const bannerImage = req.files.bannerImage;
-          const bannerResult = await cloudinary.uploader.upload(
-            bannerImage.tempFilePath,
-            {
-              folder: "100acre/Career",
-            }
-          );
-          const highlightImage = req.files.highlightImage;
-          const highlight = [];
-          if (highlightImage.length >= 2) {
-            for (let i = 0; i < highlightImage.length; i++) {
-              const highlightResult = await cloudinary.uploader.upload(
-                highlightImage[i].tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              highlight.push({
-                public_id: highlightResult.public_id,
-                url: highlightResult.secure_url,
-              });
-            }
-          } else {
-            const highlightResult = await cloudinary.uploader.upload(
-              highlightImage.tempFilePath,
-              {
-                folder: "100acre/Career",
-              }
-            );
-            
-            highlight.push({
-              public_id: highlightResult.public_id,
-              url: highlightResult.secure_url,
-            });
-          }
 
-          const activityImage = req.files.activityImage;
-          const activity = [];
-          if (activityImage.length >= 2) {
-            for (let i = 0; i < activityImage.length; i++) {
-              const activityResult = await cloudinary.uploader.upload(
-                activityImage[i].tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              activity.push({
-                public_id: activityResult.public_id,
-                url: activityResult.secure_url,
-              });
-            }
-          } else {
-            const activityResult = await cloudinary.uploader.upload(
-              activityImage.tempFilePath,
-              {
-                folder: "100acre/Career",
-              }
-            );
-            activity.push({
-              public_id: activityResult.public_id,
-              url: activityResult.secure_url,
-            });
-          }
-          const data = new careerModal({
-            bannerImage: {
-              public_id: bannerResult.public_id,
-              url: bannerResult.url,
-            },
-            highlightImage: highlight,
-            activityImage: activity,
-            whyAcress: whyAcress,
-            driveCulture: driveCulture,
-            inHouse: inHouse,
-            lifeAcress: lifeAcress,
-          });
-          await data.save();
-          res.status(200).json({
-            message: "data sent successfully ! ",
-          });
-        } else {
-          res.status(200).json({
-            mesaage: "check Image field !",
-          });
-        }
-      } else {
-        res.status(200).json({
-          message: "check files ! ",
-        });
+      if (
+        !req.files ||
+        !req.files.bannerImage ||
+        !req.files.activityImage ||
+        !req.files.highlightImage
+      ) {
+        return res.status(400).json({ error: "Image required !" });
       }
+      const image1 = await uploadFile(req.files.bannerImage[0]);
+      let image2 = [];
+      if (req.files.activityImage) {
+        image2 = await Promise.all(
+          req.files.activityImage.map((file) => uploadFile(file))
+        );
+      }
+
+      let image3 = [];
+      if (req.files.highlightImage) {
+        image3 = await Promise.all(
+          req.files.highlightImage.map((file) => uploadFile(file))
+        );
+      }
+      const data = new careerModal({
+        bannerImage: {
+          public_id: image1.Key,
+          url: image1.Location,
+        },
+        highlightImage: image3.map((image) => ({
+          public_id: image.Key,
+          url: image.Location,
+        })),
+        activityImage: image2.map((image) => ({
+          public_id: image.Key,
+          url: image.Location,
+        })),
+        whyAcress: whyAcress,
+        driveCulture: driveCulture,
+        inHouse: inHouse,
+        lifeAcress: lifeAcress,
+      });
+      await data.save();
+      // Remove local files after successful upload
+      req.files.bannerImage.forEach((file) => fs.unlinkSync(file.path));
+      req.files.activityImage.forEach((file) => fs.unlinkSync(file.path));
+      req.files.highlightImage.forEach((file) => fs.unlinkSync(file.path));
+      res.status(200).json({
+        message: "data sent successfully !",
+      });
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -149,234 +152,75 @@ class CareerController {
     }
   };
   static careerUpdate = async (req, res) => {
-    //  console.log("hello")
     try {
-      const { whyAcress, driveCulture, inHouse, lifeAcress } = req.body;
-      const id = req.params.id;
-      if (isValidObjectId(id)) {
-        if (req.files) {
-          if (
-            req.files.highlightImage &&
-            req.files.activityImage &&
-            req.files.bannerImage
-          ) {
-            console.log("he;lo");
-            const bannerImage = req.files.bannerImage;
-            const bannerResult = await cloudinary.uploader.upload(
-              bannerImage.tempFilePath,
-              {
-                folder: "100acre/Career",
-              }
-            );
-            const highlightImage = req.files.highlightImage;
-            const highlight = [];
-            if (highlightImage.length >= 2) {
-              for (let i = 0; i < highlightImage.length; i++) {
-                const highlightResult = await cloudinary.uploader.upload(
-                  highlightImage[i].tempFilePath,
-                  {
-                    folder: "100acre/Career",
-                  }
-                );
-                highlight.push({
-                  public_id: highlightResult.public_id,
-                  url: highlightResult.secure_url,
-                });
-              }
-            } else {
-              const highlightResult = await cloudinary.uploader.upload(
-                highlightImage.tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              highlight.push({
-                public_id: highlightResult.public_id,
-                url: highlightResult.secure_url,
-              });
-            }
+      // Destructure files for easier access
+      const id=req.params.id;
+      if(isValidObjectId(id)){
+        const { bannerImage, activityImage, highlightImage } = req.files;
+        const { whyAcress, driveCulture, inHouse, lifeAcress } = req.body;
+   const data=await careerModal.findById({_id:id})
+   
+   const bannerObjectKey=data.bannerImage.public_id
+   
+   const activityObjectKey=data.activityImage.map((item)=>{
+   return item.public_id
+   })
 
-            const activityImage = req.files.activityImage;
-            const activity = [];
-            if (activityImage.length >= 2) {
-              for (let i = 0; i < activityImage.length; i++) {
-                const activityResult = await cloudinary.uploader.upload(
-                  activityImage[i].tempFilePath,
-                  {
-                    folder: "100acre/Career",
-                  }
-                );
-                activity.push({
-                  public_id: activityResult.public_id,
-                  url: activityResult.secure_url,
-                });
-              }
-            } else {
-              const activityResult = await cloudinary.uploader.upload(
-                activityImage.tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              activity.push({
-                public_id: activityResult.public_id,
-                url: activityResult.secure_url,
-              });
-            }
-            const data = await careerModal.findByIdAndUpdate(
-              { _id: id },
-              {
-                bannerImage: {
-                  public_id: bannerResult.public_id,
-                  url: bannerResult.url,
-                },
-                highlightImage: highlight,
-                activityImage: activity,
-                whyAcress: whyAcress,
-                driveCulture: driveCulture,
-                inHouse: inHouse,
-                lifeAcress: lifeAcress,
-              }
-            );
-            await data.save();
-            res.status(200).json({
-              message: "data updated successfully ! ",
-            });
-          } else if (req.files.bannerImage) {
-            console.log("he;loban");
-            const bannerImage = req.files.bannerImage;
-            const bannerResult = await cloudinary.uploader.upload(
-              bannerImage.tempFilePath,
-              {
-                folder: "100acre/Career",
-              }
-            );
-            const data = await careerModal.findByIdAndUpdate(
-              { _id: id },
-              {
-                bannerImage: {
-                  public_id: bannerResult.public_id,
-                  url: bannerResult.url,
-                },
-                whyAcress: whyAcress,
-                driveCulture: driveCulture,
-                inHouse: inHouse,
-                lifeAcress: lifeAcress,
-              }
-            );
-            await data.save();
-            res.status(200).json({
-              message: "data updated successfully ! ",
-            });
-          } else if (req.files.activityImage) {
-            console.log("he;loactivity");
-            const activityImage = req.files.activityImage;
-            const activity = [];
-            if (activityImage.length >= 2) {
-              for (let i = 0; i < activityImage.length; i++) {
-                const activityResult = await cloudinary.uploader.upload(
-                  activityImage[i].tempFilePath,
-                  {
-                    folder: "100acre/Career",
-                  }
-                );
-                activity.push({
-                  public_id: activityResult.public_id,
-                  url: activityResult.secure_url,
-                });
-              }
-            } else {
-              const activityResult = await cloudinary.uploader.upload(
-                activityImage.tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              activity.push({
-                public_id: activityResult.public_id,
-                url: activityResult.secure_url,
-              });
-            }
-            const data = await careerModal.findByIdAndUpdate(
-              { _id: id },
-              {
-                activityImage: activity,
-                whyAcress: whyAcress,
-                driveCulture: driveCulture,
-                inHouse: inHouse,
-                lifeAcress: lifeAcress,
-              }
-            );
-            await data.save();
-            res.status(200).json({
-              message: "data updated successfully ! ",
-            });
-          } else if (req.files.highlightImage) {
-            console.log("he;lohight");
-            const highlightImage = req.files.highlightImage;
-            const highlight = [];
-            if (highlightImage.length >= 2) {
-              for (let i = 0; i < highlightImage.length; i++) {
-                const highlightResult = await cloudinary.uploader.upload(
-                  highlightImage[i].tempFilePath,
-                  {
-                    folder: "100acre/Career",
-                  }
-                );
-                highlight.push({
-                  public_id: highlightResult.public_id,
-                  url: highlightResult.secure_url,
-                });
-              }
-            } else {
-              const highlightResult = await cloudinary.uploader.upload(
-                highlightImage.tempFilePath,
-                {
-                  folder: "100acre/Career",
-                }
-              );
-              highlight.push({
-                public_id: highlightResult.public_id,
-                url: highlightResult.secure_url,
-              });
-            }
-            const data = await careerModal.findByIdAndUpdate(
-              { _id: id },
-              {
-                highlightImage: highlight,
-                whyAcress: whyAcress,
-                driveCulture: driveCulture,
-                inHouse: inHouse,
-                lifeAcress: lifeAcress,
-              }
-            );
-            await data.save();
-            res.status(200).json({
-              message: "data updated successfully ! ",
-            });
-          }
-        } else {
-          console.log("fuhfiuwhfih");
-          const data = await careerModal.findByIdAndUpdate(
-            { _id: id },
-            {
-              whyAcress: whyAcress,
-              driveCulture: driveCulture,
-              inHouse: inHouse,
-              lifeAcress: lifeAcress,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
+   const highlighObjectKey=data.highlightImage.map((item)=>{
+    return item.public_id
+   })
+  //  res.send(highlighObjectKey)
+        // Example logic for updating database dynamically
+        const updateData = {}; // Initialize an empty object
+        if (bannerImage) {
+          const uploadedBanner = await update(bannerImage[0],bannerObjectKey);
+          updateData.bannerImage = {
+            public_id: uploadedBanner.Key,
+            url: uploadedBanner.Location,
+          };
         }
+  
+        if (activityImage) {
+          const uploadedActivities = await Promise.all(
+            activityImage.map((file,index) => update(file,activityObjectKey[index]))
+          );
+          updateData.activityImage = uploadedActivities.map((image) => ({
+            public_id: image.Key,
+            url: image.Location,
+          }));
+        }
+  
+        if (highlightImage) {
+          const uploadedHighlights = await Promise.all(
+            highlightImage.map((file,index) => update(file,highlighObjectKey[index]))
+          );
+          updateData.highlightImage = uploadedHighlights.map((image) => ({
+            public_id: image.Key,
+            url: image.Location,
+          }));
+        }
+        if (whyAcress != null) {
+          updateData.whyAcress = whyAcress;
+        }
+        if (driveCulture != null) {
+          updateData.driveCulture = driveCulture;
+        }
+        if (inHouse) {
+          updateData.inHouse = inHouse;
+        }
+        if (lifeAcress) {
+          updateData.lifeAcress = lifeAcress;
+        }
+  
+        // Update only the fields that are present
+        await careerModal.findByIdAndUpdate(req.params.id, updateData);
+  
+        res.status(200).json({ message: "Career updated successfully!" });
       }
+
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        message: "Internal server error ! ",
-      });
+      console.error(error);
+      res.status(500).json({ error: "Internal server error!" });
     }
   };
 
@@ -473,18 +317,13 @@ class CareerController {
   };
   static openingView_all = async (req, res) => {
     try {
-     
-        const data = await openModal.find();
-      
-       
-        res.status(200).json({
-          message: "data get successfully !",
-          data,
-        });
-      }
-      
-      
-     catch (error) {
+      const data = await openModal.find();
+
+      res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
+    } catch (error) {
       console.log(error).json({
         message: "Internal server error !",
       });
@@ -581,21 +420,21 @@ class CareerController {
       });
     }
   };
-  static openingDelete =async (req, res) => {
-    try{
-      const id=req.params.id
-    if(isValidObjectId(id)){
-     const data=await openModal.findByIdAndDelete({_id:id})
-     res.status(200).json({
-         message:"Data deleted successfully !"
-     })
+  static openingDelete = async (req, res) => {
+    try {
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
+        const data = await openModal.findByIdAndDelete({ _id: id });
+        res.status(200).json({
+          message: "Data deleted successfully !",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
     }
-    }catch(error){
-     console.log(error)
-     res.status(500).json({
-        message:"Internal server error !"   
-     })
-    }
- }
+  };
 }
 module.exports = CareerController;

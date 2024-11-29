@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const connectDb=()=>{
 
-  //  return mongoose.connect(process.env.DB_URL)
+  //  return mongoose.connect("mongodb://localhost:27017/100_Acre")
 
   // return mongoose.connect("mongodb+srv://web100acress:Amit100@cluster0.lcaufzm.mongodb.net/")
 
