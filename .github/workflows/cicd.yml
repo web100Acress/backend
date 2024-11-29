@@ -37,5 +37,5 @@ jobs:
               if [ "$(docker ps -aq -f name=hundredacress-backend-container)" ]; then
                 docker rm -f hundredacress-backend-container
               fi
-      - name: Run Docker Container
-        run: docker run -d -p 3500:3500 --name hundredacress-backend-container -e MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}' hunderedacress/100acressbackend
+      - name: Run Docker Container with `.env`
+        run: docker run -d -p 3500:3500 --name hundredacress-backend-container --env-file .env hunderedacress/100acressbackend:${{ github.sha }}
