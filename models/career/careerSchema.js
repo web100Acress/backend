@@ -9,7 +9,12 @@ const careerSchema = new mongoose.Schema({
             type: String
         }
     },
-    activityImage: [],
+    activityImage: [ { public_id: {
+        type: String
+    },
+    url: {
+        type: String
+    }}],
 
     whyAcress: {
 
@@ -20,7 +25,12 @@ const careerSchema = new mongoose.Schema({
 
     lifeAcress: [],
 
-    highlightImage: [],
+    highlightImage: [{  public_id: {
+        type: String
+    },
+    url: {
+        type: String
+    }}],
 
 }, {
     timestamps: true

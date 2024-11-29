@@ -222,10 +222,22 @@ router.get('/rentproperty/search/:key',homeController.search_rent)
 //new launch
 
 //career
-router.post("/career/page/Insert",CareerController.careerInsert)
+router.post("/career/page/Insert",
+  upload.fields([
+    { name: "bannerImage", maxCount: 1 }, 
+    { name: "activityImage", maxCount: 10 }, 
+    { name: "highlightImage", maxCount: 10 }
+  ]),
+  CareerController.careerInsert)
 router.get("/career/page/View",CareerController.careerView)
 router.get("/career/page/edit/:id",CareerController.careerEdit)
-router.put("/career/page/update/:id",CareerController.careerUpdate)
+router.post("/career/page/update/:id",
+  upload.fields([
+    { name: "bannerImage", maxCount: 1 }, 
+    { name: "activityImage", maxCount: 10 }, 
+    { name: "highlightImage", maxCount: 10 }
+  ]),
+  CareerController.careerUpdate)
 router.delete('/career/opening/delete/:id',CareerController.openingDelete)
 // router.post("/mail",rentController.email)
 
