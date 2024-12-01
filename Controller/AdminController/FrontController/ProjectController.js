@@ -783,7 +783,7 @@ class projectController {
             message: "data updated successfully ! ",
           });
         } else if (req.files.frontImage) {
-          // console.log("helo project")
+          console.log("helo project")
           const frontImage = req.files.frontImage;
           const projectBgResult = await cloudinary.uploader.upload(
             frontImage.tempFilePath,

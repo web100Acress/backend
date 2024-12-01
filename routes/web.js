@@ -109,12 +109,12 @@ router.get("/property/buy/edit/:id", BuyController.buycommercialEdit);
 router.post("/property/buy/update/:id", BuyController.buycommercialUpdate);
 router.delete("/property/buy/delete/:id", BuyController.buycommercialDelete);
 //rent
-router.post("/property/rentInsert", rentController.rentInsert);
+router.post("/property/rentInsert",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentInsert);
 router.get("/property/:id/rentedit", rentController.rentEdit);
 router.get("/property/rent/:id", rentController.rentView_id);
 router.get("/property/:type/rentView", rentController.rentView);
 router.get("/property/viewAll", rentController.rentViewAll);
-router.post("/property/:id/rentUpdate", rentController.rentUpdate);
+router.post("/property/:id/rentUpdate",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentUpdate);
 router.delete("/property/:id/rentDelete", rentController.rentDelete);
 //About_Page
 //Insert
