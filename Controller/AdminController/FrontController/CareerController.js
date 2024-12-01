@@ -30,29 +30,28 @@ const uploadFile = (file) => {
   // Return the promise from s3.upload
   return s3.upload(params).promise();
 };
-const update=(file,objectKey)=>{
-  const fileContent=fs.readFileSync(file.path)
-  if(objectKey!=null){
-    const params={
-      Bucket:"100acress-media-bucket",
-      Key:objectKey,
-      Body:fileContent,
-      ContentType:file.mimetype,
-    }
-    return s3.upload(params).promise()
-  }else{
+const update = (file, objectKey) => {
+  const fileContent = fs.readFileSync(file.path);
+  if (objectKey != null) {
+    const params = {
+      Bucket: "100acress-media-bucket",
+      Key: objectKey,
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+    return s3.upload(params).promise();
+  } else {
     const params = {
       Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
       Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
       Body: fileContent,
       ContentType: file.mimetype,
     };
-  
+
     // Return the promise from s3.upload
     return s3.upload(params).promise();
   }
-
-}
+};
 class CareerController {
   static careerInsert = async (req, res) => {
     console.log(req.files, "jhfuirehiu");
@@ -154,45 +153,49 @@ class CareerController {
   static careerUpdate = async (req, res) => {
     try {
       // Destructure files for easier access
-      const id=req.params.id;
-      if(isValidObjectId(id)){
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
         const { bannerImage, activityImage, highlightImage } = req.files;
         const { whyAcress, driveCulture, inHouse, lifeAcress } = req.body;
-   const data=await careerModal.findById({_id:id})
-   
-   const bannerObjectKey=data.bannerImage.public_id
-   
-   const activityObjectKey=data.activityImage.map((item)=>{
-   return item.public_id
-   })
+        const data = await careerModal.findById({ _id: id });
 
-   const highlighObjectKey=data.highlightImage.map((item)=>{
-    return item.public_id
-   })
-  //  res.send(highlighObjectKey)
+        const bannerObjectKey = data.bannerImage.public_id;
+
+        const activityObjectKey = data.activityImage.map((item) => {
+          return item.public_id;
+        });
+
+        const highlighObjectKey = data.highlightImage.map((item) => {
+          return item.public_id;
+        });
+        //  res.send(highlighObjectKey)
         // Example logic for updating database dynamically
         const updateData = {}; // Initialize an empty object
         if (bannerImage) {
-          const uploadedBanner = await update(bannerImage[0],bannerObjectKey);
+          const uploadedBanner = await update(bannerImage[0], bannerObjectKey);
           updateData.bannerImage = {
             public_id: uploadedBanner.Key,
             url: uploadedBanner.Location,
           };
         }
-  
+
         if (activityImage) {
           const uploadedActivities = await Promise.all(
-            activityImage.map((file,index) => update(file,activityObjectKey[index]))
+            activityImage.map((file, index) =>
+              update(file, activityObjectKey[index])
+            )
           );
           updateData.activityImage = uploadedActivities.map((image) => ({
             public_id: image.Key,
             url: image.Location,
           }));
         }
-  
+
         if (highlightImage) {
           const uploadedHighlights = await Promise.all(
-            highlightImage.map((file,index) => update(file,highlighObjectKey[index]))
+            highlightImage.map((file, index) =>
+              update(file, highlighObjectKey[index])
+            )
           );
           updateData.highlightImage = uploadedHighlights.map((image) => ({
             public_id: image.Key,
@@ -211,13 +214,12 @@ class CareerController {
         if (lifeAcress) {
           updateData.lifeAcress = lifeAcress;
         }
-  
+
         // Update only the fields that are present
         await careerModal.findByIdAndUpdate(req.params.id, updateData);
-  
+
         res.status(200).json({ message: "Career updated successfully!" });
       }
-
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error!" });

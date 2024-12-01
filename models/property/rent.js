@@ -12,7 +12,12 @@ const rent_Schema=new mongoose.Schema({
         }
     },
     otherImage:[
-
+      {  public_id: {
+        type: String
+    },
+    url: {
+        type: String
+    }}
     ],
     propertyType:{
         type:String,
