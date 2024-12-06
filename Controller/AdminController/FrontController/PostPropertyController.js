@@ -158,6 +158,29 @@ const sendPostEmail = async (email) => {
         </html>
 `,
   });
+  let info2 = await transporter.sendMail({
+    from: "amit100acre@gmail.com", // Sender address
+    to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+    subject: "Post Property",
+    html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>New Project Submission</title>
+        </head>
+        <body>
+            <h1>New Project Submission</h1>
+            <p>Hello,</p>
+            <p>A new project has been submitted on your website by : ${email}</p>
+            <p>Please review the details and take necessary actions.</p>
+            <p>Thank you!</p>
+        </body>
+        </html>
+`,
+  });
 };
 class PostPropertyController {
   // seller work Registration
