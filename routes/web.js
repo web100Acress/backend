@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload=require('../aws/multerConfig')
+const fileUpload = require('express-fileupload');
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -100,13 +101,13 @@ router.delete(
 );
 //Property
 //Buy
-router.post("/property/buyInsert", BuyController.buycommercialInsert);
+router.post("/property/buyInsert",upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]), BuyController.buycommercialInsert);
 // router.get('/property/buy/:type', BuyController.buycommercialView)
 // router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
 router.get("/property/buy/ViewAll", BuyController.viewAll);
 router.get("/property/view/:id", BuyController.buyView_id);
 router.get("/property/buy/edit/:id", BuyController.buycommercialEdit);
-router.post("/property/buy/update/:id", BuyController.buycommercialUpdate);
+router.post("/property/buy/update/:id", upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),BuyController.buycommercialUpdate);
 router.delete("/property/buy/delete/:id", BuyController.buycommercialDelete);
 //rent
 router.post("/property/rentInsert",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentInsert);
@@ -125,10 +126,7 @@ router.get("/about/:id/aboutEdit", aboutController.aboutEdit);
 router.post("/about/:id/aboutUpdate", aboutController.aboutUpdate);
 router.delete("/about/:id/aboutDelete", aboutController.aboutDelete);
 //testimonial
-router.post(
-  "/testimonial/testimonialInsert",
-  aboutController.testimonialInsert
-);
+router.post("/testimonial/testimonialInsert",aboutController.testimonialInsert);
 router.get("/testimonial/testimonialView/:id", aboutController.testimonialView);
 router.get("/testimonial/viewAll", aboutController.testimonialViewAll);
 router.get("/testimonial/testimonialEdit/:id", aboutController.testimonialEdit);
@@ -159,7 +157,7 @@ router.post(
 );
 router.get("/postPerson/logout", PostPropertyController.postPerson_logout);
 router.post(
-  "/postPerson/postProperty_forget",
+  "/postPerson/postProperty_forget", 
   PostPropertyController.postPerson_forget
 );
 router.post(
@@ -176,8 +174,8 @@ router.delete(
 router.post("/changePassword", PostPropertyController.Post_changePassword);
 
 //property routing
-router.post(
-  "/postPerson/propertyInsert/:id",
+router.post( "/postPerson/propertyInsert/:id",
+  upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
   PostPropertyController.postProperty
 );
 router.get(

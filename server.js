@@ -44,10 +44,11 @@ cloudinary.config({
   secure: true,
 });
 
-// Middleware
-app.use(express.json());
+// Middleware for parsing JSON request bodies
+app.use(express.json()); // Express's built-in middleware for JSON
+
+// Middleware for parsing URL-encoded form data
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 // database connection
 connectDB();

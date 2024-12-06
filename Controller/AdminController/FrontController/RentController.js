@@ -9,7 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const AWS = require("aws-sdk");
 const { isValidObjectId } = require("mongoose");
-const { url } = require("inspector");
+// const { url } = require("inspector");
 require("dotenv").config();
 
 AWS.config.update({
@@ -251,7 +251,6 @@ class rentController {
       });
     }
   };
-
   //view
   static rentView = async (req, res) => {
     // res.send("listen  rent view ")
