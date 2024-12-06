@@ -674,7 +674,7 @@ class PostPropertyController {
 
             const email = dataPushed.email;
 
-            // await sendPostEmail(email);
+            await sendPostEmail(email);
             res.status(200).json({
               message: "Data pushed successfully ! ",
             });
