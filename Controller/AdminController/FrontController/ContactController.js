@@ -58,8 +58,6 @@ class contactController {
         res.send('contact page controlller api listen')
     }
     // contact page banner work
-
-
     // contact customer section page form
     // method for inserting custmer detail 
 

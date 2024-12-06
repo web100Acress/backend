@@ -3,59 +3,90 @@ const buyCommercial_Model = require('../../../models/property/buyCommercial');
 const cloudinary = require('cloudinary').v2;
 const NodeCache = require("node-cache");
 const cache = require("memory-cache");
-// const cache = new NodeCache();
+require('dotenv').config()
+const fs=require('fs');
+const AWS=require('aws-sdk');
+const { isValidObjectId } = require('mongoose');
+AWS.config.update({
+    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+})
+const s3=new AWS.S3()
+
+const uploadFile=(file)=>{
+
+    const fileContent=fs.readFileSync(file.path)
+
+    const params={
+        Bucket:"100acress-media-bucket",
+        Body:fileContent,
+        Key:`uploads/${Date.now()}-${file.originalname}`,
+        ContentType:file.mimetype
+
+    }
+    return s3.upload(params).promise();
+
+}
+const updateRent = (file, objectKey) => {
+    const fileContent = fs.readFileSync(file.path);
+    if (objectKey != null) {
+      const params = {
+        Bucket: "100acress-media-bucket",
+        Key: objectKey,
+        Body: fileContent,
+        ContentType: file.mimetype,
+      };
+      return s3.upload(params).promise();
+    } else {
+      const params = {
+        Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+        Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+        Body: fileContent,
+        ContentType: file.mimetype,
+      };
+  
+      // Return the promise from s3.upload
+      return s3.upload(params).promise();
+    }
+  };
 class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
         try {
-            const { propertyName,propertyType,availableDate, price, state, city, address, type, descripation, amenities, area, furnishing
-                , landMark, builtYear } = req.body
-                console.log(req.body)
-            if  (propertyName&&propertyType&&availableDate && price && state && city && address && type && descripation && amenities && area && furnishing && landMark && builtYear) {
-                // console.log("kgha")
-                if (req.files.frontImage && req.files.otherImage) {
-                    const front = req.files.frontImage;
-                    const other = req.files.otherImage
-
-                    // const length=other.length;
-                    const otherImageLink = []
-                    // console.log(otherImageLink)
-                    const imageResult = await cloudinary.uploader.upload(
-                        front.tempFilePath, {
-                        folder: `100acre/BuyCommercial/${propertyName}`
-                    }
-
-                    )
-                    // console.log(imageResult)
-                    if (other.length >= 2) {
-                        for (let i = 0; i < other.length; i++) {
-                            const otherResult = await cloudinary.uploader.upload(
-                                other[i].tempFilePath, {
-                                folder: `100acre/BuyCommercial/${propertyName}`
-                            }
-                            );
-                            otherImageLink.push({
-                                public_id: otherResult.public_id,
-                                url: otherResult.secure_url
-                            })
-                        }
-                    } else {
-                        const otherResult = await cloudinary.uploader.upload(
-                            other.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${propertyName}`
-                        }
-                        );
-                        otherImageLink.push({
-                            public_id: otherResult.public_id,
-                            url: otherResult.secure_url
+            const{propertyName,propertyType,availableDate,price, state,city,address,descripation,
+                 amenities,type,area, furnishing,landMark,builtYear}=req.body
+        
+                 if(!req.files.frontImage&&!req.files.otherImage){
+                    return res.status(400).json({
+                        error:"check Images !"
+                    })
+                }
+                 if(!propertyName&&!propertyType&&!availableDate&&!price&&!state&&!city&&!address&&!descripation&&
+                    !amenities&&!type&&!area&&!furnishing&&!landMark&&!builtYear){
+                        return res.status(400).json({
+                            error:"check input field !"
                         })
                     }
+                   const imageData1= await uploadFile(req.files.frontImage[0])
+                // console.log("kgha")
+                let imageData=[];
+                if(req.files.otherImage){
+                    imageData=await Promise.all(
+                        req.files.otherImage.map((file)=>
+                        uploadFile(file)
+                        )
+                    )
+                }
                     const data = new buyCommercial_Model({
                         frontImage: {
-                            public_id: imageResult.public_id,
-                            url: imageResult.secure_url
+                            public_id:imageData1.Key,
+                            url:imageData1.Location 
                         },
-                        otherImage: otherImageLink,
+                        otherImage:imageData.map((item)=>({
+                            public_id:item.Key,
+                            url:item.Location
+                        })),
                         propertyName:propertyName,
                         propertyType:propertyType,
                         availabledate:availableDate,
@@ -78,19 +109,10 @@ class BuyController {
                         message: "data inserted successfully !",
                         dataget: data
                     })
-                } else {
-                    res.status(403).json({
-                        message: "insert not  done",
-                    })
-                }
-            } else {
-                res.status(403).json({
-                    message: "check your field ! ",
-                })
-            }
+           
         } catch (error) {
             console.log(error)
-            res.status(500).json({
+          return res.status(500).json({
                 error: "internal server error  !"
             })
         }
@@ -300,199 +322,93 @@ class BuyController {
     static buycommercialUpdate = async (req, res) => {
         // res.send("listen update")
         try {
-            const {propertyName, propertytype, availabledate, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
-           
-                if (req.files) {
 
-                    if (req.files.frontImage && req.files.otherImage) {
-                        const front = req.files.frontImage;
-                        const other = req.files.otherImage;
-                        const otherImageLink = [];
-
-                        const data = await buyCommercial_Model.findById(req.params.id)
-                        const frontId = data.frontImage.public_id;
-                        await cloudinary.uploader.destroy(frontId)
-
-                        const frontResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${propertyName}`
-                        })
-
-
-                        if (other.length >= 2) {
-                            for (let i = 0; i < other.length; i++) {
-                                const otherResult = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: `100acre/BuyCommercial/${propertyName}`
-                                });
-                                otherImageLink.push({
-                                    public_id: otherResult.public_id,
-                                    url: otherResult.secure_url
-                                })
-                            }
-                        } else {
-                            const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: `100acre/BuyCommercial/${propertyName}`
-                            });
-
-                            otherImageLink.push({
-                                public_id: imageResult.public_id,
-                                url: imageResult.secure_url
-                            });
-                        }
-                        const result = await buyCommercial_Model.findById(req.params.id)
-                        for (let i = 0; i < result.otherImage.length; i++) {
-                            otherImageLink.push(
-                                result.otherImage[i]
-                            );
-                        }
-
-                        const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
-                            frontImage: {
-                                public_id: frontResult.public_id,
-                                url: frontResult.secure_url
-                            },
-                            otherImage: otherImageLink,
-                            propertyName:propertyName,
-                            propertytype:propertytype,
-                            availabledate:availabledate,
-                            price: price,
-                            state: state,
-                            city: city,
-                            address: address,
-                            descripation: descripation,
-                            amenities: amenities,
-                            type: type,
-                            area: area,
-                            furnishing: furnishing,
-                            landMark: landMark,
-                            builtYear: builtYear
-                        })
-                        // console.log(dataUpdate)
-                        await dataUpdate.save()
-                        res.status(200).json({
-                            message: "successfully updated !",
-                            data: dataUpdate
-                        })
-                    } else if (req.files.frontImage) {
-                        const front = req.files.frontImage;
-                        const data = await buyCommercial_Model.findById(req.params.id)
-                        const imageId = data.frontImage.public_id;
-                        await cloudinary.uploader.destroy(imageId)
-
-                        const imageResult = await cloudinary.uploader.upload(front.tempFilePath, {
-                            folder: `100acre/BuyCommercial/${propertyName}`
-                        })
-
-                        const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
-                            frontImage: {
-                                public_id: imageResult.public_id,
-                                url: imageResult.secure_url
-                            },
-                            propertyName:propertyName,
-                            propertytype:propertytype,
-                            availabledate:availabledate,
-                            price: price,
-                            state: state,
-                            city: city,
-                            address: address,
-                            descripation: descripation,
-                            amenities: amenities,
-                            type: type,
-                            area: area,
-                            furnishing: furnishing,
-                            landMark: landMark,
-                            builtYear: builtYear
-
-                        })
-                        // console.log(dataUpdate)
-                        await dataUpdate.save()
-                        res.status(200).json({
-                            message: "successfully updatede !",
-                            data: dataUpdate
-                        })
-
-                    }
-                    else if (req.files.otherImage) {
-                        const other = req.files.otherImage;
-                        const otherImageLink = []
-
-                        if (other.length >= 2) {
-                            for (let i = 0; i < other.length; i++) {
-                                const otherimage = await cloudinary.uploader.upload(other[i].tempFilePath, {
-                                    folder: `100acre/BuyCommercial/${propertyName}`
-                                })
-                                otherImageLink.push({
-                                    public_id: otherimage.public_id,
-                                    url: otherimage.secure_url
-                                })
-                            }
-                        } else {
-                            const imageResult = await cloudinary.uploader.upload(other.tempFilePath, {
-                                folder: `100acre/BuyCommercial/${propertyName}`
-                            });
-
-                            otherImageLink.push({
-                                public_id: imageResult.public_id,
-                                url: imageResult.secure_url
-                            })
-
-                        }
-
-                        const result = await buyCommercial_Model.findById(req.params.id)
-                        for (let i = 0; i < result.otherImage.length; i++) {
-                            otherImageLink.push(
-                                result.otherImage[i]
-                            );
-                        }
-                        const dataUpdate = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
-
-                            otherImage: otherImageLink,
-                            propertyName:propertyName,
-                            propertytype:propertytype,
-                            availabledate:availabledate,
-                            price: price,
-                            state: state,
-                            city: city,
-                            address: address,
-                            descripation: descripation,
-                            amenities: amenities,
-                            type: type,
-                            area: area,
-                            furnishing: furnishing,
-                            landMark: landMark,
-                            builtYear: builtYear
-                        })
-                        // console.log(dataUpdate)
-                        await dataUpdate.save()
-                        res.status(200).json({
-                            message: "successfully updated !",
-                            data: dataUpdate
-                        })
-                    }
-
-                } else {
-                    const dataset = await buyCommercial_Model.findByIdAndUpdate(req.params.id, {
-                        propertyName:propertyName,
-                        propertytype:propertytype,
-                        availabledate:availabledate,
-                        price: price,
-                        state: state,
-                        city: city,
-                        address: address,
-                        descripation: descripation,
-                        amenities: amenities,
-                        type: type,
-                        area: area,
-                        landMark: landMark,
-                        furnishing: furnishing,
-                        builtYear: builtYear
-                    })
-                    // console.log(dataset)
-                    await dataset.save()
-                    res.status(200).json({
-                        message: "successfully updated !",
-                        data: dataset
-                    })
-                }
+            const id=req.params.id;
+            if(isValidObjectId(id)){} 
+            const {propertyName, propertyType, availableDate, city, state, address, price, type, descripation, amenities, area, furnishing, landMark, builtYear } = req.body
+            const {frontImage,otherImage } = req.files;
+        
+        
+           const data = await buyCommercial_Model.findById({ _id: id });
+           if (data.length>0) {
+             return res.status(400).json({
+               message: "Not found csdcd !",
+             });
+           }
+           const update = {}; // Initialize an empty object
+           if (frontImage) {
+             const frontobjectKey = data.frontImage.public_id;
+             let frontResult = await updateRent(req.files.frontImage[0], frontobjectKey);
+             update.frontImage = {
+               public_id: frontResult.Key,
+               url: frontResult.Location,
+             };
+           }
+           if (otherImage) {
+             let otherobjectKey =  data.otherImage.map((item) => {
+               return item.public_id;
+             });
+     
+             const otherResult = await Promise.all(
+               otherImage.map((file, index) =>
+                 updateRent(file, otherobjectKey[index])
+               ),
+             );
+             update.otherImage = otherResult.map((item) => ({
+               public_id: item.Key,
+               url: item.Location,
+             }));
+       
+           }
+           if (propertyType) {
+             update.propertyType = propertyType;
+           }
+           if (propertyName) {
+             update.propertyName = propertyName;
+           }
+           if (city) {
+             update.city = city;
+           }
+           if (state) {
+             update.state = state;
+           }
+           if (address) {
+             update.address = address;
+           }
+           if (price) {
+             update.price = price;
+           }
+           if (area) {
+             update.area = area;
+           }
+           if (availableDate) {
+             update.availableDate = availableDate;
+           }
+           if (descripation) {
+             update.descripation = descripation;
+           }
+           if (furnishing) {
+             update.furnishing = furnishing;
+           }
+           if (builtYear) {
+             update.builtYear = builtYear;
+           }
+           if (amenities) {
+             update.amenities = amenities;
+           }
+           if (landMark) {
+             update.landMark = landMark;
+           }
+           if (type) {
+             update.type = type;
+           }
+           const dataUpdate = await buyCommercial_Model.findByIdAndUpdate({_id:id},update );
+           // console.log(dataUpdate)
+           res.status(200).json({
+             message: "update successfully !",
+             dataUpdate,
+           });
+                
            
         } catch (error) {
             console.log(error);
