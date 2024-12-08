@@ -192,6 +192,7 @@ router.get(
 );
 router.post(
   "/postPerson/propertyoneUpdate/:id",
+  upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
   PostPropertyController.postProperty_Update
 );
 router.delete(

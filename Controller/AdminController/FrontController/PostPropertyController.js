@@ -33,7 +33,28 @@ const uploadFile=(file)=>{
   return s3.upload(params).promise();
 
 }
+const updatePost = (file, objectKey) => {
+  const fileContent = fs.readFileSync(file.path);
+  if (objectKey != null) {
+    const params = {
+      Bucket: "100acress-media-bucket",
+      Key: objectKey,
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+    return s3.upload(params).promise();
+  } else {
+    const params = {
+      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
 
+    // Return the promise from s3.upload
+    return s3.upload(params).promise();
+  }
+};
 // Function to get all project data and cache it
 const getAllProjects = async () => {
   try {
@@ -160,7 +181,7 @@ const sendPostEmail = async (email) => {
   });
   let info2 = await transporter.sendMail({
     from: "amit100acre@gmail.com", // Sender address
-    to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+    to: email,
     subject: "Post Property",
     html: `
         <!DOCTYPE html>
@@ -169,21 +190,22 @@ const sendPostEmail = async (email) => {
         <meta charset:"UTF-8">
         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>New Project Submission</title>
+     
         </head>
         <body>
-            <h1>New Project Submission</h1>
-            <p>Hello,</p>
-            <p>A new project has been submitted on your website by : ${email}</p>
-            <p>Please review the details and take necessary actions.</p>
-            <p>Thank you!</p>
+            <h3>Property Listing Submission</h3>
+            <p>Dear User,</p>
+            <p>We are delighted to inform you that your property listing has been successfully submitted on our portal and is currently under review. Once approved, it will be published and visible to other users.</p>
+            <p>Thank you for choosing to associate with us.We wish you to very best in your endeavors.</p>
+            <p>Kind regards,</p>
+             <p>100 acress team</p>
         </body>
         </html>
 `,
   });
 };
 class PostPropertyController {
-  // seller work Registration
+          
   // static postPerson_Register = async (req, res) => {
   //   try {
   //     const { name, email, mobile, password, cpassword, role } = req.body;
@@ -905,453 +927,238 @@ class PostPropertyController {
   };
   // postproperty data upate
   static postProperty_Update = async (req, res) => {
-    try {
-      const {
-        propertyName,
-        propertyType,
-        address,
-        area,
-        city,
-        state,
-        price,
-        descripation,
-        furnishing,
-        builtYear,
-        type,
-        amenities,
-        landMark,
-        availableDate,
-        propertyLooking,
-        verify,
-      } = req.body;
-      if (req.files) {
-        if (req.files.frontImage && req.files.otherImage) {
-          const frontImage = req.files.frontImage;
-          const otherImage = req.files.otherImage;
-          const otherImageLink = [];
+  try {
+    const id=req.params.id;
+      if(isValidObjectId(id)){
+        const { propertyName,propertyType, address, area, city, state, price,descripation, furnishing,
+          builtYear, type, amenities,landMark,availableDate,propertyLooking, verify,} = req.body;
+          const {frontImage,otherImage } = req.files;
 
-          const id = req.params.id;
-
-          const frontResult = await cloudinary.uploader.upload(
-            frontImage.tempFilePath,
-            {
-              folder: "100acre/Postproperty",
-            }
-          );
-
-          if (otherImage.length >= 2) {
-            for (let i = 0; i < otherImage.length; i++) {
-              const otherResult = await cloudinary.uploader.upload(
-                otherImage[i].tempFilePath,
-                {
-                  folder: "100acre/Postproperty",
-                }
-              );
-              otherImageLink.push({
-                public_id: otherResult.public_id,
-                url: otherResult.secure_url,
-              });
-            }
-          } else {
-            const otherResult = await cloudinary.uploader.upload(
-              otherImage.tempFilePath,
-              {
-                folder: "100acre/Postproperty",
-              }
-            );
-            otherImageLink.push({
-              public_id: otherResult.public_id,
-              url: otherResult.secure_url,
-            });
-          }
-
-          // console.log(otherImageLink)
-          const dataUpdate = await postPropertyModel.findOneAndUpdate(
-            { "postProperty._id": id },
-            {
-              $set: {
-                "postProperty.$.frontImage": {
-                  public_id: frontResult.public_id,
-                  url: frontResult.secure_url,
-                },
-                "postProperty.$.otherImage": otherImageLink,
-                "postProperty.$.propertyName": propertyName,
-                "postProperty.$.propertyType": propertyType,
-                "postProperty.$.area": area,
-                "postProperty.$.city": city,
-                "postProperty.$.state": state,
-                "postProperty.$.address": address,
-                "postProperty.$.availableDate": availableDate,
-                "postProperty.$.price": price,
-                "postProperty.$.descripation": descripation,
-                "postProperty.$.furnishing": furnishing,
-                "postProperty.$.builtYear": builtYear,
-                "postProperty.$.landMark": landMark,
-                "postProperty.$.type": type,
-                "postProperty.$.amenities": amenities,
-                "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify": verify,
-              },
-            },
-            { new: true }
-          );
-          const agentEmail = dataUpdate.email;
-
-          if (
-            (propertyLooking, address, propertyName, agentEmail, dataUpdate)
-          ) {
-            const propertyName = dataUpdate.postProperty[0].propertyName;
-            const address = dataUpdate.postProperty[0].address;
-            if (verify) {
-              const transporter = await nodemailer.createTransport({
-                service: "gmail",
-                port: 465,
-                secure: true,
-                logger: false,
-                debug: true,
-                secureConnection: false,
-                auth: {
-                  // user: process.env.Email,
-                  // pass: process.env.EmailPass
-                  user: "web.100acress@gmail.com",
-                  pass: "txww gexw wwpy vvda",
-                },
-                tls: {
-                  rejectUnAuthorized: true,
-                },
-              });
-              // Send mail with defined transport objec
-              let info = await transporter.sendMail({
-                from: "amit100acre@gmail.com", // Sender address
-                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-                subject: "Verified Your Property",
-                html: `
-                                <!DOCTYPE html>
-                                <html lang:"en>
-                                <head>
-                                <meta charset:"UTF-8">
-                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                                <title>Congratulations! Your Property Verified  </title>
-                                </head>
-                                <body>
-                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-                                The verification was conducted by 100acress team </p>
-                                  
-                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                                    </p>
-                                    <p>Thank you!</p>
-                                </body>
-                                </html>
-                        `,
-              });
-            }
-          }
-
-          res.status(200).json({
-            message: "postProperty successfully update ! ",
-          });
-        } else if (req.files.frontImage) {
-          // res.send("front image")
-          const frontImage = req.files.frontImage;
-
-          const id = req.params.id;
-
-          const frontResult = await cloudinary.uploader.upload(
-            frontImage.tempFilePath,
-            { folder: "100acre/Postproperty" }
-          );
-
-          // console.log(update)
-          const dataUpdate = await postPropertyModel.findOneAndUpdate(
-            { "postProperty._id": id },
-            {
-              $set: {
-                "postProperty.$.frontImage": {
-                  public_id: frontResult.public_id,
-                  url: frontResult.secure_url,
-                },
-                "postProperty.$.propertyName": propertyName,
-                "postProperty.$.propertyType": propertyType,
-                "postProperty.$.area": area,
-                "postProperty.$.city": city,
-                "postProperty.$.state": state,
-                "postProperty.$.address": address,
-                "postProperty.$.availabledate": availableDate,
-                "postProperty.$.price": price,
-                "postProperty.$.descripation": descripation,
-                "postProperty.$.furnishing": furnishing,
-                "postProperty.$.builtYear": builtYear,
-                "postProperty.$.landMark": landMark,
-                "postProperty.$.type": type,
-                "postProperty.$.amenities": amenities,
-                "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify": verify,
-              },
-            },
-            { new: true }
-          );
-          // res.send(dataUpdate)
-          const agentEmail = dataUpdate.email;
-
-          if (
-            (propertyLooking, address, propertyName, agentEmail, dataUpdate)
-          ) {
-            const propertyName = dataUpdate.postProperty[0].propertyName;
-            const address = dataUpdate.postProperty[0].address;
-            if (verify) {
-              const transporter = await nodemailer.createTransport({
-                service: "gmail",
-                port: 465,
-                secure: true,
-                logger: false,
-                debug: true,
-                secureConnection: false,
-                auth: {
-                  // user: process.env.Email,
-                  // pass: process.env.EmailPass
-                  user: "web.100acress@gmail.com",
-                  pass: "txww gexw wwpy vvda",
-                },
-                tls: {
-                  rejectUnAuthorized: true,
-                },
-              });
-              // Send mail with defined transport objec
-              let info = await transporter.sendMail({
-                from: "amit100acre@gmail.com", // Sender address
-                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-                subject: "Verified Your Property",
-                html: `
-                                <!DOCTYPE html>
-                                <html lang:"en>
-                                <head>
-                                <meta charset:"UTF-8">
-                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                                <title>Congratulations! Your Property Verified  </title>
-                                </head>
-                                <body>
-                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-                                The verification was conducted by 100acress team </p>
-                                  
-                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                                    </p>
-                                    <p>Thank you!</p>
-                                </body>
-                                </html>
-                        `,
-              });
-            }
-          }
-
-          res.status(200).json({
-            message: "data updated",
-          });
-        } else if (req.files.otherImage) {
-          // res.send("listn other")
-          const otherImage = req.files.otherImage;
-          const id = req.params.id;
-
-          const otherImageLink = [];
-          if (otherImage.length >= 2) {
-            for (let i = 0; i < otherImage.length; i++) {
-              const otherResult = await cloudinary.uploader.upload(
-                otherImage[i].tempFilePath,
-                {
-                  folder: "100acre/Postproperty",
-                }
-              );
-              otherImageLink.push({
-                public_id: otherResult.public_id,
-                url: otherResult.secure_url,
-              });
-            }
-          } else {
-            const otherResult = await cloudinary.uploader.upload(
-              otherImage.tempFilePath,
-              {
-                folder: "100acre/Postproperty",
-              }
-            );
-            otherImageLink.push({
-              public_id: otherResult.public_id,
-              url: otherResult.secure_url,
-            });
-          }
-          // console.log(update)
-          const dataUpdate = await postPropertyModel.findOneAndUpdate(
-            { "postProperty._id": id },
-            {
-              $set: {
-                "postProperty.$.otherImage": otherImageLink,
-                "postProperty.$.propertyName": propertyName,
-                "postProperty.$.propertyType": propertyType,
-                "postProperty.$.area": area,
-                "postProperty.$.city": city,
-                "postProperty.$.state": state,
-                "postProperty.$.address": address,
-                "postProperty.$.availableDate": availableDate,
-                "postProperty.$.price": price,
-                "postProperty.$.descripation": descripation,
-                "postProperty.$.furnishing": furnishing,
-                "postProperty.$.builtYear": builtYear,
-                "postProperty.$.landMark": landMark,
-                "postProperty.$.type": type,
-                "postProperty.$.amenities": amenities,
-                "postProperty.$.propertyLooking": propertyLooking,
-                "postProperty.$.verify": verify,
-              },
-            },
-            { new: true }
-          );
-          const agentEmail = dataUpdate.email;
-
-          if (
-            (propertyLooking, address, propertyName, agentEmail, dataUpdate)
-          ) {
-            const propertyName = dataUpdate.postProperty[0].propertyName;
-            const address = dataUpdate.postProperty[0].address;
-            if (verify) {
-              const transporter = await nodemailer.createTransport({
-                service: "gmail",
-                port: 465,
-                secure: true,
-                logger: false,
-                debug: true,
-                secureConnection: false,
-                auth: {
-                  // user: process.env.Email,
-                  // pass: process.env.EmailPass
-                  user: "web.100acress@gmail.com",
-                  pass: "txww gexw wwpy vvda",
-                },
-                tls: {
-                  rejectUnAuthorized: true,
-                },
-              });
-              // Send mail with defined transport objec
-              let info = await transporter.sendMail({
-                from: "amit100acre@gmail.com", // Sender address
-                to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-                subject: "Verified Your Property",
-                html: `
-                                <!DOCTYPE html>
-                                <html lang:"en>
-                                <head>
-                                <meta charset:"UTF-8">
-                                <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                                <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                                <title>Congratulations! Your Property Verified  </title>
-                                </head>
-                                <body>
-                               <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-                                The verification was conducted by 100acress team </p>
-                                  
-                                    <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                                    </p>
-                                    <p>Thank you!</p>
-                                </body>
-                                </html>
-                        `,
-              });
-            }
-          }
-
-          res.status(200).json({
-            message: "Data updated successfully!",
-          });
-        }
-      } else {
-        const id = req.params.id;
-        const dataUpdate = await postPropertyModel.findOneAndUpdate(
+        const data = await postPropertyModel.findOne(
           { "postProperty._id": id },
           {
-            $set: {
-              "postProperty.$.propertyName": propertyName,
-              "postProperty.$.propertyType": propertyType,
-              "postProperty.$.area": area,
-              "postProperty.$.city": city,
-              "postProperty.$.state": state,
-              "postProperty.$.address": address,
-              "postProperty.$.availableDate": availableDate,
-              "postProperty.$.price": price,
-              "postProperty.$.descripation": descripation,
-              "postProperty.$.furnishing": furnishing,
-              "postProperty.$.builtYear": builtYear,
-              "postProperty.$.landMark": landMark,
-              "postProperty.$.type": type,
-              "postProperty.$.amenities": amenities,
-              "postProperty.$.propertyLooking": propertyLooking,
-              "postProperty.$.verify": verify,
+            postProperty: {
+              $elemMatch: {
+                _id: id,
+              },
             },
-          },
-          { new: true }
+          }
         );
+  
+        let update={};
 
-        const agentEmail = dataUpdate.email;
+        if(frontImage){
+          const frontobjectKey=data.postProperty[0].frontImage.public_id;
+          let frontResult=await updatePost( req.files.frontImage[0],frontobjectKey);
+          update = {
+            $set: {
+              "postProperty.$.frontImage": {
+                public_id: frontResult.Key,
+                url: frontResult.Location,
+              },
+            },
+          };
+        }
+        if(otherImage){
+         const otherobjectKey= data.postProperty[0].otherImage.map((item)=>{
+           return item.public_id;
+         })
+        
 
-        if ((propertyLooking, address, propertyName, agentEmail, dataUpdate)) {
-          const propertyName = dataUpdate.postProperty[0].propertyName;
-          const address = dataUpdate.postProperty[0].address;
-          if (verify) {
-            const transporter = await nodemailer.createTransport({
-              service: "gmail",
-              port: 465,
-              secure: true,
-              logger: false,
-              debug: true,
-              secureConnection: false,
-              auth: {
-                // user: process.env.Email,
-                // pass: process.env.EmailPass
-                user: "web.100acress@gmail.com",
-                pass: "txww gexw wwpy vvda",
-              },
-              tls: {
-                rejectUnAuthorized: true,
-              },
-            });
-            // Send mail with defined transport objec
-            let info = await transporter.sendMail({
-              from: "amit100acre@gmail.com", // Sender address
-              to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-              subject: "Verified Your Property",
-              html: `
-                            <!DOCTYPE html>
-                            <html lang:"en>
-                            <head>
-                            <meta charset:"UTF-8">
-                            <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                            <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                            <title>Congratulations! Your Property Verified  </title>
-                            </head>
-                            <body>
-                           <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-                            The verification was conducted by 100acress team </p>
-                              
-                                <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                                </p>
-                                <p>Thank you!</p>
-                            </body>
-                            </html>
-                    `,
-            });
+        let otherResult=await Promise.all(
+          otherImage.map((item,index)=>
+          updatePost(item,otherobjectKey[0]))
+        )
+
+        update={
+          $set: {
+            "postProperty.$.otherImage":otherResult.map(()=>({
+              public_id: item.Key,
+              url: item.Location,
+            }))
+          },
+        }
+        }
+       if(propertyName){
+        update={
+          $set:{
+            "postProperty.$.propertyName":propertyName
           }
         }
-
-        res.status(200).json({
-          message: "updated successfully ! ",
+       }
+       if(propertyType){
+        update={
+          $set:{
+            "postProperty.$.propertyType":propertyType
+          }
+        }
+       }
+       if(address){
+        update={
+          $set:{
+            "postProperty.$.address":address
+          }
+        }
+       }
+       if(area){
+        update={
+          $set:{
+            "postProperty.$.area":area
+          }
+        }
+       }
+       if(city){
+        update={
+          $set:{
+            "postProperty.$.area":city
+          }
+        }
+       }
+       if(state){
+        update={
+          $set:{
+            "postProperty.$.state":state
+          }
+        }
+       }
+       if(price){
+        update={
+          $set:{
+            "postProperty.$.price":price
+          }
+        }
+       }
+       if(descripation){
+        update={
+          $set:{
+            "postProperty.$.descripation":descripation
+          }
+        }
+       }
+       if(furnishing){
+        update={
+          $set:{
+            "postProperty.$.furnishing":furnishing
+          }
+        }
+       }
+       if(builtYear){
+        update={
+          $set:{
+            "postProperty.$.builtYear":builtYear
+          }
+        }
+       }
+       if(type){
+        update={
+          $set:{
+            "postProperty.$.type":type
+          }
+        }
+       }
+       if(amenities){
+        update={
+          $set:{
+            "postProperty.$.amenities":amenities
+          }
+        }
+       }
+       if(landMark){
+        update={
+$set:{
+  "postProperty.$.landMark":landMark
+}
+        }
+       }
+       if(availableDate){
+        update={
+          $Set:{
+            "postProperty.$.availableDate":availableDate
+          }
+        }
+       }
+       if(propertyLooking){
+         update={
+          $set:{
+            "postProperty.$.propertyLooking":propertyLooking
+          }
+         }
+       }
+       if(verify){
+        update={
+          $set:{
+            "postProperty.$.verify":verify
+          }
+        }
+       }
+       const dataUpdate = await postPropertyModel.findOneAndUpdate(
+        { "postProperty._id": id },
+        update,
+        { new: true }
+      )
+      const agentEmail = dataUpdate.email;
+       if(verify!==null){
+        const transporter = await nodemailer.createTransport({
+          service: "gmail",
+          port: 465,
+          secure: true,
+          logger: false,
+          debug: true,
+          secureConnection: false,
+          auth: {
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user: "web.100acress@gmail.com",
+            pass: "txww gexw wwpy vvda",
+          },
+          tls: {
+            rejectUnAuthorized: true,
+          },
         });
+        // Send mail with defined transport objec
+        let info = await transporter.sendMail({
+          from: "amit100acre@gmail.com", // Sender address
+          to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+          subject: "Verified Your Property",
+          html: `
+                          <!DOCTYPE html>
+                          <html lang:"en>
+                          <head>
+                          <meta charset:"UTF-8">
+                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                          <title>Congratulations! Your Property Verified  </title>
+                          </head>
+                          <body>
+                         <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                          The verification was conducted by 100acress team </p>
+                            
+                              <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                              </p>
+                              <p>Thank you!</p>
+                          </body>
+                          </html>
+                  `,
+        });
+      
+       }
+       return res.status(200).json({
+        message:"Property updated successfully ",
+        dataUpdate
+       })
+      }else{
+        return res.status(400).json({
+          error:"Invalid object id !"
+        })
       }
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        message: "internal server error ! ",
-      });
-    }
+      
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error:"Internal server error !"
+    })
+  }
   };
-
   // postproperty delete
   static postProperty_Delete = async (req, res) => {
     try {
@@ -1396,7 +1203,6 @@ class PostPropertyController {
       res.status(500).json({ error: "Internal server error" });
     }
   };
-
   static postPropertyEnquiry = async (req, res) => {
     try {
       const {agentEmail, agentNumber, custName, custEmail, custNumber, propertyAddress,} = req.body;
@@ -1481,9 +1287,6 @@ class PostPropertyController {
       });
     }
   };
-
-
-
   static postEnquiry_view = async (req, res) => {
     try {
       const data = await postEnquiryModel.find();
@@ -1550,16 +1353,15 @@ class PostPropertyController {
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({
+    return   res.status(500).json({
         message: error,
       });
     }
   };
-
   static otpVerify = async (req, res) => {
     try {
       const { otp } = req.body;
-      console.log(otp)
+      // console.log(otp)
       if (otp) {
         const data = await Email_verify.findOne({ otp: otp });
         if (data) {
