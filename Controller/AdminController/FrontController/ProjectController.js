@@ -2008,7 +2008,6 @@ res.status(500).json({
       console.log(error);
     }
   };
-
   static floorImage = async (req, res) => {
     try {
       const id = req.params.id
@@ -2045,16 +2044,12 @@ res.status(500).json({
       console.log(error)
     }
   }
-
-
-
     // trying something new from here
-
     static userViewAll = async (req, res) => {
       try {
         //Get page and limit from query parameters, with default values
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) ||50;
+        const limit = parseInt(req.query.limit) ||1000;
         const skip = (page - 1) * limit;
   
         // Create a unique cache key for each page
@@ -2086,9 +2081,7 @@ res.status(500).json({
         });
       }
     };
-  
     // count project according to the city
-  
     static projectCount_city = async (req, res) => {
       try {
         const data = await ProjectModel.aggregate([
@@ -2122,7 +2115,6 @@ res.status(500).json({
         })
       }
     }
-  
 }
 module.exports = projectController;
 

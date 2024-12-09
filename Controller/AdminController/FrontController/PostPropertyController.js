@@ -972,7 +972,7 @@ class PostPropertyController {
 
         update={
           $set: {
-            "postProperty.$.otherImage":otherResult.map(()=>({
+            "postProperty.$.otherImage":otherResult.map((item)=>({
               public_id: item.Key,
               url: item.Location,
             }))
