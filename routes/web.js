@@ -31,13 +31,22 @@ router.get("/contact", contactController.contact);
 // router.get('/blog',blogController.blog)
 //router for agent page
 router.get("/agent", agentController.agent);
-// project
-router.get("/project", projectController.project);
+
 
 // Admin Controller routing
 //projectDetail page
 //page with detail
-router.post("/projectInsert", projectController.projectInsert);
+router.post("/projectInsert",
+  upload.fields([{name:"logo",maxCount:1},
+    {name:"frontImage",maxCount:1},
+    {name:"project_locationImage",maxCount:1}
+    ,{name:"highlightImage",maxCount:1},
+    {name:"projectMaster_plan",maxCount:1},
+    {name:"project_Brochure",maxCount:1},
+    {name:"project_floorplan_Image",maxCount:20},
+    {name:"projectGallery",maxCount:20},
+  ]), 
+  projectController.projectInsert);
 router.get("/projectView/:project_url", projectController.projectView);
 router.get("/project/viewAll/data", projectController.projectviewAll);
 router.get("/project/Edit/:id", projectController.projectEdit);
