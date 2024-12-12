@@ -117,6 +117,9 @@ const post_Schema =new mongoose.Schema({
    
    
 }
+,{
+    timestamps:true
+}
 )
 const postPropertyModel = mongoose.model('postProperty', post_Schema)
 module.exports = postPropertyModel
