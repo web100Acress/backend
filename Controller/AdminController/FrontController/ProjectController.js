@@ -5,17 +5,17 @@ const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
-const fs=require('fs');
-const AWS=require('aws-sdk')
+const fs = require("fs");
+const AWS = require("aws-sdk");
 const mongoose = require("mongoose");
 
-require('dotenv').config()
+require("dotenv").config();
 AWS.config.update({
-    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-})
-const s3=new AWS.S3()
+  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+const s3 = new AWS.S3();
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
     service: "gmail",
@@ -64,10 +64,15 @@ const sendPostEmail = async (email, number, projectName) => {
 
 const fetchDataFromDatabase = async () => {
   try {
-    const limit = 50;  // Split into more chunks
+    const limit = 50; // Split into more chunks
     const dataPromises = [];
     for (let i = 0; i < 6; i++) {
-      dataPromises.push(ProjectModel.find().skip(i * limit).limit(limit).lean());
+      dataPromises.push(
+        ProjectModel.find()
+          .skip(i * limit)
+          .limit(limit)
+          .lean()
+      );
     }
     const dataArrays = await Promise.all(dataPromises);
     const data = [].concat(...dataArrays);
@@ -77,18 +82,17 @@ const fetchDataFromDatabase = async () => {
   }
 };
 
-const upload=(file)=>{
-  const fileContent=fs.readFileSync(file.path)
+const upload = (file) => {
+  const fileContent = fs.readFileSync(file.path);
 
-  const params={
-      Bucket:"100acress-media-bucket",
-      Body:fileContent,
-      Key:`uploads/${Date.now()}-${file.originalname}`,
-      ContentType:file.mimetype
-
-  }
-  return s3.upload(params).promise()
-}
+  const params = {
+    Bucket: "100acress-media-bucket",
+    Body: fileContent,
+    Key: `uploads/${Date.now()}-${file.originalname}`,
+    ContentType: file.mimetype,
+  };
+  return s3.upload(params).promise();
+};
 
 class projectController {
   // Project data insert api
@@ -96,116 +100,190 @@ class projectController {
     // console.log("hello")
     try {
       // console.log(req.body)
-      const {projectName,state, projectAddress, project_discripation,AboutDeveloper,builderName,projectRedefine_Connectivity,
-        projectRedefine_Education, projectRedefine_Business, projectRedefine_Entertainment,Amenities,meta_title,
-        meta_description, projectBgContent,  projectReraNo,type,city,  projectOverview,project_url,  project_Status,
-        towerNumber,  totalUnit,  totalLandArea,  launchingDate,  mobileNumber,  possessionDate,
-        minPrice,  maxPrice
+      const {
+        projectName,
+        state,
+        projectAddress,
+        project_discripation,
+        AboutDeveloper,
+        builderName,
+        projectRedefine_Connectivity,
+        projectRedefine_Education,
+        projectRedefine_Business,
+        projectRedefine_Entertainment,
+        Amenities,
+        meta_title,
+        meta_description,
+        projectBgContent,
+        projectReraNo,
+        type,
+        city,
+        projectOverview,
+        project_url,
+        project_Status,
+        towerNumber,
+        totalUnit,
+        totalLandArea,
+        launchingDate,
+        mobileNumber,
+        possessionDate,
+        minPrice,
+        maxPrice,
       } = req.body;
-      const{logo,frontImage,project_locationImage,project_floorplan_Image,highlightImage ,project_Brochure,projectGallery,projectMaster_plan}=req.files;
-
-      if(projectName&&state&&projectAddress&&project_discripation&&AboutDeveloper&&builderName&&projectRedefine_Connectivity&&
-        projectRedefine_Education&&projectRedefine_Business&&projectRedefine_Entertainment&&Amenities&&meta_title,
-        meta_description&& projectBgContent&&  projectReraNo&&type&&city&&projectOverview&&project_url&&project_Status&&
-        towerNumber&& totalUnit&& totalLandArea&&launchingDate&& mobileNumber&& possessionDate&&
-        minPrice&&maxPrice){
-          return res.status(400).json({
-            error:"Check Input field !"
-          })
-        }
-// console.log(req.files,";vjlah")
-        if(!logo &&!frontImage &&!project_locationImage &&!project_floorplan_Image &&!highlightImage &&
-          !project_Brochure &&!projectGallery &&!projectMaster_plan ){
-            return res.status(400).json({
+      const {
+        logo,
+        frontImage,
+        project_locationImage,
+        project_floorplan_Image,
+        highlightImage,
+        project_Brochure,
+        projectGallery,
+        projectMaster_plan,
+      } = req.files;
       
-              error:"Check image field !"
-            })
-        }
-   
-       const logoResult=await upload(logo[0]);
-       const frontResult=await upload(frontImage[0]);
-       const projectLocationResult=await upload(project_locationImage[0]);
-      //  const floorplanResult=upload(req.files.project_floorplan_Image[0])
-       const highlightResult=await upload(highlightImage[0]);
-       const projectMasterResult=await upload(projectMaster_plan[0]);
-       const project_BrochureResult=await upload(project_Brochure[0]);
-     
-     let project_floorplanResult=await Promise.all(
-      req.files.project_floorplan_Image.map((file)=>
-      upload(file))
-     );
-     
-     let projectGalleryResult=await Promise.all(
-      req.files.projectGallery.map((file)=>
-      upload(file))
-     )
-     const data=new ProjectModel({
-      projectName:projectName,
-      state:state,
-      city:city,
-      projectAddress:projectAddress,
-      project_discripation:project_discripation,
-      project_url:project_url,
-      projectBgContent:projectBgContent,
-      projectOverview:projectOverview,
-      project_Status:project_Status,
-      projectReraNo:projectReraNo,
-      AboutDeveloper:AboutDeveloper,
-      builderName:builderName,
-      projectRedefine_Business:projectRedefine_Business,
-      projectRedefine_Connectivity:projectRedefine_Connectivity,
-      projectRedefine_Entertainment:projectRedefine_Entertainment,
-      projectRedefine_Education:projectRedefine_Education,
-     Amenities:Amenities,
-     possessionDate:possessionDate,
-     launchingDate:launchingDate,
-     mobileNumber:mobileNumber,
-     totalLandArea:totalLandArea,
-     totalUnit:totalUnit,
-     towerNUmber:towerNumber,
-     maxPrice:maxPrice,
-     minPrice:minPrice,
-     meta_title:meta_title,
-     meta_description:meta_description,
-     logo:{
-public_id:logoResult.key,
-url:logoResult.Location
-     },
-     frontImage:{
-      public_id:frontResult.key,
-      url:frontResult.Location
-     },
-     projectLocation:{
-      public_id:projectLocationResult.key,
-      url:projectLocationResult.Location
-     },
-     highlightImage:{
-      public_id:highlightResult.key,
-      url:highlightResult.Location
-     },
-     projectMaster_plan:{
-      public_id:projectMasterResult.key,
-      url:projectMasterResult.Location
-     },
-     project_Brochure:{
-      public_id:project_BrochureResult.key,
-      url:project_BrochureResult.Location
-     },
-     project_floorplan_Image:project_floorplanResult.map((item)=>({
-      public_id:item.Key,
-      url:item.Location
-     })),
-     projectGallery:projectGalleryResult.map((item)=>({
-      public_id:item.Key,
-      url:item.Location
-     }))
+      if (
+        !projectName &&
+        !state &&
+        !projectAddress &&
+       !project_discripation &&
+        !AboutDeveloper &&
+        !builderName &&
+        !projectRedefine_Connectivity &&
+        !projectRedefine_Education &&
+        !projectRedefine_Business &&
+        !projectRedefine_Entertainment &&
+        !Amenities &&
+        !meta_title &&
+        !meta_description &&
+        !projectBgContent &&
+        !projectReraNo &&
+        !type &&
+        !city &&
+        !projectOverview &&
+        !project_url &&
+        !project_Status &&
+        !towerNumber &&
+        !totalUnit &&
+        !totalLandArea &&
+        !launchingDate &&
+        !mobileNumber &&
+        !possessionDate &&
+        !minPrice &&
+        !maxPrice
+      ) {
+        return res.status(400).json({
+          error: "Check Input field !",
+        });
+      }
+      // console.log(req.files,";vjlah")
+      if (
+        !logo &&
+        !frontImage &&
+        !project_locationImage &&
+        !project_floorplan_Image &&
+        !highlightImage &&
+        !project_Brochure &&
+        !projectGallery &&
+        !projectMaster_plan
+      ) {
+        return res.status(400).json({
+          error: "Check image field !",
+        });
+      }
+      // Prepare an array of promises for all uploads
+      const uploadPromises = [
+        upload(logo[0]),
+        upload(frontImage[0]),
+        upload(project_locationImage[0]),
+        upload(highlightImage[0]),
+        upload(projectMaster_plan[0]),
+        upload(project_Brochure[0]),
+      ];
 
-  
-     })
-     await data.save();
-     return res.status(200).json({
-      message:"Submitted successfully !"
-     })
+      // Use Promise.all to upload all files concurrently
+      const [
+        logoResult,
+        frontResult,
+        projectLocationResult,
+        highlightResult,
+        projectMasterResult,
+        project_BrochureResult,
+      ] = await Promise.all(uploadPromises);
+
+      let project_floorplanResult = await Promise.all(
+        req.files.project_floorplan_Image.map((file) => upload(file))
+      );
+
+      let projectGalleryResult = await Promise.all(
+        req.files.projectGallery.map((file) => upload(file))
+      );
+      const data = new ProjectModel({
+        projectName: projectName,
+        state: state,
+        city: city,
+        type:type,
+        projectAddress: projectAddress,
+        project_discripation: project_discripation,
+        project_url: project_url,
+        projectBgContent: projectBgContent,
+        projectOverview: projectOverview,
+        project_Status: project_Status,
+        projectReraNo: projectReraNo,
+        AboutDeveloper: AboutDeveloper,
+        builderName: builderName,
+        projectRedefine_Business: projectRedefine_Business,
+        projectRedefine_Connectivity: projectRedefine_Connectivity,
+        projectRedefine_Entertainment: projectRedefine_Entertainment,
+        projectRedefine_Education: projectRedefine_Education,
+        Amenities: Amenities,
+        possessionDate: possessionDate,
+        launchingDate: launchingDate,
+        mobileNumber: mobileNumber,
+        totalLandArea: totalLandArea,
+        totalUnit: totalUnit,
+        towerNumber: towerNumber,
+        maxPrice: maxPrice,
+        minPrice: minPrice,
+        meta_title: meta_title,
+        meta_description: meta_description,
+        logo: {
+          public_id: logoResult.Key,
+          url: logoResult.Location,
+        },
+        frontImage: {
+          public_id: frontResult.Key,
+          url: frontResult.Location,
+        },
+        project_locationImage: {
+          public_id:projectLocationResult.Key,
+          url: projectLocationResult.Location,
+        },
+        highlightImage: {
+          public_id: highlightResult.Key,
+          url: highlightResult.Location,
+        },
+        projectMaster_plan: {
+          public_id: projectMasterResult.Key,
+          url: projectMasterResult.Location,
+        },
+        project_Brochure: {
+          public_id: project_BrochureResult.Key,
+          url: project_BrochureResult.Location,
+        },
+        project_floorplan_Image: project_floorplanResult.map((item) => ({
+          public_id: item.Key,
+          url: item.Location,
+        })),
+        projectGallery: projectGalleryResult.map((item) => ({
+          public_id: item.Key,
+          url: item.Location,
+        })),
+      });
+    
+      await data.save();
+      res.status(200).json({
+        message: "Submitted successfully !",
+      });
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -283,7 +361,7 @@ url:logoResult.Location
         mobileNumber,
         possessionDate,
         minPrice,
-        maxPrice
+        maxPrice,
       } = req.body;
       const id = req.params.id;
       if (req.files) {
@@ -451,15 +529,15 @@ url:logoResult.Location
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
+              project_Status: project_Status,
               towerNumber: towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           // console.log(data)
@@ -503,15 +581,15 @@ url:logoResult.Location
               meta_description: meta_description,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           // console.log(data)
@@ -520,7 +598,7 @@ url:logoResult.Location
             message: "data updated successfully ! ",
           });
         } else if (req.files.frontImage) {
-          console.log("helo project")
+          console.log("helo project");
           const frontImage = req.files.frontImage;
           const projectBgResult = await cloudinary.uploader.upload(
             frontImage.tempFilePath,
@@ -554,15 +632,15 @@ url:logoResult.Location
               city: city,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           // console.log(data)
@@ -604,15 +682,15 @@ url:logoResult.Location
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           //  console.log(data)
@@ -673,15 +751,15 @@ url:logoResult.Location
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           await data.save();
@@ -739,7 +817,7 @@ url:logoResult.Location
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status: project_Status,
-              project_Status:project_Status,
+              project_Status: project_Status,
             }
           );
           await data.save();
@@ -757,10 +835,10 @@ url:logoResult.Location
           const data = await ProjectModel.findByIdAndUpdate(
             { _id: id },
             {
-              highlightImage:{
-                public_id:highlightImageResult.public_id,
-                url:highlightImageResult.secure_url
-              } ,
+              highlightImage: {
+                public_id: highlightImageResult.public_id,
+                url: highlightImageResult.secure_url,
+              },
               projectName: projectName,
               state: state,
               projectAddress: projectAddress,
@@ -779,14 +857,14 @@ url:logoResult.Location
               projectOverview: projectOverview,
               project_url: project_url,
               project_Status: project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           await data.save();
@@ -828,13 +906,13 @@ url:logoResult.Location
               project_url: project_url,
               project_Status: project_Status,
               towerNumber: towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           await data.save();
@@ -842,16 +920,17 @@ url:logoResult.Location
             message: "data updated successfully ! ",
           });
         } else if (req.files.projectMaster_plan) {
-            const projectMaster_plan = req.files.projectMaster_plan;
-            const projectMaster_planResult = await cloudinary.uploader.upload(
-              projectMaster_plan.tempFilePath,
-              {
-                folder: "100acre/project",
-              }
-            );
+          const projectMaster_plan = req.files.projectMaster_plan;
+          const projectMaster_planResult = await cloudinary.uploader.upload(
+            projectMaster_plan.tempFilePath,
+            {
+              folder: "100acre/project",
+            }
+          );
           const data = await ProjectModel.findByIdAndUpdate(
             { _id: id },
-            {projectMaster_plan: projectMaster_planResult,
+            {
+              projectMaster_plan: projectMaster_planResult,
               projectName: projectName,
               state: state,
               projectAddress: projectAddress,
@@ -869,15 +948,15 @@ url:logoResult.Location
               type: type,
               projectOverview: projectOverview,
               project_url: project_url,
-              project_Status:project_Status,
-              towerNumber:  towerNumber,
-              totalUnit:totalUnit,
-              totalLandArea:totalLandArea,
-              launchingDate:launchingDate,
-              mobileNumber:mobileNumber,
-              possessionDate:possessionDate,
-              minPrice:minPrice,
-              maxPrice:maxPrice
+              project_Status: project_Status,
+              towerNumber: towerNumber,
+              totalUnit: totalUnit,
+              totalLandArea: totalLandArea,
+              launchingDate: launchingDate,
+              mobileNumber: mobileNumber,
+              possessionDate: possessionDate,
+              minPrice: minPrice,
+              maxPrice: maxPrice,
             }
           );
           await data.save();
@@ -906,15 +985,15 @@ url:logoResult.Location
             type: type,
             projectOverview: projectOverview,
             project_url: project_url,
-            project_Status:project_Status,
+            project_Status: project_Status,
             towerNumber: towerNumber,
-            totalUnit:totalUnit,
-            totalLandArea:totalLandArea,
-            launchingDate:launchingDate,
-            mobileNumber:mobileNumber,
-            possessionDate:possessionDate,
-            minPrice:minPrice,
-            maxPrice:maxPrice
+            totalUnit: totalUnit,
+            totalLandArea: totalLandArea,
+            launchingDate: launchingDate,
+            mobileNumber: mobileNumber,
+            possessionDate: possessionDate,
+            minPrice: minPrice,
+            maxPrice: maxPrice,
           }
         );
         await data.save();
@@ -954,33 +1033,33 @@ url:logoResult.Location
 
   static projectviewAll = async (req, res) => {
     try {
-        // Check if data is available in cache
-        let data = cache.get("projectData");
+      // Check if data is available in cache
+      let data = cache.get("projectData");
 
-        // If not available in cache, fetch from the database and cache it
-        if (!data) {
-            data = await fetchDataFromDatabase();
-            const expirationTime = 10 * 60 * 1000; 
-            cache.put("projectData", data,expirationTime );
-        }
+      // If not available in cache, fetch from the database and cache it
+      if (!data) {
+        data = await fetchDataFromDatabase();
+        const expirationTime = 10 * 60 * 1000;
+        cache.put("projectData", data, expirationTime);
+      }
 
-        if (data && data.length > 0) {
-            res.status(200).json({
-                message: "All project data retrieved successfully!",
-                data
-            });
-        } else {
-            res.status(404).json({
-                message: "No data found!"
-            });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: "Internal server error!"
+      if (data && data.length > 0) {
+        res.status(200).json({
+          message: "All project data retrieved successfully!",
+          data,
         });
+      } else {
+        res.status(404).json({
+          message: "No data found!",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server error!",
+      });
     }
-};
+  };
 
   // Route handler to get all project data
   // static projectviewAll = async (req, res) => {
@@ -1008,70 +1087,69 @@ url:logoResult.Location
   //     }
   // };
   //  project data delete
-  
+
   static projectDelete = async (req, res) => {
     // console.log("helo")
     try {
-      const id = req.params.id
-      const data_id=await ProjectModel.findById({_id:id})
-    
-      if(data_id){
-        const logoId=data_id.logo.public_id;
-        if(logoId){
-            await cloudinary.uploader.destroy(logoId)
+      const id = req.params.id;
+      const data_id = await ProjectModel.findById({ _id: id });
+
+      if (data_id) {
+        const logoId = data_id.logo.public_id;
+        if (logoId) {
+          await cloudinary.uploader.destroy(logoId);
         }
         const frontId = data_id.frontImage.public_id;
         if (frontId != null) {
-            await cloudinary.uploader.destroy(frontId);
+          await cloudinary.uploader.destroy(frontId);
         }
-        const locationId=data_id.project_locationImage.public_id;
-        if(locationId){
-            await cloudinary.uploader.destroy(locationId)
+        const locationId = data_id.project_locationImage.public_id;
+        if (locationId) {
+          await cloudinary.uploader.destroy(locationId);
         }
-        const floorId=data_id.project_floorplan_Image
-      for(let i=0; i< floorId.length ; i++){
-          const id=data_id.project_floorplan_Image[i].public_id;
+        const floorId = data_id.project_floorplan_Image;
+        for (let i = 0; i < floorId.length; i++) {
+          const id = data_id.project_floorplan_Image[i].public_id;
 
-      if(floorId){
-         await cloudinary.uploader.destroy(id) 
-      }
-  }
-  const highlightId=data_id.highlightImage.public_id;
-  if(highlightId){
-      await cloudinary.uploader.destroy(highlightId)
-  }
-  const BrochureId=data_id.project_Brochure.public_id;
-      if(BrochureId){
-          await cloudinary.uploader.destroy(BrochureId)
-      }
-      const GalleryId=data_id.projectGallery
-      for(let i=0;i<GalleryId.length ; i++){
-          const id=data_id.projectGallery[i].public_id;
-          if(id){
-              await cloudinary.uploader.destroy(id)
+          if (floorId) {
+            await cloudinary.uploader.destroy(id);
           }
-      }
-      const masterId=data_id.projectMaster_plan.public_id;
-      if(masterId){
-          await cloudinary.uploader.destroy(masterId)
-      }
-      const data = await ProjectModel.findByIdAndDelete({ _id: id })
-      res.status(202).json({
-          message: 'data deleted sucessfully!',
+        }
+        const highlightId = data_id.highlightImage.public_id;
+        if (highlightId) {
+          await cloudinary.uploader.destroy(highlightId);
+        }
+        const BrochureId = data_id.project_Brochure.public_id;
+        if (BrochureId) {
+          await cloudinary.uploader.destroy(BrochureId);
+        }
+        const GalleryId = data_id.projectGallery;
+        for (let i = 0; i < GalleryId.length; i++) {
+          const id = data_id.projectGallery[i].public_id;
+          if (id) {
+            await cloudinary.uploader.destroy(id);
+          }
+        }
+        const masterId = data_id.projectMaster_plan.public_id;
+        if (masterId) {
+          await cloudinary.uploader.destroy(masterId);
+        }
+        const data = await ProjectModel.findByIdAndDelete({ _id: id });
+        res.status(202).json({
+          message: "data deleted sucessfully!",
           // deletedata: data
-      })
-  }else{
-     res.status(200).json({
-      message:"Project alredy deleted"
-     })
-  }
-  } catch (error) {
-      console.log(error)
+        });
+      } else {
+        res.status(200).json({
+          message: "Project alredy deleted",
+        });
+      }
+    } catch (error) {
+      console.log(error);
       res.status(500).json({
-          message: "internal server error !"
-      })
-  }  
-  
+        message: "internal server error !",
+      });
+    }
   };
   //project find trending data
   static project_trending = async (req, res) => {
@@ -1140,23 +1218,23 @@ url:logoResult.Location
       });
     }
   };
-  static projectAffordable=async(req,res)=>{
-    try{
-     const affordable="Affordable Homes";
-   const data=await ProjectModel.find({type:affordable})
-  //  console.log(data)
-  res.status(200).json({
-      message:"data get successfully ! ",
-      data
-  })
-  // res.send(data)
-  }catch(error){
-      console.log(error)
+  static projectAffordable = async (req, res) => {
+    try {
+      const affordable = "Affordable Homes";
+      const data = await ProjectModel.find({ type: affordable });
+      //  console.log(data)
+      res.status(200).json({
+        message: "data get successfully ! ",
+        data,
+      });
+      // res.send(data)
+    } catch (error) {
+      console.log(error);
       res.status(500).json({
-          message:"Internal server error !"
-      })
+        message: "Internal server error !",
+      });
     }
-  }
+  };
   ///highlight
   static highlightPoint = async (req, res) => {
     try {
@@ -1221,7 +1299,7 @@ url:logoResult.Location
   static highlightedit = async (req, res) => {
     // console.log("hello")
     try {
-      const id = req.params.id
+      const id = req.params.id;
       // console.log(id)
       if (isValidObjectId(id)) {
         const data = await ProjectModel.findOne(
@@ -1229,89 +1307,89 @@ url:logoResult.Location
           {
             highlight: {
               $elemMatch: {
-                _id: id
-              }
-            }
+                _id: id,
+              },
+            },
           }
-        )
+        );
         res.status(200).json({
           message: "data get Successfully ! ",
-          data
-        })
+          data,
+        });
       } else {
         res.status(200).json({
           message: "check Your Id ",
-
-        })
+        });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({
-        message: "Internal server error ! "
-      })
+        message: "Internal server error ! ",
+      });
     }
-  }
-  static highlightupdate=async(req,res)=>{
-  // console.log("hello")
-  try{
-    //  console.log(req.params.id)
-    const id=req.params.id;
-    const highlight_Point=req.body.highlight_Point
-    if(isValidObjectId(id)){
-      const data=await ProjectModel.findOneAndUpdate(
-        {"highlight._id":id},
-        {
-          $set:{
-      "highlight.$.highlight_Point":highlight_Point
-        }},
-        {new:true}
-      )
-      res.status(200).json({
-        message:"data update successfully !",
-        data
-      })
-    }else{
-      res.status(200).json({
-        error:"check your field !"
-      })
-    }
-  }catch(error){
-    console.log(error)
-  }
-  }
-  static highlightdelete=async(req,res)=>{
+  };
+  static highlightupdate = async (req, res) => {
     // console.log("hello")
-    try{
-   const id=req.params.id
-   if(isValidObjectId(id)){
-    const data=await ProjectModel.findOne({
-      "highlight._id":id
-    })
-   if(!data){
-    res.status(404).json({
-      error: "Post property not found"
-    })
-   }else{
-    const index=data.highlight.findIndex(
-      (highlight) => highlight._id.toString() ===id
-    )
-    if (index === -1) {
-      return res.status(404).json({ error: "Post property not found" });
+    try {
+      //  console.log(req.params.id)
+      const id = req.params.id;
+      const highlight_Point = req.body.highlight_Point;
+      if (isValidObjectId(id)) {
+        const data = await ProjectModel.findOneAndUpdate(
+          { "highlight._id": id },
+          {
+            $set: {
+              "highlight.$.highlight_Point": highlight_Point,
+            },
+          },
+          { new: true }
+        );
+        res.status(200).json({
+          message: "data update successfully !",
+          data,
+        });
+      } else {
+        res.status(200).json({
+          error: "check your field !",
+        });
+      }
+    } catch (error) {
+      console.log(error);
     }
-    data.highlight.splice(index, 1);
-    await data.save();
-    res.status(200).json({ message: "Post property deleted successfully" });
-   }
-
-   }
-  }catch(error){
-console.log(error)
-res.status(500).json({
-  message:"Internal server error !"
-})
-  }
-  }
-
+  };
+  static highlightdelete = async (req, res) => {
+    // console.log("hello")
+    try {
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
+        const data = await ProjectModel.findOne({
+          "highlight._id": id,
+        });
+        if (!data) {
+          res.status(404).json({
+            error: "Post property not found",
+          });
+        } else {
+          const index = data.highlight.findIndex(
+            (highlight) => highlight._id.toString() === id
+          );
+          if (index === -1) {
+            return res.status(404).json({ error: "Post property not found" });
+          }
+          data.highlight.splice(index, 1);
+          await data.save();
+          res
+            .status(200)
+            .json({ message: "Post property deleted successfully" });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
 
   // project Bhk detail inter data
   static bhk_insert = async (req, res) => {
@@ -1650,7 +1728,7 @@ res.status(500).json({
   //     }
   //     // If data is not in cache, fetch from database
   //     const data = await UserModel.find();
-  //     const expirationTime = 5 * 60 * 1000; 
+  //     const expirationTime = 5 * 60 * 1000;
   //     cache.put('projectEnquiry', data, expirationTime);
   //     res.status(200).json({
   //       message: "Data retrieved successfully from database!",
@@ -1745,111 +1823,113 @@ res.status(500).json({
   };
   static floorImage = async (req, res) => {
     try {
-      const id = req.params.id
-      const  indexNumber  =req.params.indexNumber
-      console.log(id,indexNumber,"snkkwhvs")
-     
+      const id = req.params.id;
+      const indexNumber = req.params.indexNumber;
+      console.log(id, indexNumber, "snkkwhvs");
+
       if (isValidObjectId) {
-        const data = await ProjectModel.findById({ _id:id})
-        const floorplan = data.project_floorplan_Image
-        const Imagelength = floorplan.length
+        const data = await ProjectModel.findById({ _id: id });
+        const floorplan = data.project_floorplan_Image;
+        const Imagelength = floorplan.length;
         // console.log(Imagelength)
         if (indexNumber < Imagelength) {
-          const public_id =floorplan[0].public_id;
+          const public_id = floorplan[0].public_id;
           if (public_id) {
-            await cloudinary.uploader.destroy(public_id); 
+            await cloudinary.uploader.destroy(public_id);
             floorplan.splice(indexNumber, 1);
             // Update the data in the database
-            await ProjectModel.findByIdAndUpdate({_id:id}, { project_floorplan_Image: floorplan });
-            return res.status(200).json({ message: "Image removed successfully", floorplan });
-        }
-        }else{
+            await ProjectModel.findByIdAndUpdate(
+              { _id: id },
+              { project_floorplan_Image: floorplan }
+            );
+            return res
+              .status(200)
+              .json({ message: "Image removed successfully", floorplan });
+          }
+        } else {
           res.status(200).json({
-            message:"Object Index number not found !",
-            indexNumber
-          })
-        }
-
-      } else {
-    res.status(400).json({
-      message:"object id is invalid !"
-    })
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-    // trying something new from here
-    static userViewAll = async (req, res) => {
-      try {
-        //Get page and limit from query parameters, with default values
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) ||1000;
-        const skip = (page - 1) * limit;
-  
-        // Create a unique cache key for each page
-        const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
-        // Check if data is in cache
-        const cacheData = cache.get(cacheKey);
-        if (cacheData) {
-          return res.status(200).json({
-            message: "Data retrieved successfully from cache!",
-            data: cacheData,
+            message: "Object Index number not found !",
+            indexNumber,
           });
         }
-  
-        // If data is not in cache, fetch from database
-        const data = await UserModel.find().skip(skip).limit(limit);
-  
-        // Calculate cache expiration time (5 minutes in milliseconds)
-        const expirationTime = 5 * 60 * 1000;
-        cache.put(cacheKey, data, expirationTime);
-  
-        res.status(200).json({
-          message: "Data retrieved successfully from database!",
-          data: data,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({
-          message: "Internal server error!",
+      } else {
+        res.status(400).json({
+          message: "object id is invalid !",
         });
       }
-    };
-    // count project according to the city
-    static projectCount_city = async (req, res) => {
-      try {
-        const data = await ProjectModel.aggregate([
-          {
-            $group: {
-              _id: "$builderName",
-              count: { $sum: 1 }
-            }
-  
-          }
-        ])
-        const data2=await ProjectModel.aggregate([
-          {
-            $group:{
-  
-              _id:"$city",
-              count:{$sum:1}
-            }
-          }
-        ])
-        // console.log(data,data2)
-        res.status(200).json({
-          message:"get data",
-          data,
-          data2
-        })
-      } catch (error) {
-        console.error(error)
-        res.status(500).json({
-          message: "Internal server log"
-        })
-      }
+    } catch (error) {
+      console.log(error);
     }
+  };
+  // trying something new from here
+  static userViewAll = async (req, res) => {
+    try {
+      //Get page and limit from query parameters, with default values
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 1000;
+      const skip = (page - 1) * limit;
+
+      // Create a unique cache key for each page
+      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+      // Check if data is in cache
+      const cacheData = cache.get(cacheKey);
+      if (cacheData) {
+        return res.status(200).json({
+          message: "Data retrieved successfully from cache!",
+          data: cacheData,
+        });
+      }
+
+      // If data is not in cache, fetch from database
+      const data = await UserModel.find().skip(skip).limit(limit);
+
+      // Calculate cache expiration time (5 minutes in milliseconds)
+      const expirationTime = 5 * 60 * 1000;
+      cache.put(cacheKey, data, expirationTime);
+
+      res.status(200).json({
+        message: "Data retrieved successfully from database!",
+        data: data,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server error!",
+      });
+    }
+  };
+  // count project according to the city
+  static projectCount_city = async (req, res) => {
+    try {
+      const data = await ProjectModel.aggregate([
+        {
+          $group: {
+            _id: "$builderName",
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+      const data2 = await ProjectModel.aggregate([
+        {
+          $group: {
+            _id: "$city",
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+      // console.log(data,data2)
+      res.status(200).json({
+        message: "get data",
+        data,
+        data2,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server log",
+      });
+    }
+  };
 }
 module.exports = projectController;
 
