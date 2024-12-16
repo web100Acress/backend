@@ -50,7 +50,17 @@ router.post("/projectInsert",
 router.get("/projectView/:project_url", projectController.projectView);
 router.get("/project/viewAll/data", projectController.projectviewAll);
 router.get("/project/Edit/:id", projectController.projectEdit);
-router.post("/project/Update/:id", projectController.projectUpdate);
+router.post("/project/Update/:id",
+  upload.fields([{name:"logo",maxCount:1},
+    {name:"frontImage",maxCount:1},
+    {name:"project_locationImage",maxCount:1}
+    ,{name:"highlightImage",maxCount:1},
+    {name:"projectMaster_plan",maxCount:1},
+    {name:"project_Brochure",maxCount:1},
+    {name:"project_floorplan_Image",maxCount:20},
+    {name:"projectGallery",maxCount:20},
+  ]),
+  projectController.projectUpdate);
 router.delete("/project/Delete/:id", projectController.projectDelete);
 
 router.get("/project/trending", projectController.project_trending);
