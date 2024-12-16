@@ -8,7 +8,7 @@ const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
 const mongoose = require("mongoose");
-
+const validator = require('validator');
 require('dotenv').config()
 const fs=require('fs');
 const AWS=require('aws-sdk');
@@ -256,6 +256,8 @@ class PostPropertyController {
   //   }
   // };
   static postPerson_Register = async (req, res) => {
+   
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -265,7 +267,11 @@ class PostPropertyController {
       const verify = await postPropertyModel
         .findOne({ email: email })
         .session(session);
-      console.log(verify);
+      // console.log(verify);
+  
+
+ // true or false
+
 
       if (verify) {
         res.status(409).json({
@@ -967,7 +973,7 @@ class PostPropertyController {
 
         let otherResult=await Promise.all(
           otherImage.map((item,index)=>
-          updatePost(item,otherobjectKey[0]))
+          updatePost(item,otherobjectKey[index]))
         )
 
         update={
@@ -1381,7 +1387,5 @@ $set:{
       });
     }
   };
-
-  
 }
 module.exports = PostPropertyController;
