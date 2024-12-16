@@ -135,7 +135,7 @@ static blog_insert = async (req, res) => {
         }
     }
     static blog_update = async (req, res) => {
-        console.log("hellobfiu1")
+    
         try {
             const id = req.params.id
             if (ObjectId.isValid(id)) {
@@ -165,7 +165,7 @@ static blog_insert = async (req, res) => {
                         message: "data updated successfully !"
                     })
                 } else {
-                    console.log("hellobfiu3")
+           
                     const update = await blogModel.findByIdAndUpdate({ _id: id }, {
                         blog_Title: blog_Title,
                         blog_Description: blog_Description,

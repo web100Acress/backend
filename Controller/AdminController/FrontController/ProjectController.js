@@ -94,6 +94,29 @@ const upload = (file) => {
   return s3.upload(params).promise();
 };
 
+const uploadUpdate = (file, objectKey) => {
+  const fileContent = fs.readFileSync(file.path);
+  if (objectKey != null) {
+    const params = {
+      Bucket: "100acress-media-bucket",
+      Key: objectKey,
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+    return s3.upload(params).promise();
+  } else {
+    const params = {
+      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+      Body: fileContent,
+      ContentType: file.mimetype,
+    };
+
+    // Return the promise from s3.upload
+    return s3.upload(params).promise();
+  }
+};
+
 class projectController {
   // Project data insert api
   static projectInsert = async (req, res) => {
@@ -140,12 +163,12 @@ class projectController {
         projectGallery,
         projectMaster_plan,
       } = req.files;
-      
+
       if (
         !projectName &&
         !state &&
         !projectAddress &&
-       !project_discripation &&
+        !project_discripation &&
         !AboutDeveloper &&
         !builderName &&
         !projectRedefine_Connectivity &&
@@ -221,7 +244,7 @@ class projectController {
         projectName: projectName,
         state: state,
         city: city,
-        type:type,
+        type: type,
         projectAddress: projectAddress,
         project_discripation: project_discripation,
         project_url: project_url,
@@ -255,7 +278,7 @@ class projectController {
           url: frontResult.Location,
         },
         project_locationImage: {
-          public_id:projectLocationResult.Key,
+          public_id: projectLocationResult.Key,
           url: projectLocationResult.Location,
         },
         highlightImage: {
@@ -279,7 +302,7 @@ class projectController {
           url: item.Location,
         })),
       });
-    
+
       await data.save();
       res.status(200).json({
         message: "Submitted successfully !",
@@ -331,675 +354,166 @@ class projectController {
     }
   };
   static projectUpdate = async (req, res) => {
+    console.log("hello");
     try {
-      // console.log("hello")
       const {
-        projectName,
-        state,
-        project_discripation,
-        projectAddress,
-        builderName,
-        AboutDeveloper,
-        projectRedefine_Business,
-        projectRedefine_Connectivity,
-        projectRedefine_Education,
-        projectRedefine_Entertainment,
-        Amenities,
-        projectBgContent,
-        projectReraNo,
-        meta_description,
-        meta_title,
-        type,
-        city,
-        projectOverview,
-        project_url,
-        project_Status,
-        towerNumber,
-        totalUnit,
-        totalLandArea,
-        launchingDate,
-        mobileNumber,
-        possessionDate,
-        minPrice,
-        maxPrice,
-      } = req.body;
+        logo,
+        frontImage,
+        project_Brochure,
+        project_locationImage,
+        highlightImage,
+        project_floorplan_Image,
+        projectGallery,
+        projectMaster_plan,
+      } = req.files;
       const id = req.params.id;
-      if (req.files) {
-        // console.log("hellofile")
-        if (
-          req.files.logo &&
-          req.files.frontImage &&
-          req.files.project_locationImage &&
-          req.files.project_floorplan_Image &&
-          req.files.projectGallery &&
-          req.files.highlightImage &&
-          req.files.project_Brochure &&
-          req.files.projectMaster_plan
-        ) {
-          // console.log("hello")
-          const logo = req.files.logo;
-          // console.log("hello")
-          const logoResult = await cloudinary.uploader.upload(
-            logo.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
+      if (isValidObjectId(id)) {
+        const update = {};
 
-          const frontImage = req.files.frontImage;
-          const projectBgResult = await cloudinary.uploader.upload(
-            frontImage.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
+        const projectData = await ProjectModel.findById({ _id: id });
 
-          const project_locationImage = req.files.project_locationImage;
-          const projectlocationResult = await cloudinary.uploader.upload(
-            project_locationImage.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-
-          const project_floorplan_Image = req.files.project_floorplan_Image;
-          const floorplanLink = [];
-
-          if (project_floorplan_Image.length >= 2) {
-            for (let i = 0; i < project_floorplan_Image.length; i++) {
-              const project_floorplanResult = await cloudinary.uploader.upload(
-                project_floorplan_Image[i].tempFilePath,
-                {
-                  folder: "100acre/project",
-                }
-              );
-
-              floorplanLink.push({
-                public_id: project_floorplanResult.public_id,
-                url: project_floorplanResult.secure_url,
-              });
-            }
-          } else {
-            const project_floorplanResult = await cloudinary.uploader.upload(
-              project_floorplan_Image.tempFilePath,
-              {
-                folder: "100acre/project",
-              }
-            );
-            floorplanLink.push({
-              public_id: project_floorplanResult.public_id,
-              url: project_floorplanResult.secure_url,
-            });
-          }
-          const project_BrochureImage = req.files.project_Brochure;
-          const project_BrochureResult = await cloudinary.uploader.upload(
-            project_BrochureImage.tempFilePath,
-            {
-              folder: "100acre/project",
-              resource_type: "raw", // or "raw"
-            }
-          );
-          const highlightImageProject = req.files.highlightImage;
-          const highlightImageResult = await cloudinary.uploader.upload(
-            highlightImageProject.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const projectGalleryImage = req.files.projectGallery;
-          const projectGalleryLink = [];
-          if (projectGalleryImage.length >= 2) {
-            for (let i = 0; i < projectGalleryImage.length; i++) {
-              const projectGalleryImageResult =
-                await cloudinary.uploader.upload(
-                  projectGalleryImage[i].tempFilePath,
-                  {
-                    folder: "100acre/project",
-                  }
-                );
-              projectGalleryLink.push({
-                public_id: projectGalleryImageResult.public_id,
-                url: projectGalleryImageResult.secure_url,
-              });
-            }
-          } else {
-            const projectGalleryImageResult = await cloudinary.uploader.upload(
-              projectGalleryImage.tempFilePath,
-              {
-                folder: "100acre/project",
-              }
-            );
-            projectGalleryLink.push({
-              public_id: projectGalleryImageResult.public_id,
-              url: projectGalleryImageResult.secure_url,
-            });
-          }
-          const projectMaster_plan = req.files.projectMaster_plan;
-          const projectMaster_planResult = await cloudinary.uploader.upload(
-            projectMaster_plan.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              logo: {
-                public_id: logoResult.public_id,
-                url: logoResult.secure_url,
-              },
-              frontImage: {
-                public_id: projectBgResult.public_id,
-                url: projectBgResult.secure_url,
-              },
-              project_locationImage: {
-                public_id: projectlocationResult.public_id,
-                url: projectlocationResult.secure_url,
-              },
-              project_floorplan_Image: floorplanLink,
-              project_Brochure: {
-                public_id: project_BrochureResult.public_id,
-                secure_url: project_BrochureResult.secure_url,
-              },
-              highlightImage: {
-                public_id: highlightImageResult.public_id,
-                secure_url: highlightImageResult.secure_url,
-              },
-              projectGallery: projectGalleryLink,
-              projectMaster_plan: {
-                public_id: projectMaster_planResult.public_id,
-                secure_url: projectMaster_planResult.secure_url,
-              },
-              projectName: projectName,
-              state: state,
-              project_discripation: project_discripation,
-              projectAddress: projectAddress,
-              AboutDeveloper: AboutDeveloper,
-              builderName: builderName,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Education: projectRedefine_Education,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_title: meta_title,
-              meta_description: meta_description,
-              type: type,
-              city: city,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          // console.log(data)
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.logo) {
-          console.log("logo");
-          const logo = req.files.logo;
-          // console.log("hello")
-          const logoResult = await cloudinary.uploader.upload(
-            logo.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              logo: {
-                public_id: logoResult.public_id,
-                url: logoResult.secure_url,
-              },
-
-              projectName: projectName,
-              state: state,
-              project_discripation: project_discripation,
-              projectAddress: projectAddress,
-              AboutDeveloper: AboutDeveloper,
-              builderName: builderName,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Education: projectRedefine_Education,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_title: meta_title,
-              meta_description: meta_description,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          // console.log(data)
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.frontImage) {
-          console.log("helo project");
-          const frontImage = req.files.frontImage;
-          const projectBgResult = await cloudinary.uploader.upload(
-            frontImage.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              frontImage: {
-                public_id: projectBgResult.public_id,
-                url: projectBgResult.secure_url,
-              },
-              projectName: projectName,
-              state: state,
-              project_discripation: project_discripation,
-              projectAddress: projectAddress,
-              bulderName: builderName,
-              AboutDeveloper: AboutDeveloper,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Education: projectRedefine_Education,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              // Amenities: Amenities,
-              projectBgResult: projectBgResult,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              type: type,
-              city: city,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          // console.log(data)
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully !",
-          });
-        } else if (req.files.project_locationImage) {
-          const projectLocation = req.files.project_locationImage;
-          const projectLocationResult = await cloudinary.uploader.upload(
-            projectLocation.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              project_locationImage: {
-                public_id: projectLocationResult.public_id,
-                url: projectLocationResult.secure_url,
-              },
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              builderName: builderName,
-              AboutDeveloper: AboutDeveloper,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Education: projectRedefine_Education,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          //  console.log(data)
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-            data,
-          });
-        } else if (req.files.project_floorplan_Image) {
-          const project_floorplan_Image = req.files.project_floorplan_Image;
-          // console.log(project_floorplan_Image)
-          const floorplanLink = [];
-          if (project_floorplan_Image.length >= 2) {
-            for (let i = 0; i < project_floorplan_Image.length; i++) {
-              const project_floorplanResult = await cloudinary.uploader.upload(
-                project_floorplan_Image[i].tempFilePath,
-                {
-                  folder: "100acre/project",
-                }
-              );
-
-              floorplanLink.push({
-                public_id: project_floorplanResult.public_id,
-                url: project_floorplanResult.secure_url,
-              });
-            }
-          } else {
-            const project_floorplanResult = await cloudinary.uploader.upload(
-              project_floorplan_Image.tempFilePath,
-              {
-                folder: "100acre/project",
-              }
-            );
-            floorplanLink.push({
-              public_id: project_floorplanResult.public_id,
-              url: project_floorplanResult.secure_url,
-            });
-          }
-
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              project_floorplan_Image: floorplanLink,
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              projectRedefine_Education: projectRedefine_Education,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.projectGallery) {
-          const projectGallery = req.files.projectGallery;
-          const projectGalleryArray = [];
-          if (projectGallery.length >= 2) {
-            for (let i = 0; i < projectGallery.length; i++) {
-              const projectGalleryImageResult =
-                await cloudinary.uploader.upload(
-                  projectGallery[i].tempFilePath,
-                  {
-                    folder: "100acre/project",
-                  }
-                );
-              projectGalleryArray.push({
-                public_id: projectGalleryImageResult.public_id,
-                url: projectGalleryImageResult.secure_url,
-              });
-            }
-          } else {
-            const projectGalleryImageResult = await cloudinary.uploader.upload(
-              projectGallery.tempFilePath,
-              {
-                folder: "100acre/project",
-              }
-            );
-            projectGalleryArray.push({
-              public_id: projectGalleryImageResult.public_id,
-              url: projectGalleryImageResult.secure_url,
-            });
-          }
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              projectGallery: projectGalleryArray,
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              projectRedefine_Education: projectRedefine_Education,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              project_Status: project_Status,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.highlightImage) {
-          const highlightImageProject = req.files.highlightImage;
-          const highlightImageResult = await cloudinary.uploader.upload(
-            highlightImageProject.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              highlightImage: {
-                public_id: highlightImageResult.public_id,
-                url: highlightImageResult.secure_url,
-              },
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              projectRedefine_Education: projectRedefine_Education,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.project_Brochure) {
-          const project_Brochure = req.files.project_Brochure;
-
-          const project_BrochureResult = await cloudinary.uploader.upload(
-            project_Brochure.tempFilePath,
-            {
-              folder: "100acre/project",
-              resource_type: "raw", // or "raw"
-            }
-          );
-
-          console.log(project_BrochureResult);
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              project_Brochure: project_BrochureResult,
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              projectRedefine_Education: projectRedefine_Education,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
-        } else if (req.files.projectMaster_plan) {
-          const projectMaster_plan = req.files.projectMaster_plan;
-          const projectMaster_planResult = await cloudinary.uploader.upload(
-            projectMaster_plan.tempFilePath,
-            {
-              folder: "100acre/project",
-            }
-          );
-          const data = await ProjectModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              projectMaster_plan: projectMaster_planResult,
-              projectName: projectName,
-              state: state,
-              projectAddress: projectAddress,
-              project_discripation: project_discripation,
-              projectRedefine_Business: projectRedefine_Business,
-              projectRedefine_Connectivity: projectRedefine_Connectivity,
-              projectRedefine_Entertainment: projectRedefine_Entertainment,
-              projectRedefine_Education: projectRedefine_Education,
-              // Amenities: Amenities,
-              projectBgContent: projectBgContent,
-              projectReraNo: projectReraNo,
-              meta_description: meta_description,
-              meta_title: meta_title,
-              city: city,
-              type: type,
-              projectOverview: projectOverview,
-              project_url: project_url,
-              project_Status: project_Status,
-              towerNumber: towerNumber,
-              totalUnit: totalUnit,
-              totalLandArea: totalLandArea,
-              launchingDate: launchingDate,
-              mobileNumber: mobileNumber,
-              possessionDate: possessionDate,
-              minPrice: minPrice,
-              maxPrice: maxPrice,
-            }
-          );
-          await data.save();
-          res.status(200).json({
-            message: "data updated successfully ! ",
-          });
+        if (logo) {
+          const logoId = projectData.logo.public_id;
+          const logoResult = await uploadUpdate(logo[0], logoId);
+          update.logo = {
+            public_id: logoResult.Key,
+            url: logoResult.Location,
+          };
         }
-      } else {
-        const data = await ProjectModel.findByIdAndUpdate(
-          { _id: id },
-          {
-            projectName: projectName,
-            state: state,
-            projectAddress: projectAddress,
-            project_discripation: project_discripation,
-            projectRedefine_Business: projectRedefine_Business,
-            projectRedefine_Connectivity: projectRedefine_Connectivity,
-            projectRedefine_Entertainment: projectRedefine_Entertainment,
-            projectRedefine_Education: projectRedefine_Education,
-            // Amenities: Amenities,
-            projectBgContent: projectBgContent,
-            projectReraNo: projectReraNo,
-            meta_description: meta_description,
-            meta_title: meta_title,
-            city: city,
-            type: type,
-            projectOverview: projectOverview,
-            project_url: project_url,
-            project_Status: project_Status,
-            towerNumber: towerNumber,
-            totalUnit: totalUnit,
-            totalLandArea: totalLandArea,
-            launchingDate: launchingDate,
-            mobileNumber: mobileNumber,
-            possessionDate: possessionDate,
-            minPrice: minPrice,
-            maxPrice: maxPrice,
+
+        if (frontImage) {
+          const frontId = projectData.frontImage.public_id;
+          const frontResult = await uploadUpdate(frontImage[0], frontId);
+          update.frontImage = {
+            public_id: frontResult.Key,
+            url: frontResult.Location,
+          };
+        }
+
+        if (project_locationImage) {
+          const locationId = projectData.project_locationImage.public_id;
+          const locationResult = await uploadUpdate(
+            project_locationImage[0],
+            locationId
+          );
+          update.project_locationImage = {
+            public_id: locationResult.Key,
+            url: locationResult.Location,
+          };
+        }
+
+        if (highlightImage) {
+          const highlightId = projectData.highlightImage.public_id;
+          const highlightResult = await uploadUpdate(
+            highlightImage[0],
+            highlightId
+          );
+          update.highlightImage = {
+            public_id: highlightResult.Key,
+            url: highlightResult.Location,
+          };
+        }
+
+        if (project_Brochure) {
+          const brochureId = projectData.project_Brochure.public_id;
+
+          const brochureResult = await uploadUpdate(
+            project_Brochure[0],
+            brochureId
+          );
+          update.project_Brochure = {
+            public_id: brochureResult.Key,
+            url: brochureResult.Location,
+          };
+        }
+
+        if (projectMaster_plan) {
+          const masterId = projectData.projectMaster_plan.public_id;
+
+          const masterResult = await uploadUpdate(
+            projectMaster_plan[0],
+            masterId
+          );
+          update.projectMaster_plan = {
+            public_id: masterResult.Key,
+            url: masterResult.Location,
+          };
+        }
+        if (project_floorplan_Image) {
+          const floorId = projectData.project_floorplan_Image.map((item) => {
+            return item.public_id;
+          });
+
+          let floorResult = await Promise.all(
+            project_floorplan_Image.map((item, index) =>
+              uploadUpdate(item, floorId[index])
+            )
+          );
+
+          update.project_floorplan_Image =floorResult.map((item)=>({
+            public_id:item.Key,
+            url:item.Location
+          }))
+        }
+
+        if (projectGallery) {
+          const GalleryId = projectData.projectGallery.map((item) => {
+            return item.public_id;
+          });
+
+          let galleryresult = await Promise.all(
+            projectGallery.map((item, index) =>
+              uploadUpdate(item, GalleryId[index])
+            )
+          );
+
+          update.projectGallery =galleryresult.map((item)=>({
+            public_id:item.Key,
+            url:item.Location
+          }))
+        }
+        const fieldsToUpdate = [
+          "projectName",
+          "state",
+          "project_discripation",
+          "projectAddress",
+          "builderName",
+          "AboutDeveloper",
+          "projectRedefine_Business",
+          "projectRedefine_Connectivity",
+          "projectRedefine_Education",
+          "projectRedefine_Entertainment",
+          "Amenities",
+          "projectBgContent",
+          "projectReraNo",
+          "meta_description",
+          "meta_title",
+          "type",
+          "city",
+          "projectOverview",
+          "project_url",
+          "project_Status",
+          "towerNumber",
+          "totalUnit",
+          "totalLandArea",
+          "launchingDate",
+          "mobileNumber",
+          "possessionDate",
+          "minPrice",
+          "maxPrice",
+        ];
+
+        fieldsToUpdate.forEach((field) => {
+          if (req.body[field]) {
+            update[field] = req.body[field];
           }
-        );
-        await data.save();
-        res.status(200).json({
-          message: "data updated successfully ! ",
         });
+   const data= await ProjectModel.findByIdAndUpdate({_id:id},update)
+   await data.save()
+  //  fs.unlinkSync(req.files.path);
+   return res.status(200).json({
+    message:"Updated successfully !"
+   })
       }
     } catch (error) {
       console.log(error);
@@ -1958,3 +1472,4 @@ module.exports = projectController;
 // };
 // const result = await ProjectModel.updateMany(filter, updateDoc);
 // console.log(`Updated ${result.modifiedCount} documents`);
+ 
