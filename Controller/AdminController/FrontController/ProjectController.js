@@ -64,15 +64,14 @@ const sendPostEmail = async (email, number, projectName) => {
 
 const fetchDataFromDatabase = async () => {
   try {
-    const limit = 25; // Split into more chunks
+    const limit = 50; // Split into more chunks
     const dataPromises = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 6; i++) {
       dataPromises.push(
         ProjectModel.find()
           .skip(i * limit)
           .limit(limit)
           .lean()
-          .exec()
       );
     }
     const dataArrays = await Promise.all(dataPromises);
@@ -82,7 +81,6 @@ const fetchDataFromDatabase = async () => {
     throw error;
   }
 };
-
 
 const upload = (file) => {
   const fileContent = fs.readFileSync(file.path);
@@ -555,7 +553,7 @@ class projectController {
       // If not available in cache, fetch from the database and cache it
       if (!data) {
         data = await fetchDataFromDatabase();
-        const expirationTime = 1 * 60 * 1000;
+        const expirationTime = 10 * 60 * 1000;
         cache.put("projectData", data, expirationTime);
       }
 
