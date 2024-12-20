@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const upload=require('../aws/multerConfig')
-const fileUpload = require('express-fileupload');
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -22,7 +21,7 @@ const CareerController = require("../Controller/AdminController/FrontController/
 //Router for front home page  controller
 // router.get('/', homeController.home)
 // router for about page
-router.get("/about", aboutController.about);
+router.get("/about",authAdmin, aboutController.about);
 
 // router for front contact page
 router.get("/contact", contactController.contact);
@@ -65,7 +64,7 @@ router.delete("/project/Delete/:id", projectController.projectDelete);
 
 router.get("/project/trending", projectController.project_trending);
 router.get("/project/featured", projectController.project_featured);
-router.get("/project/city", projectController.project_City);
+router.get("/project/city",  projectController.project_City);
 router.get("/project/upcoming", projectController.project_Upcoming);
 router.get("/project/affordable", projectController.projectAffordable);
 router.delete("/floorImage/:id/:indexNumber",projectController.floorImage)
@@ -165,31 +164,15 @@ router.delete(
 router.post("/postPerson/otp",PostPropertyController.otpVerify)
 router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
 router.post("/postPerson/register", PostPropertyController.postPerson_Register);
-router.get(
-  "/postPerson/Role/:email",
-  PostPropertyController.postPerson_verifyRole
-);
-router.post(
-  "/postPerson/verify_Login",
-  authAdmin,
-  PostPropertyController.postPerson_VerifyLogin
-);
+router.get( "/postPerson/Role/:email", PostPropertyController.postPerson_verifyRole);
+router.post("/postPerson/verify_Login",PostPropertyController.postPerson_VerifyLogin);
 router.get("/postPerson/logout", PostPropertyController.postPerson_logout);
-router.post(
-  "/postPerson/postProperty_forget", 
-  PostPropertyController.postPerson_forget
-);
-router.post(
-  "/postPerson/reset/:token",
-  PostPropertyController.postPerson_reset
-);
+router.post("/postPerson/postProperty_forget",  PostPropertyController.postPerson_forget);
+router.post( "/postPerson/reset/:token",PostPropertyController.postPerson_reset);
 router.get("/postPerson/view", PostPropertyController.postPerson_View);
 router.get("/postPerson/edit/:id", PostPropertyController.postPerson_Edit);
 router.post("/postPerson/update/:id", PostPropertyController.postPerson_update);
-router.delete(
-  "/postPerson/delete/:id",
-  PostPropertyController.postPerson_accountDelete
-);
+router.delete("/postPerson/delete/:id",PostPropertyController.postPerson_accountDelete);
 router.post("/changePassword", PostPropertyController.Post_changePassword);
 
 //property routing
