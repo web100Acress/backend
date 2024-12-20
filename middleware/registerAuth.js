@@ -1,36 +1,25 @@
 const jwt = require('jsonwebtoken')
 const postPropertyModel = require('../models/postProperty/post')
-require('dotenv').config()
+
+// const postPropertyModel=require('../models/postProperty/post')
 
 const authAdmin = async (req, res, next) => {
   try {
     // res.send("hello auth")
-    const  token  = req.cookies.jwt
-    
-		if (!token) {
-			return res.status(401).json({ error: "Unauthorized - No Token Provided" });
-		}
-
-      const verify_token = jwt.verify(token, process.env.JWT_SECRET)
-      
-		if (!verify_token) {
-			return res.status(401).json({ error: "Unauthorized - Invalid Token" });
-		}
-
-      
-      const admin_data = await postPropertyModel.findOne({ _id: verify_token.userId })
-      
-      if (!admin_data) {
-        return res.status(404).json({ error: "User not found" });
-      }
+    const { token } = req.cookies
+    //    res.send(token)
+    if (token) {
+      const verify_token = jwt.verify(token, 'amitchaudhary100')
+      // console.log(verify_token)
+      const admin_data = await postPropertyModel.findOne({ _id: verify_token.user_id })
+      // console.log(admin_data)
       req.admin = admin_data
       next()
-  
+    } else {
+      next()
+    }
   } catch (error) {
     console.log(error)
-    res.status(500).json({
-      error:error
-    })
   }
 }
 module.exports = authAdmin

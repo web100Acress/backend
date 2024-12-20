@@ -7,9 +7,9 @@ const cloudinary = require("cloudinary").v2;
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
-const generateTokenAndset=require("../../../middleware/utils")
+const mongoose = require("mongoose");
+const validator = require('validator');
 require('dotenv').config()
-const  validator = require("email-validator");
 const fs=require('fs');
 const AWS=require('aws-sdk');
 const { isValidObjectId } = require('mongoose');
@@ -56,7 +56,14 @@ const updatePost = (file, objectKey) => {
   }
 };
 // Function to get all project data and cache it
-
+const getAllProjects = async () => {
+  try {
+    const data = await postPropertyModel.find();
+    cache.put("allProjects", data, 3600000); // Cache for 1 hour (in milliseconds)
+  } catch (error) {
+    console.error("Error caching projects:", error);
+  }
+};
 const generateToken = () => {
   return Math.floor(Math.random() * 1000000);
 };
@@ -199,47 +206,107 @@ const sendPostEmail = async (email) => {
 };
 class PostPropertyController {
           
+  // static postPerson_Register = async (req, res) => {
+  //   try {
+  //     const { name, email, mobile, password, cpassword, role } = req.body;
+  //     // console.log(req.body
+  //     const verify = await postPropertyModel.findOne({ email: email });
+  //     if (verify) {
+  //       res.status(409).json({
+  //         message: " User already exists !",
+  //       });
+  //     } else {
+  //       if (name && email && password && cpassword && mobile && role) {
+  //         if (password.length < 5) {
+  //           res.status(400).json({
+  //             message: " Password must be atleast 8 character ! ",
+  //           });
+  //         } else {
+  //           if (password == cpassword) {
+  //             const hashpassword = await bcrypt.hash(password, 10);
+  //             const data = new postPropertyModel({
+  //               name: name,
+  //               email: email,
+  //               password: hashpassword,
+  //               mobile: mobile,
+  //               role: role,
+  //             });
+  //             // console.log(data)
+  //             await data.save();
+  //             res.status(200).json({
+  //               message: "Registration successfully done ! ",
+  //             });
+  //           } else {
+  //             res.status(401).json({
+  //               message: "Password and Confirm password does not match  ! ",
+  //             });
+  //           }
+  //         }
+  //       } else {
+  //         res.status(204).json({
+  //           message: "check yur field ! ",
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       message: "Internal server error !",
+  //     });
+  //   }
+  // };
   static postPerson_Register = async (req, res) => {
+   
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-     const check= validator.validate(email);
-     if(!check){
-      return res.status(400).json({
-        message: "Invalid email!",
-      });
-  
-     }
-      const verify = await postPropertyModel.findOne({ email: email })
-      
+
+      const verify = await postPropertyModel
+        .findOne({ email: email })
+        .session(session);
       // console.log(verify);
+  
 
  // true or false
+
+
       if (verify) {
-       return res.status(400).json({
+        res.status(409).json({
           message: "User already exists!",
         });
-    
+        await session.abortTransaction();
+        session.endSession();
+        return;
       }
 
       if (!name || !email || !password || !cpassword || !mobile || !role) {
-       return res.status(400).json({
-          message: "Please fill in all field!",
+        res.status(400).json({
+          message: "Please fill in all fields!",
         });
-      
+        await session.abortTransaction();
+        session.endSession();
+        return;
       }
 
       if (password.length < 5) {
-      return  res.status(400).json({
+        res.status(400).json({
           message: "Password must be at least 8 characters!",
         });
-        
+        await session.abortTransaction();
+        session.endSession();
+        return;
       }
 
       if (password !== cpassword) {
-       return res.status(400).json({
+        res.status(400).json({
           message: "Password and Confirm Password do not match!",
         });
-       
+        await session.abortTransaction();
+        session.endSession();
+        return;
       }
 
       const hashpassword = await bcrypt.hash(password, 10);
@@ -250,16 +317,17 @@ class PostPropertyController {
         mobile: mobile,
         role: role,
       });
+      await data.save({ session });
+      await session.commitTransaction();
+      session.endSession();
 
-// Generate JWT token here
-generateTokenAndset(data._id, res);
-      await data.save();
-     return res.status(201).json({
+      res.status(201).json({
         message: "Registration successfully done!",
-        data
       });
     } catch (error) {
       console.log(error);
+      await session.abortTransaction();
+      session.endSession();
       res.status(500).json({
         message: "Internal server error!",
       });
@@ -275,16 +343,29 @@ generateTokenAndset(data._id, res);
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
           if (email == email && isMatch) {
-       
+            if (User.role == "admin") {
               const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
-// Generate JWT token here
-             generateTokenAndset(User._id, res);
+
               res.status(200).json({
                 message: " Admin login successfully ! ",
                 token,
                 User,
               });
-           
+            } else {
+              const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
+              // const totalProperty=User.postProperty.length
+              // const Property = User.postProperty;
+              // const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
+              // const selltotal=SellProperty.length
+              // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
+              // const Renttotal=RentProperty.length
+
+              res.status(200).json({
+                message: " login successfully done  ! ",
+                token,
+                User,
+              });
+            }
           } else {
             res.status(401).json({
               message: "Please verify your email and password before sign in !",
@@ -329,8 +410,10 @@ generateTokenAndset(data._id, res);
   // logout
   static postPerson_logout = async (req, res) => {
     try {
-      res.cookie("jwt", "", { maxAge: 0 });
-      res.status(200).json({ message: "Logged out successfully" });
+      res.clearCookie("token");
+      res.status(200).json({
+        message: "You have successfully logged out !",
+      });
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -1020,52 +1103,51 @@ $set:{
         { new: true }
       )
       const agentEmail = dataUpdate.email;
-      // console.log(agentEmail,"shhhkio")
-      //  if(verify!==null){
-      //   const transporter = await nodemailer.createTransport({
-      //     service: "gmail",
-      //     port: 465,
-      //     secure: true,
-      //     logger: false,
-      //     debug: true,
-      //     secureConnection: false,
-      //     auth: {
-      //       // user: process.env.Email,
-      //       // pass: process.env.EmailPass
-      //       user: "web.100acress@gmail.com",
-      //       pass: "txww gexw wwpy vvda",
-      //     },
-      //     tls: {
-      //       rejectUnAuthorized: true,
-      //     },
-      //   });
-      //   // Send mail with defined transport objec
-      //   let info = await transporter.sendMail({
-      //     from: "amit100acre@gmail.com", // Sender address
-      //     to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-      //     subject: "Verified Your Property",
-      //     html: `
-      //                     <!DOCTYPE html>
-      //                     <html lang:"en>
-      //                     <head>
-      //                     <meta charset:"UTF-8">
-      //                     <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-      //                     <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-      //                     <title>Congratulations! Your Property Verified  </title>
-      //                     </head>
-      //                     <body>
-      //                    <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-      //                     The verification was conducted by 100acress team </p>
+       if(verify!==null){
+        const transporter = await nodemailer.createTransport({
+          service: "gmail",
+          port: 465,
+          secure: true,
+          logger: false,
+          debug: true,
+          secureConnection: false,
+          auth: {
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user: "web.100acress@gmail.com",
+            pass: "txww gexw wwpy vvda",
+          },
+          tls: {
+            rejectUnAuthorized: true,
+          },
+        });
+        // Send mail with defined transport objec
+        let info = await transporter.sendMail({
+          from: "amit100acre@gmail.com", // Sender address
+          to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+          subject: "Verified Your Property",
+          html: `
+                          <!DOCTYPE html>
+                          <html lang:"en>
+                          <head>
+                          <meta charset:"UTF-8">
+                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                          <title>Congratulations! Your Property Verified  </title>
+                          </head>
+                          <body>
+                         <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
+                          The verification was conducted by 100acress team </p>
                             
-      //                         <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-      //                         </p>
-      //                         <p>Thank you!</p>
-      //                     </body>
-      //                     </html>
-      //             `,
-      //   });
+                              <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                              </p>
+                              <p>Thank you!</p>
+                          </body>
+                          </html>
+                  `,
+        });
       
-      //  }
+       }
        return res.status(200).json({
         message:"Property updated successfully ",
         dataUpdate
