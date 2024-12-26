@@ -14,11 +14,11 @@ const websiteSchema=new mongoose.Schema({
     },
     projectName:{
         type:String,
-        required:true
+  
     },
     projectAddress:{
         type:String,
-        required:true
+       
     },
     status:{
         type: String,
