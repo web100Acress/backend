@@ -118,7 +118,7 @@ class registerController {
                     if ((user.email == email) && isMatch) {
 
                         if (user.role == 'admin') {
-                            const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
+                            const token = jwt.sign({ user_id: user._id, role: "Admin" }, 'amitchaudhary100')
                             // console.log(token)
                             //  console.log(token)
                             res.cookie('token', token)
@@ -129,7 +129,7 @@ class registerController {
                             })
 
                         } else {
-                            const token = jwt.sign({ user_id: user._id }, 'amitchaudhary100')
+                            const token = jwt.sign({ user_id: user._id, role: "user" }, 'amitchaudhary100')
                             res.cookie('token', token)
                             res.status(200).json({
                                 message: "admin user login successful! "
