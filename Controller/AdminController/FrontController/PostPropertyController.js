@@ -336,23 +336,23 @@ class PostPropertyController {
   // verify login for seller
   static postPerson_VerifyLogin = async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password } =  req.body;
       if (email && password) {
         const User = await postPropertyModel.findOne({ email: email });
+
         // console.log(User.role,"hello")
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
           if (email == email && isMatch) {
-            if (User.role == "admin") {
-              const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
-
+            if (User.role === "Admin") {
+              const token = jwt.sign({ user_id: User._id, role: "Admin" }, "amitchaudhary100");
               res.status(200).json({
                 message: " Admin login successfully ! ",
                 token,
                 User,
               });
             } else {
-              const token = jwt.sign({ user_id: User._id }, "amitchaudhary100");
+              const token = jwt.sign({ user_id: User._id, role: "user" }, "amitchaudhary100");
               // const totalProperty=User.postProperty.length
               // const Property = User.postProperty;
               // const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
