@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const upload=require('../aws/multerConfig')
 const fileUpload = require('express-fileupload');
+const adminVerify = require("../middleware/adminVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
