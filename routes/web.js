@@ -17,6 +17,7 @@ const PostPropertyController = require("../Controller/AdminController/FrontContr
 const newlaunchController = require("../Controller/AdminController/FrontController/NewlauchController");
 const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
+const adminVerify = require("../middleware/adminVerify");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
 
 //Router for front home page  controller
