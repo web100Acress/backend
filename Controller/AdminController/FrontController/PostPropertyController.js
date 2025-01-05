@@ -33,6 +33,23 @@ const uploadFile=(file)=>{
   return s3.upload(params).promise();
 
 }
+const deleteFile = async (fileKey) => {
+  const params = {
+    Bucket: "100acress-media-bucket",
+    Key: fileKey,
+  };
+
+  try {
+    await s3.deleteObject(params).promise();
+    console.log(`File deleted successfully: ${fileKey}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting file: ${fileKey}`, error);
+    throw error; // Re-throw the error to handle it in the calling function
+  }
+};
+
+
 const updatePost = (file, objectKey) => {
   const fileContent = fs.readFileSync(file.path);
   if (objectKey != null) {
@@ -1169,41 +1186,54 @@ $set:{
   static postProperty_Delete = async (req, res) => {
     try {
       const propertyId = req.params.id;
-      // Find the user by ID
       const user = await postPropertyModel.findOne({
         "postProperty._id": propertyId,
       });
 
-      const matchedPostProperties = user.postProperty.find(
-        (postProperty) => postProperty._id.toString() === propertyId
-      );
-      const frontId = matchedPostProperties.frontImage.public_id;
-      if (frontId) {
-        await cloudinary.uploader.destroy(frontId);
-      }
-      const other = matchedPostProperties.otherImage;
-      if (other) {
-        for (let i = 0; i < other.length; i++) {
-          const id = matchedPostProperties.otherImage[i].public_id;
-          if (id) {
-            await cloudinary.uploader.destroy(id);
-          }
-        }
-      }
-
       if (!user) {
         return res.status(404).json({ error: "Post property not found" });
       }
-      // Find  index of the postProperty object with  ID
-      const index = user.postProperty.findIndex(
+
+      const matchedPostProperties = user.postProperty.find(
         (postProperty) => postProperty._id.toString() === propertyId
       );
-      if (index === -1) {
-        return res.status(404).json({ error: "Post property not found" });
+
+      // Try to delete files from S3
+      let s3DeleteSuccess = true;
+      try {
+        const frontId = matchedPostProperties.frontImage.public_id;
+        if (frontId) {
+          await deleteFile(frontId);
+        }
+
+        const other = matchedPostProperties.otherImage;
+        if (other) {
+          for (let i = 0; i < other.length; i++) {
+            const id = matchedPostProperties.otherImage[i].public_id;
+            if (id) {
+              await deleteFile(id);
+            }
+          }
+        }
+      } catch (s3Error) {
+        s3DeleteSuccess = false;
+        console.error("Failed to delete some S3 files:", s3Error);
       }
-      user.postProperty.splice(index, 1);
-      await user.save();
-      res.status(200).json({ message: "Post property deleted successfully" });
+
+      // Only proceed with database deletion if S3 deletion was successful
+      if (s3DeleteSuccess) {
+        const index = user.postProperty.findIndex(
+          (postProperty) => postProperty._id.toString() === propertyId
+        );
+        if (index === -1) {
+          return res.status(404).json({ error: "Post property not found" });
+        }
+        user.postProperty.splice(index, 1);
+        await user.save();
+        res.status(200).json({ message: "Post property deleted successfully" });
+      } else {
+        res.status(500).json({ error: "Failed to delete S3 files. Operation aborted." });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error" });
