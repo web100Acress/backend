@@ -8,6 +8,8 @@ const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
 const AWS = require("aws-sdk");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+
 
 require("dotenv").config();
 AWS.config.update({
@@ -117,9 +119,28 @@ const uploadUpdate = (file, objectKey) => {
   }
 };
 
+const deleteFile = async (fileKey) => {
+  const params = {
+    Bucket: "100acress-media-bucket",
+    Key: fileKey,
+  };
+
+  try {
+    await s3.deleteObject(params).promise();
+    console.log(`File deleted successfully: ${fileKey}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting file: ${fileKey}`, error);
+    throw error; // Re-throw the error to handle it in the calling function
+  }
+};
+
 class projectController {
   // Project data insert api
+    
   static projectInsert = async (req, res) => {
+    console.log("Headers: ",req.headers);
+    console.log("Body: ",req.body);
     // console.log("hello")
     try {
       // console.log(req.body)
@@ -546,6 +567,7 @@ class projectController {
   // };
 
   static projectviewAll = async (req, res) => {
+
     try {
       // Check if data is available in cache
       let data = cache.get("projectData");
@@ -611,42 +633,42 @@ class projectController {
       if (data_id) {
         const logoId = data_id.logo.public_id;
         if (logoId) {
-          await cloudinary.uploader.destroy(logoId);
+          await deleteFile(logoId);
         }
         const frontId = data_id.frontImage.public_id;
         if (frontId != null) {
-          await cloudinary.uploader.destroy(frontId);
+          await deleteFile(frontId);
         }
         const locationId = data_id.project_locationImage.public_id;
         if (locationId) {
-          await cloudinary.uploader.destroy(locationId);
+          await deleteFile(locationId);
         }
         const floorId = data_id.project_floorplan_Image;
         for (let i = 0; i < floorId.length; i++) {
           const id = data_id.project_floorplan_Image[i].public_id;
 
           if (floorId) {
-            await cloudinary.uploader.destroy(id);
+            await deleteFile(id);
           }
         }
         const highlightId = data_id.highlightImage.public_id;
         if (highlightId) {
-          await cloudinary.uploader.destroy(highlightId);
+          await deleteFile(highlightId);
         }
         const BrochureId = data_id.project_Brochure.public_id;
         if (BrochureId) {
-          await cloudinary.uploader.destroy(BrochureId);
+          await deleteFile(BrochureId);
         }
         const GalleryId = data_id.projectGallery;
         for (let i = 0; i < GalleryId.length; i++) {
           const id = data_id.projectGallery[i].public_id;
           if (id) {
-            await cloudinary.uploader.destroy(id);
+            await deleteFile(id);
           }
         }
         const masterId = data_id.projectMaster_plan.public_id;
         if (masterId) {
-          await cloudinary.uploader.destroy(masterId);
+          await deleteFile(masterId);
         }
         const data = await ProjectModel.findByIdAndDelete({ _id: id });
         res.status(202).json({
@@ -1349,7 +1371,7 @@ class projectController {
         if (indexNumber < Imagelength) {
           const public_id = floorplan[0].public_id;
           if (public_id) {
-            await cloudinary.uploader.destroy(public_id);
+            await deleteFile(public_id);
             floorplan.splice(indexNumber, 1);
             // Update the data in the database
             await ProjectModel.findByIdAndUpdate(

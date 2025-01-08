@@ -19,6 +19,8 @@ const newlaunchController = require("../Controller/AdminController/FrontControll
 const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
+const postPropertyRoute = require("./postProperty.route");
+const projectRoute = require("./Project.route");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -36,39 +38,40 @@ router.get("/agent", agentController.agent);
 
 // Admin Controller routing
 //projectDetail page
+router.use("/project",projectRoute);
 //page with detail
-router.post("/projectInsert",
-  upload.fields([{name:"logo",maxCount:1},
-    {name:"frontImage",maxCount:1},
-    {name:"project_locationImage",maxCount:1}
-    ,{name:"highlightImage",maxCount:1},
-    {name:"projectMaster_plan",maxCount:1},
-    {name:"project_Brochure",maxCount:1},
-    {name:"project_floorplan_Image",maxCount:20},
-    {name:"projectGallery",maxCount:20},
-  ]), 
-  projectController.projectInsert);
-router.get("/projectView/:project_url", projectController.projectView);
-router.get("/project/viewAll/data", projectController.projectviewAll);
-router.get("/project/Edit/:id", projectController.projectEdit);
-router.post("/project/Update/:id",
-  upload.fields([{name:"logo",maxCount:1},
-    {name:"frontImage",maxCount:1},
-    {name:"project_locationImage",maxCount:1}
-    ,{name:"highlightImage",maxCount:1},
-    {name:"projectMaster_plan",maxCount:1},
-    {name:"project_Brochure",maxCount:1},
-    {name:"project_floorplan_Image",maxCount:20},
-    {name:"projectGallery",maxCount:20},
-  ]),
-  projectController.projectUpdate);
-router.delete("/project/Delete/:id", projectController.projectDelete);
+// router.post("/project/Insert",
+//   upload.fields([{name:"logo",maxCount:1},
+//     {name:"frontImage",maxCount:1},
+//     {name:"project_locationImage",maxCount:1}
+//     ,{name:"highlightImage",maxCount:1},
+//     {name:"projectMaster_plan",maxCount:1},
+//     {name:"project_Brochure",maxCount:1},
+//     {name:"project_floorplan_Image",maxCount:20},
+//     {name:"projectGallery",maxCount:20},
+//   ]), 
+//   projectController.projectInsert);
+// router.get("/project/View/:project_url", projectController.projectView);
+// router.get("/project/viewAll/data", projectController.projectviewAll);
+// router.get("/project/Edit/:id", projectController.projectEdit);
+// router.post("/project/Update/:id",
+//   upload.fields([{name:"logo",maxCount:1},
+//     {name:"frontImage",maxCount:1},
+//     {name:"project_locationImage",maxCount:1}
+//     ,{name:"highlightImage",maxCount:1},
+//     {name:"projectMaster_plan",maxCount:1},
+//     {name:"project_Brochure",maxCount:1},
+//     {name:"project_floorplan_Image",maxCount:20},
+//     {name:"projectGallery",maxCount:20},
+//   ]),
+//   projectController.projectUpdate);
+// router.delete("/project/Delete/:id", projectController.projectDelete);
 
-router.get("/project/trending", projectController.project_trending);
-router.get("/project/featured", projectController.project_featured);
-router.get("/project/city", projectController.project_City);
-router.get("/project/upcoming", projectController.project_Upcoming);
-router.get("/project/affordable", projectController.projectAffordable);
+// router.get("/project/trending", projectController.project_trending);
+// router.get("/project/featured", projectController.project_featured);
+// router.get("/project/city", projectController.project_City);
+// router.get("/project/upcoming", projectController.project_Upcoming);
+// router.get("/project/affordable", projectController.projectAffordable);
 router.delete("/floorImage/:id/:indexNumber",projectController.floorImage)
   
 //from
@@ -163,62 +166,64 @@ router.delete(
 // Post Property
 
 //post person
-router.post("/postPerson/otp",PostPropertyController.otpVerify)
-router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
-router.post("/postPerson/register", PostPropertyController.postPerson_Register);
-router.get(
-  "/postPerson/Role/:email",
-  PostPropertyController.postPerson_verifyRole
-);
-router.post(
-  "/postPerson/verify_Login",
-  authAdmin,
-  PostPropertyController.postPerson_VerifyLogin
-);
-router.get("/postPerson/logout", PostPropertyController.postPerson_logout);
-router.post(
-  "/postPerson/postProperty_forget", 
-  PostPropertyController.postPerson_forget
-);
-router.post(
-  "/postPerson/reset/:token",
-  PostPropertyController.postPerson_reset
-);
-router.get("/postPerson/view", PostPropertyController.postPerson_View);
-router.get("/postPerson/edit/:id", PostPropertyController.postPerson_Edit);
-router.post("/postPerson/update/:id", PostPropertyController.postPerson_update);
-router.delete(
-  "/postPerson/delete/:id",
-  PostPropertyController.postPerson_accountDelete
-);
-router.post("/changePassword", PostPropertyController.Post_changePassword);
 
-//property routing
-router.post( "/postPerson/propertyInsert/:id",
-  upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
-  PostPropertyController.postProperty
-);
-router.get(
-  "/postPerson/propertyView/:id",
-  PostPropertyController.postProperty_View
-);
-router.get(
-  "/postPerson/propertyoneView/:id",
-  PostPropertyController.postPropertyOne_View
-);
-router.get(
-  "/postPerson/propertyoneEdit/:id",
-  PostPropertyController.postProperty_Edit
-);
-router.post(
-  "/postPerson/propertyoneUpdate/:id",
-  upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
-  PostPropertyController.postProperty_Update
-);
-router.delete(
-  "/postPerson/propertyDelete/:id",
-  PostPropertyController.postProperty_Delete
-);
+router.use("/postPerson",postPropertyRoute);
+// router.post("/postPerson/otp",PostPropertyController.otpVerify)
+// router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
+// router.post("/postPerson/register", PostPropertyController.postPerson_Register);
+// router.get(
+//   "/postPerson/Role/:email",
+//   PostPropertyController.postPerson_verifyRole
+// );
+// router.post(
+//   "/postPerson/verify_Login",
+//   authAdmin,
+//   PostPropertyController.postPerson_VerifyLogin
+// );
+// router.get("/postPerson/logout", PostPropertyController.postPerson_logout);
+// router.post(
+//   "/postPerson/postProperty_forget", 
+//   PostPropertyController.postPerson_forget
+// );
+// router.post(
+//   "/postPerson/reset/:token",
+//   PostPropertyController.postPerson_reset
+// );
+// router.get("/postPerson/view", PostPropertyController.postPerson_View);
+// router.get("/postPerson/edit/:id", PostPropertyController.postPerson_Edit);
+// router.post("/postPerson/update/:id", PostPropertyController.postPerson_update);
+// router.delete(
+//   "/postPerson/delete/:id",
+//   PostPropertyController.postPerson_accountDelete
+// );
+// router.post("/changePassword", PostPropertyController.Post_changePassword);
+
+// //property routing
+// router.post( "/postPerson/propertyInsert/:id",
+//   upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
+//   PostPropertyController.postProperty
+// );
+// router.get(
+//   "/postPerson/propertyView/:id",
+//   PostPropertyController.postProperty_View
+// );
+// router.get(
+//   "/postPerson/propertyoneView/:id",
+//   PostPropertyController.postPropertyOne_View
+// );
+// router.get(
+//   "/postPerson/propertyoneEdit/:id",
+//   PostPropertyController.postProperty_Edit
+// );
+// router.post(
+//   "/postPerson/propertyoneUpdate/:id",
+//   upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
+//   PostPropertyController.postProperty_Update
+// );
+// router.delete(
+//   "/postPerson/propertyDelete/:id",
+//   PostPropertyController.postProperty_Delete
+// );
 router.get("/postEnq_view",PostPropertyController.postEnquiry_view)
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
