@@ -72,7 +72,7 @@ router.use("/project",projectRoute);
 // router.get("/project/city", projectController.project_City);
 // router.get("/project/upcoming", projectController.project_Upcoming);
 // router.get("/project/affordable", projectController.projectAffordable);
-router.delete("/floorImage/:id/:indexNumber",projectController.floorImage)
+router.delete("/floorImage/:id/:indexNumber",adminVerify,projectController.floorImage)
   
 //from
 router.post("/userInsert", projectController.userInsert);
@@ -168,62 +168,8 @@ router.delete(
 //post person
 
 router.use("/postPerson",postPropertyRoute);
-// router.post("/postPerson/otp",PostPropertyController.otpVerify)
-// router.post("/postPerson/verifyEmail",PostPropertyController.verifyEmail)
-// router.post("/postPerson/register", PostPropertyController.postPerson_Register);
-// router.get(
-//   "/postPerson/Role/:email",
-//   PostPropertyController.postPerson_verifyRole
-// );
-// router.post(
-//   "/postPerson/verify_Login",
-//   authAdmin,
-//   PostPropertyController.postPerson_VerifyLogin
-// );
-// router.get("/postPerson/logout", PostPropertyController.postPerson_logout);
-// router.post(
-//   "/postPerson/postProperty_forget", 
-//   PostPropertyController.postPerson_forget
-// );
-// router.post(
-//   "/postPerson/reset/:token",
-//   PostPropertyController.postPerson_reset
-// );
-// router.get("/postPerson/view", PostPropertyController.postPerson_View);
-// router.get("/postPerson/edit/:id", PostPropertyController.postPerson_Edit);
-// router.post("/postPerson/update/:id", PostPropertyController.postPerson_update);
-// router.delete(
-//   "/postPerson/delete/:id",
-//   PostPropertyController.postPerson_accountDelete
-// );
-// router.post("/changePassword", PostPropertyController.Post_changePassword);
 
-// //property routing
-// router.post( "/postPerson/propertyInsert/:id",
-//   upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
-//   PostPropertyController.postProperty
-// );
-// router.get(
-//   "/postPerson/propertyView/:id",
-//   PostPropertyController.postProperty_View
-// );
-// router.get(
-//   "/postPerson/propertyoneView/:id",
-//   PostPropertyController.postPropertyOne_View
-// );
-// router.get(
-//   "/postPerson/propertyoneEdit/:id",
-//   PostPropertyController.postProperty_Edit
-// );
-// router.post(
-//   "/postPerson/propertyoneUpdate/:id",
-//   upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),
-//   PostPropertyController.postProperty_Update
-// );
-// router.delete(
-//   "/postPerson/propertyDelete/:id",
-//   PostPropertyController.postProperty_Delete
-// );
+//post enquiry
 router.get("/postEnq_view",PostPropertyController.postEnquiry_view)
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 

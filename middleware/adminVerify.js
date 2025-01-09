@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const jwtVerification = async (req, res, next) => {
   try {
-    console.log("Headers: ",req.headers);
+    // console.log("Headers: ",req.headers);
     if (!req.headers.authorization) {
       console.log("No token provided");
       return res.status(401).json({ message: "No token provided" });
@@ -29,11 +29,14 @@ const jwtVerification = async (req, res, next) => {
     
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
+      console.log("Invalid token");
       return res.status(401).json({ message: "Invalid token" });
     }
     if (error.name === 'TokenExpiredError') {
+      console.log("Token expired");
       return res.status(401).json({ message: "Token expired" });
     }
+    console.log("Internal server error");
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -4,7 +4,7 @@ const upload= require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
 const router = express.Router();
 
-router.post("/Insert",
+router.post("/Insert",adminVerify,
   upload.fields([{name:"logo",maxCount:1},
     {name:"frontImage",maxCount:1},
     {name:"project_locationImage",maxCount:1}
@@ -19,6 +19,7 @@ router.get("/View/:project_url", projectController.projectView);
 router.get("/viewAll/data", projectController.projectviewAll);
 router.get("/Edit/:id", projectController.projectEdit);
 router.post("/Update/:id",
+  adminVerify,
   upload.fields([{name:"logo",maxCount:1},
     {name:"frontImage",maxCount:1},
     {name:"project_locationImage",maxCount:1}
