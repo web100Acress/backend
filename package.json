@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 && nodemon server.js"
   },
   "author": "",
   "license": "ISC",
@@ -30,5 +31,9 @@
     "nodemailer": "^6.9.4",
     "otp-generator": "^4.0.1",
     "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.9"
   }
 }
