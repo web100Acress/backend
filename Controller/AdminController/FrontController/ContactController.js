@@ -1,5 +1,4 @@
 //contact controller for handling opertion related contact page 
-const cloudinary = require('cloudinary').v2;
 // contac page   models
 const contactModel = require("../../../models/contact")
 const nodemailer = require('nodemailer');

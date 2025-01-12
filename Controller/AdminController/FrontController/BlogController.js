@@ -1,39 +1,10 @@
 
 const blogModel = require('../../../models/blog/blogpost');
 const postPropertyModel = require('../../../models/postProperty/post');
-const cloudinary = require('cloudinary').v2;
-  const ObjectId = require('mongodb').ObjectId;
-  const fs = require("fs");
-  const path = require("path");
-//   const uploadFile = require("../../../aws/s3Helper");
-  const updateFile=require('../../../aws/s3Helper')
-  const AWS=require('aws-sdk');
-  require("dotenv").config();
-  
-  AWS.config.update({
-    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-  })
-//   console.log( process.env.AWS_S3_SECRET_ACESS_KEY)
-  const s3=new AWS.S3();
-  const uploadFile=(file)=>{
+const ObjectId = require('mongodb').ObjectId;
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+const fs = require("fs");
 
-    // Read the file content
-    console.log("F.KAWHFIOQFJ")
-    const fileContent = fs.readFileSync(file.path);
-  
-    const params = {
-      Bucket: '100acress-media-bucket', // You can use environment variables for sensitive data like bucket name
-      Key:`uploads/${Date.now()}-${file.originalname}`,   // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-  
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  
-  }
 class blogController {
 
   
@@ -42,8 +13,10 @@ static blog_insert = async (req, res) => {
         if (!req.file) {
           return res.status(400).json({ message: 'No image uploaded' });
         }
-        const { blog_Title, blog_Description, author, blog_Category } = req.body;
-        if (!blog_Title || !blog_Description || !author || !blog_Category) {
+        const { blog_Title, author,blog_Description, blog_Category } = req.body;
+        let string_blog_Description = blog_Description[1];
+
+        if (!blog_Title || !string_blog_Description || !author || !blog_Category) {
           return res.status(400).json({ message: 'Missing fields' });
         }
         // Upload file to S3
@@ -55,7 +28,7 @@ static blog_insert = async (req, res) => {
             url: imageData.Location,
           },
           blog_Title,
-          blog_Description,
+          blog_Description:string_blog_Description,
           author,
           blog_Category,
         });
@@ -145,7 +118,7 @@ static blog_insert = async (req, res) => {
                     const data = await blogModel.findById({ _id: id })
                    const objectKey=data.blog_Image.public_id;
                
-                   const imageData=await updateFile(req.file,objectKey)
+                   const imageData=await upda(req.file,objectKey)
                 
 
                     const update = await blogModel.findByIdAndUpdate({ _id: id }, {
@@ -197,7 +170,7 @@ static blog_insert = async (req, res) => {
                 const data=await blogModel.findById({_id:id})
                 const imageId=data.blog_Image.public_id
                 if(imageId){
-                    await cloudinary.uploader.destroy(imageId)
+                    await deleteFile(imageId);
                 }
                 await blogModel.findByIdAndDelete({_id:id})
                 res.status(200).json({
@@ -217,5 +190,5 @@ static blog_insert = async (req, res) => {
     }
        
 }
-module.exports = blogController
+module.exports = blogController;
 

@@ -1,21 +1,15 @@
 const ProjectModel = require("../../../models/projectDetail/project");
 const UserModel = require("../../../models/projectDetail/user");
-const cloudinary = require("cloudinary").v2;
-const dotenv = require("dotenv").config();
+// const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
-const AWS = require("aws-sdk");
-const mongoose = require("mongoose");
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+// const mongoose = require("mongoose");
 
 require("dotenv").config();
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-const s3 = new AWS.S3();
+
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
     service: "gmail",
@@ -82,56 +76,6 @@ const fetchDataFromDatabase = async () => {
   }
 };
 
-const upload = (file) => {
-  const fileContent = fs.readFileSync(file.path);
-
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Body: fileContent,
-    Key: `uploads/${Date.now()}-${file.originalname}`,
-    ContentType: file.mimetype,
-  };
-  return s3.upload(params).promise();
-};
-
-const uploadUpdate = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
-  if (objectKey != null) {
-    const params = {
-      Bucket: "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
-};
-
-const deleteFile = async (fileKey) => {
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Key: fileKey,
-  };
-
-  try {
-    await s3.deleteObject(params).promise();
-    console.log(`File deleted successfully: ${fileKey}`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting file: ${fileKey}`, error);
-    throw error; // Re-throw the error to handle it in the calling function
-  }
-};
 
 class projectController {
   // Project data insert api
@@ -234,12 +178,12 @@ class projectController {
       }
       // Prepare an array of promises for all uploads
       const uploadPromises = [
-        upload(logo[0]),
-        upload(frontImage[0]),
-        upload(project_locationImage[0]),
-        upload(highlightImage[0]),
-        upload(projectMaster_plan[0]),
-        upload(project_Brochure[0]),
+        uploadFile(logo[0]),
+        uploadFile(frontImage[0]),
+        uploadFile(project_locationImage[0]),
+        uploadFile(highlightImage[0]),
+        uploadFile(projectMaster_plan[0]),
+        uploadFile(project_Brochure[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
@@ -253,11 +197,11 @@ class projectController {
       ] = await Promise.all(uploadPromises);
 
       let project_floorplanResult = await Promise.all(
-        req.files.project_floorplan_Image.map((file) => upload(file))
+        req.files.project_floorplan_Image.map((file) => uploadFile(file))
       );
 
       let projectGalleryResult = await Promise.all(
-        req.files.projectGallery.map((file) => upload(file))
+        req.files.projectGallery.map((file) => uploadFile(file))
       );
       const data = new ProjectModel({
         projectName: projectName,
@@ -393,7 +337,7 @@ class projectController {
 
         if (logo) {
           const logoId = projectData.logo.public_id;
-          const logoResult = await uploadUpdate(logo[0], logoId);
+          const logoResult = await updateFile(logo[0], logoId);
           update.logo = {
             public_id: logoResult.Key,
             url: logoResult.Location,
@@ -402,7 +346,7 @@ class projectController {
 
         if (frontImage) {
           const frontId = projectData.frontImage.public_id;
-          const frontResult = await uploadUpdate(frontImage[0], frontId);
+          const frontResult = await updateFile(frontImage[0], frontId);
           update.frontImage = {
             public_id: frontResult.Key,
             url: frontResult.Location,
@@ -411,7 +355,7 @@ class projectController {
 
         if (project_locationImage) {
           const locationId = projectData.project_locationImage.public_id;
-          const locationResult = await uploadUpdate(
+          const locationResult = await updateFile(
             project_locationImage[0],
             locationId
           );
@@ -423,7 +367,7 @@ class projectController {
 
         if (highlightImage) {
           const highlightId = projectData.highlightImage.public_id;
-          const highlightResult = await uploadUpdate(
+          const highlightResult = await updateFile(
             highlightImage[0],
             highlightId
           );
@@ -436,7 +380,7 @@ class projectController {
         if (project_Brochure) {
           const brochureId = projectData.project_Brochure.public_id;
 
-          const brochureResult = await uploadUpdate(
+          const brochureResult = await updateFile(
             project_Brochure[0],
             brochureId
           );
@@ -449,7 +393,7 @@ class projectController {
         if (projectMaster_plan) {
           const masterId = projectData.projectMaster_plan.public_id;
 
-          const masterResult = await uploadUpdate(
+          const masterResult = await updateFile(
             projectMaster_plan[0],
             masterId
           );
@@ -465,7 +409,7 @@ class projectController {
 
           let floorResult = await Promise.all(
             project_floorplan_Image.map((item, index) =>
-              uploadUpdate(item, floorId[index])
+              updateFile(item, floorId[index])
             )
           );
 
@@ -482,7 +426,7 @@ class projectController {
 
           let galleryresult = await Promise.all(
             projectGallery.map((item, index) =>
-              uploadUpdate(item, GalleryId[index])
+              updateFile(item, GalleryId[index])
             )
           );
 

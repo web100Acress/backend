@@ -1,55 +1,55 @@
 const postPropertyModel = require('../../../models/postProperty/post');
 const buyCommercial_Model = require('../../../models/property/buyCommercial');
-const cloudinary = require('cloudinary').v2;
 const NodeCache = require("node-cache");
 const cache = require("memory-cache");
 require('dotenv').config()
-const fs=require('fs');
-const AWS=require('aws-sdk');
+
 const { isValidObjectId } = require('mongoose');
-AWS.config.update({
-    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-})
-const s3=new AWS.S3()
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+// AWS.config.update({
+//     secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+//     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+//     region: process.env.AWS_REGION,
+// })
+// const s3=new AWS.S3()
 
-const uploadFile=(file)=>{
+// const uploadFile=(file)=>{
 
-    const fileContent=fs.readFileSync(file.path)
+//     const fileContent=fs.readFileSync(file.path)
 
-    const params={
-        Bucket:"100acress-media-bucket",
-        Body:fileContent,
-        Key:`uploads/${Date.now()}-${file.originalname}`,
-        ContentType:file.mimetype
+//     const params={
+//         Bucket:"100acress-media-bucket",
+//         Body:fileContent,
+//         Key:`uploads/${Date.now()}-${file.originalname}`,
+//         ContentType:file.mimetype
 
-    }
-    return s3.upload(params).promise();
+//     }
+//     return s3.upload(params).promise();
 
-}
-const updateRent = (file, objectKey) => {
-    const fileContent = fs.readFileSync(file.path);
-    if (objectKey != null) {
-      const params = {
-        Bucket: "100acress-media-bucket",
-        Key: objectKey,
-        Body: fileContent,
-        ContentType: file.mimetype,
-      };
-      return s3.upload(params).promise();
-    } else {
-      const params = {
-        Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-        Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-        Body: fileContent,
-        ContentType: file.mimetype,
-      };
+// }
+// const updateRent = (file, objectKey) => {
+//     const fileContent = fs.readFileSync(file.path);
+//     if (objectKey != null) {
+//       const params = {
+//         Bucket: "100acress-media-bucket",
+//         Key: objectKey,
+//         Body: fileContent,
+//         ContentType: file.mimetype,
+//       };
+//       return s3.upload(params).promise();
+//     } else {
+//       const params = {
+//         Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+//         Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+//         Body: fileContent,
+//         ContentType: file.mimetype,
+//       };
   
-      // Return the promise from s3.upload
-      return s3.upload(params).promise();
-    }
-  };
+//       // Return the promise from s3.upload
+//       return s3.upload(params).promise();
+//     }
+//   };
+
 class BuyController {
     // Buy Commercial Insert Edit View Update Delete
     static buycommercialInsert = async (req, res) => {
@@ -338,7 +338,7 @@ class BuyController {
            const update = {}; // Initialize an empty object
            if (frontImage) {
              const frontobjectKey = data.frontImage.public_id;
-             let frontResult = await updateRent(req.files.frontImage[0], frontobjectKey);
+             let frontResult = await updateFile(req.files.frontImage[0], frontobjectKey);
              update.frontImage = {
                public_id: frontResult.Key,
                url: frontResult.Location,
@@ -351,7 +351,7 @@ class BuyController {
      
              const otherResult = await Promise.all(
                otherImage.map((file, index) =>
-                 updateRent(file, otherobjectKey[index])
+                 updateFile(file, otherobjectKey[index])
                ),
              );
              update.otherImage = otherResult.map((item) => ({
@@ -425,12 +425,12 @@ class BuyController {
             // const data = await buyCommercial_Model.findByIdAndDelete(id)
             const result = await buyCommercial_Model.findById(req.params.id)
             const imageId = result.frontImage.public_id
-            await cloudinary.uploader.destroy(imageId)
+            await deleteFile(imageId)
 
             for (let i = 0; i < result.length; i++) {
                 const otherResult = await buyCommercial_Model.findById(req.params.id)
                 const otherId = otherResult.otherImage[i].public_id
-                await cloudinary.uploader.destroy(otherId)
+                await deleteFile(otherId)
             }
 
             await buyCommercial_Model.findByIdAndDelete(req.params.id)
