@@ -66,7 +66,7 @@ const fetchDataFromDatabase = async () => {
   try {
     const limit = 50; // Split into more chunks
     const dataPromises = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       dataPromises.push(
         ProjectModel.find()
           .skip(i * limit)
