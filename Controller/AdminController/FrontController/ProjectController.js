@@ -1,23 +1,17 @@
 const ProjectModel = require("../../../models/projectDetail/project");
 const UserModel = require("../../../models/projectDetail/user");
-const cloudinary = require("cloudinary").v2;
-const dotenv = require("dotenv").config();
+// const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
-const AWS = require("aws-sdk");
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
+const path = require("path");
+// const mongoose = require("mongoose");
 
 require("dotenv").config();
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-const s3 = new AWS.S3();
+
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
     service: "gmail",
@@ -68,7 +62,7 @@ const fetchDataFromDatabase = async () => {
   try {
     const limit = 50; // Split into more chunks
     const dataPromises = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       dataPromises.push(
         ProjectModel.find()
           .skip(i * limit)
@@ -84,63 +78,13 @@ const fetchDataFromDatabase = async () => {
   }
 };
 
-const upload = (file) => {
-  const fileContent = fs.readFileSync(file.path);
-
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Body: fileContent,
-    Key: `uploads/${Date.now()}-${file.originalname}`,
-    ContentType: file.mimetype,
-  };
-  return s3.upload(params).promise();
-};
-
-const uploadUpdate = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
-  if (objectKey != null) {
-    const params = {
-      Bucket: "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
-};
-
-const deleteFile = async (fileKey) => {
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Key: fileKey,
-  };
-
-  try {
-    await s3.deleteObject(params).promise();
-    console.log(`File deleted successfully: ${fileKey}`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting file: ${fileKey}`, error);
-    throw error; // Re-throw the error to handle it in the calling function
-  }
-};
 
 class projectController {
   // Project data insert api
     
   static projectInsert = async (req, res) => {
-    console.log("Headers: ",req.headers);
-    console.log("Body: ",req.body);
+    // console.log("Headers: ",req.headers);
+    // console.log("Body: ",req.body);
     // console.log("hello")
     try {
       // console.log(req.body)
@@ -236,12 +180,12 @@ class projectController {
       }
       // Prepare an array of promises for all uploads
       const uploadPromises = [
-        upload(logo[0]),
-        upload(frontImage[0]),
-        upload(project_locationImage[0]),
-        upload(highlightImage[0]),
-        upload(projectMaster_plan[0]),
-        upload(project_Brochure[0]),
+        uploadFile(logo[0]),
+        uploadFile(frontImage[0]),
+        uploadFile(project_locationImage[0]),
+        uploadFile(highlightImage[0]),
+        uploadFile(projectMaster_plan[0]),
+        uploadFile(project_Brochure[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
@@ -255,11 +199,11 @@ class projectController {
       ] = await Promise.all(uploadPromises);
 
       let project_floorplanResult = await Promise.all(
-        req.files.project_floorplan_Image.map((file) => upload(file))
+        req.files.project_floorplan_Image.map((file) => uploadFile(file))
       );
 
       let projectGalleryResult = await Promise.all(
-        req.files.projectGallery.map((file) => upload(file))
+        req.files.projectGallery.map((file) => uploadFile(file))
       );
       const data = new ProjectModel({
         projectName: projectName,
@@ -395,7 +339,7 @@ class projectController {
 
         if (logo) {
           const logoId = projectData.logo.public_id;
-          const logoResult = await uploadUpdate(logo[0], logoId);
+          const logoResult = await updateFile(logo[0], logoId);
           update.logo = {
             public_id: logoResult.Key,
             url: logoResult.Location,
@@ -404,7 +348,7 @@ class projectController {
 
         if (frontImage) {
           const frontId = projectData.frontImage.public_id;
-          const frontResult = await uploadUpdate(frontImage[0], frontId);
+          const frontResult = await updateFile(frontImage[0], frontId);
           update.frontImage = {
             public_id: frontResult.Key,
             url: frontResult.Location,
@@ -413,7 +357,7 @@ class projectController {
 
         if (project_locationImage) {
           const locationId = projectData.project_locationImage.public_id;
-          const locationResult = await uploadUpdate(
+          const locationResult = await updateFile(
             project_locationImage[0],
             locationId
           );
@@ -425,7 +369,7 @@ class projectController {
 
         if (highlightImage) {
           const highlightId = projectData.highlightImage.public_id;
-          const highlightResult = await uploadUpdate(
+          const highlightResult = await updateFile(
             highlightImage[0],
             highlightId
           );
@@ -438,7 +382,7 @@ class projectController {
         if (project_Brochure) {
           const brochureId = projectData.project_Brochure.public_id;
 
-          const brochureResult = await uploadUpdate(
+          const brochureResult = await updateFile(
             project_Brochure[0],
             brochureId
           );
@@ -451,7 +395,7 @@ class projectController {
         if (projectMaster_plan) {
           const masterId = projectData.projectMaster_plan.public_id;
 
-          const masterResult = await uploadUpdate(
+          const masterResult = await updateFile(
             projectMaster_plan[0],
             masterId
           );
@@ -467,7 +411,7 @@ class projectController {
 
           let floorResult = await Promise.all(
             project_floorplan_Image.map((item, index) =>
-              uploadUpdate(item, floorId[index])
+              updateFile(item, floorId[index])
             )
           );
 
@@ -484,7 +428,7 @@ class projectController {
 
           let galleryresult = await Promise.all(
             projectGallery.map((item, index) =>
-              uploadUpdate(item, GalleryId[index])
+              updateFile(item, GalleryId[index])
             )
           );
 
@@ -1415,9 +1359,10 @@ class projectController {
           data: cacheData,
         });
       }
-
       // If data is not in cache, fetch from database
       const data = await UserModel.find().skip(skip).limit(limit);
+      const fileName = `EnquiryDate page-${page} ${Date.now()}`;
+
 
       // Calculate cache expiration time (5 minutes in milliseconds)
       const expirationTime = 5 * 60 * 1000;
@@ -1434,6 +1379,90 @@ class projectController {
       });
     }
   };
+
+  static enquiryDownload = async (req, res) => {
+      try {
+        //Get page and limit from query parameters, with default values
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 2000;
+        const skip = (page - 1) * limit;
+        // Create a unique cache key for each page
+        const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+        console.log("CacheKey",cacheKey);
+        // Check if data is in cache
+        const cacheData = cache.get(cacheKey);
+
+        if (cacheData) {
+          console.log("Serving data from cache");
+
+          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
+          
+          await ConvertJSONtoExcel(cacheData, filePath);
+
+          //TO get the file deatils
+          const stat = fs.statSync(filePath);
+          const fileSize = stat.size;
+
+          // Set headers for file download
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+          res.setHeader('Content-Length', fileSize);
+          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+
+
+          // Stream the file to the client
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(res);
+
+          // Clean up the temporary file after sending
+          fileStream.on('close', () => {
+            fs.unlink(filePath, (err) => {
+              if (err) console.error("Failed to delete temporary file:", err);
+            });
+          });
+
+        }else{
+          // If data is not in cache, fetch from the database
+          console.log("Fetching data from database");
+          const data = await UserModel.find().lean().skip(skip).limit(limit);
+          // Cache the fetched data for 5 minutes
+          const expirationTime = 5 * 60 * 1000;
+          cache.put(cacheKey, data, expirationTime);
+
+
+          // Convert JSON data to Excel
+          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
+          await ConvertJSONtoExcel(data, filePath);
+
+          //TO get the file deatils
+          const fileSize = fs.statSync(filePath).size;
+
+          // Set headers for file download
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+          res.setHeader('Content-Length', fileSize);
+          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+
+          // Stream the file to the client
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(res);
+
+          // Clean up the temporary file after sending
+          fileStream.on('close', () => {
+            fs.unlink(filePath, (err) => {
+              if (err) console.error("Failed to delete temporary file:", err);
+            });
+          });
+        }
+
+
+      } catch (error) {
+          console.error("Error in enquiryDownload:", error);
+          res.status(500).send("Failed to download enquiry data");
+      }
+  }
   // count project according to the city
   static projectCount_city = async (req, res) => {
     try {

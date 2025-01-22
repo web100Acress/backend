@@ -8,14 +8,17 @@ const app = express();
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const https = require('https');
-const http = require('http');
-// Add this before your other middleware
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-// Configure axios or other HTTP clients to ignore certificate errors
-https.globalAgent.options.rejectUnauthorized = false;
-// var cloudinary = require("cloudinary").v2;
+
+// For Local Development
+// const https = require('https');
+// const http = require('http');
+// // Add this before your other middleware
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// // Configure axios or other HTTP clients to ignore certificate errors
+// https.globalAgent.options.rejectUnauthorized = false;
+
 
 // Create a rate limit rule
 const limiter = rateLimit({

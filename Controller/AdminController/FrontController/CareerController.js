@@ -3,55 +3,55 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const fs = require("fs");
-const cloudinary = require("cloudinary").v2;
-
-const AWS = require("aws-sdk");
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+// const AWS = require("aws-sdk");
 require("dotenv").config();
 
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+// AWS.config.update({
+//   secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+//   accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+//   region: process.env.AWS_REGION,
+// });
 
-const s3 = new AWS.S3();
-const uploadFile = (file) => {
-  // Read the file content
-  // console.log("F.KAWHFIOQFJ");
-  const fileContent = fs.readFileSync(file.path);
+// const s3 = new AWS.S3();
+// const uploadFile = (file) => {
+//   // Read the file content
+//   // console.log("F.KAWHFIOQFJ");
+//   const fileContent = fs.readFileSync(file.path);
 
-  const params = {
-    Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-    Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-    Body: fileContent,
-    ContentType: file.mimetype,
-  };
+//   const params = {
+//     Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+//     Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+//     Body: fileContent,
+//     ContentType: file.mimetype,
+//   };
 
-  // Return the promise from s3.upload
-  return s3.upload(params).promise();
-};
-const update = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
-  if (objectKey != null) {
-    const params = {
-      Bucket: "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
+//   // Return the promise from s3.upload
+//   return s3.upload(params).promise();
+// };
+// const update = (file, objectKey) => {
+//   const fileContent = fs.readFileSync(file.path);
+//   if (objectKey != null) {
+//     const params = {
+//       Bucket: "100acress-media-bucket",
+//       Key: objectKey,
+//       Body: fileContent,
+//       ContentType: file.mimetype,
+//     };
+//     return s3.upload(params).promise();
+//   } else {
+//     const params = {
+//       Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+//       Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
+//       Body: fileContent,
+//       ContentType: file.mimetype,
+//     };
 
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
-};
+//     // Return the promise from s3.upload
+//     return s3.upload(params).promise();
+//   }
+// };
+
 class CareerController {
   static careerInsert = async (req, res) => {
     console.log(req.files, "jhfuirehiu");
@@ -172,7 +172,7 @@ class CareerController {
         // Example logic for updating database dynamically
         const updateData = {}; // Initialize an empty object
         if (bannerImage) {
-          const uploadedBanner = await update(bannerImage[0], bannerObjectKey);
+          const uploadedBanner = await updateFile(bannerImage[0], bannerObjectKey);
           updateData.bannerImage = {
             public_id: uploadedBanner.Key,
             url: uploadedBanner.Location,
@@ -182,7 +182,7 @@ class CareerController {
         if (activityImage) {
           const uploadedActivities = await Promise.all(
             activityImage.map((file, index) =>
-              update(file, activityObjectKey[index])
+              updateFile(file, activityObjectKey[index])
             )
           );
           updateData.activityImage = uploadedActivities.map((image) => ({
@@ -194,7 +194,7 @@ class CareerController {
         if (highlightImage) {
           const uploadedHighlights = await Promise.all(
             highlightImage.map((file, index) =>
-              update(file, highlighObjectKey[index])
+              updateFile(file, highlighObjectKey[index])
             )
           );
           updateData.highlightImage = uploadedHighlights.map((image) => ({
@@ -233,7 +233,7 @@ class CareerController {
         const data = await careerModal.findById({ _id: id });
         const banner = data.bannerImage.public_id;
         if (banner) {
-          const data = await cloudinary.uploader.destroy(banner);
+          const data = await deleteFile(banner);
           console.log(data, "data1");
         }
         const activity = data.activityImage;
@@ -241,7 +241,7 @@ class CareerController {
           for (let i = 0; i < activity.length; i++) {
             const id = activity[i].public_id;
             if (id) {
-              const data = await cloudinary.uploader.destroy(id);
+              const data = await deleteFile(id);
               console.log(data, "data2");
             }
           }
@@ -252,7 +252,7 @@ class CareerController {
             const id = highlight[i].public_id;
             console.log(id, "data3");
             if (id) {
-              const data = await cloudinary.uploader.destroy(id);
+              const data = await deleteFile(id);
               console.log(data, "data3");
             }
           }

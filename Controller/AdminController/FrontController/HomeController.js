@@ -525,9 +525,9 @@ try {
       // Count PostProperty data
       const postDat = await postPropertyModel.find().lean();
       // buy property
-      // const buyCount = (await buyCommercial_Model.find()).length;
+      const buyCount = (await buyCommercial_Model.find()).length;
       // rent property
-      // const rentCount = (await rent_Model.find()).length;
+      const rentCount = (await rent_Model.find()).length;
       // total project count
       const projectCount = await ProjectModel.countDocuments();
       // total leads till date
@@ -551,23 +551,23 @@ try {
         },
       ]).exec();
 
-      // const mothlyuserRegister= await postPropertyModel.aggregate([
-      //   {
-      //     $group: {
-      //       _id: {
-      //         year: { $year: "$createdAt" },
-      //         month: { $month: "$createdAt" }
-      //       },
-      //       count: { $sum: 1 }
-      //     }
-      //   },
-      //   {
-      //     $sort: {
-      //       "_id.year": -1,
-      //       "_id.month": -1
-      //     }
-      //   }
-      // ]).exec();
+      const mothlyuserRegister= await postPropertyModel.aggregate([
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $sort: {
+            "_id.year": -1,
+            "_id.month": -1
+          }
+        }
+      ]).exec();
 
       const totalprojectLeads = projectLeads.length;
 

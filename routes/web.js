@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const upload=require('../aws/multerConfig')
-const fileUpload = require('express-fileupload');
 const adminVerify = require("../middleware/adminVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
@@ -48,6 +47,7 @@ router.delete("/floorImage/:id/:indexNumber",adminVerify,projectController.floor
 //from
 router.post("/userInsert", projectController.userInsert);
 router.get("/userViewAll", projectController.userViewAll);
+router.get("/userViewAll/dowloadData",projectController.enquiryDownload)
 router.get("/userviewDetail/:id", projectController.userViewDetail);
 router.post("/userUpdate/:id", projectController.userUpdate);
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete);

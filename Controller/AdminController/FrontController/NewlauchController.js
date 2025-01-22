@@ -1,6 +1,5 @@
 const newlaunchModel = require('../../../models/newlaunch/newProject');
 const nodemailer = require("nodemailer");
-const cloudinary = require('cloudinary').v2;
 class newlaunchController {
 
     static newlaunch_Insert = async (req, res) => {
