@@ -1394,11 +1394,10 @@ class projectController {
 
         if (cacheData) {
           console.log("Serving data from cache");
-
           const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
           const filePath = path.join('./temp', fileName); // Save file in a temporary directory
           
-          await ConvertJSONtoExcel(cacheData, filePath);
+          await ConvertJSONtoExcel(JSON.parse(JSON.stringify(cacheData)), filePath);
 
           //TO get the file deatils
           const stat = fs.statSync(filePath);
