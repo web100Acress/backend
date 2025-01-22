@@ -6,6 +6,8 @@ const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
 const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
+const path = require("path");
 // const mongoose = require("mongoose");
 
 require("dotenv").config();
@@ -60,7 +62,7 @@ const fetchDataFromDatabase = async () => {
   try {
     const limit = 50; // Split into more chunks
     const dataPromises = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       dataPromises.push(
         ProjectModel.find()
           .skip(i * limit)
@@ -1357,9 +1359,10 @@ class projectController {
           data: cacheData,
         });
       }
-
       // If data is not in cache, fetch from database
       const data = await UserModel.find().skip(skip).limit(limit);
+      const fileName = `EnquiryDate page-${page} ${Date.now()}`;
+
 
       // Calculate cache expiration time (5 minutes in milliseconds)
       const expirationTime = 5 * 60 * 1000;
@@ -1376,6 +1379,90 @@ class projectController {
       });
     }
   };
+
+  static enquiryDownload = async (req, res) => {
+      try {
+        //Get page and limit from query parameters, with default values
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 2000;
+        const skip = (page - 1) * limit;
+        // Create a unique cache key for each page
+        const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+        console.log("CacheKey",cacheKey);
+        // Check if data is in cache
+        const cacheData = cache.get(cacheKey);
+
+        if (cacheData) {
+          console.log("Serving data from cache");
+
+          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
+          
+          await ConvertJSONtoExcel(cacheData, filePath);
+
+          //TO get the file deatils
+          const stat = fs.statSync(filePath);
+          const fileSize = stat.size;
+
+          // Set headers for file download
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+          res.setHeader('Content-Length', fileSize);
+          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+
+
+          // Stream the file to the client
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(res);
+
+          // Clean up the temporary file after sending
+          fileStream.on('close', () => {
+            fs.unlink(filePath, (err) => {
+              if (err) console.error("Failed to delete temporary file:", err);
+            });
+          });
+
+        }else{
+          // If data is not in cache, fetch from the database
+          console.log("Fetching data from database");
+          const data = await UserModel.find().lean().skip(skip).limit(limit);
+          // Cache the fetched data for 5 minutes
+          const expirationTime = 5 * 60 * 1000;
+          cache.put(cacheKey, data, expirationTime);
+
+
+          // Convert JSON data to Excel
+          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
+          await ConvertJSONtoExcel(data, filePath);
+
+          //TO get the file deatils
+          const fileSize = fs.statSync(filePath).size;
+
+          // Set headers for file download
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+          res.setHeader('Content-Length', fileSize);
+          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+
+          // Stream the file to the client
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(res);
+
+          // Clean up the temporary file after sending
+          fileStream.on('close', () => {
+            fs.unlink(filePath, (err) => {
+              if (err) console.error("Failed to delete temporary file:", err);
+            });
+          });
+        }
+
+
+      } catch (error) {
+          console.error("Error in enquiryDownload:", error);
+          res.status(500).send("Failed to download enquiry data");
+      }
+  }
   // count project according to the city
   static projectCount_city = async (req, res) => {
     try {
