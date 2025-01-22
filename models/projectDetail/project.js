@@ -18,9 +18,21 @@ const highlight_Schema = new mongoose.Schema({
   },
 });
 
+const about_project_Schema = new mongoose.Schema({
+  about_image:{
+    type:String
+  },
+  mobile_banner_image:{
+    type:String
+  }
+})
+
 const projectSchema = new mongoose.Schema(
   {
     project_floorplan_Image: [],
+    thumbnailImage:{
+      type:String
+    },
     frontImage: {
       public_id: {
         type: String,
@@ -125,6 +137,7 @@ const projectSchema = new mongoose.Schema(
     project_url: {
       type: String,
     },
+    about_project:[about_project_Schema],
     BhK_Details: [bhk_Schema],
     highlight: [highlight_Schema],
 

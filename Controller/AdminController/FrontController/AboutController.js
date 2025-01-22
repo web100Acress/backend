@@ -2,8 +2,8 @@ const aboutModel = require('../../../models/about/about');
 const testimonialModel = require('../../../models/about/testimonial');
 // const { findById } = require('../../../models/contact');
 const rent_Model = require('../../../models/property/rent');
+const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
 
-const cloudinary = require('cloudinary').v2;
 class aboutController {
     static about = async (req, res) => {
         res.send("about page listen")
@@ -18,13 +18,13 @@ class aboutController {
                     const aboutImage = req.files.aboutImage;
                     const chooseImage = req.files.chooseImage
 
-                    const sliderResult = await cloudinary.uploader.upload(sliderImage.tempFilePath, {
+                    const sliderResult = await uploadFile(sliderImage.tempFilePath, {
                         folder: "100acre/aboutPage"
                     })
-                    const aboutResult = await cloudinary.uploader.upload(aboutImage.tempFilePath, {
+                    const aboutResult = await uploadFile(aboutImage.tempFilePath, {
                         folder: "100acre/aboutPage"
                     })
-                    const chooseResult = await cloudinary.uploader.upload(chooseImage.tempFilePath, {
+                    const chooseResult = await uploadFile(chooseImage.tempFilePath, {
                         folder: "100acre/aboutPage"
                     })
 
@@ -141,24 +141,24 @@ class aboutController {
                         const data = await aboutModel.findById(req.params.id)
 
                         const sliderId = data.sliderImage.public_id
-                        await cloudinary.uploader.destroy(sliderId)
+                        await deleteFile(sliderId)
 
                         const aboutId = data.aboutImage.public_id
-                        await cloudinary.uploader.destroy(aboutId)
+                        await deleteFile(aboutId)
 
                         const chooseId = data.chooseImage.public_id
-                        await cloudinary.uploader.destroy(chooseId)
+                        await deleteFile(chooseId)
 
-                        const sliderResult = await cloudinary.uploader.upload(sliderImage.tempFilePath,
+                        const sliderResult = await uploadFile(sliderImage.tempFilePath,
                             {
                                 folder: "100acre/aboutPage"
                             })
 
-                        const aboutResult = await cloudinary.uploader.upload(aboutImage.tempFilePath, {
+                        const aboutResult = await uploadFile(aboutImage.tempFilePath, {
                             folder: "100acre/aboutPage"
                         })
 
-                        const chooseResult = await cloudinary.uploader.upload(chooseImage.tempFilePath, {
+                        const chooseResult = await uploadFile(chooseImage.tempFilePath, {
                             folder: "100acre/aboutPage"
                         })
 
@@ -197,9 +197,9 @@ class aboutController {
                         const data = await aboutModel.findById(req.params.id)
 
                         const sliderId = data.sliderImage.public_id
-                        await cloudinary.uploader.destroy(sliderId)
+                        await deleteFile(sliderId)
 
-                        const sliderResult = await cloudinary.uploader.upload(sliderImage.tempFilePath,
+                        const sliderResult = await uploadFile(sliderImage.tempFilePath,
                             {
                                 folder: "100acre/aboutPage"
                             })
@@ -230,9 +230,9 @@ class aboutController {
                         const data = await aboutModel.findById(req.params.id)
 
                         const aboutId = data.aboutImage.public_id
-                        await cloudinary.uploader.destroy(aboutId)
+                        await deleteFile(aboutId)
 
-                        const aboutResult = await cloudinary.uploader.upload(aboutImage.tempFilePath,
+                        const aboutResult = await uploadFile(aboutImage.tempFilePath,
                             {
                                 folder: "100acre/aboutPage"
                             })
@@ -260,9 +260,9 @@ class aboutController {
                         const data = await aboutModel.findById(req.params.id)
 
                         const chooseId = data.chooseImage.public_id
-                        await cloudinary.uploader.destroy(chooseId)
+                        await deleteFile(chooseId)
 
-                        const chooseResult = await cloudinary.uploader.upload(chooseImage.tempFilePath,
+                        const chooseResult = await uploadFile(chooseImage.tempFilePath,
                             {
                                 folder: "100acre/aboutPage"
                             })
@@ -322,9 +322,9 @@ class aboutController {
             const aboutId = data.aboutImage.public_id;
             const chooseId = data.chooseImage.public_id; 
             if (sliderId && aboutId && chooseId) {
-                await cloudinary.uploader.destroy(sliderId)
-                await cloudinary.uploader.destroy(aboutId)
-                await cloudinary.uploader.upload(chooseId)
+                await deleteFile(sliderId)
+                await deleteFile(aboutId)
+                await uploadFile(chooseId)
 
                 await aboutModel.findByIdAndDelete(id)
                 res.status(200).json({
@@ -356,7 +356,7 @@ class aboutController {
                 if (req.files.image) {
                     const image = req.files.image
 
-                    const imageResult = await cloudinary.uploader.upload(image.tempFilePath, {
+                    const imageResult = await uploadFile(image.tempFilePath, {
                         folder: "100acre/Testimonial"
                     })
 
@@ -457,9 +457,9 @@ class aboutController {
                 const data= await testimonialModel.findById(id)
   
                 const imageData=data.image.public_id;
-                await cloudinary.uploader.destroy(imageData)
+                await deleteFile(imageData)
   
-                const imageResult= await cloudinary.uploader.upload(image.tempFilePath , {
+                const imageResult= await uploadFile(image.tempFilePath , {
                   folder:"100acre/Testimonial"
                 })
   
@@ -510,7 +510,7 @@ class aboutController {
             const imageData= await testimonialModel.findById({_id:id})
             const imageid=imageData.image.public_id
             if(imageid!==null){
-                await cloudinary.uploader.destroy(imageid)
+                await deleteFile(imageid)
             }
             const data=await testimonialModel.findByIdAndDelete({_id:id})
             // res.json(data)

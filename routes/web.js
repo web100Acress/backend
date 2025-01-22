@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const upload=require('../aws/multerConfig')
-const fileUpload = require('express-fileupload');
 const adminVerify = require("../middleware/adminVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
@@ -21,6 +20,8 @@ const authAdmin = require("../middleware/registerAuth");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
 const postPropertyRoute = require("./postProperty.route");
 const projectRoute = require("./Project.route");
+const propertyRoute = require("./property.route");
+const aboutRoute = require("./about.route");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -40,43 +41,13 @@ router.get("/agent", agentController.agent);
 //projectDetail page
 router.use("/project",projectRoute);
 //page with detail
-// router.post("/project/Insert",
-//   upload.fields([{name:"logo",maxCount:1},
-//     {name:"frontImage",maxCount:1},
-//     {name:"project_locationImage",maxCount:1}
-//     ,{name:"highlightImage",maxCount:1},
-//     {name:"projectMaster_plan",maxCount:1},
-//     {name:"project_Brochure",maxCount:1},
-//     {name:"project_floorplan_Image",maxCount:20},
-//     {name:"projectGallery",maxCount:20},
-//   ]), 
-//   projectController.projectInsert);
-// router.get("/project/View/:project_url", projectController.projectView);
-// router.get("/project/viewAll/data", projectController.projectviewAll);
-// router.get("/project/Edit/:id", projectController.projectEdit);
-// router.post("/project/Update/:id",
-//   upload.fields([{name:"logo",maxCount:1},
-//     {name:"frontImage",maxCount:1},
-//     {name:"project_locationImage",maxCount:1}
-//     ,{name:"highlightImage",maxCount:1},
-//     {name:"projectMaster_plan",maxCount:1},
-//     {name:"project_Brochure",maxCount:1},
-//     {name:"project_floorplan_Image",maxCount:20},
-//     {name:"projectGallery",maxCount:20},
-//   ]),
-//   projectController.projectUpdate);
-// router.delete("/project/Delete/:id", projectController.projectDelete);
 
-// router.get("/project/trending", projectController.project_trending);
-// router.get("/project/featured", projectController.project_featured);
-// router.get("/project/city", projectController.project_City);
-// router.get("/project/upcoming", projectController.project_Upcoming);
-// router.get("/project/affordable", projectController.projectAffordable);
 router.delete("/floorImage/:id/:indexNumber",adminVerify,projectController.floorImage)
   
 //from
 router.post("/userInsert", projectController.userInsert);
 router.get("/userViewAll", projectController.userViewAll);
+router.get("/userViewAll/dowloadData",projectController.enquiryDownload)
 router.get("/userviewDetail/:id", projectController.userViewDetail);
 router.post("/userUpdate/:id", projectController.userUpdate);
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete);
@@ -124,7 +95,8 @@ router.delete(
 );
 //Property
 //Buy
-router.post("/property/buyInsert",upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]), BuyController.buycommercialInsert);
+router.use("/property",propertyRoute);
+/*router.post("/property/buyInsert",upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]), BuyController.buycommercialInsert);
 // router.get('/property/buy/:type', BuyController.buycommercialView)
 // router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
 router.get("/property/buy/ViewAll", BuyController.viewAll);
@@ -140,14 +112,18 @@ router.get("/property/:type/rentView", rentController.rentView);
 router.get("/property/viewAll", rentController.rentViewAll);
 router.post("/property/:id/rentUpdate",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentUpdate);
 router.delete("/property/:id/rentDelete", rentController.rentDelete);
+*/
 //About_Page
 //Insert
+router.use("/about",aboutRoute);
+/*
 router.post("/about/aboutInsert", aboutController.aboutInsert);
 router.get("/about/:id/aboutView", aboutController.aboutView);
 router.get("/about/viewAll", aboutController.aboutViewAll);
 router.get("/about/:id/aboutEdit", aboutController.aboutEdit);
 router.post("/about/:id/aboutUpdate", aboutController.aboutUpdate);
 router.delete("/about/:id/aboutDelete", aboutController.aboutDelete);
+*/
 //testimonial
 router.post("/testimonial/testimonialInsert",aboutController.testimonialInsert);
 router.get("/testimonial/testimonialView/:id", aboutController.testimonialView);

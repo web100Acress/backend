@@ -4,11 +4,11 @@ const rent_Model = require("../../../models/property/rent");
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
 const nodemailer = require("nodemailer");
-const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 const path = require("path");
 const AWS = require("aws-sdk");
 const { isValidObjectId } = require("mongoose");
+const { uploadFile, deleteFile, updateFile  } = require("../../../Utilities/s3HelperUtility");
 // const { url } = require("inspector");
 require("dotenv").config();
 
@@ -51,40 +51,6 @@ const sendPostEmail = async (email) => {
         </div>
    `,
   });
-};
-const s3 = new AWS.S3();
-const uploadFile = (file) => {
-  const fileContent = fs.readFileSync(file.path);
-
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Key: `uploads/${Date.now()}-${file.originalname}`,
-    Body: fileContent,
-    ContentType: file.mimetype,
-  };
-  return s3.upload(params).promise();
-};
-const updateRent = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
-  if (objectKey != null) {
-    const params = {
-      Bucket: "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
 };
 
 class rentController {
@@ -337,7 +303,7 @@ class rentController {
       const update = {}; // Initialize an empty object
       if (frontImage) {
         const frontobjectKey = data.frontImage.public_id;
-        let frontResult = await updateRent(req.files.frontImage[0], frontobjectKey);
+        let frontResult = await updateFile(req.files.frontImage[0], frontobjectKey);
         update.frontImage = {
           public_id: frontResult.Key,
           url: frontResult.Location,
@@ -350,7 +316,7 @@ class rentController {
 
         const otherResult = await Promise.all(
           otherImage.map((file, index) =>
-            updateRent(file, otherobjectKey[index])
+            updateFile(file, otherobjectKey[index])
           ),
         );
         update.otherImage = otherResult.map((item) => ({
@@ -422,7 +388,7 @@ class rentController {
       const image = await rent_Model.findById({ _id: id });
       const imageId = image.frontImage.public_id;
 
-      await cloudinary.uploader.destroy(imageId);
+      await deleteFile(imageId);
 
       for (let i = 0; i < image.length; i++) {
         const otherResult = await rent_Model.findById({ _id: id });

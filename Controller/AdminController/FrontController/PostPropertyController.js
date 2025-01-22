@@ -2,76 +2,14 @@ const postPropertyModel = require("../../../models/postProperty/post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-// const otpGenerator = require('otp-generator')
-const cloudinary = require("cloudinary").v2;
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
 const mongoose = require("mongoose");
-const validator = require('validator');
-require('dotenv').config()
-const fs=require('fs');
-const AWS=require('aws-sdk');
+require('dotenv').config();
 const { isValidObjectId } = require('mongoose');
-AWS.config.update({
-    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-})
-const s3=new AWS.S3()
-const uploadFile=(file)=>{
+const {uploadFile,deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
 
-  const fileContent=fs.readFileSync(file.path)
-
-  const params={
-      Bucket:"100acress-media-bucket",
-      Body:fileContent,
-      Key:`uploads/${Date.now()}-${file.originalname}`,
-      ContentType:file.mimetype
-
-  }
-  return s3.upload(params).promise();
-
-}
-const deleteFile = async (fileKey) => {
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Key: fileKey,
-  };
-
-  try {
-    await s3.deleteObject(params).promise();
-    console.log(`File deleted successfully: ${fileKey}`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting file: ${fileKey}`, error);
-    throw error; // Re-throw the error to handle it in the calling function
-  }
-};
-
-
-const updatePost = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
-  if (objectKey != null) {
-    const params = {
-      Bucket: "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
-};
 // Function to get all project data and cache it
 const getAllProjects = async () => {
   try {
@@ -972,7 +910,7 @@ class PostPropertyController {
 
         if(frontImage){
           const frontobjectKey=data.postProperty[0].frontImage.public_id;
-          let frontResult=await updatePost( req.files.frontImage[0],frontobjectKey);
+          let frontResult=await updateFile( req.files.frontImage[0],frontobjectKey);
           update = {
             $set: {
               "postProperty.$.frontImage": {
@@ -990,7 +928,7 @@ class PostPropertyController {
 
         let otherResult=await Promise.all(
           otherImage.map((item,index)=>
-          updatePost(item,otherobjectKey[index]))
+          updateFile(item,otherobjectKey[index]))
         )
 
         update={
