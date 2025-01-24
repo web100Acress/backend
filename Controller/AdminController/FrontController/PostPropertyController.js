@@ -283,6 +283,11 @@ class PostPropertyController {
       console.log(error);
       await session.abortTransaction();
       session.endSession();
+      if(error.name === 'ValidationError') {
+        res.status(401).json({
+          message:"You are not authorized to change the role"
+        });
+      }
       res.status(500).json({
         message: "Internal server error!",
       });

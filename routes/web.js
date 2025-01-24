@@ -115,6 +115,7 @@ router.delete("/property/:id/rentDelete", rentController.rentDelete);
 */
 //About_Page
 //Insert
+
 router.use("/about",aboutRoute);
 /*
 router.post("/about/aboutInsert", aboutController.aboutInsert);
@@ -125,6 +126,7 @@ router.post("/about/:id/aboutUpdate", aboutController.aboutUpdate);
 router.delete("/about/:id/aboutDelete", aboutController.aboutDelete);
 */
 //testimonial
+
 router.post("/testimonial/testimonialInsert",aboutController.testimonialInsert);
 router.get("/testimonial/testimonialView/:id", aboutController.testimonialView);
 router.get("/testimonial/viewAll", aboutController.testimonialViewAll);

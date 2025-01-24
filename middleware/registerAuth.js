@@ -6,7 +6,7 @@ const postPropertyModel = require('../models/postProperty/post')
 const authAdmin = async (req, res, next) => {
   try {
     // res.send("hello auth")
-    const { token } = req.cookies
+    const { token } = req.cookies;
     //    res.send(token)
     if (token) {
       const verify_token = jwt.verify(token, 'amitchaudhary100')

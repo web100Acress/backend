@@ -221,8 +221,54 @@ class BuyController {
               }
             }
           ]);
-    
+          
+          // const data1 = 
+          //   await postPropertyModel.aggregate([
+          //     {
+          //       $match: {
+          //         "postProperty.verify": "verified",
+          //         "postProperty.propertyLooking": "Sell"
+          //       }
+          //     },
+          //     {
+          //       $unwind: "$postProperty"
+          //     },
+          //     {
+          //       $match: {
+          //         "postProperty.verify": "verified",
+          //         "postProperty.propertyLooking": "Sell"
+          //       }
+          //     },
+          //     {
+          //       $project: {
+          //         _id: "$postProperty._id",
+          //         propertyName: "$postProperty.propertyName",
+          //         price: "$postProperty.price",
+          //         area: "$postProperty.area",
+          //         type: "$postProperty.type",
+          //         furnishing: "$postProperty.furnishing",
+          //         amenities: "$postProperty.amenities",
+          //         city: "$postProperty.city",
+          //         state: "$postProperty.state",
+          //         address: "$postProperty.address",
+          //         contact: {
+          //           email: "$postProperty.email",
+          //           number: "$postProperty.number",
+          //           name: "$postProperty.name"
+          //         },
+          //         frontImage: "$postProperty.frontImage.url",
+          //         otherImages: "$postProperty.otherImage",
+          //         description: "$postProperty.descripation",
+          //         landMark: "$postProperty.landMark",
+          //         propertyType: "$postProperty.propertyType",
+          //         role: "$postProperty.role",
+          //         availableDate: "$postProperty.availableDate"
+          //       }
+          //     }
+          //   ]);
+
           const collectdata = [...data1];
+
           const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
     
           // Store the data in cache
