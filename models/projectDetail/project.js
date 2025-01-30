@@ -33,9 +33,11 @@ const projectSchema = new mongoose.Schema(
     thumbnailImage: {
       public_id: {
         type: String,
+        default: "",
       },
       url: {
         type: String,
+        default: "",
       },
     },
     frontImage: {
@@ -117,8 +119,8 @@ const projectSchema = new mongoose.Schema(
       default: "India",
     },
     luxury: {
-      type: Boolean,
-      default: false,
+      type: String,
+      default: "False",
     },
     city: {
       type: String,
