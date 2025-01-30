@@ -33,9 +33,11 @@ const projectSchema = new mongoose.Schema(
     thumbnailImage: {
       public_id: {
         type: String,
+        default: "",
       },
       url: {
         type: String,
+        default: "",
       },
     },
     frontImage: {
