@@ -32,6 +32,7 @@ router.post(
   adminVerify,
   upload.fields([
     { name: "logo", maxCount: 1 },
+      { name: "thumbnailImage", maxCount: 1 },
     { name: "frontImage", maxCount: 1 },
     { name: "project_locationImage", maxCount: 1 },
     { name: "highlightImage", maxCount: 1 },
@@ -39,6 +40,7 @@ router.post(
     { name: "project_Brochure", maxCount: 1 },
     { name: "project_floorplan_Image", maxCount: 20 },
     { name: "projectGallery", maxCount: 20 },
+
   ]),
   projectController.projectUpdate,
 );

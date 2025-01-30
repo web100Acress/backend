@@ -188,7 +188,6 @@ class projectController {
         });
       }
 
-      var isLuxury = luxury === "true" || luxury === "True" ? true : false;
       // Prepare an array of promises for all uploads
       const uploadPromises = [
         uploadFile(logo[0]),
@@ -342,6 +341,7 @@ class projectController {
     try {
       const {
         logo,
+        thumbnailImage,
         frontImage,
         project_Brochure,
         project_locationImage,
@@ -350,6 +350,7 @@ class projectController {
         projectGallery,
         projectMaster_plan,
       } = req.files;
+      console.log(req.body);
       const id = req.params.id;
       if (isValidObjectId(id)) {
         const update = {};
@@ -363,6 +364,18 @@ class projectController {
             public_id: logoResult.Key,
             url: logoResult.Location,
           };
+        }
+
+        if (thumbnailImage) {
+          // console.log("Inside Thumbnail Image");
+          const thumbnailImageId = projectData.thumbnailImage.public_id;
+          const thumbnailImageResult = await updateFile(thumbnailImage[0], thumbnailImageId);
+          // console.log("File updated successfully:", thumbnailImageResult);
+          update.thumbnailImage = {
+            public_id: thumbnailImageResult.Key,
+            url: thumbnailImageResult.Location,
+          };
+          // console.log("Updated thumbnailImage:", update.thumbnailImage);
         }
 
         if (frontImage) {
@@ -458,6 +471,8 @@ class projectController {
         }
         const fieldsToUpdate = [
           "projectName",
+          "country",
+          "luxury",
           "state",
           "project_discripation",
           "projectAddress",
@@ -492,6 +507,8 @@ class projectController {
             update[field] = req.body[field];
           }
         });
+        console.log(update);
+
         const data = await ProjectModel.findByIdAndUpdate({ _id: id }, update);
         await data.save();
         //  fs.unlinkSync(req.files.path);
@@ -596,6 +613,10 @@ class projectController {
         const logoId = data_id.logo.public_id;
         if (logoId) {
           await deleteFile(logoId);
+        }
+        const thumbnailId = data_id.thumbnailImage.public_id;
+        if (thumbnailId) {
+          await deleteFile(thumbnailId);
         }
         const frontId = data_id.frontImage.public_id;
         if (frontId != null) {

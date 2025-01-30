@@ -117,8 +117,8 @@ const projectSchema = new mongoose.Schema(
       default: "India",
     },
     luxury: {
-      type: Boolean,
-      default: false,
+      type: String,
+      default: "False",
     },
     city: {
       type: String,
