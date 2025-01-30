@@ -8,7 +8,11 @@ const fs = require("fs");
 const path = require("path");
 const AWS = require("aws-sdk");
 const { isValidObjectId } = require("mongoose");
-const { uploadFile, deleteFile, updateFile  } = require("../../../Utilities/s3HelperUtility");
+const {
+  uploadFile,
+  deleteFile,
+  updateFile,
+} = require("../../../Utilities/s3HelperUtility");
 // const { url } = require("inspector");
 require("dotenv").config();
 
@@ -108,7 +112,7 @@ class rentController {
       let imageData2 = [];
       if (req.files.otherImage) {
         imageData2 = await Promise.all(
-          req.files.otherImage.map((file) => uploadFile(file))
+          req.files.otherImage.map((file) => uploadFile(file)),
         );
       }
 
@@ -191,7 +195,7 @@ class rentController {
                 _id: id,
               },
             },
-          }
+          },
         );
         //  const data1=postData.postProperty[0]
         if (data) {
@@ -289,13 +293,26 @@ class rentController {
       const id = req.params.id;
       if (isValidObjectId(id)) {
       }
-      const {frontImage,otherImage } = req.files;
-      const { propertyType,propertyName,city,state,address,price,area,availableDate,
-        descripation,furnishing,builtYear,amenities,landmark, type,
+      const { frontImage, otherImage } = req.files;
+      const {
+        propertyType,
+        propertyName,
+        city,
+        state,
+        address,
+        price,
+        area,
+        availableDate,
+        descripation,
+        furnishing,
+        builtYear,
+        amenities,
+        landmark,
+        type,
       } = req.body;
 
       const data = await rent_Model.findById({ _id: id });
-      if (data.length>0) {
+      if (data.length > 0) {
         return res.status(400).json({
           message: "Not found csdcd !",
         });
@@ -303,27 +320,29 @@ class rentController {
       const update = {}; // Initialize an empty object
       if (frontImage) {
         const frontobjectKey = data.frontImage.public_id;
-        let frontResult = await updateFile(req.files.frontImage[0], frontobjectKey);
+        let frontResult = await updateFile(
+          req.files.frontImage[0],
+          frontobjectKey,
+        );
         update.frontImage = {
           public_id: frontResult.Key,
           url: frontResult.Location,
         };
       }
       if (otherImage) {
-        let otherobjectKey =  data.otherImage.map((item) => {
+        let otherobjectKey = data.otherImage.map((item) => {
           return item.public_id;
         });
 
         const otherResult = await Promise.all(
           otherImage.map((file, index) =>
-            updateFile(file, otherobjectKey[index])
+            updateFile(file, otherobjectKey[index]),
           ),
         );
         update.otherImage = otherResult.map((item) => ({
           public_id: item.Key,
           url: item.Location,
         }));
-  
       }
       if (propertyType) {
         update.propertyType = propertyType;
@@ -367,7 +386,10 @@ class rentController {
       if (type) {
         update.type = type;
       }
-      const dataUpdate = await rent_Model.findByIdAndUpdate({_id:id},update );
+      const dataUpdate = await rent_Model.findByIdAndUpdate(
+        { _id: id },
+        update,
+      );
       // console.log(dataUpdate)
       res.status(200).json({
         message: "update successfully !",

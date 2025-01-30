@@ -5,7 +5,11 @@ const cache = require("memory-cache");
 const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
-const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+const {
+  uploadFile,
+  deleteFile,
+  updateFile,
+} = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
 const path = require("path");
 // const mongoose = require("mongoose");
@@ -67,7 +71,7 @@ const fetchDataFromDatabase = async () => {
         ProjectModel.find()
           .skip(i * limit)
           .limit(limit)
-          .lean()
+          .lean(),
       );
     }
     const dataArrays = await Promise.all(dataPromises);
@@ -78,10 +82,9 @@ const fetchDataFromDatabase = async () => {
   }
 };
 
-
 class projectController {
   // Project data insert api
-    
+
   static projectInsert = async (req, res) => {
     // console.log("Headers: ",req.headers);
     // console.log("Body: ",req.body);
@@ -105,6 +108,8 @@ class projectController {
         projectBgContent,
         projectReraNo,
         type,
+        country,
+        luxury,
         city,
         projectOverview,
         project_url,
@@ -121,6 +126,7 @@ class projectController {
       const {
         logo,
         frontImage,
+        thumbnailImage,
         project_locationImage,
         project_floorplan_Image,
         highlightImage,
@@ -157,7 +163,9 @@ class projectController {
         !mobileNumber &&
         !possessionDate &&
         !minPrice &&
-        !maxPrice
+        !maxPrice &&
+        !country &&
+        !luxury
       ) {
         return res.status(400).json({
           error: "Check Input field !",
@@ -172,12 +180,15 @@ class projectController {
         !highlightImage &&
         !project_Brochure &&
         !projectGallery &&
-        !projectMaster_plan
+        !projectMaster_plan &&
+        !thumbnailImage
       ) {
         return res.status(400).json({
           error: "Check image field !",
         });
       }
+
+      var isLuxury = luxury === "true" || luxury === "True" ? true : false;
       // Prepare an array of promises for all uploads
       const uploadPromises = [
         uploadFile(logo[0]),
@@ -186,6 +197,7 @@ class projectController {
         uploadFile(highlightImage[0]),
         uploadFile(projectMaster_plan[0]),
         uploadFile(project_Brochure[0]),
+        uploadFile(thumbnailImage[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
@@ -196,18 +208,20 @@ class projectController {
         highlightResult,
         projectMasterResult,
         project_BrochureResult,
+        thumbnailResult,
       ] = await Promise.all(uploadPromises);
 
       let project_floorplanResult = await Promise.all(
-        req.files.project_floorplan_Image.map((file) => uploadFile(file))
+        req.files.project_floorplan_Image.map((file) => uploadFile(file)),
       );
 
       let projectGalleryResult = await Promise.all(
-        req.files.projectGallery.map((file) => uploadFile(file))
+        req.files.projectGallery.map((file) => uploadFile(file)),
       );
       const data = new ProjectModel({
         projectName: projectName,
         state: state,
+        country: country,
         city: city,
         type: type,
         projectAddress: projectAddress,
@@ -224,6 +238,7 @@ class projectController {
         projectRedefine_Entertainment: projectRedefine_Entertainment,
         projectRedefine_Education: projectRedefine_Education,
         Amenities: Amenities,
+        luxury: isLuxury,
         possessionDate: possessionDate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
@@ -237,6 +252,10 @@ class projectController {
         logo: {
           public_id: logoResult.Key,
           url: logoResult.Location,
+        },
+        thumbnailImage: {
+          public_id: thumbnailResult.Key,
+          url: thumbnailResult.Location,
         },
         frontImage: {
           public_id: frontResult.Key,
@@ -274,7 +293,7 @@ class projectController {
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -359,7 +378,7 @@ class projectController {
           const locationId = projectData.project_locationImage.public_id;
           const locationResult = await updateFile(
             project_locationImage[0],
-            locationId
+            locationId,
           );
           update.project_locationImage = {
             public_id: locationResult.Key,
@@ -371,7 +390,7 @@ class projectController {
           const highlightId = projectData.highlightImage.public_id;
           const highlightResult = await updateFile(
             highlightImage[0],
-            highlightId
+            highlightId,
           );
           update.highlightImage = {
             public_id: highlightResult.Key,
@@ -384,7 +403,7 @@ class projectController {
 
           const brochureResult = await updateFile(
             project_Brochure[0],
-            brochureId
+            brochureId,
           );
           update.project_Brochure = {
             public_id: brochureResult.Key,
@@ -397,7 +416,7 @@ class projectController {
 
           const masterResult = await updateFile(
             projectMaster_plan[0],
-            masterId
+            masterId,
           );
           update.projectMaster_plan = {
             public_id: masterResult.Key,
@@ -411,14 +430,14 @@ class projectController {
 
           let floorResult = await Promise.all(
             project_floorplan_Image.map((item, index) =>
-              updateFile(item, floorId[index])
-            )
+              updateFile(item, floorId[index]),
+            ),
           );
 
-          update.project_floorplan_Image =floorResult.map((item)=>({
-            public_id:item.Key,
-            url:item.Location
-          }))
+          update.project_floorplan_Image = floorResult.map((item) => ({
+            public_id: item.Key,
+            url: item.Location,
+          }));
         }
 
         if (projectGallery) {
@@ -428,14 +447,14 @@ class projectController {
 
           let galleryresult = await Promise.all(
             projectGallery.map((item, index) =>
-              updateFile(item, GalleryId[index])
-            )
+              updateFile(item, GalleryId[index]),
+            ),
           );
 
-          update.projectGallery =galleryresult.map((item)=>({
-            public_id:item.Key,
-            url:item.Location
-          }))
+          update.projectGallery = galleryresult.map((item) => ({
+            public_id: item.Key,
+            url: item.Location,
+          }));
         }
         const fieldsToUpdate = [
           "projectName",
@@ -473,12 +492,12 @@ class projectController {
             update[field] = req.body[field];
           }
         });
-   const data= await ProjectModel.findByIdAndUpdate({_id:id},update)
-   await data.save()
-  //  fs.unlinkSync(req.files.path);
-   return res.status(200).json({
-    message:"Updated successfully !"
-   })
+        const data = await ProjectModel.findByIdAndUpdate({ _id: id }, update);
+        await data.save();
+        //  fs.unlinkSync(req.files.path);
+        return res.status(200).json({
+          message: "Updated successfully !",
+        });
       }
     } catch (error) {
       console.log(error);
@@ -511,7 +530,6 @@ class projectController {
   // };
 
   static projectviewAll = async (req, res) => {
-
     try {
       // Check if data is available in cache
       let data = cache.get("projectData");
@@ -728,7 +746,7 @@ class projectController {
         const dataPushed = await ProjectModel.findOneAndUpdate(
           { _id: id },
           { $push: { highlight: data } },
-          { new: true }
+          { new: true },
         );
 
         await dataPushed.save();
@@ -790,7 +808,7 @@ class projectController {
                 _id: id,
               },
             },
-          }
+          },
         );
         res.status(200).json({
           message: "data get Successfully ! ",
@@ -822,7 +840,7 @@ class projectController {
               "highlight.$.highlight_Point": highlight_Point,
             },
           },
-          { new: true }
+          { new: true },
         );
         res.status(200).json({
           message: "data update successfully !",
@@ -851,7 +869,7 @@ class projectController {
           });
         } else {
           const index = data.highlight.findIndex(
-            (highlight) => highlight._id.toString() === id
+            (highlight) => highlight._id.toString() === id,
           );
           if (index === -1) {
             return res.status(404).json({ error: "Post property not found" });
@@ -888,7 +906,7 @@ class projectController {
             const dataPushed = await ProjectModel.findOneAndUpdate(
               { _id: id },
               { $push: { BhK_Details: data } },
-              { new: true }
+              { new: true },
             );
 
             await dataPushed.save();
@@ -960,7 +978,7 @@ class projectController {
                 _id: id,
               },
             },
-          }
+          },
         );
 
         if (data) {
@@ -999,7 +1017,7 @@ class projectController {
       if (update) {
         const data = await ProjectModel.findOneAndUpdate(
           { "BhK_Details._id": id },
-          { $set: { "BhK_Details.$": update } }
+          { $set: { "BhK_Details.$": update } },
         );
         if (data) {
           res.status(200).json({
@@ -1263,7 +1281,7 @@ class projectController {
               projectName: projectName,
               address: address,
               status: status,
-            }
+            },
           );
           // console.log(data)
           await data.save();
@@ -1320,7 +1338,7 @@ class projectController {
             // Update the data in the database
             await ProjectModel.findByIdAndUpdate(
               { _id: id },
-              { project_floorplan_Image: floorplan }
+              { project_floorplan_Image: floorplan },
             );
             return res
               .status(200)
@@ -1363,7 +1381,6 @@ class projectController {
       const data = await UserModel.find().skip(skip).limit(limit);
       const fileName = `EnquiryDate page-${page} ${Date.now()}`;
 
-
       // Calculate cache expiration time (5 minutes in milliseconds)
       const expirationTime = 5 * 60 * 1000;
       cache.put(cacheKey, data, expirationTime);
@@ -1381,87 +1398,103 @@ class projectController {
   };
 
   static enquiryDownload = async (req, res) => {
-      try {
-        //Get page and limit from query parameters, with default values
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 2000;
-        const skip = (page - 1) * limit;
-        // Create a unique cache key for each page
-        const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
-        console.log("CacheKey",cacheKey);
-        // Check if data is in cache
-        const cacheData = cache.get(cacheKey);
+    try {
+      //Get page and limit from query parameters, with default values
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 2000;
+      const skip = (page - 1) * limit;
+      // Create a unique cache key for each page
+      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+      console.log("CacheKey", cacheKey);
+      // Check if data is in cache
+      const cacheData = cache.get(cacheKey);
 
-        if (cacheData) {
-          console.log("Serving data from cache");
-          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
-          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
-          
-          await ConvertJSONtoExcel(JSON.parse(JSON.stringify(cacheData)), filePath);
+      if (cacheData) {
+        console.log("Serving data from cache");
+        const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+        const filePath = path.join("./temp", fileName); // Save file in a temporary directory
 
-          //TO get the file deatils
-          const stat = fs.statSync(filePath);
-          const fileSize = stat.size;
+        await ConvertJSONtoExcel(
+          JSON.parse(JSON.stringify(cacheData)),
+          filePath,
+        );
 
-          // Set headers for file download
-          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-          res.setHeader('Content-Length', fileSize);
-          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+        //TO get the file deatils
+        const stat = fs.statSync(filePath);
+        const fileSize = stat.size;
 
+        // Set headers for file download
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${fileName}`,
+        );
+        res.setHeader("Content-Length", fileSize);
+        res.setHeader(
+          "Access-Control-Expose-Headers",
+          "Content-Disposition, Content-Length",
+        );
 
-          // Stream the file to the client
-          const fileStream = fs.createReadStream(filePath);
-          fileStream.pipe(res);
+        // Stream the file to the client
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
 
-          // Clean up the temporary file after sending
-          fileStream.on('close', () => {
-            fs.unlink(filePath, (err) => {
-              if (err) console.error("Failed to delete temporary file:", err);
-            });
+        // Clean up the temporary file after sending
+        fileStream.on("close", () => {
+          fs.unlink(filePath, (err) => {
+            if (err) console.error("Failed to delete temporary file:", err);
           });
+        });
+      } else {
+        // If data is not in cache, fetch from the database
+        console.log("Fetching data from database");
+        const data = await UserModel.find().lean().skip(skip).limit(limit);
+        // Cache the fetched data for 5 minutes
+        const expirationTime = 5 * 60 * 1000;
+        cache.put(cacheKey, data, expirationTime);
 
-        }else{
-          // If data is not in cache, fetch from the database
-          console.log("Fetching data from database");
-          const data = await UserModel.find().lean().skip(skip).limit(limit);
-          // Cache the fetched data for 5 minutes
-          const expirationTime = 5 * 60 * 1000;
-          cache.put(cacheKey, data, expirationTime);
+        // Convert JSON data to Excel
+        const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
+        const filePath = path.join("./temp", fileName); // Save file in a temporary directory
+        await ConvertJSONtoExcel(data, filePath);
 
+        //TO get the file deatils
+        const fileSize = fs.statSync(filePath).size;
 
-          // Convert JSON data to Excel
-          const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
-          const filePath = path.join('./temp', fileName); // Save file in a temporary directory
-          await ConvertJSONtoExcel(data, filePath);
+        // Set headers for file download
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${fileName}`,
+        );
+        res.setHeader("Content-Length", fileSize);
+        res.setHeader(
+          "Access-Control-Expose-Headers",
+          "Content-Disposition, Content-Length",
+        );
 
-          //TO get the file deatils
-          const fileSize = fs.statSync(filePath).size;
+        // Stream the file to the client
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
 
-          // Set headers for file download
-          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-          res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-          res.setHeader('Content-Length', fileSize);
-          res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
-
-          // Stream the file to the client
-          const fileStream = fs.createReadStream(filePath);
-          fileStream.pipe(res);
-
-          // Clean up the temporary file after sending
-          fileStream.on('close', () => {
-            fs.unlink(filePath, (err) => {
-              if (err) console.error("Failed to delete temporary file:", err);
-            });
+        // Clean up the temporary file after sending
+        fileStream.on("close", () => {
+          fs.unlink(filePath, (err) => {
+            if (err) console.error("Failed to delete temporary file:", err);
           });
-        }
-
-
-      } catch (error) {
-          console.error("Error in enquiryDownload:", error);
-          res.status(500).send("Failed to download enquiry data");
+        });
       }
-  }
+    } catch (error) {
+      console.error("Error in enquiryDownload:", error);
+      res.status(500).send("Failed to download enquiry data");
+    }
+  };
   // count project according to the city
   static projectCount_city = async (req, res) => {
     try {
@@ -1494,7 +1527,20 @@ class projectController {
       });
     }
   };
+
+  static projectShowHomepageLazyLoading = async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const data = await ProjectModel.find().skip(skip).limit(limit);
+      const count = await ProjectModel.countDocuments();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 }
+
 module.exports = projectController;
 
 // const data=await ProjectModel.findOne()
@@ -1522,4 +1568,3 @@ module.exports = projectController;
 // };
 // const result = await ProjectModel.updateMany(filter, updateDoc);
 // console.log(`Updated ${result.modifiedCount} documents`);
- 

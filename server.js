@@ -1,5 +1,5 @@
 const express = require("express");
-const compression=require('compression')
+const compression = require("compression");
 const connectDB = require("./db/connect_db");
 const router = require("./routes/web");
 const Port = process.env.PORT || 3500;
@@ -8,7 +8,6 @@ const app = express();
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
 
 // For Local Development
 // const https = require('https');
@@ -19,7 +18,6 @@ const bodyParser = require("body-parser");
 // // Configure axios or other HTTP clients to ignore certificate errors
 // https.globalAgent.options.rejectUnauthorized = false;
 
-
 // Create a rate limit rule
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 15 minutes
@@ -27,9 +25,8 @@ const limiter = rateLimit({
   message: "Too many requests , please try again after sometime.",
 });
 
-// compress the response 
-app.use(compression())
-
+// compress the response
+app.use(compression());
 
 // cors
 app.use(cors());
@@ -60,7 +57,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // database connection
 connectDB();
 
-app.set('trust proxy',1)
+app.set("trust proxy", 1);
 
 // cookie
 const cookieParser = require("cookie-parser");
@@ -73,4 +70,4 @@ app.listen(Port, () => {
   console.log(`App Listen On the ${Port}`);
 });
 
-//hi there 
+//hi there
