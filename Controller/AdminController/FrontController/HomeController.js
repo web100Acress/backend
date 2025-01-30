@@ -6,9 +6,9 @@ const rent_Model = require("../../../models/property/rent");
 const ProjectModel = require("../../../models/projectDetail/project");
 const postPropertyModel = require("../../../models/postProperty/post");
 const UserModel = require("../../../models/projectDetail/user");
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 const LeadModel = require("../../../models/projectDetail/website");
-const cache=require('memory-cache')
+const cache = require("memory-cache");
 const tarnsporter = nodemailer.createTransport({
   service: "gmail",
   port: 465,
@@ -30,26 +30,27 @@ class homeController {
         message: "Please enter your query!",
       });
     }
-  
+
     // Generate a unique cache key for the search term
     const cacheKey = `findData:${searchTerm}`;
-  
+
     // Check if the data is in cache
     const cachedData = await cache.get(cacheKey);
     if (cachedData) {
- 
       return res.status(200).json({
         message: "Data found in cache!",
         searchdata: JSON.parse(cachedData),
       });
     }
-  
+
     try {
       // First try the text search
-      const searchResults = await ProjectModel.find(
-        { $text: { $search: searchTerm } }
-      ).limit(16).lean();
-  
+      const searchResults = await ProjectModel.find({
+        $text: { $search: searchTerm },
+      })
+        .limit(16)
+        .lean();
+
       // Cache the results if found
       if (searchResults.length > 0) {
         const time = 3 * 60 * 1000; // Cache for 3 minutes
@@ -61,18 +62,18 @@ class homeController {
       } else {
         // If no results, split the search term and perform regex search
         const words = searchTerm.split(" ");
-        const searchPromises = words.map(word => {
+        const searchPromises = words.map((word) => {
           return ProjectModel.find({
             $or: [
               { projectName: { $regex: word, $options: "i" } },
-              { project_discripation: { $regex: word, $options: 'i' } },
+              { project_discripation: { $regex: word, $options: "i" } },
             ],
           }).lean();
         });
-  
+
         const regexResults = await Promise.all(searchPromises);
         const combinedResults = [...new Set(regexResults.flat())]; // Remove duplicates
-  
+
         // Cache the results from regex search
         if (combinedResults.length > 0) {
           const time = 3 * 60 * 1000; // Cache for 3 minutes
@@ -82,15 +83,15 @@ class homeController {
             searchdata: combinedResults,
           });
         }
-  
+
         return res.status(404).json({ message: "No data found!" });
       }
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
-  }
-  
+  };
+
   //search for otherproperty
   static search_other = async (req, res) => {
     const { query } = req.query;
@@ -132,147 +133,144 @@ class homeController {
     }
   };
   //search in rental property
- //search in buy property
- static search_buy = async (req, res) => {
-  try {
-    const key = req.params.key;
-    const data = await postPropertyModel.aggregate([
-      {
-        $match: {
-          $text: { $search: key },
-          "postProperty.verify": "verified",
-          "postProperty.propertyLooking": "Sell"
-        }
-      },
-      {
-        $addFields: {
-          metaScore: { $meta: "textScore" }
-        }
-      },
-      {
-        $sort: {
-          metaScore: -1
-        }
-      },
-      {
-        $unwind:"$postProperty"
-      },
-      {
-        $match: {
-          "postProperty.verify": "verified", // verified after unwinding
-          "postProperty.propertyLooking": "Sell" //  "rent"
-        }
-      },
-      {
-        $project: {
-          postProperty: 1,
-          metaScore: 1
-        }
-      }
-    ]);
-    
-
-    if (data.length > 0) {
-      res.status(200).send({
-        success: true,
-        message: "Data retrieved successfully",
-        data: data,
-      });
-    }
-    else {
-      const data1 = await postPropertyModel.aggregate([
+  //search in buy property
+  static search_buy = async (req, res) => {
+    try {
+      const key = req.params.key;
+      const data = await postPropertyModel.aggregate([
         {
           $match: {
+            $text: { $search: key },
             "postProperty.verify": "verified",
             "postProperty.propertyLooking": "Sell",
           },
         },
         {
+          $addFields: {
+            metaScore: { $meta: "textScore" },
+          },
+        },
+        {
+          $sort: {
+            metaScore: -1,
+          },
+        },
+        {
+          $unwind: "$postProperty",
+        },
+        {
+          $match: {
+            "postProperty.verify": "verified", // verified after unwinding
+            "postProperty.propertyLooking": "Sell", //  "rent"
+          },
+        },
+        {
           $project: {
-            name: 1,
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.propertyLooking", "Sell"] },
-                    { $eq: ["$$property.verify", "verified"] },
-                  ],
+            postProperty: 1,
+            metaScore: 1,
+          },
+        },
+      ]);
+
+      if (data.length > 0) {
+        res.status(200).send({
+          success: true,
+          message: "Data retrieved successfully",
+          data: data,
+        });
+      } else {
+        const data1 = await postPropertyModel.aggregate([
+          {
+            $match: {
+              "postProperty.verify": "verified",
+              "postProperty.propertyLooking": "Sell",
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              postProperty: {
+                $filter: {
+                  input: "$postProperty",
+                  as: "property",
+                  cond: {
+                    $and: [
+                      { $eq: ["$$property.propertyLooking", "Sell"] },
+                      { $eq: ["$$property.verify", "verified"] },
+                    ],
+                  },
                 },
               },
             },
           },
-        },
-      ]);
-      res.status(200).send({
-        success: true,
-        message: "data get successfully !",
-        data: data1,
+        ]);
+        res.status(200).send({
+          success: true,
+          message: "data get successfully !",
+          data: data1,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server error!",
       });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Internal server error!",
-    });
-  }
-};
+  };
   //search in buy property
 
-  
-// Search in rental property
-static search_rent = async (req, res) => {
-  const word = req.params.key; 
-try {
-  if(word.length!==null){
-    const data = await postPropertyModel.aggregate([
-      {
-        $match: {
-          $text: { $search: word },
-          "postProperty.verify": "verified",
-          "postProperty.propertyLooking": "rent"
-        }
-      },
-      {
-        $addFields: {
-          metaScore: { $meta: "textScore" }
-        }
-      },
-      {
-        $sort: {
-          metaScore: -1
-        }
-      },
-    {
-      $unwind:"$postProperty"
-    },
-      {
-        $match: {
-          "postProperty.verify": "verified", // verified after unwinding
-          "postProperty.propertyLooking": "rent" //  "rent"
-        }
-      },
-      {
-        $project: {
-          postProperty: 1,
-          metaScore: 1
-        }
+  // Search in rental property
+  static search_rent = async (req, res) => {
+    const word = req.params.key;
+    try {
+      if (word.length !== null) {
+        const data = await postPropertyModel.aggregate([
+          {
+            $match: {
+              $text: { $search: word },
+              "postProperty.verify": "verified",
+              "postProperty.propertyLooking": "rent",
+            },
+          },
+          {
+            $addFields: {
+              metaScore: { $meta: "textScore" },
+            },
+          },
+          {
+            $sort: {
+              metaScore: -1,
+            },
+          },
+          {
+            $unwind: "$postProperty",
+          },
+          {
+            $match: {
+              "postProperty.verify": "verified", // verified after unwinding
+              "postProperty.propertyLooking": "rent", //  "rent"
+            },
+          },
+          {
+            $project: {
+              postProperty: 1,
+              metaScore: 1,
+            },
+          },
+        ]);
+
+        res.status(200).json({
+          message: "fetch Matched data !",
+          data,
+        });
       }
-    ]);
-    
-  res.status(200).json({
-    message:"fetch Matched data !",
-    data
-  })
-}
-} catch (error) {
-  console.error(error)
-  res.status(500).json({
-    message:"Internal server error !"
-  })
-}
-};
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
   // filter data by projectname, city,buildername,minPrice,maxprice
   // type===residential and Commercial
   //area or state
@@ -505,7 +503,7 @@ try {
 
       // const collectdata = [...data1];
       const collectdata = [...data1].filter(
-        (item) => item.postProperty.length > 0
+        (item) => item.postProperty.length > 0,
       );
 
       res.status(200).json({
@@ -551,23 +549,25 @@ try {
         },
       ]).exec();
 
-      const mothlyuserRegister= await postPropertyModel.aggregate([
-        {
-          $group: {
-            _id: {
-              year: { $year: "$createdAt" },
-              month: { $month: "$createdAt" }
+      const mothlyuserRegister = await postPropertyModel
+        .aggregate([
+          {
+            $group: {
+              _id: {
+                year: { $year: "$createdAt" },
+                month: { $month: "$createdAt" },
+              },
+              count: { $sum: 1 },
             },
-            count: { $sum: 1 }
-          }
-        },
-        {
-          $sort: {
-            "_id.year": -1,
-            "_id.month": -1
-          }
-        }
-      ]).exec();
+          },
+          {
+            $sort: {
+              "_id.year": -1,
+              "_id.month": -1,
+            },
+          },
+        ])
+        .exec();
 
       const totalprojectLeads = projectLeads.length;
 
@@ -605,31 +605,33 @@ try {
   };
   // ///////////////////
 
-   // Enquiry for Other domain's
-   static leadSumbit = async (req, res) => {
+  // Enquiry for Other domain's
+  static leadSumbit = async (req, res) => {
     try {
-      const { name, email, number, projectName, projectAddress } = req.body
+      const { name, email, number, projectName, projectAddress } = req.body;
       if (!number) {
-        return res.status(400).json({ error: "Input field is missing or undefined" });
+        return res
+          .status(400)
+          .json({ error: "Input field is missing or undefined" });
       }
 
-         // Respond to client first
-         res.status(200).json({ message: "data received. " });
+      // Respond to client first
+      res.status(200).json({ message: "data received. " });
 
-         // Save the lead data and send email concurrently
-         const leadData = new LeadModel({
-           name,
-           email,
-           number,
-           projectName,
-           projectAddress,
-         });
-   
-         const emailPromise = tarnsporter.sendMail({
-           from: "amit100acre@gmail.com",
-           to: "vinay.aadharhomes@gmail.com",
-           subject: `New Lead on ${projectName}`,
-           html: `
+      // Save the lead data and send email concurrently
+      const leadData = new LeadModel({
+        name,
+        email,
+        number,
+        projectName,
+        projectAddress,
+      });
+
+      const emailPromise = tarnsporter.sendMail({
+        from: "amit100acre@gmail.com",
+        to: "vinay.aadharhomes@gmail.com",
+        subject: `New Lead on ${projectName}`,
+        html: `
              <h1>New Lead - ${projectName}</h1>
              <p>Customer Name: ${name}</p>
              <p>Customer Number: ${number}</p>
@@ -638,16 +640,15 @@ try {
              <p>Please review the details and take necessary actions.</p>
              <p>Thank you!</p>
            `,
-         });
-   
-         await Promise.all([leadData.save(), emailPromise]);
+      });
+
+      await Promise.all([leadData.save(), emailPromise]);
     } catch (error) {
-      console.error(error)
+      console.error(error);
       res.status(500).json({
-        message:"Internal server error !"
-      })
+        message: "Internal server error !",
+      });
     }
-  }
-  
+  };
 }
 module.exports = homeController;

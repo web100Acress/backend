@@ -1,31 +1,29 @@
-const mongoose=require('mongoose')
+const mongoose = require("mongoose");
 
-const websiteSchema=new mongoose.Schema({
-    name:{
-        type:String
+const websiteSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
     },
-    email:{
-        type:String,
-        
+    email: {
+      type: String,
     },
-    number:{
-        type:String,
-        required:true
+    number: {
+      type: String,
+      required: true,
     },
-    projectName:{
-        type:String,
-  
+    projectName: {
+      type: String,
     },
-    projectAddress:{
-        type:String,
-       
+    projectAddress: {
+      type: String,
     },
-    status:{
-        type: String,
-        default:"Pending"
-      }
-    
-
-},{timestamps:true})
-const LeadModel=mongoose.model("websiteLead",websiteSchema);
-module.exports=LeadModel
+    status: {
+      type: String,
+      default: "Pending",
+    },
+  },
+  { timestamps: true },
+);
+const LeadModel = mongoose.model("websiteLead", websiteSchema);
+module.exports = LeadModel;

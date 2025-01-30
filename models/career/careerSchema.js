@@ -1,39 +1,47 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
-const careerSchema = new mongoose.Schema({
+const careerSchema = new mongoose.Schema(
+  {
     bannerImage: {
+      public_id: {
+        type: String,
+      },
+      url: {
+        type: String,
+      },
+    },
+    activityImage: [
+      {
         public_id: {
-            type: String
+          type: String,
         },
         url: {
-            type: String
-        }
-    },
-    activityImage: [ { public_id: {
-        type: String
-    },
-    url: {
-        type: String
-    }}],
+          type: String,
+        },
+      },
+    ],
 
-    whyAcress: {
-
-    },
+    whyAcress: {},
     driveCulture: [],
 
     inHouse: [],
 
     lifeAcress: [],
 
-    highlightImage: [{  public_id: {
-        type: String
-    },
-    url: {
-        type: String
-    }}],
-
-}, {
-    timestamps: true
-})
-const careerModal = mongoose.model("Career", careerSchema)
-module.exports = careerModal
+    highlightImage: [
+      {
+        public_id: {
+          type: String,
+        },
+        url: {
+          type: String,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  },
+);
+const careerModal = mongoose.model("Career", careerSchema);
+module.exports = careerModal;

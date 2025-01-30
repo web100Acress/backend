@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload=require('../aws/multerConfig')
+const upload = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
@@ -36,18 +36,21 @@ router.get("/contact", contactController.contact);
 //router for agent page
 router.get("/agent", agentController.agent);
 
-
 // Admin Controller routing
 //projectDetail page
-router.use("/project",projectRoute);
+router.use("/project", projectRoute);
 //page with detail
 
-router.delete("/floorImage/:id/:indexNumber",adminVerify,projectController.floorImage)
-  
+router.delete(
+  "/floorImage/:id/:indexNumber",
+  adminVerify,
+  projectController.floorImage,
+);
+
 //from
 router.post("/userInsert", projectController.userInsert);
 router.get("/userViewAll", projectController.userViewAll);
-router.get("/userViewAll/dowloadData",projectController.enquiryDownload)
+router.get("/userViewAll/dowloadData", projectController.enquiryDownload);
 router.get("/userviewDetail/:id", projectController.userViewDetail);
 router.post("/userUpdate/:id", projectController.userUpdate);
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete);
@@ -60,9 +63,9 @@ router.delete("/bhk_delete/:id", projectController.bhk_delete);
 ///project highlight
 router.post("/highlight/:id", projectController.highlightPoint);
 router.get("/highlight/view/:id", projectController.highlightPoint_view);
-router.get("/highlight/edit/:id",projectController.highlightedit)
-router.post("/highlight/update/:id",projectController.highlightupdate)
-router.delete("/highlight/delete/:id",projectController.highlightdelete)
+router.get("/highlight/edit/:id", projectController.highlightedit);
+router.post("/highlight/update/:id", projectController.highlightupdate);
+router.delete("/highlight/delete/:id", projectController.highlightdelete);
 
 //contact
 // Customer Contact routing handler
@@ -75,27 +78,27 @@ router.delete("/contact_delete/:id/delete", contactController.contact_delete);
 router.post("/contact_pagedetail", contactController.contact_pagedetail);
 router.get(
   "/contact_pagedetail_edit/:id/edit",
-  contactController.contact_pagedetail_edit
+  contactController.contact_pagedetail_edit,
 );
 router.post(
   "/contact_pagedetail_update/:id/update",
-  contactController.contact_pagedetail_update
+  contactController.contact_pagedetail_update,
 );
 router.get(
   "/contact_pagedetail_view/:id/view",
-  contactController.contact_pagedetail_view
+  contactController.contact_pagedetail_view,
 );
 router.get(
   "/contact_pagedetail_viewAll",
-  contactController.contactpagedetail_viewAll
+  contactController.contactpagedetail_viewAll,
 );
 router.delete(
   "/contact_pagedetail_delete/:id/delete",
-  contactController.contact_pagedetail_delete
+  contactController.contact_pagedetail_delete,
 );
 //Property
 //Buy
-router.use("/property",propertyRoute);
+router.use("/property", propertyRoute);
 /*router.post("/property/buyInsert",upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]), BuyController.buycommercialInsert);
 // router.get('/property/buy/:type', BuyController.buycommercialView)
 // router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
@@ -116,7 +119,7 @@ router.delete("/property/:id/rentDelete", rentController.rentDelete);
 //About_Page
 //Insert
 
-router.use("/about",aboutRoute);
+router.use("/about", aboutRoute);
 /*
 router.post("/about/aboutInsert", aboutController.aboutInsert);
 router.get("/about/:id/aboutView", aboutController.aboutView);
@@ -127,17 +130,20 @@ router.delete("/about/:id/aboutDelete", aboutController.aboutDelete);
 */
 //testimonial
 
-router.post("/testimonial/testimonialInsert",aboutController.testimonialInsert);
+router.post(
+  "/testimonial/testimonialInsert",
+  aboutController.testimonialInsert,
+);
 router.get("/testimonial/testimonialView/:id", aboutController.testimonialView);
 router.get("/testimonial/viewAll", aboutController.testimonialViewAll);
 router.get("/testimonial/testimonialEdit/:id", aboutController.testimonialEdit);
 router.post(
   "/testimonial/testimonialUpdate/:id",
-  aboutController.testimonialUpdate
+  aboutController.testimonialUpdate,
 );
 router.delete(
   "/testimonial/testimonialDelete/:id",
-  aboutController.testimonialDelete
+  aboutController.testimonialDelete,
 );
 //Register
 
@@ -145,18 +151,26 @@ router.delete(
 
 //post person
 
-router.use("/postPerson",postPropertyRoute);
+router.use("/postPerson", postPropertyRoute);
 
 //post enquiry
-router.get("/postEnq_view",PostPropertyController.postEnquiry_view)
+router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
 //Blog
-router.post("/blog/insert",upload.single('blog_Image'), blogController.blog_insert);
+router.post(
+  "/blog/insert",
+  upload.single("blog_Image"),
+  blogController.blog_insert,
+);
 router.get("/blog/view", blogController.blog_view);
 router.get("/blog/view/:id", blogController.blog_viewId);
 router.get("/blog/edit/:id", blogController.blog_edit);
-router.put("/blog/update/:id",upload.single('blog_Image'), blogController.blog_update);
+router.put(
+  "/blog/update/:id",
+  upload.single("blog_Image"),
+  blogController.blog_update,
+);
 router.delete("/blog/delete/:id", blogController.blog_delete);
 
 //Searching routing
@@ -164,48 +178,49 @@ router.delete("/blog/delete/:id", blogController.blog_delete);
 router.get("/property/search/:key", homeController.search);
 //searching buy
 router.get("/buyproperty/search/:key", homeController.search_buy);
-router.get("/data/filter",homeController.filter_data)
-router.get('/rentproperty/search/:key',homeController.search_rent)
+router.get("/data/filter", homeController.filter_data);
+router.get("/rentproperty/search/:key", homeController.search_rent);
 
 //new launch
 
 //career
-router.post("/career/page/Insert",
+router.post(
+  "/career/page/Insert",
   upload.fields([
-    { name: "bannerImage", maxCount: 1 }, 
-    { name: "activityImage", maxCount: 10 }, 
-    { name: "highlightImage", maxCount: 10 }
+    { name: "bannerImage", maxCount: 1 },
+    { name: "activityImage", maxCount: 10 },
+    { name: "highlightImage", maxCount: 10 },
   ]),
-  CareerController.careerInsert)
-router.get("/career/page/View",CareerController.careerView)
-router.get("/career/page/edit/:id",CareerController.careerEdit)
-router.post("/career/page/update/:id",
+  CareerController.careerInsert,
+);
+router.get("/career/page/View", CareerController.careerView);
+router.get("/career/page/edit/:id", CareerController.careerEdit);
+router.post(
+  "/career/page/update/:id",
   upload.fields([
-    { name: "bannerImage", maxCount: 1 }, 
-    { name: "activityImage", maxCount: 10 }, 
-    { name: "highlightImage", maxCount: 10 }
+    { name: "bannerImage", maxCount: 1 },
+    { name: "activityImage", maxCount: 10 },
+    { name: "highlightImage", maxCount: 10 },
   ]),
-  CareerController.careerUpdate)
-router.delete('/career/opening/delete/:id',CareerController.openingDelete)
+  CareerController.careerUpdate,
+);
+router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 // router.post("/mail",rentController.email)
 
 //Job Opening
-router.post("/career/opening/Insert", CareerController.openingInsert)
-router.get("/career/opening/ViewAll", CareerController.openingView_all)
-router.get("/career/opening/View/:id", CareerController.openingView_id)
-router.get("/career/opening/edit/:id",CareerController.openingEdit)
-router.put('/career/opening/update/:id',CareerController.openingUpdate)
-router.delete('/career/opening/delete/:id',CareerController.openingDelete)
+router.post("/career/opening/Insert", CareerController.openingInsert);
+router.get("/career/opening/ViewAll", CareerController.openingView_all);
+router.get("/career/opening/View/:id", CareerController.openingView_id);
+router.get("/career/opening/edit/:id", CareerController.openingEdit);
+router.put("/career/opening/update/:id", CareerController.openingUpdate);
+router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 
+router.post("/pahleGhar", newlaunchController.pahleGhar);
+router.post("/Valley", newlaunchController.Valley);
+router.get("/snapShot", homeController.dataSnapshot);
 
-
-
-router.post('/pahleGhar',newlaunchController.pahleGhar)
-router.post('/Valley',newlaunchController.Valley)
-router.get("/snapShot",homeController.dataSnapshot)
-
-// try code 
-router.get("/projectCount",projectController.projectCount_city)
-// This routes used for the navigate leads from other domains 
-router.post('/submit',homeController.leadSumbit)
+// try code
+router.get("/projectCount", projectController.projectCount_city);
+// This routes used for the navigate leads from other domains
+router.post("/submit", homeController.leadSumbit);
 module.exports = router;

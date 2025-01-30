@@ -3,7 +3,11 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const fs = require("fs");
-const {uploadFile, deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+const {
+  uploadFile,
+  deleteFile,
+  updateFile,
+} = require("../../../Utilities/s3HelperUtility");
 // const AWS = require("aws-sdk");
 require("dotenv").config();
 
@@ -70,14 +74,14 @@ class CareerController {
       let image2 = [];
       if (req.files.activityImage) {
         image2 = await Promise.all(
-          req.files.activityImage.map((file) => uploadFile(file))
+          req.files.activityImage.map((file) => uploadFile(file)),
         );
       }
 
       let image3 = [];
       if (req.files.highlightImage) {
         image3 = await Promise.all(
-          req.files.highlightImage.map((file) => uploadFile(file))
+          req.files.highlightImage.map((file) => uploadFile(file)),
         );
       }
       const data = new careerModal({
@@ -172,7 +176,10 @@ class CareerController {
         // Example logic for updating database dynamically
         const updateData = {}; // Initialize an empty object
         if (bannerImage) {
-          const uploadedBanner = await updateFile(bannerImage[0], bannerObjectKey);
+          const uploadedBanner = await updateFile(
+            bannerImage[0],
+            bannerObjectKey,
+          );
           updateData.bannerImage = {
             public_id: uploadedBanner.Key,
             url: uploadedBanner.Location,
@@ -182,8 +189,8 @@ class CareerController {
         if (activityImage) {
           const uploadedActivities = await Promise.all(
             activityImage.map((file, index) =>
-              updateFile(file, activityObjectKey[index])
-            )
+              updateFile(file, activityObjectKey[index]),
+            ),
           );
           updateData.activityImage = uploadedActivities.map((image) => ({
             public_id: image.Key,
@@ -194,8 +201,8 @@ class CareerController {
         if (highlightImage) {
           const uploadedHighlights = await Promise.all(
             highlightImage.map((file, index) =>
-              updateFile(file, highlighObjectKey[index])
-            )
+              updateFile(file, highlighObjectKey[index]),
+            ),
           );
           updateData.highlightImage = uploadedHighlights.map((image) => ({
             public_id: image.Key,
@@ -399,7 +406,7 @@ class CareerController {
               experience: experience,
               skill: skill,
               jobProfile: jobProfile,
-            }
+            },
           );
           await data.save();
           res.status(200).json({

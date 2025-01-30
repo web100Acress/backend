@@ -6,9 +6,13 @@ const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
 const mongoose = require("mongoose");
-require('dotenv').config();
-const { isValidObjectId } = require('mongoose');
-const {uploadFile,deleteFile,updateFile} = require("../../../Utilities/s3HelperUtility");
+require("dotenv").config();
+const { isValidObjectId } = require("mongoose");
+const {
+  uploadFile,
+  deleteFile,
+  updateFile,
+} = require("../../../Utilities/s3HelperUtility");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -22,7 +26,7 @@ const getAllProjects = async () => {
 const generateToken = () => {
   return Math.floor(Math.random() * 1000000);
 };
-const transporter =  nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: "gmail",
   port: 465,
   secure: true,
@@ -160,7 +164,6 @@ const sendPostEmail = async (email) => {
   });
 };
 class PostPropertyController {
-          
   // static postPerson_Register = async (req, res) => {
   //   try {
   //     const { name, email, mobile, password, cpassword, role } = req.body;
@@ -211,8 +214,6 @@ class PostPropertyController {
   //   }
   // };
   static postPerson_Register = async (req, res) => {
-   
-
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -223,10 +224,8 @@ class PostPropertyController {
         .findOne({ email: email })
         .session(session);
       // console.log(verify);
-  
 
- // true or false
-
+      // true or false
 
       if (verify) {
         res.status(409).json({
@@ -273,6 +272,7 @@ class PostPropertyController {
         role: role,
       });
       await data.save({ session });
+
       await session.commitTransaction();
       session.endSession();
 
@@ -283,9 +283,9 @@ class PostPropertyController {
       // console.log(error);
       await session.abortTransaction();
       session.endSession();
-      if(error.name === 'ValidationError') {
+      if (error.name === "ValidationError") {
         return res.status(401).json({
-          message:"You are not authorized to change the role"
+          message: "You are not authorized to change the role",
         });
       }
       return res.status(500).json({
@@ -296,7 +296,7 @@ class PostPropertyController {
   // verify login for seller
   static postPerson_VerifyLogin = async (req, res) => {
     try {
-      const { email, password } =  req.body;
+      const { email, password } = req.body;
       if (email && password) {
         const User = await postPropertyModel.findOne({ email: email });
 
@@ -305,14 +305,20 @@ class PostPropertyController {
           const isMatch = await bcrypt.compare(password, User.password);
           if (email == email && isMatch) {
             if (User.role === "Admin") {
-              const token = jwt.sign({ user_id: User._id, role: "Admin" }, "amitchaudhary100");
+              const token = jwt.sign(
+                { user_id: User._id, role: "Admin" },
+                "amitchaudhary100",
+              );
               res.status(200).json({
                 message: " Admin login successfully ! ",
                 token,
                 User,
               });
             } else {
-              const token = jwt.sign({ user_id: User._id, role: "user" }, "amitchaudhary100");
+              const token = jwt.sign(
+                { user_id: User._id, role: "user" },
+                "amitchaudhary100",
+              );
               // const totalProperty=User.postProperty.length
               // const Property = User.postProperty;
               // const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
@@ -384,29 +390,29 @@ class PostPropertyController {
   //forget password
   static postPerson_forget = async (req, res) => {
     const { email } = req.body;
-    console.log(email)
+    console.log(email);
     try {
       if (email) {
         const user = await postPropertyModel.findOne({ email: email });
-        console.log(user)
+        console.log(user);
         if (!user) {
           res.status(404).json({
             message: " User not found , sign in before login  ! ",
           });
         } else {
-          console.log("token")
+          console.log("token");
           const token = generateToken();
-          console.log("token1")
+          console.log("token1");
           const resetToken = await postPropertyModel.findByIdAndUpdate(
             user._id,
             {
               token: token,
-            }
+            },
           );
-          console.log(token,resetToken,"fhwe")
+          console.log(token, resetToken, "fhwe");
           await resetToken.save();
           await sendResetEmail(email, token);
-           console.log(resetToken,"lhfuiweh")
+          console.log(resetToken, "lhfuiweh");
           res.status(200).json({
             message: "Password reset link sent successfully",
           });
@@ -436,7 +442,7 @@ class PostPropertyController {
           {
             password: hashpassword,
             token: "",
-          }
+          },
         );
         if (user) {
           // console.log(token, "here token is updated and set as empty token after running this api")
@@ -544,7 +550,7 @@ class PostPropertyController {
       });
     }
   };
-  // update 
+  // update
   static postPerson_update = async (req, res) => {
     // console.log("hello")
     try {
@@ -584,7 +590,7 @@ class PostPropertyController {
           { email: email },
           {
             password: hashpassword,
-          }
+          },
         );
         await data.save();
         res.status(200).json({
@@ -631,178 +637,177 @@ class PostPropertyController {
   // acc-s3
   static postProperty = async (req, res) => {
     try {
-        if (req.files.frontImage && req.files.otherImage) {
-          const id = req.params.id;
-          const personData = await postPropertyModel.findById({ _id: id });
-          const email = personData.email;
-          const number = personData.mobile;
-          const agentName = personData.name;
-          const role = personData.role;
-        let frontImage=await uploadFile(req.files.frontImage[0]);
-        let otherImage=await Promise.all(
-          req.files.otherImage.map((file)=>
-          uploadFile(file))
-        )
+      if (req.files.frontImage && req.files.otherImage) {
+        const id = req.params.id;
+        const personData = await postPropertyModel.findById({ _id: id });
+        const email = personData.email;
+        const number = personData.mobile;
+        const agentName = personData.name;
+        const role = personData.role;
+        let frontImage = await uploadFile(req.files.frontImage[0]);
+        let otherImage = await Promise.all(
+          req.files.otherImage.map((file) => uploadFile(file)),
+        );
 
-          const data = {
-            propertyType: req.body.propertyType,
-            propertyName: req.body.propertyName,
-            address: req.body.address,
-            city: req.body.city,
-            state: req.body.state,
-            price: req.body.price,
-            area: req.body.area,
-            descripation: req.body.descripation,
-            landMark: req.body.landMark,
-            amenities: req.body.amenities,
-            builtYear: req.body.builtYear,
-            furnishing: req.body.furnishing,
-            type: req.body.type,
-            availableDate: req.body.availableDate,
-            email: email,
-            number: number,
-            verify: " ",
-            agentName: agentName,
-            role: role,
-            frontImage: {
-              public_id:frontImage.Key,
-              url:frontImage.Location,
-            },
-            otherImage:otherImage.map((file)=>({
-              public_id:file.Key,
-              url:file.Location
-            })),
-            propertyLooking: req.body.propertyLooking,
-          };
-          // console.log(data)
+        const data = {
+          propertyType: req.body.propertyType,
+          propertyName: req.body.propertyName,
+          address: req.body.address,
+          city: req.body.city,
+          state: req.body.state,
+          price: req.body.price,
+          area: req.body.area,
+          descripation: req.body.descripation,
+          landMark: req.body.landMark,
+          amenities: req.body.amenities,
+          builtYear: req.body.builtYear,
+          furnishing: req.body.furnishing,
+          type: req.body.type,
+          availableDate: req.body.availableDate,
+          email: email,
+          number: number,
+          verify: " ",
+          agentName: agentName,
+          role: role,
+          frontImage: {
+            public_id: frontImage.Key,
+            url: frontImage.Location,
+          },
+          otherImage: otherImage.map((file) => ({
+            public_id: file.Key,
+            url: file.Location,
+          })),
+          propertyLooking: req.body.propertyLooking,
+        };
+        // console.log(data)
 
-          if (id) {
-            const dataPushed = await postPropertyModel.findOneAndUpdate(
-              { _id: id },
-              { $push: { postProperty: data } },
-              { new: true }
-            );
+        if (id) {
+          const dataPushed = await postPropertyModel.findOneAndUpdate(
+            { _id: id },
+            { $push: { postProperty: data } },
+            { new: true },
+          );
 
-            const email = dataPushed.email;
+          const email = dataPushed.email;
 
-            await sendPostEmail(email);
-            res.status(200).json({
-              message: "Data pushed successfully ! ",
-            });
-          } else {
-            res.status(200).json({
-              message: "user id not found ! ",
-            });
-          }
-        } else if (req.files.frontImage) {
-          const id = req.params.id;
-          const personData = await postPropertyModel.findOne({ _id: id });
-          const email = personData.email;
-          const number = personData.mobile;
-          const agentName = personData.name;
-          const role = personData.role;
-  
-      const frontImage=await uploadFile(req.files.frontImage[0])
-
-          const data = {
-            propertyType: req.body.propertyType,
-            propertyName: req.body.propertyName,
-            address: req.body.address,
-            city: req.body.city,
-            state: req.body.state,
-            price: req.body.price,
-            area: req.body.area,
-            descripation: req.body.descripation,
-            landMark: req.body.landMark,
-            amenities: req.body.amenities,
-            builtYear: req.body.builtYear,
-            furnishing: req.body.furnishing,
-            type: req.body.type,
-            availableDate: req.body.availableDate,
-            frontImage: {
-              public_id: frontImage.Key,
-              url:frontImage.Key ,
-            },
-            email: email,
-            number: number,
-            agentName: agentName,
-            role: role,
-            verify: "",
-            propertyLooking: req.body.propertyLooking,
-          };
-          // console.log(data)
-
-          if (id) {
-            const dataPushed = await postPropertyModel.findOneAndUpdate(
-              { _id: id },
-              { $push: { postProperty: data } },
-              { new: true }
-            );
-
-            const email = dataPushed.email;
-
-            await sendPostEmail(email);
-            res.status(200).json({
-              message: "Data pushed successfully ! ",
-            });
-          } else {
-            res.status(200).json({
-              message: "user id not found ! ",
-            });
-          }
+          await sendPostEmail(email);
+          res.status(200).json({
+            message: "Data pushed successfully ! ",
+          });
         } else {
-          const id = req.params.id;
-          const personData = await postPropertyModel.findOne({ _id: id });
-          const email = personData.email;
-          const number = personData.mobile;
-          const agentName = personData.name;
-          const role = personData.role;
-
-          const data = {
-            propertyType: req.body.propertyType,
-            propertyName: req.body.propertyName,
-            address: req.body.address,
-            city: req.body.city,
-            state: req.body.state,
-            price: req.body.price,
-            area: req.body.area,
-            descripation: req.body.descripation,
-            landMark: req.body.landMark,
-            amenities: req.body.amenities,
-            builtYear: req.body.builtYear,
-            furnishing: req.body.furnishing,
-            type: req.body.type,
-            availableDate: req.body.availableDate,
-
-            otherImage: otherImagelink,
-            email: email,
-            number: number,
-            agentName: agentName,
-            role: role,
-            verify: "",
-            propertyLooking: req.body.propertyLooking,
-          };
-          // console.log(data)
-
-          if (id) {
-            const dataPushed = await postPropertyModel.findOneAndUpdate(
-              { _id: id },
-              { $push: { postProperty: data } },
-              { new: true }
-            );
-
-            const email = dataPushed.email;
-            // console.log(email, "hello")
-            await sendPostEmail(email);
-            res.status(200).json({
-              message: "Data pushed successfully ! ",
-            });
-          } else {
-            res.status(200).json({
-              message: "user id not found ! ",
-            });
-          }
+          res.status(200).json({
+            message: "user id not found ! ",
+          });
         }
+      } else if (req.files.frontImage) {
+        const id = req.params.id;
+        const personData = await postPropertyModel.findOne({ _id: id });
+        const email = personData.email;
+        const number = personData.mobile;
+        const agentName = personData.name;
+        const role = personData.role;
+
+        const frontImage = await uploadFile(req.files.frontImage[0]);
+
+        const data = {
+          propertyType: req.body.propertyType,
+          propertyName: req.body.propertyName,
+          address: req.body.address,
+          city: req.body.city,
+          state: req.body.state,
+          price: req.body.price,
+          area: req.body.area,
+          descripation: req.body.descripation,
+          landMark: req.body.landMark,
+          amenities: req.body.amenities,
+          builtYear: req.body.builtYear,
+          furnishing: req.body.furnishing,
+          type: req.body.type,
+          availableDate: req.body.availableDate,
+          frontImage: {
+            public_id: frontImage.Key,
+            url: frontImage.Key,
+          },
+          email: email,
+          number: number,
+          agentName: agentName,
+          role: role,
+          verify: "",
+          propertyLooking: req.body.propertyLooking,
+        };
+        // console.log(data)
+
+        if (id) {
+          const dataPushed = await postPropertyModel.findOneAndUpdate(
+            { _id: id },
+            { $push: { postProperty: data } },
+            { new: true },
+          );
+
+          const email = dataPushed.email;
+
+          await sendPostEmail(email);
+          res.status(200).json({
+            message: "Data pushed successfully ! ",
+          });
+        } else {
+          res.status(200).json({
+            message: "user id not found ! ",
+          });
+        }
+      } else {
+        const id = req.params.id;
+        const personData = await postPropertyModel.findOne({ _id: id });
+        const email = personData.email;
+        const number = personData.mobile;
+        const agentName = personData.name;
+        const role = personData.role;
+
+        const data = {
+          propertyType: req.body.propertyType,
+          propertyName: req.body.propertyName,
+          address: req.body.address,
+          city: req.body.city,
+          state: req.body.state,
+          price: req.body.price,
+          area: req.body.area,
+          descripation: req.body.descripation,
+          landMark: req.body.landMark,
+          amenities: req.body.amenities,
+          builtYear: req.body.builtYear,
+          furnishing: req.body.furnishing,
+          type: req.body.type,
+          availableDate: req.body.availableDate,
+
+          otherImage: otherImagelink,
+          email: email,
+          number: number,
+          agentName: agentName,
+          role: role,
+          verify: "",
+          propertyLooking: req.body.propertyLooking,
+        };
+        // console.log(data)
+
+        if (id) {
+          const dataPushed = await postPropertyModel.findOneAndUpdate(
+            { _id: id },
+            { $push: { postProperty: data } },
+            { new: true },
+          );
+
+          const email = dataPushed.email;
+          // console.log(email, "hello")
+          await sendPostEmail(email);
+          res.status(200).json({
+            message: "Data pushed successfully ! ",
+          });
+        } else {
+          res.status(200).json({
+            message: "user id not found ! ",
+          });
+        }
+      }
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -844,7 +849,7 @@ class PostPropertyController {
               _id: id,
             },
           },
-        }
+        },
       );
       if (data) {
         res.status(200).json({
@@ -877,7 +882,7 @@ class PostPropertyController {
               _id: id,
             },
           },
-        }
+        },
       );
       // console.log(data)
       res.status(200).json({
@@ -893,12 +898,28 @@ class PostPropertyController {
   };
   // postproperty data upate
   static postProperty_Update = async (req, res) => {
-  try {
-    const id=req.params.id;
-      if(isValidObjectId(id)){
-        const { propertyName,propertyType, address, area, city, state, price,descripation, furnishing,
-          builtYear, type, amenities,landMark,availableDate,propertyLooking, verify,} = req.body;
-          const {frontImage,otherImage } = req.files;
+    try {
+      const id = req.params.id;
+      if (isValidObjectId(id)) {
+        const {
+          propertyName,
+          propertyType,
+          address,
+          area,
+          city,
+          state,
+          price,
+          descripation,
+          furnishing,
+          builtYear,
+          type,
+          amenities,
+          landMark,
+          availableDate,
+          propertyLooking,
+          verify,
+        } = req.body;
+        const { frontImage, otherImage } = req.files;
 
         const data = await postPropertyModel.findOne(
           { "postProperty._id": id },
@@ -908,14 +929,17 @@ class PostPropertyController {
                 _id: id,
               },
             },
-          }
+          },
         );
-  
-        let update={};
 
-        if(frontImage){
-          const frontobjectKey=data.postProperty[0].frontImage.public_id;
-          let frontResult=await updateFile( req.files.frontImage[0],frontobjectKey);
+        let update = {};
+
+        if (frontImage) {
+          const frontobjectKey = data.postProperty[0].frontImage.public_id;
+          let frontResult = await updateFile(
+            req.files.frontImage[0],
+            frontobjectKey,
+          );
           update = {
             $set: {
               "postProperty.$.frontImage": {
@@ -925,168 +949,168 @@ class PostPropertyController {
             },
           };
         }
-        if(otherImage){
-         const otherobjectKey= data.postProperty[0].otherImage.map((item)=>{
-           return item.public_id;
-         })
-        
+        if (otherImage) {
+          const otherobjectKey = data.postProperty[0].otherImage.map((item) => {
+            return item.public_id;
+          });
 
-        let otherResult=await Promise.all(
-          otherImage.map((item,index)=>
-          updateFile(item,otherobjectKey[index]))
-        )
+          let otherResult = await Promise.all(
+            otherImage.map((item, index) =>
+              updateFile(item, otherobjectKey[index]),
+            ),
+          );
 
-        update={
-          $set: {
-            "postProperty.$.otherImage":otherResult.map((item)=>({
-              public_id: item.Key,
-              url: item.Location,
-            }))
-          },
+          update = {
+            $set: {
+              "postProperty.$.otherImage": otherResult.map((item) => ({
+                public_id: item.Key,
+                url: item.Location,
+              })),
+            },
+          };
         }
+        if (propertyName) {
+          update = {
+            $set: {
+              "postProperty.$.propertyName": propertyName,
+            },
+          };
         }
-       if(propertyName){
-        update={
-          $set:{
-            "postProperty.$.propertyName":propertyName
-          }
+        if (propertyType) {
+          update = {
+            $set: {
+              "postProperty.$.propertyType": propertyType,
+            },
+          };
         }
-       }
-       if(propertyType){
-        update={
-          $set:{
-            "postProperty.$.propertyType":propertyType
-          }
+        if (address) {
+          update = {
+            $set: {
+              "postProperty.$.address": address,
+            },
+          };
         }
-       }
-       if(address){
-        update={
-          $set:{
-            "postProperty.$.address":address
-          }
+        if (area) {
+          update = {
+            $set: {
+              "postProperty.$.area": area,
+            },
+          };
         }
-       }
-       if(area){
-        update={
-          $set:{
-            "postProperty.$.area":area
-          }
+        if (city) {
+          update = {
+            $set: {
+              "postProperty.$.area": city,
+            },
+          };
         }
-       }
-       if(city){
-        update={
-          $set:{
-            "postProperty.$.area":city
-          }
+        if (state) {
+          update = {
+            $set: {
+              "postProperty.$.state": state,
+            },
+          };
         }
-       }
-       if(state){
-        update={
-          $set:{
-            "postProperty.$.state":state
-          }
+        if (price) {
+          update = {
+            $set: {
+              "postProperty.$.price": price,
+            },
+          };
         }
-       }
-       if(price){
-        update={
-          $set:{
-            "postProperty.$.price":price
-          }
+        if (descripation) {
+          update = {
+            $set: {
+              "postProperty.$.descripation": descripation,
+            },
+          };
         }
-       }
-       if(descripation){
-        update={
-          $set:{
-            "postProperty.$.descripation":descripation
-          }
+        if (furnishing) {
+          update = {
+            $set: {
+              "postProperty.$.furnishing": furnishing,
+            },
+          };
         }
-       }
-       if(furnishing){
-        update={
-          $set:{
-            "postProperty.$.furnishing":furnishing
-          }
+        if (builtYear) {
+          update = {
+            $set: {
+              "postProperty.$.builtYear": builtYear,
+            },
+          };
         }
-       }
-       if(builtYear){
-        update={
-          $set:{
-            "postProperty.$.builtYear":builtYear
-          }
+        if (type) {
+          update = {
+            $set: {
+              "postProperty.$.type": type,
+            },
+          };
         }
-       }
-       if(type){
-        update={
-          $set:{
-            "postProperty.$.type":type
-          }
+        if (amenities) {
+          update = {
+            $set: {
+              "postProperty.$.amenities": amenities,
+            },
+          };
         }
-       }
-       if(amenities){
-        update={
-          $set:{
-            "postProperty.$.amenities":amenities
-          }
+        if (landMark) {
+          update = {
+            $set: {
+              "postProperty.$.landMark": landMark,
+            },
+          };
         }
-       }
-       if(landMark){
-        update={
-$set:{
-  "postProperty.$.landMark":landMark
-}
+        if (availableDate) {
+          update = {
+            $Set: {
+              "postProperty.$.availableDate": availableDate,
+            },
+          };
         }
-       }
-       if(availableDate){
-        update={
-          $Set:{
-            "postProperty.$.availableDate":availableDate
-          }
+        if (propertyLooking) {
+          update = {
+            $set: {
+              "postProperty.$.propertyLooking": propertyLooking,
+            },
+          };
         }
-       }
-       if(propertyLooking){
-         update={
-          $set:{
-            "postProperty.$.propertyLooking":propertyLooking
-          }
-         }
-       }
-       if(verify){
-        update={
-          $set:{
-            "postProperty.$.verify":verify
-          }
+        if (verify) {
+          update = {
+            $set: {
+              "postProperty.$.verify": verify,
+            },
+          };
         }
-       }
-       const dataUpdate = await postPropertyModel.findOneAndUpdate(
-        { "postProperty._id": id },
-        update,
-        { new: true }
-      )
-      const agentEmail = dataUpdate.email;
-       if(verify!==null){
-        const transporter = await nodemailer.createTransport({
-          service: "gmail",
-          port: 465,
-          secure: true,
-          logger: false,
-          debug: true,
-          secureConnection: false,
-          auth: {
-            // user: process.env.Email,
-            // pass: process.env.EmailPass
-            user: "web.100acress@gmail.com",
-            pass: "txww gexw wwpy vvda",
-          },
-          tls: {
-            rejectUnAuthorized: true,
-          },
-        });
-        // Send mail with defined transport objec
-        let info = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
-          to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-          subject: "Verified Your Property",
-          html: `
+        const dataUpdate = await postPropertyModel.findOneAndUpdate(
+          { "postProperty._id": id },
+          update,
+          { new: true },
+        );
+        const agentEmail = dataUpdate.email;
+        if (verify !== null) {
+          const transporter = await nodemailer.createTransport({
+            service: "gmail",
+            port: 465,
+            secure: true,
+            logger: false,
+            debug: true,
+            secureConnection: false,
+            auth: {
+              // user: process.env.Email,
+              // pass: process.env.EmailPass
+              user: "web.100acress@gmail.com",
+              pass: "txww gexw wwpy vvda",
+            },
+            tls: {
+              rejectUnAuthorized: true,
+            },
+          });
+          // Send mail with defined transport objec
+          let info = await transporter.sendMail({
+            from: "amit100acre@gmail.com", // Sender address
+            to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+            subject: "Verified Your Property",
+            html: `
                           <!DOCTYPE html>
                           <html lang:"en>
                           <head>
@@ -1105,25 +1129,23 @@ $set:{
                           </body>
                           </html>
                   `,
+          });
+        }
+        return res.status(200).json({
+          message: "Property updated successfully ",
+          dataUpdate,
         });
-      
-       }
-       return res.status(200).json({
-        message:"Property updated successfully ",
-        dataUpdate
-       })
-      }else{
+      } else {
         return res.status(400).json({
-          error:"Invalid object id !"
-        })
+          error: "Invalid object id !",
+        });
       }
-      
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      error:"Internal server error !"
-    })
-  }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Internal server error !",
+      });
+    }
   };
   // postproperty delete
   static postProperty_Delete = async (req, res) => {
@@ -1138,7 +1160,7 @@ $set:{
       }
 
       const matchedPostProperties = user.postProperty.find(
-        (postProperty) => postProperty._id.toString() === propertyId
+        (postProperty) => postProperty._id.toString() === propertyId,
       );
 
       // Try to delete files from S3
@@ -1166,7 +1188,7 @@ $set:{
       // Only proceed with database deletion if S3 deletion was successful
       if (s3DeleteSuccess) {
         const index = user.postProperty.findIndex(
-          (postProperty) => postProperty._id.toString() === propertyId
+          (postProperty) => postProperty._id.toString() === propertyId,
         );
         if (index === -1) {
           return res.status(404).json({ error: "Post property not found" });
@@ -1175,7 +1197,9 @@ $set:{
         await user.save();
         res.status(200).json({ message: "Post property deleted successfully" });
       } else {
-        res.status(500).json({ error: "Failed to delete S3 files. Operation aborted." });
+        res
+          .status(500)
+          .json({ error: "Failed to delete S3 files. Operation aborted." });
       }
     } catch (error) {
       console.error(error);
@@ -1184,7 +1208,14 @@ $set:{
   };
   static postPropertyEnquiry = async (req, res) => {
     try {
-      const {agentEmail, agentNumber, custName, custEmail, custNumber, propertyAddress,} = req.body;
+      const {
+        agentEmail,
+        agentNumber,
+        custName,
+        custEmail,
+        custNumber,
+        propertyAddress,
+      } = req.body;
       if (req.body) {
         res.status(200).json({
           message: "data sent successfully ! ",
@@ -1201,7 +1232,7 @@ $set:{
           from: "amit100acre@gmail.com", // Sender address
           to: "vinay.aadharhomes@gmail.com",
           // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-           subject: "Post Property",
+          subject: "Post Property",
           html: `
                       <!DOCTYPE html>
                       <html lang:"en>
@@ -1228,8 +1259,8 @@ $set:{
           from: "amit100acre@gmail.com", // Sender address
           to: agentEmail,
           // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-         
-           subject: "Post Property",
+
+          subject: "Post Property",
           html: `
                       <!DOCTYPE html>
                       <html lang:"en>
@@ -1252,8 +1283,8 @@ $set:{
                       </html>
               `,
         });
-      // await data.save();
-      await Promise.all([data.save(),info,info2])
+        // await data.save();
+        await Promise.all([data.save(), info, info2]);
       } else {
         res.status(200).json({
           message: "please fill the form !",
@@ -1283,19 +1314,18 @@ $set:{
   // verify email
   static verifyEmail = async (req, res) => {
     const { email } = req.body;
-    const otpNumber=generateToken()
+    const otpNumber = generateToken();
     try {
       const checkEmail = await postPropertyModel.findOne({ email: email });
       if (checkEmail !== null) {
-      return  res.status(401).json({
+        return res.status(401).json({
           message: "this email alredy exist !",
         });
       }
       const otpEmail = await Email_verify.findOne({ email: email });
       if (otpEmail) {
-     return   res.status(200).json({
+        return res.status(200).json({
           message: "check your email otp sent already!",
-          
         });
       }
       const transporter = nodemailer.createTransport({
@@ -1332,7 +1362,7 @@ $set:{
       }
     } catch (error) {
       console.error(error);
-    return   res.status(500).json({
+      return res.status(500).json({
         message: error,
       });
     }
@@ -1344,12 +1374,12 @@ $set:{
       if (otp) {
         const data = await Email_verify.findOne({ otp: otp });
         if (data) {
-         return res.status(200).json({
+          return res.status(200).json({
             message: "Email successfully verified !",
             data,
           });
         } else {
-        return  res.status(401).json({
+          return res.status(401).json({
             message: "Check entered otp !",
           });
         }

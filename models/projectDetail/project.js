@@ -19,19 +19,24 @@ const highlight_Schema = new mongoose.Schema({
 });
 
 const about_project_Schema = new mongoose.Schema({
-  about_image:{
-    type:String
+  about_image: {
+    type: String,
   },
-  mobile_banner_image:{
-    type:String
-  }
-})
+  mobile_banner_image: {
+    type: String,
+  },
+});
 
 const projectSchema = new mongoose.Schema(
   {
     project_floorplan_Image: [],
-    thumbnailImage:{
-      type:String
+    thumbnailImage: {
+      public_id: {
+        type: String,
+      },
+      url: {
+        type: String,
+      },
     },
     frontImage: {
       public_id: {
@@ -107,6 +112,14 @@ const projectSchema = new mongoose.Schema(
     type: {
       type: String,
     },
+    country: {
+      type: String,
+      default: "India",
+    },
+    luxury: {
+      type: Boolean,
+      default: false,
+    },
     city: {
       type: String,
     },
@@ -137,7 +150,7 @@ const projectSchema = new mongoose.Schema(
     project_url: {
       type: String,
     },
-    about_project:[about_project_Schema],
+    about_project: [about_project_Schema],
     BhK_Details: [bhk_Schema],
     highlight: [highlight_Schema],
 
@@ -149,67 +162,70 @@ const projectSchema = new mongoose.Schema(
         type: String,
       },
     },
-    projectMaster_plan:{
-        public_id: {
-            type: String,
-          },
-          url: {
-            type: String,
-          },
+    projectMaster_plan: {
+      public_id: {
+        type: String,
+      },
+      url: {
+        type: String,
+      },
     },
     projectGallery: [],
     towerNumber: {
-      type: Number
+      type: Number,
     },
     totalUnit: {
-      type: Number
+      type: Number,
     },
     totalLandArea: {
-      type: Number
+      type: Number,
     },
     launchingDate: {
-       type: Date 
+      type: Date,
     },
     mobileNumber: {
-      type: Number
+      type: Number,
     },
     possessionDate: {
-       type: Date 
+      type: Date,
     },
     minPrice: {
-      type: Number
+      type: Number,
     },
     maxPrice: {
-      type: Number
-    }
+      type: Number,
+    },
   },
 
   {
     timestamps: true,
-  }
+  },
 );
 
-projectSchema.index({
-  projectName: "text",
-  projectAddress: "text",
-  project_discripation: "text",
-  type:"text",
-  city:"text",
-  state:"text",
-  builderName: "text",
-  project_Status:'text'
-}, {
-  weights: {
-    projectName: 6, // updated weight
-    projectAddress: 3,
-    project_discripation: 2,
-    type:3,
-    city:2,
-    state:2,
-    project_Status:3,
-    builderName: 1
-  }
-})
+projectSchema.index(
+  {
+    projectName: "text",
+    projectAddress: "text",
+    project_discripation: "text",
+    type: "text",
+    city: "text",
+    state: "text",
+    builderName: "text",
+    project_Status: "text",
+  },
+  {
+    weights: {
+      projectName: 6, // updated weight
+      projectAddress: 3,
+      project_discripation: 2,
+      type: 3,
+      city: 2,
+      state: 2,
+      project_Status: 3,
+      builderName: 1,
+    },
+  },
+);
 
 const ProjectModel = mongoose.model("projectData", projectSchema);
 module.exports = ProjectModel;

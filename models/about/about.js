@@ -1,67 +1,51 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const about_Schema = new mongoose.Schema({
-    sliderImage: {
-        public_id: {
-            type: String,
-        
-        },
-        url: {
-            type: String,
-       
-        }
+  sliderImage: {
+    public_id: {
+      type: String,
     },
-    sliderHeading: {
-        type: String,
-        
+    url: {
+      type: String,
     },
-    sliderDescripation: {
-        type: String,
-    
-    },
+  },
+  sliderHeading: {
+    type: String,
+  },
+  sliderDescripation: {
+    type: String,
+  },
 
-    aboutImage: {
-        public_id: {
-            type: String,
-          
-        },
-        url: {
-            type: String,
-            
-        }
+  aboutImage: {
+    public_id: {
+      type: String,
     },
-    aboutHeading: {
-        type: String,
-    
+    url: {
+      type: String,
     },
-    aboutDescripation: {
-        type: String,
-      
-    },
+  },
+  aboutHeading: {
+    type: String,
+  },
+  aboutDescripation: {
+    type: String,
+  },
 
-    chooseImage: {
-        public_id: {
-            type: String,
-       
-        url: {
-            type: String,
-        
-        }
+  chooseImage: {
+    public_id: {
+      type: String,
+
+      url: {
+        type: String,
+      },
     },
     chooseHeading: {
-        type: String,
-   
+      type: String,
     },
     chooseDescripation: {
-        type: String,
-    
+      type: String,
     },
-
- 
-
-},
-
-
-})
-const aboutModel = mongoose.model('AboutPage', about_Schema)
-module.exports = aboutModel
+  },
+});
+const aboutModel = mongoose.model("AboutPage", about_Schema);
+module.exports = aboutModel;

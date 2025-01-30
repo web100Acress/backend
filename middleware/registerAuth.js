@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken')
-const postPropertyModel = require('../models/postProperty/post')
+const jwt = require("jsonwebtoken");
+const postPropertyModel = require("../models/postProperty/post");
 
 // const postPropertyModel=require('../models/postProperty/post')
 
@@ -9,17 +9,19 @@ const authAdmin = async (req, res, next) => {
     const { token } = req.cookies;
     //    res.send(token)
     if (token) {
-      const verify_token = jwt.verify(token, 'amitchaudhary100')
+      const verify_token = jwt.verify(token, "amitchaudhary100");
       // console.log(verify_token)
-      const admin_data = await postPropertyModel.findOne({ _id: verify_token.user_id })
+      const admin_data = await postPropertyModel.findOne({
+        _id: verify_token.user_id,
+      });
       // console.log(admin_data)
-      req.admin = admin_data
-      next()
+      req.admin = admin_data;
+      next();
     } else {
-      next()
+      next();
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
-module.exports = authAdmin
+};
+module.exports = authAdmin;
