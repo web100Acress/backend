@@ -217,6 +217,7 @@ class projectController {
       let projectGalleryResult = await Promise.all(
         req.files.projectGallery.map((file) => uploadFile(file)),
       );
+
       const data = new ProjectModel({
         projectName: projectName,
         state: state,
@@ -237,7 +238,7 @@ class projectController {
         projectRedefine_Entertainment: projectRedefine_Entertainment,
         projectRedefine_Education: projectRedefine_Education,
         Amenities: Amenities,
-        luxury: isLuxury,
+        luxury: luxury,
         possessionDate: possessionDate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
