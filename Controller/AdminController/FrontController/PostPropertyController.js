@@ -24,7 +24,11 @@ const getAllProjects = async () => {
   }
 };
 const generateToken = () => {
-  return Math.floor(Math.random() * 1000000);
+  // Generate a random number between 100000 and 999999 (inclusive)
+  const otp = Math.floor(Math.random() * 900000) + 100000;
+
+  // Convert to string and pad with leading zeros if necessary
+  return String(otp).padStart(6, '0');
 };
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -219,7 +223,6 @@ class PostPropertyController {
 
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-
       const verify = await postPropertyModel
         .findOne({ email: email })
         .session(session);
@@ -299,7 +302,6 @@ class PostPropertyController {
       const { email, password } = req.body;
       if (email && password) {
         const User = await postPropertyModel.findOne({ email: email });
-
         // console.log(User.role,"hello")
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
@@ -315,6 +317,12 @@ class PostPropertyController {
                 User,
               });
             } else {
+              if(User.emailVerified == false){
+
+                res.status(401).json({
+                  message: "Please verify your email and password before sign in !",
+                });
+              }
               const token = jwt.sign(
                 { user_id: User._id, role: "user" },
                 "amitchaudhary100",
@@ -1317,7 +1325,8 @@ class PostPropertyController {
     const otpNumber = generateToken();
     try {
       const checkEmail = await postPropertyModel.findOne({ email: email });
-      if (checkEmail !== null) {
+      console.log(checkEmail.emailVerified);
+      if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy exist !",
         });
@@ -1374,6 +1383,11 @@ class PostPropertyController {
       if (otp) {
         const data = await Email_verify.findOne({ otp: otp });
         if (data) {
+          await postPropertyModel.updateOne(
+            { email: data.email },
+            { $set: { emailVerified: true } },
+          );
+          await Email_verify.deleteOne({ email: data.email });
           return res.status(200).json({
             message: "Email successfully verified !",
             data,
