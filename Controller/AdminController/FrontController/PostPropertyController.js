@@ -275,12 +275,18 @@ class PostPropertyController {
         role: role,
       });
       await data.save({ session });
-
+      
       await session.commitTransaction();
       session.endSession();
-
+      
+      const token = jwt.sign(
+        { user_id: data._id, role: "user" },
+        "amitchaudhary100",
+      );
       res.status(201).json({
         message: "Registration successfully done!",
+        token: token,
+        User: data,
       });
     } catch (error) {
       // console.log(error);
@@ -311,16 +317,28 @@ class PostPropertyController {
                 { user_id: User._id, role: "Admin" },
                 "amitchaudhary100",
               );
-              res.status(200).json({
+              if(User.emailVerified == false){
+                return res.status(403).json({
+                  message: "Please verify your email before sign in !",
+                  User,
+                  token
+                });
+              }
+              return res.status(200).json({
                 message: " Admin login successfully ! ",
                 token,
                 User,
               });
             } else {
               if(User.emailVerified == false){
-
-                res.status(401).json({
-                  message: "Please verify your email and password before sign in !",
+                const token = jwt.sign(
+                  { user_id: User._id, role: "user" },
+                  "amitchaudhary100",
+                );
+                return res.status(403).json({
+                  message: "Please verify your email before sign in !",
+                  User,
+                  token
                 });
               }
               const token = jwt.sign(
@@ -334,26 +352,28 @@ class PostPropertyController {
               // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
               // const Renttotal=RentProperty.length
 
-              res.status(200).json({
+              
+
+              return res.status(200).json({
                 message: " login successfully done  ! ",
                 token,
                 User,
               });
             }
           } else {
-            res.status(401).json({
+           return res.status(401).json({
               message: "Please verify your email and password before sign in !",
             });
           }
         } else {
-          res.status(200).json({
+         return res.status(200).json({
             message: "Registration is required before sign in ! ",
           });
         }
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+     return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1325,7 +1345,7 @@ class PostPropertyController {
     const otpNumber = generateToken();
     try {
       const checkEmail = await postPropertyModel.findOne({ email: email });
-      console.log(checkEmail.emailVerified);
+      //console.log(checkEmail.emailVerified);
       if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy exist !",
