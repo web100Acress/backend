@@ -24,7 +24,11 @@ const getAllProjects = async () => {
   }
 };
 const generateToken = () => {
-  return Math.floor(Math.random() * 1000000);
+  // Generate a random number between 100000 and 999999 (inclusive)
+  const otp = Math.floor(Math.random() * 900000) + 100000;
+
+  // Convert to string and pad with leading zeros if necessary
+  return String(otp).padStart(6, '0');
 };
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -219,7 +223,6 @@ class PostPropertyController {
 
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-
       const verify = await postPropertyModel
         .findOne({ email: email })
         .session(session);
@@ -272,12 +275,18 @@ class PostPropertyController {
         role: role,
       });
       await data.save({ session });
-
+      
       await session.commitTransaction();
       session.endSession();
-
+      
+      const token = jwt.sign(
+        { user_id: data._id, role: "user" },
+        "amitchaudhary100",
+      );
       res.status(201).json({
         message: "Registration successfully done!",
+        token: token,
+        User: data,
       });
     } catch (error) {
       // console.log(error);
@@ -299,7 +308,6 @@ class PostPropertyController {
       const { email, password } = req.body;
       if (email && password) {
         const User = await postPropertyModel.findOne({ email: email });
-
         // console.log(User.role,"hello")
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
@@ -309,12 +317,30 @@ class PostPropertyController {
                 { user_id: User._id, role: "Admin" },
                 "amitchaudhary100",
               );
-              res.status(200).json({
+              if(User.emailVerified == false){
+                return res.status(403).json({
+                  message: "Please verify your email before sign in !",
+                  User,
+                  token
+                });
+              }
+              return res.status(200).json({
                 message: " Admin login successfully ! ",
                 token,
                 User,
               });
             } else {
+              if(User.emailVerified == false){
+                const token = jwt.sign(
+                  { user_id: User._id, role: "user" },
+                  "amitchaudhary100",
+                );
+                return res.status(403).json({
+                  message: "Please verify your email before sign in !",
+                  User,
+                  token
+                });
+              }
               const token = jwt.sign(
                 { user_id: User._id, role: "user" },
                 "amitchaudhary100",
@@ -326,26 +352,28 @@ class PostPropertyController {
               // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
               // const Renttotal=RentProperty.length
 
-              res.status(200).json({
+              
+
+              return res.status(200).json({
                 message: " login successfully done  ! ",
                 token,
                 User,
               });
             }
           } else {
-            res.status(401).json({
+           return res.status(401).json({
               message: "Please verify your email and password before sign in !",
             });
           }
         } else {
-          res.status(200).json({
+         return res.status(200).json({
             message: "Registration is required before sign in ! ",
           });
         }
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+     return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1317,7 +1345,8 @@ class PostPropertyController {
     const otpNumber = generateToken();
     try {
       const checkEmail = await postPropertyModel.findOne({ email: email });
-      if (checkEmail !== null) {
+      //console.log(checkEmail.emailVerified);
+      if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy exist !",
         });
@@ -1374,6 +1403,11 @@ class PostPropertyController {
       if (otp) {
         const data = await Email_verify.findOne({ otp: otp });
         if (data) {
+          await postPropertyModel.updateOne(
+            { email: data.email },
+            { $set: { emailVerified: true } },
+          );
+          await Email_verify.deleteOne({ email: data.email });
           return res.status(200).json({
             message: "Email successfully verified !",
             data,
