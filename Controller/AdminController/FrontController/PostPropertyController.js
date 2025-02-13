@@ -168,55 +168,7 @@ const sendPostEmail = async (email) => {
   });
 };
 class PostPropertyController {
-  // static postPerson_Register = async (req, res) => {
-  //   try {
-  //     const { name, email, mobile, password, cpassword, role } = req.body;
-  //     // console.log(req.body
-  //     const verify = await postPropertyModel.findOne({ email: email });
-  //     if (verify) {
-  //       res.status(409).json({
-  //         message: " User already exists !",
-  //       });
-  //     } else {
-  //       if (name && email && password && cpassword && mobile && role) {
-  //         if (password.length < 5) {
-  //           res.status(400).json({
-  //             message: " Password must be atleast 8 character ! ",
-  //           });
-  //         } else {
-  //           if (password == cpassword) {
-  //             const hashpassword = await bcrypt.hash(password, 10);
-  //             const data = new postPropertyModel({
-  //               name: name,
-  //               email: email,
-  //               password: hashpassword,
-  //               mobile: mobile,
-  //               role: role,
-  //             });
-  //             // console.log(data)
-  //             await data.save();
-  //             res.status(200).json({
-  //               message: "Registration successfully done ! ",
-  //             });
-  //           } else {
-  //             res.status(401).json({
-  //               message: "Password and Confirm password does not match  ! ",
-  //             });
-  //           }
-  //         }
-  //       } else {
-  //         res.status(204).json({
-  //           message: "check yur field ! ",
-  //         });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({
-  //       message: "Internal server error !",
-  //     });
-  //   }
-  // };
+  
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -947,7 +899,11 @@ class PostPropertyController {
           propertyLooking,
           verify,
         } = req.body;
-        const { frontImage, otherImage } = req.files;
+
+        if(req.files){
+          const { frontImage, otherImage } = req.files;
+        }
+        const { frontImage, otherImage } = "";
 
         const data = await postPropertyModel.findOne(
           { "postProperty._id": id },
