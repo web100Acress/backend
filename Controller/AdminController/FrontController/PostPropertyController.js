@@ -175,6 +175,15 @@ class PostPropertyController {
 
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
+      
+      if (!name || !email || !password || !cpassword || !mobile || !role) {
+        res.status(400).json({
+          message: "Please fill in all fields!",
+        });
+        return;
+      }
+      
+      let emailLowerCase = email.toLowerCase();
       const verify = await postPropertyModel
         .findOne({ email: email })
         .session(session);
@@ -185,15 +194,6 @@ class PostPropertyController {
       if (verify) {
         res.status(409).json({
           message: "User already exists!",
-        });
-        await session.abortTransaction();
-        session.endSession();
-        return;
-      }
-
-      if (!name || !email || !password || !cpassword || !mobile || !role) {
-        res.status(400).json({
-          message: "Please fill in all fields!",
         });
         await session.abortTransaction();
         session.endSession();
@@ -221,7 +221,7 @@ class PostPropertyController {
       const hashpassword = await bcrypt.hash(password, 10);
       const data = new postPropertyModel({
         name: name,
-        email: email,
+        email: emailLowerCase,
         password: hashpassword,
         mobile: mobile,
         role: role,
@@ -258,12 +258,17 @@ class PostPropertyController {
   static postPerson_VerifyLogin = async (req, res) => {
     try {
       const { email, password } = req.body;
+      console.log("Email: ", email, "Password: ", password);
       if (email && password) {
-        const User = await postPropertyModel.findOne({ email: email });
+        let emailToLowerCase = email.toLowerCase();
+        const User = await postPropertyModel.findOne({ email: emailToLowerCase });
         // console.log(User.role,"hello")
+        console.log("User: ", User);
         if (User != null) {
+
           const isMatch = await bcrypt.compare(password, User.password);
-          if (email == email && isMatch) {
+
+          if (emailToLowerCase == User.email && isMatch) {
             if (User.role === "Admin") {
               const token = jwt.sign(
                 { user_id: User._id, role: "Admin" },
@@ -294,16 +299,9 @@ class PostPropertyController {
                 });
               }
               const token = jwt.sign(
-                { user_id: User._id, role: "user" },
+                { user_id: User._id, role: User.role },
                 "amitchaudhary100",
               );
-              // const totalProperty=User.postProperty.length
-              // const Property = User.postProperty;
-              // const SellProperty = Property.filter(property => property.propertyLooking == "Sell");
-              // const selltotal=SellProperty.length
-              // const RentProperty = Property.filter(property => property.propertyLooking === "rent");
-              // const Renttotal=RentProperty.length
-
               
 
               return res.status(200).json({
@@ -1297,19 +1295,28 @@ class PostPropertyController {
   };
   // verify email
   static verifyEmail = async (req, res) => {
-    const { email } = req.body;
+    let { email } = req.body;
+    console.log("Email: ",email);
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required",
+      });
+    }
+
+    let emailToLowerCase = email.toLowerCase();
+
     const otpNumber = generateToken();
     try {
-      const checkEmail = await postPropertyModel.findOne({ email: email });
-      //console.log(checkEmail.emailVerified);
+      const checkEmail = await postPropertyModel.findOne({ email: emailToLowerCase });
+      
       if (checkEmail.emailVerified === true) {
         return res.status(401).json({
-          message: "this email alredy exist !",
+          message: "this email alredy Verified !",
         });
       }
       const otpEmail = await Email_verify.findOne({ email: email });
       if (otpEmail) {
-        return res.status(200).json({
+        return res.status(409).json({
           message: "check your email otp sent already!",
         });
       }
