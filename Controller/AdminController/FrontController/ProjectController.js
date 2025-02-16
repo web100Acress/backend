@@ -110,6 +110,7 @@ class projectController {
         type,
         country,
         luxury,
+        spotlight,
         city,
         projectOverview,
         project_url,
@@ -165,7 +166,8 @@ class projectController {
         !minPrice &&
         !maxPrice &&
         !country &&
-        !luxury
+        !luxury && 
+        !spotlight
       ) {
         return res.status(400).json({
           error: "Check Input field !",
@@ -239,6 +241,7 @@ class projectController {
         projectRedefine_Education: projectRedefine_Education,
         Amenities: Amenities,
         luxury: luxury,
+        spotlight:spotlight,
         possessionDate: possessionDate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
@@ -474,6 +477,7 @@ class projectController {
           "projectName",
           "country",
           "luxury",
+          "spotlight",
           "state",
           "project_discripation",
           "projectAddress",
