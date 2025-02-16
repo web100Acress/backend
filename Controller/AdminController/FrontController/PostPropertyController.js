@@ -28,7 +28,7 @@ const generateToken = () => {
   const otp = Math.floor(Math.random() * 900000) + 100000;
 
   // Convert to string and pad with leading zeros if necessary
-  return String(otp).padStart(6, '0');
+  return String(otp).padStart(6, "0");
 };
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -168,21 +168,20 @@ const sendPostEmail = async (email) => {
   });
 };
 class PostPropertyController {
-  
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
       const { name, email, mobile, password, cpassword, role } = req.body;
-      
+
       if (!name || !email || !password || !cpassword || !mobile || !role) {
         res.status(400).json({
           message: "Please fill in all fields!",
         });
         return;
       }
-      
+
       let emailLowerCase = email.toLowerCase();
       const verify = await postPropertyModel
         .findOne({ email: email })
@@ -227,10 +226,10 @@ class PostPropertyController {
         role: role,
       });
       await data.save({ session });
-      
+
       await session.commitTransaction();
       session.endSession();
-      
+
       const token = jwt.sign(
         { user_id: data._id, role: "user" },
         "amitchaudhary100",
@@ -261,11 +260,12 @@ class PostPropertyController {
       console.log("Email: ", email, "Password: ", password);
       if (email && password) {
         let emailToLowerCase = email.toLowerCase();
-        const User = await postPropertyModel.findOne({ email: emailToLowerCase });
+        const User = await postPropertyModel.findOne({
+          email: emailToLowerCase,
+        });
         // console.log(User.role,"hello")
         console.log("User: ", User);
         if (User != null) {
-
           const isMatch = await bcrypt.compare(password, User.password);
 
           if (emailToLowerCase == User.email && isMatch) {
@@ -274,11 +274,11 @@ class PostPropertyController {
                 { user_id: User._id, role: "Admin" },
                 "amitchaudhary100",
               );
-              if(User.emailVerified == false){
+              if (User.emailVerified == false) {
                 return res.status(403).json({
                   message: "Please verify your email before sign in !",
                   User,
-                  token
+                  token,
                 });
               }
               return res.status(200).json({
@@ -287,7 +287,7 @@ class PostPropertyController {
                 User,
               });
             } else {
-              if(User.emailVerified == false){
+              if (User.emailVerified == false) {
                 const token = jwt.sign(
                   { user_id: User._id, role: "user" },
                   "amitchaudhary100",
@@ -295,14 +295,13 @@ class PostPropertyController {
                 return res.status(403).json({
                   message: "Please verify your email before sign in !",
                   User,
-                  token
+                  token,
                 });
               }
               const token = jwt.sign(
                 { user_id: User._id, role: User.role },
                 "amitchaudhary100",
               );
-              
 
               return res.status(200).json({
                 message: " login successfully done  ! ",
@@ -311,19 +310,19 @@ class PostPropertyController {
               });
             }
           } else {
-           return res.status(401).json({
+            return res.status(401).json({
               message: "Please verify your email and password before sign in !",
             });
           }
         } else {
-         return res.status(200).json({
+          return res.status(200).json({
             message: "Registration is required before sign in ! ",
           });
         }
       }
     } catch (error) {
       console.log(error);
-     return res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -878,255 +877,146 @@ class PostPropertyController {
   static postProperty_Update = async (req, res) => {
     try {
       const id = req.params.id;
-      if (isValidObjectId(id)) {
-        const {
-          propertyName,
-          propertyType,
-          address,
-          area,
-          city,
-          state,
-          price,
-          descripation,
-          furnishing,
-          builtYear,
-          type,
-          amenities,
-          landMark,
-          availableDate,
-          propertyLooking,
-          verify,
-        } = req.body;
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ error: "Invalid object id!" });
+      }
+      const { verify } = req.body;
 
-        if(req.files){
-          const { frontImage, otherImage } = req.files;
+      let update = { $set: {} };
+
+      const data = await postPropertyModel.findOne(
+        { "postProperty._id": id },
+        { "postProperty.$": 1 },
+      );
+
+      if (!data || !data.postProperty.length) {
+        return res.status(404).json({ error: "Property not found." });
+      }
+
+      if (req.files?.frontImage) {
+        const frontImageFile = req.files.frontImage[0];
+        const frontObjectKey = data.postProperty[0].frontImage.public_id;
+               
+        const frontResult = await updateFile(frontImageFile, frontObjectKey);
+
+        update.$set["postProperty.$.frontImage"] = {
+          public_id: frontResult.Key,
+          url: frontResult.Location,
+        };
+      }
+
+      // Handle Other Images Update
+      if (req.files?.otherImage) {
+        const otherImages = req.files.otherImage; // Array of files
+        const existingOtherImages = data.postProperty[0].otherImage;
+
+        // Assuming you want to replace all existing other images
+        const updateOtherImages = await Promise.all(
+          otherImages.map(async (img, index) => {
+            const existingKey = existingOtherImages[index]?.public_id;
+            // If updating existing, else add new (adjust based on your logic)
+            return existingKey
+              ? await updateFile(img, existingKey)
+              : await uploadFile(img); // Implement uploadNewFile if adding
+          }),
+        );
+        
+        update.$set["postProperty.$.otherImage"] = updateOtherImages.map(
+          (img) => ({
+            public_id: img.Key,
+            url: img.Location,
+          }),
+        );
+      }
+
+      // Update Fields (add to $set without overwriting)
+      const fields = {
+        propertyName: "postProperty.$.propertyName",
+        propertyType: "postProperty.$.propertyType",
+        address: "postProperty.$.address",
+        area: "postProperty.$.area",
+        city: "postProperty.$.city", 
+        state: "postProperty.$.state",
+        price: "postProperty.$.price",
+        descripation: "postProperty.$.descripation",
+        furnishing: "postProperty.$.furnishing",
+        builtYear: "postProperty.$.builtYear",
+        type: "postProperty.$.type",
+        amenities: "postProperty.$.amenities",
+        landMark: "postProperty.$.landMark",
+        availableDate: "postProperty.$.availableDate",
+        propertyLooking: "postProperty.$.propertyLooking",
+        verify: "postProperty.$.verify",
+      };
+      Object.entries(fields).forEach(([key, path]) => {
+        if (req.body[key] !== undefined && req.body[key] !== null) {
+          // Check if field is provided
+          update.$set[path] = req.body[key];
         }
-        const { frontImage, otherImage } = "";
+      });
+      // Perform the update
+      const updatedDoc = await postPropertyModel.findOneAndUpdate(
+        { "postProperty._id": id },
+        update,
+        { new: true },
+      );
 
-        const data = await postPropertyModel.findOne(
-          { "postProperty._id": id },
-          {
-            postProperty: {
-              $elemMatch: {
-                _id: id,
-              },
-            },
+      if (!updatedDoc) {
+        return res.status(404).json({ error: "Property not found." });
+      }
+
+      const agentEmail = updatedDoc.email;
+      if (verify == "verified") {
+        const transporter = await nodemailer.createTransport({
+          service: "gmail",
+          port: 465,
+          secure: true,
+          logger: false,
+          debug: true,
+          secureConnection: false,
+          auth: {
+            // user: process.env.Email,
+            // pass: process.env.EmailPass
+            user: "web.100acress@gmail.com",
+            pass: "txww gexw wwpy vvda",
           },
-        );
-
-        let update = {};
-
-        if (frontImage) {
-          const frontobjectKey = data.postProperty[0].frontImage.public_id;
-          let frontResult = await updateFile(
-            req.files.frontImage[0],
-            frontobjectKey,
-          );
-          update = {
-            $set: {
-              "postProperty.$.frontImage": {
-                public_id: frontResult.Key,
-                url: frontResult.Location,
-              },
-            },
-          };
-        }
-        if (otherImage) {
-          const otherobjectKey = data.postProperty[0].otherImage.map((item) => {
-            return item.public_id;
-          });
-
-          let otherResult = await Promise.all(
-            otherImage.map((item, index) =>
-              updateFile(item, otherobjectKey[index]),
-            ),
-          );
-
-          update = {
-            $set: {
-              "postProperty.$.otherImage": otherResult.map((item) => ({
-                public_id: item.Key,
-                url: item.Location,
-              })),
-            },
-          };
-        }
-        if (propertyName) {
-          update = {
-            $set: {
-              "postProperty.$.propertyName": propertyName,
-            },
-          };
-        }
-        if (propertyType) {
-          update = {
-            $set: {
-              "postProperty.$.propertyType": propertyType,
-            },
-          };
-        }
-        if (address) {
-          update = {
-            $set: {
-              "postProperty.$.address": address,
-            },
-          };
-        }
-        if (area) {
-          update = {
-            $set: {
-              "postProperty.$.area": area,
-            },
-          };
-        }
-        if (city) {
-          update = {
-            $set: {
-              "postProperty.$.area": city,
-            },
-          };
-        }
-        if (state) {
-          update = {
-            $set: {
-              "postProperty.$.state": state,
-            },
-          };
-        }
-        if (price) {
-          update = {
-            $set: {
-              "postProperty.$.price": price,
-            },
-          };
-        }
-        if (descripation) {
-          update = {
-            $set: {
-              "postProperty.$.descripation": descripation,
-            },
-          };
-        }
-        if (furnishing) {
-          update = {
-            $set: {
-              "postProperty.$.furnishing": furnishing,
-            },
-          };
-        }
-        if (builtYear) {
-          update = {
-            $set: {
-              "postProperty.$.builtYear": builtYear,
-            },
-          };
-        }
-        if (type) {
-          update = {
-            $set: {
-              "postProperty.$.type": type,
-            },
-          };
-        }
-        if (amenities) {
-          update = {
-            $set: {
-              "postProperty.$.amenities": amenities,
-            },
-          };
-        }
-        if (landMark) {
-          update = {
-            $set: {
-              "postProperty.$.landMark": landMark,
-            },
-          };
-        }
-        if (availableDate) {
-          update = {
-            $Set: {
-              "postProperty.$.availableDate": availableDate,
-            },
-          };
-        }
-        if (propertyLooking) {
-          update = {
-            $set: {
-              "postProperty.$.propertyLooking": propertyLooking,
-            },
-          };
-        }
-        if (verify) {
-          update = {
-            $set: {
-              "postProperty.$.verify": verify,
-            },
-          };
-        }
-        const dataUpdate = await postPropertyModel.findOneAndUpdate(
-          { "postProperty._id": id },
-          update,
-          { new: true },
-        );
-        const agentEmail = dataUpdate.email;
-        if (verify !== null) {
-          const transporter = await nodemailer.createTransport({
-            service: "gmail",
-            port: 465,
-            secure: true,
-            logger: false,
-            debug: true,
-            secureConnection: false,
-            auth: {
-              // user: process.env.Email,
-              // pass: process.env.EmailPass
-              user: "web.100acress@gmail.com",
-              pass: "txww gexw wwpy vvda",
-            },
-            tls: {
-              rejectUnAuthorized: true,
-            },
-          });
-          // Send mail with defined transport objec
-          let info = await transporter.sendMail({
-            from: "amit100acre@gmail.com", // Sender address
-            to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "Verified Your Property",
-            html: `
-                          <!DOCTYPE html>
-                          <html lang:"en>
-                          <head>
-                          <meta charset:"UTF-8">
-                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                          <title>Congratulations! Your Property Verified  </title>
-                          </head>
-                          <body>
-                         <p> Congratulations! Your property,${propertyName} address ${address} , has been successfully verified. 
-                          The verification was conducted by 100acress team </p>
-                            
-                              <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                              </p>
-                              <p>Thank you!</p>
-                          </body>
-                          </html>
-                  `,
-          });
-        }
-        return res.status(200).json({
-          message: "Property updated successfully ",
-          dataUpdate,
+          tls: {
+            rejectUnAuthorized: true,
+          },
         });
-      } else {
-        return res.status(400).json({
-          error: "Invalid object id !",
+        // Send mail with defined transport objec
+        let info = await transporter.sendMail({
+          from: "amit100acre@gmail.com", // Sender address
+          to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+          subject: "Verified Your Property",
+          html: `
+                        <!DOCTYPE html>
+                        <html lang:"en>
+                        <head>
+                        <meta charset:"UTF-8">
+                        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                        <title>Congratulations! Your Property Verified  </title>
+                        </head>
+                        <body>
+                       <p> Congratulations! Your property,${updatedDoc.postProperty[0].propertyName} address ${updatedDoc.postProperty[0].address} , has been successfully verified.
+                        The verification was conducted by 100acress team </p>
+
+                            <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
+                            </p>
+                            <p>Thank you!</p>
+                        </body>
+                        </html>
+                `,
         });
       }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        error: "Internal server error !",
+
+      return res.status(200).json({
+        message: "Property updated successfully",
       });
+    } catch (error) {
+      console.error("Update error:", error);
+      return res.status(500).json({ error: "Internal server error!" });
     }
   };
   // postproperty delete
@@ -1296,7 +1186,7 @@ class PostPropertyController {
   // verify email
   static verifyEmail = async (req, res) => {
     let { email } = req.body;
-    console.log("Email: ",email);
+    console.log("Email: ", email);
     if (!email) {
       return res.status(400).json({
         message: "Email is required",
@@ -1307,8 +1197,10 @@ class PostPropertyController {
 
     const otpNumber = generateToken();
     try {
-      const checkEmail = await postPropertyModel.findOne({ email: emailToLowerCase });
-      
+      const checkEmail = await postPropertyModel.findOne({
+        email: emailToLowerCase,
+      });
+
       if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy Verified !",
