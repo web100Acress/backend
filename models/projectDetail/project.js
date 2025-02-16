@@ -122,6 +122,10 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: "False",
     },
+    spotlight:{
+      type:String,
+      default:"False",
+    },
     city: {
       type: String,
     },
