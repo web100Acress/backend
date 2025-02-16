@@ -62,6 +62,7 @@ const property_Schema = new mongoose.Schema({
   },
   verify: {
     type: String,
+    default:"unverified"
   },
   propertyLooking: {
     type: String,

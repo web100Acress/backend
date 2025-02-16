@@ -41,10 +41,10 @@ app.use(limiter);
 
 
 // Middleware for parsing JSON request bodies
-app.use(express.json()); // Express's built-in middleware for JSON
+app.use(express.json({limit:"20mb"})); // Express's built-in middleware for JSON
 
 // Middleware for parsing URL-encoded form data
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false ,limit:"20mb"}));
 
 // database connection
 connectDB();
