@@ -1,6 +1,7 @@
 const express = require("express");
 const PostPropertyController = require("../Controller/AdminController/FrontController/PostPropertyController");
 const authAdmin = require("../middleware/registerAuth");
+const adminVerify = require("../middleware/adminVerify");
 const upload = require("../aws/multerConfig");
 
 const router = express.Router();
@@ -35,13 +36,26 @@ router.post(
 router.get("/propertyView/:id", PostPropertyController.postProperty_View);
 router.get("/propertyoneView/:id", PostPropertyController.postPropertyOne_View);
 router.get("/propertyoneEdit/:id", PostPropertyController.postProperty_Edit);
+
+//Route to update the property by Admin
 router.post(
   "/propertyoneUpdate/:id",
+  adminVerify,
   upload.fields([
     { name: "frontImage", maxCount: 1 },
     { name: "otherImage", maxCount: 20 },
   ]),
   PostPropertyController.postProperty_Update,
+);
+
+//Route to update the property by USer
+router.post(
+  "/propertyoneUserUpdate/:id",
+  upload.fields([
+    { name: "frontImage", maxCount: 1 },
+    { name: "otherImage", maxCount: 20 },
+  ]),
+  PostPropertyController.postProerty_User_Update,
 );
 router.delete(
   "/propertyDelete/:id",

@@ -257,14 +257,13 @@ class PostPropertyController {
   static postPerson_VerifyLogin = async (req, res) => {
     try {
       const { email, password } = req.body;
-      console.log("Email: ", email, "Password: ", password);
+
       if (email && password) {
         let emailToLowerCase = email.toLowerCase();
         const User = await postPropertyModel.findOne({
           email: emailToLowerCase,
         });
-        // console.log(User.role,"hello")
-        console.log("User: ", User);
+
         if (User != null) {
           const isMatch = await bcrypt.compare(password, User.password);
 
@@ -966,7 +965,8 @@ class PostPropertyController {
       }
 
       const agentEmail = updatedDoc.email;
-      if (verify == "verified") {
+      if (data.postProperty[0].verify !== "verified" && verify == "verified") {
+        console.log("Your property has been verified");
         const transporter = await nodemailer.createTransport({
           service: "gmail",
           port: 465,
@@ -1019,6 +1019,107 @@ class PostPropertyController {
       return res.status(500).json({ error: "Internal server error!" });
     }
   };
+
+  static postProerty_User_Update = async (req, res) => {
+
+      try {
+        const id = req.params.id;
+        if (!isValidObjectId(id)) {
+          return res.status(400).json({ error: "Invalid object id!" });
+        }
+  
+        let update = { $set: {} };
+  
+        const data = await postPropertyModel.findOne(
+          { "postProperty._id": id },
+          { "postProperty.$": 1 },
+        );
+  
+        if (!data || !data.postProperty.length) {
+          return res.status(404).json({ error: "Property not found." });
+        }
+  
+        if (req.files?.frontImage) {
+          const frontImageFile = req.files.frontImage[0];
+          const frontObjectKey = data.postProperty[0].frontImage.public_id;
+                 
+          const frontResult = await updateFile(frontImageFile, frontObjectKey);
+  
+          update.$set["postProperty.$.frontImage"] = {
+            public_id: frontResult.Key,
+            url: frontResult.Location,
+          };
+        }
+  
+        // Handle Other Images Update
+        if (req.files?.otherImage) {
+          const otherImages = req.files.otherImage; // Array of files
+          const existingOtherImages = data.postProperty[0].otherImage;
+  
+          // Assuming you want to replace all existing other images
+          const updateOtherImages = await Promise.all(
+            otherImages.map(async (img, index) => {
+              const existingKey = existingOtherImages[index]?.public_id;
+              // If updating existing, else add new (adjust based on your logic)
+              return existingKey
+                ? await updateFile(img, existingKey)
+                : await uploadFile(img); // Implement uploadNewFile if adding
+            }),
+          );
+          
+          update.$set["postProperty.$.otherImage"] = updateOtherImages.map(
+            (img) => ({
+              public_id: img.Key,
+              url: img.Location,
+            }),
+          );
+        }
+  
+        // Update Fields (add to $set without overwriting)
+        const fields = {
+          propertyName: "postProperty.$.propertyName",
+          propertyType: "postProperty.$.propertyType",
+          address: "postProperty.$.address",
+          area: "postProperty.$.area",
+          city: "postProperty.$.city", 
+          state: "postProperty.$.state",
+          price: "postProperty.$.price",
+          descripation: "postProperty.$.descripation",
+          furnishing: "postProperty.$.furnishing",
+          builtYear: "postProperty.$.builtYear",
+          type: "postProperty.$.type",
+          amenities: "postProperty.$.amenities",
+          landMark: "postProperty.$.landMark",
+          availableDate: "postProperty.$.availableDate",
+          propertyLooking: "postProperty.$.propertyLooking"
+        };
+        
+        Object.entries(fields).forEach(([key, path]) => {
+          if (req.body[key] !== undefined && req.body[key] !== null) {
+            // Check if field is provided
+            update.$set[path] = req.body[key];
+          }
+        });
+        // Perform the update
+        const updatedDoc = await postPropertyModel.findOneAndUpdate(
+          { "postProperty._id": id },
+          update,
+          { new: true },
+        );
+  
+        if (!updatedDoc) {
+          return res.status(404).json({ error: "Property not found." });
+        }
+  
+        return res.status(200).json({
+          message: "Property updated successfully",
+        });
+      } catch (error) {
+        console.error("Update error:", error);
+        return res.status(500).json({ error: "Internal server error!" });
+      }
+  };
+
   // postproperty delete
   static postProperty_Delete = async (req, res) => {
     try {
@@ -1186,7 +1287,6 @@ class PostPropertyController {
   // verify email
   static verifyEmail = async (req, res) => {
     let { email } = req.body;
-    console.log("Email: ", email);
     if (!email) {
       return res.status(400).json({
         message: "Email is required",
