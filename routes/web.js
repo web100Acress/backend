@@ -22,6 +22,7 @@ const postPropertyRoute = require("./postProperty.route");
 const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
 const aboutRoute = require("./about.route");
+const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -223,4 +224,8 @@ router.get("/snapShot", homeController.dataSnapshot);
 router.get("/projectCount", projectController.projectCount_city);
 // This routes used for the navigate leads from other domains
 router.post("/submit", homeController.leadSumbit);
+
+//This route is for admin access to verify admin whether it is admin or not
+router.get("/auth/isAdmin",adminVerify,AuthController.isAdminVerify);
+
 module.exports = router;
