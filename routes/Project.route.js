@@ -47,9 +47,13 @@ router.post(
 router.delete("/Delete/:id", adminVerify, projectController.projectDelete);
 
 router.get("/trending", projectController.project_trending);
+router.get("/luxury", projectController.project_luxury);
+router.get("/spotlight", projectController.project_spotlight);
 router.get("/featured", projectController.project_featured);
 router.get("/city", projectController.project_City);
 router.get("/upcoming", projectController.project_Upcoming);
-router.get("/affordable", projectController.projectAffordable);
+router.get("/affordable", projectController.projectAffordable); 
+router.get("/scoplots", projectController.projectSCOplots); 
+router.get("/commercial", projectController.project_commercial); 
 
 module.exports = router;
