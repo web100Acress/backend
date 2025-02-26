@@ -676,19 +676,53 @@ class projectController {
     }
   };
   //project find trending data
+  static project_spotlight = async (req, res) => {
+    // console.log("hello")
+    try {
+      const data = await ProjectModel.find({
+        spotlight: "True",
+      }).limit(8);
+      return res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "internal server error ! ",
+      });
+    }
+  };
+  static project_luxury = async (req, res) => {
+    // console.log("hello")
+    try {
+      const data = await ProjectModel.find({
+        luxury: "True",
+      }).limit(8);
+      return res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "internal server error ! ",
+      });
+    }
+  };
   static project_trending = async (req, res) => {
     // console.log("hello")
     try {
       const data = await ProjectModel.find({
         projectOverview: "trending",
       }).limit(8);
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully !",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error ! ",
       });
     }
@@ -698,13 +732,13 @@ class projectController {
     // console.log("hello")
     try {
       const data = await ProjectModel.find({ projectOverview: "featured" });
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully !",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error ! ",
       });
     }
@@ -716,13 +750,13 @@ class projectController {
         city: "Delhi",
         projectOverview: "delhi",
       }).limit(4);
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully !",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -731,13 +765,13 @@ class projectController {
     // console.log("hello")
     try {
       const data = await ProjectModel.find({ projectOverview: "upcoming" });
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully !",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -747,18 +781,54 @@ class projectController {
       const affordable = "Affordable Homes";
       const data = await ProjectModel.find({ type: affordable });
       //  console.log(data)
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
       // res.send(data)
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
   };
+  static projectSCOplots = async (req, res) => {
+    try {
+      const SCOplots = "SCO Plots";
+      const data = await ProjectModel.find({ type: SCOplots });
+      //  console.log(data)
+      return res.status(200).json({
+        message: "data get successfully ! ",
+        data,
+      });
+      // res.send(data)
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+  static project_commercial = async (req, res) => {
+    try {
+      const CommercialProperty = "Commercial Property";
+      const data = await ProjectModel.find({ type: CommercialProperty });
+      //  console.log(data)
+      return res.status(200).json({
+        message: "data get successfully ! ",
+        data,
+      });
+      // res.send(data)
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+
+
   ///highlight
   static highlightPoint = async (req, res) => {
     try {
