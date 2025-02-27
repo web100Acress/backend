@@ -56,4 +56,19 @@ const updateFile = (file, objectKey) => {
   }
 };
 
-module.exports = { uploadFile, deleteFile, updateFile };
+const getS3File = async(objectKey) => {
+  try {
+    const params = {
+      Bucket: "100acress-media-bucket",
+      Key: objectKey
+    }
+
+    const readstream = await s3.getObject(params).createReadStream();
+    // return new Buffer.from(bitmap).toString('base64');
+    return readstream;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+module.exports = { uploadFile, deleteFile, updateFile, getS3File };

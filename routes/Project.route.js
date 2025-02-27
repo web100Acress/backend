@@ -55,5 +55,6 @@ router.get("/upcoming", projectController.project_Upcoming);
 router.get("/affordable", projectController.projectAffordable); 
 router.get("/scoplots", projectController.projectSCOplots); 
 router.get("/commercial", projectController.project_commercial); 
+router.get("/budgethomes", projectController.project_budgetHomes); 
 
 module.exports = router;
