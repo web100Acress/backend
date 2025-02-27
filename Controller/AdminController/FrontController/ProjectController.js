@@ -827,6 +827,23 @@ class projectController {
       });
     }
   };
+  static project_budgetHomes = async (req, res) => {
+    try {
+      const BudgetProperty = ["M3M Antalya Hills","Signature Global City 93","Signature Global City 81","M3M Soulitude"];
+      const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
+      //  console.log(data)
+      return res.status(200).json({
+        message: "data get successfully ! ",
+        data,
+      });
+      // res.send(data)
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
 
 
   ///highlight
