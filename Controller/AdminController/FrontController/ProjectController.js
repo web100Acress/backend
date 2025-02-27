@@ -681,7 +681,7 @@ class projectController {
     try {
       const data = await ProjectModel.find({
         spotlight: "True",
-      }).limit(8);
+      });
       return res.status(200).json({
         message: "data get successfully !",
         data,
