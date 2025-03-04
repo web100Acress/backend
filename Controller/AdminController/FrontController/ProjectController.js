@@ -9,7 +9,6 @@ const {
   uploadFile,
   deleteFile,
   updateFile,
-  uploadThumbnailImage
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
 const path = require("path");
@@ -199,7 +198,7 @@ class projectController {
         uploadFile(highlightImage[0]),
         uploadFile(projectMaster_plan[0]),
         uploadFile(project_Brochure[0]),
-        uploadThumbnailImage(thumbnailImage[0]),
+        uploadFile(thumbnailImage[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
@@ -766,21 +765,6 @@ class projectController {
     // console.log("hello")
     try {
       const data = await ProjectModel.find({ projectOverview: "upcoming" });
-      return res.status(200).json({
-        message: "data get successfully !",
-        data,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "Internal server error !",
-      });
-    }
-  };
-  static project_allupcoming = async (req, res) => {
-    // console.log("hello")
-    try {
-      const data = await ProjectModel.find({ project_Status:"comingsoon" });
       return res.status(200).json({
         message: "data get successfully !",
         data,
