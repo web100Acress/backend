@@ -9,7 +9,6 @@ const {
   uploadFile,
   deleteFile,
   updateFile,
-  uploadThumbnailImage
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
 const path = require("path");
@@ -199,7 +198,7 @@ class projectController {
         uploadFile(highlightImage[0]),
         uploadFile(projectMaster_plan[0]),
         uploadFile(project_Brochure[0]),
-        uploadThumbnailImage(thumbnailImage[0]),
+        uploadFile(thumbnailImage[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
