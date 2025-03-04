@@ -777,21 +777,6 @@ class projectController {
       });
     }
   };
-  static project_allupcoming = async (req, res) => {
-    // console.log("hello")
-    try {
-      const data = await ProjectModel.find({ project_Status:"comingsoon" });
-      return res.status(200).json({
-        message: "data get successfully !",
-        data,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "Internal server error !",
-      });
-    }
-  };
   static projectAffordable = async (req, res) => {
     try {
       const affordable = "Affordable Homes";
@@ -802,6 +787,22 @@ class projectController {
         data,
       });
       // res.send(data)
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+
+  static project_allupcoming = async (req, res) => {
+    // console.log("hello")
+    try {
+      const data = await ProjectModel.find({ project_Status:"comingsoon" });
+      return res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

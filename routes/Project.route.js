@@ -52,10 +52,10 @@ router.get("/spotlight", projectController.project_spotlight);
 router.get("/featured", projectController.project_featured);
 router.get("/city", projectController.project_City);
 router.get("/upcoming", projectController.project_Upcoming);
-router.get("/comingsoon", projectController.project_allupcoming);
 router.get("/affordable", projectController.projectAffordable); 
 router.get("/scoplots", projectController.projectSCOplots); 
 router.get("/commercial", projectController.project_commercial); 
 router.get("/budgethomes", projectController.project_budgetHomes); 
+router.get("/comingsoon", projectController.project_allupcoming);
 
 module.exports = router;
