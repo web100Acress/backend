@@ -24,18 +24,16 @@ const uploadFile = (file) => {
 const uploadThumbnailImage = async(file) => {
 
   try {
-  const originalPath = file.path;
-  
-  const compressedDir = path.join(__dirname, '../temp/Compressed');
-  
-  const compressedFileName = `${Date.now()}-${file.originalname}`;
-  
-  const compressedPath = path.join(compressedDir, compressedFileName);
-  
-  await fs.promises.mkdir(compressedDir, { recursive: true });
 
-  await compressImage(originalPath, compressedPath, 25);
-  
+  /*Image Compression before uploading to AWS on hold for temp*/
+  /*
+    const originalPath = file.path;
+    const compressedDir = path.join(__dirname, '../temp/Compressed');
+    const compressedFileName = `${Date.now()}-${file.originalname}`;    
+    const compressedPath = path.join(compressedDir, compressedFileName);
+    await fs.promises.mkdir(compressedDir, { recursive: true });
+    await compressImage(originalPath, compressedPath, 25);
+  */  
   const fileContent = await fs.promises.readFile(compressedPath);
   
   const params = {
@@ -45,17 +43,20 @@ const uploadThumbnailImage = async(file) => {
     ContentType: file.mimetype,
   };
   const uploadResult = await s3.upload(params).promise();
-  console.log(uploadResult);
 
+  /*Deleting temp file after upload S3*/
+  /*
+    console.log(uploadResult);
     console.log('Starting cleanup');
-    // console.log("Original Path: ",originalPath);
-    // console.log("Compressed Path: ",compressedPath);
+    console.log("Original Path: ",originalPath);
+    console.log("Compressed Path: ",compressedPath);
     if(fs.existsSync(originalPath)){
       fs.unlinkSync(originalPath);
     };
     if(fs.existsSync(compressedPath)){
       fs.unlinkSync(compressedPath);
     };
+  */
   return uploadResult; // Return S3 upload result
   } catch (error) {
     console.error('Error in uploadThumbnailImage:', error);
