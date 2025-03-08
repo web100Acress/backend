@@ -737,6 +737,8 @@ class PostPropertyController {
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
+        const frontImage = personData?.frontImage;
+        const otherImage = personData?.otherImage;
         const role = personData.role;
 
         const data = {
@@ -755,7 +757,7 @@ class PostPropertyController {
           type: req.body.type,
           availableDate: req.body.availableDate,
 
-          otherImage: otherImagelink,
+          otherImage: otherImage,
           email: email,
           number: number,
           agentName: agentName,
