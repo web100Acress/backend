@@ -730,7 +730,7 @@ static projectSearch = async (req, res) => {
       .sort(sort || '-createdAt')
       .skip(options.skip)
       .limit(options.limit).lean();
-      
+
     const total = await ProjectModel.countDocuments(query);
 
     res.status(200).json({

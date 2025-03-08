@@ -20,9 +20,7 @@ const uploadFile = (file) => {
   };
   return s3.upload(params).promise();
 };
-
 const uploadThumbnailImage = async(file) => {
-
   try {
 
   /*Image Compression before uploading to AWS on hold for temp*/
@@ -34,7 +32,7 @@ const uploadThumbnailImage = async(file) => {
     await fs.promises.mkdir(compressedDir, { recursive: true });
     await compressImage(originalPath, compressedPath, 25);
   */  
-  const fileContent = await fs.promises.readFile(compressedPath);
+  const fileContent = await fs.promises.readFile(file.path);
   
   const params = {
     Bucket: "100acress-media-bucket",
@@ -126,4 +124,4 @@ const getS3File = async(objectKey) => {
   }
 };
 
-module.exports = { uploadFile, deleteFile, updateFile, getS3File,uploadThumbnailImage };
+module.exports = { uploadFile, deleteFile, updateFile, getS3File, uploadThumbnailImage };
