@@ -9,6 +9,7 @@ const {
   uploadFile,
   deleteFile,
   updateFile,
+  uploadThumbnailImage
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
 const path = require("path");
@@ -198,7 +199,7 @@ class projectController {
         uploadFile(highlightImage[0]),
         uploadFile(projectMaster_plan[0]),
         uploadFile(project_Brochure[0]),
-        uploadFile(thumbnailImage[0]),
+        uploadThumbnailImage(thumbnailImage[0]),
       ];
 
       // Use Promise.all to upload all files concurrently
@@ -242,7 +243,7 @@ class projectController {
         Amenities: Amenities,
         luxury: luxury,
         spotlight:spotlight,
-        possessionDate: possessionDate,
+        possessiondate: possessiondate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
         totalLandArea: totalLandArea,
@@ -581,6 +582,171 @@ class projectController {
     }
   };
 
+  // projectController.js
+static projectSearch = async (req, res) => {
+  try {
+    const { 
+      city,
+      spotlight,
+      luxury,
+      featured,
+      trending,
+      upcoming,
+      affordable,
+      commercial,
+      allcommercialprojects,
+      budgetHomes,
+      comingSoon,
+      scoplots,
+      minPrice, 
+      maxPrice,
+      residentiaProject,
+      allupcomingproject,
+      budgethomesgurugram,
+      typescoplots,
+      typeaffordable,
+      builderindepedentfloor,
+      deendayalplots,
+      villas,
+      sohnaroad,
+      golfcourseroad,
+      readytomove,
+      possessiondate,
+      alldlfproject,
+      builderName,
+      signatureglobal,
+      projectOverview,
+      projectStatus,
+      nh48,
+      mgroad,
+      underconstruction,
+      newlaunch,
+      dlfsco,
+      sort,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    let query = {};
+
+
+    // Handle boolean fields (convert string 'True' to boolean true)
+    if (spotlight === "1") query.spotlight = "True";
+    if (luxury === "1") query.luxury = "True";
+    if (featured === "1") query.projectOverview = "featured";
+    if (trending === "1") query.projectOverview = "trending";
+    if (upcoming === "1") query.$or = [{projectOverview: "upcoming"}, {projectReraNo: "upcoming"}];
+    if (affordable === "1") query.type = "Affordable Homes";
+    if (commercial === "1") query.projectOverview = "commercial";
+    if (budgetHomes === "1") query.budgetHomes = true;
+    if (comingSoon === "1") query.comingSoon = true;
+    if (scoplots === "1") query.type = "SCO Plots";
+    if (residentiaProject === "1") query.type = "Residential Flats";
+    if (allupcomingproject === "1") query.project_Status = "comingsoon";
+    if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
+    
+    // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
+    if (builderName) query.builderName = builderName;
+
+    if (allcommercialprojects === "1") query.type = "Commercial Property";
+    if (typescoplots === "1") query.projectOverview = "sco";
+    if (typeaffordable === "1") query.projectOverview = "affordable";
+    if (builderindepedentfloor === "1") query.$or = [{type:"Independent Floors"},{type:"Builder Floors"}];
+    if (deendayalplots ==="1") query.$or  = [{type:"Deen Dayal Plots"},{type:"Residential Plots"},{city:"Gurugram"}];
+    if (villas === "1") query.type = "Villas";
+    if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
+    if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course Road", "$options": "i" };
+    if (city) query.city = city;
+    if (readytomove === "1") query.$or = [{project_Status:"readytomove"}, {possessionDate: { $gte: new Date("2024-01-01"), $lte: new Date("2024-12-31") }}];
+    //Handle Possession Date
+    if (possessiondate) {
+      // Convert possessionYear to a number if it's a string
+      const year = parseInt(possessiondate, 10);
+            
+      // Check if it's a valid year
+      if (!isNaN(year)) {
+        // Create date range for the entire year (Jan 1 to Dec 31)
+        const startOfYear = new Date(year, 0, 1);  // January 1st of the year
+        const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);  // December 31st 23:59:59.999
+        
+        // Query for possession dates within that year
+        query.possessionDate = { $gte: startOfYear, $lte: endOfYear };
+      }
+    }
+    // Handle price range if both min and max are provided
+    if (minPrice && maxPrice) {
+      query = { minPrice:{$gte: parseFloat(minPrice)}, maxPrice:{$lte: parseFloat(maxPrice)} };
+    } else if (minPrice) {
+      query.minPrice = { $gte: parseFloat(minPrice) };
+    } else if (maxPrice) {
+      query.maxPrice = { $lte: parseFloat(maxPrice) };
+    }
+    //Handle DLF Project Unable to find the project with the parameteres for the dlf projects
+    // if (dlfproject === "1") query.$or = [{projectOverview:"luxuryProject"}, {projectReraNo:"luxuryProject"}];
+    
+    if(alldlfproject === "1") query.builderName = "DLF Homes";
+    
+    // for projects such as goaProject, bptp, orris, jms, rof
+    if(projectOverview) query.projectOverview = projectOverview;
+
+    if(signatureglobal === "1") query.$or = [{type:"Deen Dayal Plots"},{type:"Residential Plots"},{builderName:"Signature Global"}];
+
+    //For builder like : emaar,m3m, microtek
+    if(projectStatus) query.project_Status = projectStatus;
+    if(nh48 === "1") query.$or = [{projectAddress: {"$regex": "NH-48", "$options": "i" }},{projectAddress: {"$regex": "NH 48", "$options": "i" }}];
+    if(mgroad === "1") query.$or = [{projectAddress: {"$regex": "MG Road", "$options": "i" }}];
+    //For gurugram use city = "Gurugram" parameter
+    if(underconstruction === "1") query.project_Status = "underconstruction";
+    if(newlaunch === "1") query.project_Status = "newlaunch";
+    if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
+    // Check if any query value is an array and has multiple values
+    // const hasMultipleValues = Object.values(query).some(value => Array.isArray(value) && value.length > 1);
+    // console.log("Has Multiple Values", hasMultipleValues);
+
+    // if (Object.keys(query).length > 1 || hasMultipleValues) {
+    //     console.log("Complex query detected");
+    //     if (hasMultipleValues) {
+    //         // Handle array values properly
+    //         const conditions = Object.entries(query).map(([key, value]) => {
+    //             if (Array.isArray(value)) {
+    //                 return { [key]: { $in: value } };
+    //             }
+    //             return { [key]: value };
+    //         });
+    //         query = { $and: conditions };
+    //     } else {
+    //         query.$or = [query];
+    //     }
+    // }
+
+    console.log("Query: ", JSON.stringify(query));
+    // Pagination options
+    const options = {
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      limit: parseInt(limit),
+    };
+
+    const results = await ProjectModel.find(query)
+      .sort(sort || '-createdAt')
+      .skip(options.skip)
+      .limit(options.limit).lean();
+
+    const total = await ProjectModel.countDocuments(query);
+
+    res.status(200).json({
+      message: "Projects retrieved successfully!",
+      success: true,
+      total: total,
+      data: results,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+}
+
   // Route handler to get all project data
   // static projectviewAll = async (req, res) => {
   //     try {
@@ -786,6 +952,22 @@ class projectController {
         data,
       });
       // res.send(data)
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+
+  static project_allupcoming = async (req, res) => {
+    // console.log("hello")
+    try {
+      const data = await ProjectModel.find({ project_Status:"comingsoon" });
+      return res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

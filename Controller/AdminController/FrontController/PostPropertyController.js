@@ -723,11 +723,11 @@ class PostPropertyController {
           const email = dataPushed.email;
 
           await sendPostEmail(email);
-          res.status(200).json({
+          return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "user id not found ! ",
           });
         }
@@ -775,18 +775,18 @@ class PostPropertyController {
           const email = dataPushed.email;
           // console.log(email, "hello")
           await sendPostEmail(email);
-          res.status(200).json({
+          return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "user id not found ! ",
           });
         }
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -797,17 +797,17 @@ class PostPropertyController {
       const id = req.params.id;
       const data = await postPropertyModel.findById({ _id: id });
       if (data) {
-        res.status(200).json({
+        return res.status(200).json({
           message: "All project Data get  !",
           data,
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: " data not found !",
         });
       }
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error ! ",
       });
     }
@@ -828,18 +828,18 @@ class PostPropertyController {
         },
       );
       if (data) {
-        res.status(200).json({
+        return res.status(200).json({
           message: "data retrieved successfully ! ",
           data,
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "data not found !",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -861,13 +861,13 @@ class PostPropertyController {
         },
       );
       // console.log(data)
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get Successsfully ! ",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1259,27 +1259,27 @@ class PostPropertyController {
         // await data.save();
         await Promise.all([data.save(), info, info2]);
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "please fill the form !",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
-        messsage: "internal server error ",
+      return res.status(500).json({
+        message: "Internal server error ! ",
       });
     }
   };
   static postEnquiry_view = async (req, res) => {
     try {
       const data = await postEnquiryModel.find();
-      res.status(200).json({
+      return res.status(200).json({
         message: "data get successfully !",
         data,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
