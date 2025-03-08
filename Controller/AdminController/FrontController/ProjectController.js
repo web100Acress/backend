@@ -243,7 +243,7 @@ class projectController {
         Amenities: Amenities,
         luxury: luxury,
         spotlight:spotlight,
-        possessiondate: possessiondate,
+        possessionDate: possessionDate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
         totalLandArea: totalLandArea,
