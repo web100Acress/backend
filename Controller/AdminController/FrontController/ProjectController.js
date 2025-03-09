@@ -652,7 +652,7 @@ static projectSearch = async (req, res) => {
     if (typescoplots === "1") query.projectOverview = "sco";
     if (typeaffordable === "1") query.projectOverview = "affordable";
     if (builderindepedentfloor === "1") query.$or = [{type:"Independent Floors"},{type:"Builder Floors"}];
-    if (deendayalplots ==="1") query.$or  = [{type:"Deen Dayal Plots"},{type:"Residential Plots"},{city:"Gurugram"}];
+    if (deendayalplots ==="1") query.$and  = [{city:"Gurugram"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
     if (villas === "1") query.type = "Villas";
     if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
     if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course Road", "$options": "i" };
@@ -695,10 +695,12 @@ static projectSearch = async (req, res) => {
     if(projectStatus) query.project_Status = projectStatus;
     if(nh48 === "1") query.$or = [{projectAddress: {"$regex": "NH-48", "$options": "i" }},{projectAddress: {"$regex": "NH 48", "$options": "i" }}];
     if(mgroad === "1") query.$or = [{projectAddress: {"$regex": "MG Road", "$options": "i" }}];
+    
     //For gurugram use city = "Gurugram" parameter
     if(underconstruction === "1") query.project_Status = "underconstruction";
     if(newlaunch === "1") query.project_Status = "newlaunch";
     if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
+
     // Check if any query value is an array and has multiple values
     // const hasMultipleValues = Object.values(query).some(value => Array.isArray(value) && value.length > 1);
     // console.log("Has Multiple Values", hasMultipleValues);
@@ -719,7 +721,6 @@ static projectSearch = async (req, res) => {
     //     }
     // }
 
-    console.log("Query: ", JSON.stringify(query));
     // Pagination options
     const options = {
       skip: (parseInt(page) - 1) * parseInt(limit),
