@@ -731,7 +731,7 @@ static projectSearch = async (req, res) => {
     };
 
     // Store result in cache for 5 minutes
-    cache.set(cacheKey, response, 300000);
+    cache.put(cacheKey, response, 300000);
 
     return res.status(200).json(response);
 
