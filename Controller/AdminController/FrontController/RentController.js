@@ -24,18 +24,24 @@ AWS.config.update({
 
 const sendPostEmail = async (email) => {
   const transporter = await nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    auth: {
-      user: process.env.Email,
-      pass: process.env.EmailPass,
+    host: "smtpout.secureserver.net",
+    secure: true,
+    secureConnection: false, // TLS requires secureConnection to be false
+    tls: {
+        ciphers:'SSLv3'
     },
-    // debug: true // Enable debugging
+    requireTLS:true,
+    debug: true,
+    port: 465,
+    auth: {
+      user: "support@100acress.com",
+      pass: "Mission@#2025",
+    }
   });
   // Send mail with defined transport object
   let info = await transporter.sendMail({
-    from: "web.100acress@gmail.com", // Sender address
-    to: "amit100acre@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
+    from: "support@100acress.com", // Sender address
+    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
     subject: "New User Enquiry Detail", // Subject line
     text: "", // Plain text body
     html: `

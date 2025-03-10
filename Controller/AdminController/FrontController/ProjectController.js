@@ -19,25 +19,23 @@ require("dotenv").config();
 
 const sendPostEmail = async (email, number, projectName) => {
   const transporter = await nodemailer.createTransport({
-    service: "gmail",
-    port: 465,
-    secure: true,
-    logger: false,
-    debug: true,
-    secureConnection: false,
-    auth: {
-      // user: process.env.Email,
-      // pass: process.env.EmailPass
-      user: "web.100acress@gmail.com",
-      pass: "txww gexw wwpy vvda",
-    },
-    tls: {
-      rejectUnAuthorized: true,
-    },
+        host: "smtpout.secureserver.net",
+        secure: true,
+        secureConnection: false, // TLS requires secureConnection to be false
+        tls: {
+            ciphers:'SSLv3'
+        },
+        requireTLS:true,
+        debug: true,
+        port: 465,
+        auth: {
+          user: "support@100acress.com",
+          pass: "Mission@#2025",
+        },
   });
   // Send mail with defined transport objec
   let info = await transporter.sendMail({
-    from: "amit100acre@gmail.com", // Sender address
+    from: "support@100acress.com", // Sender address
     to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
     subject: "Project Enquiry",
     html: `
@@ -689,16 +687,16 @@ static projectSearch = async (req, res) => {
     // for projects such as goaProject, bptp, orris, jms, rof
     if(projectOverview) query.projectOverview = projectOverview;
 
-    if(signatureglobal === "1") query.$or = [{type:"Deen Dayal Plots"},{type:"Residential Plots"},{builderName:"Signature Global"}];
+    if(signatureglobal === "1") query.$and = [{builderName:"Signature Global"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
 
-    //For builder like : emaar,m3m, microtek
+    //For builder like :emaar ,m3m, microtek
     if(projectStatus) query.project_Status = projectStatus;
     if(nh48 === "1") query.$or = [{projectAddress: {"$regex": "NH-48", "$options": "i" }},{projectAddress: {"$regex": "NH 48", "$options": "i" }}];
     if(mgroad === "1") query.$or = [{projectAddress: {"$regex": "MG Road", "$options": "i" }}];
     
     //For gurugram use city = "Gurugram" parameter
     if(underconstruction === "1") query.project_Status = "underconstruction";
-    if(newlaunch === "1") query.project_Status = "newlaunch";
+    if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
     if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
 
     // Check if any query value is an array and has multiple values
@@ -1426,25 +1424,23 @@ static projectSearch = async (req, res) => {
 
         // await sendPostEmail(email,number,projectName)
         const transporter = await nodemailer.createTransport({
-          service: "gmail",
-          port: 465,
+          host: "smtpout.secureserver.net",
           secure: true,
-          logger: false,
-          debug: true,
-          secureConnection: false,
-          auth: {
-            // user: process.env.Email,
-            // pass: process.env.EmailPass
-            user: "web.100acress@gmail.com",
-            pass: "txww gexw wwpy vvda",
-          },
+          secureConnection: false, // TLS requires secureConnection to be false
           tls: {
-            rejectUnAuthorized: true,
+              ciphers:'SSLv3'
+          },
+          requireTLS:true,
+          debug: true,
+          port: 465,
+          auth: {
+            user: "support@100acress.com",
+            pass: "Mission@#2025",
           },
         });
         // Send mail with defined transport objec
         let info = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
+          from: "support@100acress.com", // Sender address
           to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "100acress.com Enquiry",
           html: `
