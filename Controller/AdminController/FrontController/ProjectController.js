@@ -290,7 +290,7 @@ class projectController {
       });
 
       await data.save();
-      res.status(200).json({
+      return res.status(200).json({
         message: "Submitted successfully !",
       });
     } catch (error) {
@@ -305,13 +305,13 @@ class projectController {
     // console.log("project edit")
     try {
       const data = await ProjectModel.findById(req.params.id);
-      res.status(200).json({
+      return res.status(200).json({
         message: "data edit is enable  ! ",
         dataedit: data,
       });
     } catch (error) {
       console.log("error");
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error !",
       });
     }
@@ -323,18 +323,18 @@ class projectController {
       const project_url = req.params.project_url;
       if (project_url) {
         const data = await ProjectModel.find({ project_url: project_url });
-        res.status(200).json({
+        return res.status(200).json({
           message: " enable",
           dataview: data,
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "Internal server error ! ",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         error: "an error is occured",
       });
     }
@@ -522,7 +522,7 @@ class projectController {
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -563,18 +563,18 @@ class projectController {
       }
 
       if (data && data.length > 0) {
-        res.status(200).json({
+        returnres.status(200).json({
           message: "All project data retrieved successfully!",
           data,
         });
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           message: "No data found!",
         });
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error!",
       });
     }
@@ -699,25 +699,14 @@ static projectSearch = async (req, res) => {
     if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
     if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
 
-    // Check if any query value is an array and has multiple values
-    // const hasMultipleValues = Object.values(query).some(value => Array.isArray(value) && value.length > 1);
-    // console.log("Has Multiple Values", hasMultipleValues);
+    const cacheKey = JSON.stringify(query);
 
-    // if (Object.keys(query).length > 1 || hasMultipleValues) {
-    //     console.log("Complex query detected");
-    //     if (hasMultipleValues) {
-    //         // Handle array values properly
-    //         const conditions = Object.entries(query).map(([key, value]) => {
-    //             if (Array.isArray(value)) {
-    //                 return { [key]: { $in: value } };
-    //             }
-    //             return { [key]: value };
-    //         });
-    //         query = { $and: conditions };
-    //     } else {
-    //         query.$or = [query];
-    //     }
-    // }
+    // Check if result exists in cache
+    const cachedResult = cache.get(cacheKey);
+ 
+    if (cachedResult) {
+      return res.status(200).json(cachedResult);
+    }
 
     // Pagination options
     const options = {
@@ -732,17 +721,23 @@ static projectSearch = async (req, res) => {
 
     const total = await ProjectModel.countDocuments(query);
 
-    res.status(200).json({
+    const response = {
       message: "Projects retrieved successfully!",
       success: true,
       total: total,
       data: results,
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
-    });
+    };
+
+    // Store result in cache for 5 minutes
+    cache.set(cacheKey, response, 300000);
+
+    return res.status(200).json(response);
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: 'Server Error' });
+    return res.status(500).json({ success: false, error: 'Server Error' });
   }
 }
 
@@ -824,18 +819,18 @@ static projectSearch = async (req, res) => {
           await deleteFile(masterId);
         }
         const data = await ProjectModel.findByIdAndDelete({ _id: id });
-        res.status(202).json({
+        return res.status(202).json({
           message: "data deleted sucessfully!",
           // deletedata: data
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "Project alredy deleted",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error !",
       });
     }
@@ -1045,17 +1040,17 @@ static projectSearch = async (req, res) => {
 
         await dataPushed.save();
 
-        res.status(200).json({
+        return res.status(200).json({
           message: "data pushed successfully !",
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "check input box",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({});
+      return res.status(500).json({});
     }
   };
   static highlightPoint_view = async (req, res) => {
@@ -1067,23 +1062,23 @@ static projectSearch = async (req, res) => {
         const data = await ProjectModel.findById({ _id: id });
         // console.log(data)
         if (data) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data get successfully",
             data: data.highlight,
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data not found ",
           });
         }
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           message: "check url id ",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "internal server error !",
       });
     }
@@ -1104,18 +1099,18 @@ static projectSearch = async (req, res) => {
             },
           },
         );
-        res.status(200).json({
+        return res.status(200).json({
           message: "data get Successfully ! ",
           data,
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "check Your Id ",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1136,12 +1131,12 @@ static projectSearch = async (req, res) => {
           },
           { new: true },
         );
-        res.status(200).json({
+        return res.status(200).json({
           message: "data update successfully !",
           data,
         });
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           error: "check your field !",
         });
       }
@@ -1158,7 +1153,7 @@ static projectSearch = async (req, res) => {
           "highlight._id": id,
         });
         if (!data) {
-          res.status(404).json({
+          return res.status(404).json({
             error: "Post property not found",
           });
         } else {
@@ -1177,7 +1172,7 @@ static projectSearch = async (req, res) => {
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -1205,27 +1200,27 @@ static projectSearch = async (req, res) => {
 
             await dataPushed.save();
 
-            res.status(200).json({
+            return res.status(200).json({
               message: "data pushed successfully !",
             });
           } else {
-            res.status(403).json({
+            return res.status(403).json({
               message: "check your input field ! ",
             });
           }
         } else {
-          res.status(403).json({
+          return res.status(403).json({
             message: "check id !",
           });
         }
       } else {
-        res.status(403).json({
+        return res.status(403).json({
           message: "check your field ! ",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Inetrnal server error !",
       });
     }
@@ -1240,22 +1235,25 @@ static projectSearch = async (req, res) => {
         const data = await ProjectModel.findById({ _id: id });
         // console.log(data)
         if (data) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data get successfully",
             data: data.BhK_Details,
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data not found ",
           });
         }
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           message: "check url id ",
         });
       }
     } catch (error) {
       console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
     }
   };
 
@@ -1276,23 +1274,23 @@ static projectSearch = async (req, res) => {
         );
 
         if (data) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data get successfully !",
             data,
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data not found !",
           });
         }
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           message: "check your id !",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1314,22 +1312,22 @@ static projectSearch = async (req, res) => {
           { $set: { "BhK_Details.$": update } },
         );
         if (data) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data update successfully  !",
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data not found !",
           });
         }
       } else {
-        res.status(200).json({
+        return res.status(200).json({
           message: "check field !",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1379,18 +1377,18 @@ static projectSearch = async (req, res) => {
         };
         // console.log(id)
         const data = await ProjectModel.updateOne(update);
-        res.status(200).json({
+        return res.status(200).json({
           message: "Delete successful!",
           data,
         });
       } else {
-        res.status(400).json({
+        return res.status(400).json({
           message: "Invalid ID!",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error!",
       });
     }
@@ -1465,19 +1463,19 @@ static projectSearch = async (req, res) => {
         });
 
         await data.save();
-        res.status(201).json({
+        return res.status(201).json({
           message:
             "User data submitted successfully , and the data has been sent via email",
           // dataInsert: data
         });
       } else {
-        res.status(403).json({
+        return res.status(403).json({
           message: "not success",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1540,12 +1538,12 @@ static projectSearch = async (req, res) => {
       if (id) {
         const data = await UserModel.findById({ _id: id });
         if (data) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "Data get successfully ! ",
             data: data,
           });
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "data not found ! ",
           });
         }
@@ -1579,18 +1577,18 @@ static projectSearch = async (req, res) => {
           await data.save();
         } else {
           // console.log("hello ")
-          res.status(403).json({
+          return res.status(403).json({
             message: "Check status field ! ",
           });
         }
       } else {
-        res.status(403).json({
+        return res.status(403).json({
           message: "please mtach id  ! ",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }
@@ -1603,7 +1601,7 @@ static projectSearch = async (req, res) => {
       const id = req.params.id;
       const data = await UserModel.findByIdAndDelete({ _id: id });
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "message delete",
         datadelete: data,
       });
@@ -1637,13 +1635,13 @@ static projectSearch = async (req, res) => {
               .json({ message: "Image removed successfully", floorplan });
           }
         } else {
-          res.status(200).json({
+          return res.status(200).json({
             message: "Object Index number not found !",
             indexNumber,
           });
         }
       } else {
-        res.status(400).json({
+        return res.status(400).json({
           message: "object id is invalid !",
         });
       }
@@ -1677,13 +1675,13 @@ static projectSearch = async (req, res) => {
       const expirationTime = 5 * 60 * 1000;
       cache.put(cacheKey, data, expirationTime);
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "Data retrieved successfully from database!",
         data: data,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error!",
       });
     }
@@ -1784,7 +1782,7 @@ static projectSearch = async (req, res) => {
       }
     } catch (error) {
       console.error("Error in enquiryDownload:", error);
-      res.status(500).send("Failed to download enquiry data");
+      return res.status(500).send("Failed to download enquiry data");
     }
   };
   // count project according to the city
@@ -1807,14 +1805,14 @@ static projectSearch = async (req, res) => {
         },
       ]);
       // console.log(data,data2)
-      res.status(200).json({
+      return res.status(200).json({
         message: "get data",
         data,
         data2,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server log",
       });
     }
