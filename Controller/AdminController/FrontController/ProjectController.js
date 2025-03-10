@@ -563,7 +563,7 @@ class projectController {
       }
 
       if (data && data.length > 0) {
-        returnres.status(200).json({
+        return res.status(200).json({
           message: "All project data retrieved successfully!",
           data,
         });
