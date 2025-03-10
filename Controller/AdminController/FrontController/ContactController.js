@@ -81,25 +81,23 @@ class contactController {
 
         //   await sendPostEmail(email,mobile)
         const transporter = await nodemailer.createTransport({
-          service: "gmail",
-          port: 465,
+          host: "smtpout.secureserver.net",
           secure: true,
-          logger: false,
-          debug: true,
-          secureConnection: false,
-          auth: {
-            // user: process.env.Email,
-            //pass: process.env.EmailPass
-            user: "web.100acress@gmail.com",
-            pass: "txww gexw wwpy vvda",
-          },
+          secureConnection: false, // TLS requires secureConnection to be false
           tls: {
-            rejectUnAuthorized: true,
+              ciphers:'SSLv3'
+          },
+          requireTLS:true,
+          debug: true,
+          port: 465,
+          auth: {
+            user: "support@100acress.com",
+            pass: "Mission@#2025",
           },
         });
         // Send mail with defined transport objec
         let info = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
+          from: "support@100acress.com", // Sender address
           to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "100acress Enquiry-Home Page",
           html: `

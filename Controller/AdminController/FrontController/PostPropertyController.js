@@ -31,44 +31,40 @@ const generateToken = () => {
   return String(otp).padStart(6, "0");
 };
 const transporter = nodemailer.createTransport({
-  service: "gmail",
-  port: 465,
+  host: "smtpout.secureserver.net",
   secure: true,
-  logger: false,
-  debug: true,
-  secureConnection: false,
-  auth: {
-    // user: process.env.Email,
-    // pass: process.env.EmailPass
-    user: "web.100acress@gmail.com",
-    pass: "txww gexw wwpy vvda",
-  },
+  secureConnection: false, // TLS requires secureConnection to be false
   tls: {
-    rejectUnAuthorized: true,
+      ciphers:'SSLv3'
+  },
+  requireTLS:true,
+  debug: true,
+  port: 465,
+  auth: {
+    user: "support@100acress.com",
+    pass: "Mission@#2025",
   },
 });
 const sendResetEmail = async (email, token) => {
   // Connect with SMTP Gmail
   const transporter = await nodemailer.createTransport({
-    service: "gmail",
-    port: 465,
+    host: "smtpout.secureserver.net",
     secure: true,
-    logger: false,
-    debug: true,
-    secureConnection: false,
-    auth: {
-      // user: process.env.Email,
-      // pass: process.env.EmailPass
-      user: "web.100acress@gmail.com",
-      pass: "txww gexw wwpy vvda",
-    },
+    secureConnection: false, // TLS requires secureConnection to be false
     tls: {
-      rejectUnAuthorized: true,
+        ciphers:'SSLv3'
+    },
+    requireTLS:true,
+    debug: true,
+    port: 465,
+    auth: {
+      user: "support@100acress.com",
+      pass: "Mission@#2025",
     },
   });
   // Send mail with defined transport object
   let info = await transporter.sendMail({
-    from: "amit100acre@gmail.com", // Sender address
+    from: "support@100acress.com", // Sender address
     to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
     subject: "Password Reset",
     html: `
@@ -102,25 +98,23 @@ const sendResetEmail = async (email, token) => {
 };
 const sendPostEmail = async (email) => {
   const transporter = await nodemailer.createTransport({
-    service: "gmail",
-    port: 465,
+    host: "smtpout.secureserver.net",
     secure: true,
-    logger: false,
-    debug: true,
-    secureConnection: false,
-    auth: {
-      // user: process.env.Email,
-      // pass: process.env.EmailPass
-      user: "web.100acress@gmail.com",
-      pass: "txww gexw wwpy vvda",
-    },
+    secureConnection: false, // TLS requires secureConnection to be false
     tls: {
-      rejectUnAuthorized: true,
+        ciphers:'SSLv3'
+    },
+    requireTLS:true,
+    debug: true,
+    port: 465,
+    auth: {
+      user: "support@100acress.com",
+      pass: "Mission@#2025",
     },
   });
   // Send mail with defined transport objec
   let info = await transporter.sendMail({
-    from: "amit100acre@gmail.com", // Sender address
+    from: "support@100acress.com", // Sender address
     to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
     subject: "Post Property",
     html: `
@@ -143,7 +137,7 @@ const sendPostEmail = async (email) => {
 `,
   });
   let info2 = await transporter.sendMail({
-    from: "amit100acre@gmail.com", // Sender address
+    from: "support@100acress.com", // Sender address
     to: email,
     subject: "Post Property",
     html: `
@@ -970,25 +964,23 @@ class PostPropertyController {
       if (data.postProperty[0].verify !== "verified" && verify == "verified") {
         console.log("Your property has been verified");
         const transporter = await nodemailer.createTransport({
-          service: "gmail",
-          port: 465,
+          host: "smtpout.secureserver.net",
           secure: true,
-          logger: false,
-          debug: true,
-          secureConnection: false,
-          auth: {
-            // user: process.env.Email,
-            // pass: process.env.EmailPass
-            user: "web.100acress@gmail.com",
-            pass: "txww gexw wwpy vvda",
-          },
+          secureConnection: false, // TLS requires secureConnection to be false
           tls: {
-            rejectUnAuthorized: true,
+              ciphers:'SSLv3'
+          },
+          requireTLS:true,
+          debug: true,
+          port: 465,
+          auth: {
+            user: "support@100acress.com",
+            pass: "Mission@#2025",
           },
         });
         // Send mail with defined transport objec
         let info = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
+          from: "support@100acress.com", // Sender address
           to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "Verified Your Property",
           html: `
@@ -1204,7 +1196,7 @@ class PostPropertyController {
           propertyAddress: propertyAddress,
         });
         const info = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
+          from: "support@100acress.com", // Sender address
           to: "vinay.aadharhomes@gmail.com",
           // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "Post Property",
@@ -1231,7 +1223,7 @@ class PostPropertyController {
               `,
         });
         const info2 = await transporter.sendMail({
-          from: "amit100acre@gmail.com", // Sender address
+          from: "support@100acress.com", // Sender address
           to: agentEmail,
           // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
 
@@ -1316,14 +1308,22 @@ class PostPropertyController {
       }
       const transporter = nodemailer.createTransport({
         // SMTP configuration
-        service: "gmail",
+        host: "smtpout.secureserver.net",
+        secure: true,
+        secureConnection: false, // TLS requires secureConnection to be false
+        tls: {
+            ciphers:'SSLv3'
+        },
+        requireTLS:true,
+        debug: true,
+        port: 465,
         auth: {
-          user: "web.100acress@gmail.com",
-          pass: "txww gexw wwpy vvda",
+          user: "support@100acress.com",
+          pass: "Mission@#2025",
         },
       });
       const mailOptions = {
-        from: "web.100acress@gmail.com",
+        from: "support@100acress.com",
         to: email,
         subject: "Email Verification",
         text: `Thank you for registering with 100acress.com. We are sending this email only to verify that it is indeed your email address. To complete your registration, verify otp : ${otpNumber}`,
