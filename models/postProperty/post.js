@@ -105,7 +105,7 @@ const post_Schema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["user", "Owner", "Developer", "Agent", "propertyOwner", "Seller"],
+      enum: ["user", "Owner", "Developer", "Agent", "propertyOwner", "Seller","Admin"],
       required: true,
     },
     token: {
