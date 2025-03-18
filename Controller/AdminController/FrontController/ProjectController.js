@@ -607,6 +607,12 @@ static projectSearch = async (req, res) => {
       deendayalplots,
       villas,
       sohnaroad,
+      dwarkaexpressway,
+      nprroad,
+      newgurgaon,
+      sohna,
+      sprroad,
+      golfcourseextensionroad,
       golfcourseroad,
       readytomove,
       possessiondate,
@@ -653,7 +659,13 @@ static projectSearch = async (req, res) => {
     if (deendayalplots ==="1") query.$and  = [{city:"Gurugram"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
     if (villas === "1") query.type = "Villas";
     if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
+    if (dwarkaexpressway === "1") query.projectAddress = {"$regex": "Dwarka Expressway", "$options": "i" };
+    if (nprroad === "1") query.projectAddress = {"$regex": "Northern Peripheral Road", "$options": "i" };
     if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course Road", "$options": "i" };
+    if (newgurgaon === "1") query.projectAddress = {"$regex": "New Gurgaon", "$options": "i" };
+    if (sohna === "1") query.projectAddress = {"$regex": "Sohna", "$options": "i" };
+    if (sprroad === "1") query.projectAddress = {"$regex": "Southern Peripheral Road", "$options": "i" };
+    if (golfcourseextensionroad === "1") query.projectAddress = {"$regex": "Golf Course Extn Road", "$options": "i" };
     if (city) query.city = city;
     if (readytomove === "1") query.$or = [{project_Status:"readytomove"}, {possessionDate: { $gte: new Date("2024-01-01"), $lte: new Date("2024-12-31") }}];
     //Handle Possession Date
