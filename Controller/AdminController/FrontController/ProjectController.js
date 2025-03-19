@@ -661,7 +661,7 @@ static projectSearch = async (req, res) => {
     if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
     if (dwarkaexpressway === "1") query.projectAddress = {"$regex": "Dwarka Expressway", "$options": "i" };
     if (nprroad === "1") query.projectAddress = {"$regex": "Northern Peripheral Road", "$options": "i" };
-    if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course Road", "$options": "i" };
+    if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course", "$options": "i" };
     if (newgurgaon === "1") query.projectAddress = {"$regex": "New Gurgaon", "$options": "i" };
     if (sohna === "1") query.projectAddress = {"$regex": "Sohna", "$options": "i" };
     if (sprroad === "1") query.projectAddress = {"$regex": "Southern Peripheral Road", "$options": "i" };
