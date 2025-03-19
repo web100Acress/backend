@@ -247,47 +247,59 @@ class rentController {
   // ViewAll
   static rentViewAll = async (req, res) => {
     try {
-      const data = await rent_Model.find();
+      // const data = await rent_Model.find();
       const data1 = await postPropertyModel.aggregate([
+
         {
-          $match: {
-            "postProperty.verify": "verified",
-            "postProperty.propertyLooking": "rent",
-          },
+          $unwind: "$postProperty"
         },
         {
-          $project: {
-            name: 1,
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.propertyLooking", "rent"] },
-                    { $eq: ["$$property.verify", "verified"] },
-                  ],
-                },
-              },
-            },
-          },
+          $match:{
+            "postProperty.verify":"verified",
+            "postProperty.propertyLooking":"rent"
+          }
         },
-      ]);
-      const ost = data1.postProperty;
-      const collectdata = [...data, ...data1];
-      if (collectdata) {
-        res.status(200).json({
+        {
+          $project:{
+            _id: "$postProperty._id", // Include the property's _id if needed
+            frontImage: "$postProperty.frontImage",
+            otherImage: "$postProperty.otherImage",
+            propertyType: "$postProperty.propertyType",
+            propertyName: "$postProperty.propertyName",
+            price: "$postProperty.price",
+            area: "$postProperty.area",
+            availableDate: "$postProperty.availableDate",
+            descripation: "$postProperty.descripation",
+            furnishing: "$postProperty.furnishing",
+            builtYear: "$postProperty.builtYear",
+            amenities: "$postProperty.amenities",
+            landMark: "$postProperty.landMark",
+            type: "$postProperty.type",
+            city: "$postProperty.city",
+            state: "$postProperty.state",
+            address: "$postProperty.address",
+            email: "$postProperty.email",
+            number: "$postProperty.number",
+            verify: "$postProperty.verify",
+            propertyLooking: "$postProperty.propertyLooking"
+          }
+        }
+      ])
+      
+      const RentalData = [...data1];
+      if (RentalData) {
+        return res.status(200).json({
           message: "data get successfully !",
-          collectdata,
+          rentaldata:RentalData,
         });
       } else {
-        res.status(200).json({
+        return res.status(404).json({
           message: "data not  found !",
         });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error ! ",
       });
     }

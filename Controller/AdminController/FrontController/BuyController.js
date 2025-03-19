@@ -198,120 +198,62 @@ class BuyController {
       if (cachedData) {
         return res.status(200).json({
           message: "Data fetched from the cache!",
-          collectdata: cachedData,
+          ResaleData: cachedData,
         });
       }
 
-      // Fetch data from the database
       const data1 = await postPropertyModel.aggregate([
+        // Step 1: Unwind the postProperty array to deconstruct it into individual documents
+        {
+          $unwind: "$postProperty"
+        },
         {
           $match: {
             "postProperty.verify": "verified",
-            "postProperty.propertyLooking": "Sell",
-          },
+            "postProperty.propertyLooking": "Sell"
+          }
         },
+        // Step 2: Project only the fields from postProperty (excluding other user-related fields)
         {
           $project: {
-            name: 1, // Include name
-            role: 1, // Include role
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.propertyLooking", "Sell"] },
-                    { $eq: ["$$property.verify", "verified"] },
-                  ],
-                },
-              },
-            },
-          },
-        },
-        {
-          $addFields: {
-            postProperty: {
-              $map: {
-                input: "$postProperty",
-                as: "property",
-                in: {
-                  $mergeObjects: [
-                    "$$property",
-                    { name: "$name", role: "$role" },
-                  ],
-                },
-              },
-            },
-          },
-        },
-        {
-          $project: {
-            name: 0, // Remove name from root level
-            role: 0, // Remove role from root level
-          },
-        },
+            _id: "$postProperty._id", // Include the property's _id if needed
+            frontImage: "$postProperty.frontImage",
+            otherImage: "$postProperty.otherImage",
+            propertyType: "$postProperty.propertyType",
+            propertyName: "$postProperty.propertyName",
+            price: "$postProperty.price",
+            area: "$postProperty.area",
+            availableDate: "$postProperty.availableDate",
+            descripation: "$postProperty.descripation",
+            furnishing: "$postProperty.furnishing",
+            builtYear: "$postProperty.builtYear",
+            amenities: "$postProperty.amenities",
+            landMark: "$postProperty.landMark",
+            type: "$postProperty.type",
+            city: "$postProperty.city",
+            state: "$postProperty.state",
+            address: "$postProperty.address",
+            email: "$postProperty.email",
+            number: "$postProperty.number",
+            verify: "$postProperty.verify",
+            propertyLooking: "$postProperty.propertyLooking"
+          }
+        }
       ]);
 
-      // const data1 =
-      //   await postPropertyModel.aggregate([
-      //     {
-      //       $match: {
-      //         "postProperty.verify": "verified",
-      //         "postProperty.propertyLooking": "Sell"
-      //       }
-      //     },
-      //     {
-      //       $unwind: "$postProperty"
-      //     },
-      //     {
-      //       $match: {
-      //         "postProperty.verify": "verified",
-      //         "postProperty.propertyLooking": "Sell"
-      //       }
-      //     },
-      //     {
-      //       $project: {
-      //         _id: "$postProperty._id",
-      //         propertyName: "$postProperty.propertyName",
-      //         price: "$postProperty.price",
-      //         area: "$postProperty.area",
-      //         type: "$postProperty.type",
-      //         furnishing: "$postProperty.furnishing",
-      //         amenities: "$postProperty.amenities",
-      //         city: "$postProperty.city",
-      //         state: "$postProperty.state",
-      //         address: "$postProperty.address",
-      //         contact: {
-      //           email: "$postProperty.email",
-      //           number: "$postProperty.number",
-      //           name: "$postProperty.name"
-      //         },
-      //         frontImage: "$postProperty.frontImage.url",
-      //         otherImages: "$postProperty.otherImage",
-      //         description: "$postProperty.descripation",
-      //         landMark: "$postProperty.landMark",
-      //         propertyType: "$postProperty.propertyType",
-      //         role: "$postProperty.role",
-      //         availableDate: "$postProperty.availableDate"
-      //       }
-      //     }
-      //   ]);
-
-      const collectdata = [...data1];
 
       const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-      // Store the data in cache
-      cache.put("buyData", collectdata, expirationTime);
+      cache.put("buyData", data1, expirationTime);
 
       // Send the response with the fetched data
-      res.status(200).json({
+      return res.status(200).json({
         message: "Data fetched from the database!",
-        collectdata: collectdata,
+        ResaleData: data1,
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({
+      return res.status(500).json({
         message: "Internal server error",
       });
     }
@@ -320,8 +262,10 @@ class BuyController {
   static buyView_id = async (req, res) => {
     try {
       const id = req.params.id;
+
       if (id) {
         const data = await buyCommercial_Model.findById({ _id: id });
+
         const postData = await postPropertyModel.findOne(
           { "postProperty._id": id },
           {
@@ -332,6 +276,7 @@ class BuyController {
             },
           },
         );
+
         if (data) {
           res.status(200).json({
             message: "data get successfully !! ",

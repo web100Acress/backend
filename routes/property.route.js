@@ -36,9 +36,9 @@ router.post(
   rentController.rentInsert,
 );
 router.get("/:id/rentedit", rentController.rentEdit);
-router.get("/rent/:id", rentController.rentView_id);
 router.get("/:type/rentView", rentController.rentView);
-router.get("/viewAll", rentController.rentViewAll);
+router.get("/rent/viewall", rentController.rentViewAll);
+router.get("/rent/:id", rentController.rentView_id);
 router.post(
   "/:id/rentUpdate",
   upload.fields([
