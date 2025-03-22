@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css"
+    rel="stylesheet"
+/>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+        .subtitle {
+            color: #666;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .content {
+            padding: 10px 0;
+            text-align: center;
+        }
+        .otp-container {
+            margin: 30px auto;
+            max-width: 350px;
+        }
+        .otp-box {
+            /* display: flex; */
+            justify-content: center;
+            gap: 10px;
+            margin: 25px auto;
+        }
+        .otp-digit {
+            width: fit-content;
+            height: fit-content;
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            padding: 10px;
+        }
+        .instruction {
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        .expiry {
+            background-color: #fff8e1;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #C13B44;
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #888;
+            font-size: 14px;
+        }
+        .highlight {
+            color: #C13B44;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #C13B44;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        .security-notice {
+            background-color: #f5f5f5;
+            border-left: 4px solid #C13B44;
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 14px;
+            text-align: left;
+        }
+        .social {
+            margin: 15px 0;
+        }
+        .social a {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            background-color: #f0f0f0;
+            color: #555;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            margin: 0 5px;
+            text-decoration: none;
+            position: relative;
+        }
+        .social img{
+            position: absolute;
+            top: 10%;
+            right: 10%;
+        }
+        #logo{
+            height: 60px;
+            width: 160px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Verification <span class="highlight">Code</span></h1>
+            <p class="subtitle">Please verify your account</p>
+        </div>
+        
+        <div class="content">
+            <p>Hello {{username}},</p>
+            <p>We received a request to verify your account. Please use the following One-Time Password (OTP) to complete your verification.</p>
+            
+            <div class="otp-container">
+                <div class="otp-box">
+                    <div class="otp-digit">{{otp}}</div>
+                </div>
+                
+                <div class="expiry">
+                    <strong>Code expires in 10 minutes</strong>
+                </div>
+            </div>
+            
+            <p class="instruction">Enter this code on the verification page to confirm your identity and complete the process.</p>
+            
+            <div class="security-notice">
+                <strong>Security Notice:</strong> If you didn't request this code, please ignore this email or contact support if you believe your account may be compromised.
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <div class="social">
+                <a href="https://www.facebook.com/100Acress" target="_blank"><img src="cid:fblogo" alt="Facebook logo" ></a>
+                <a href="https://www.linkedIn.com/company/100acress/" target="_blank"><img src="cid:lnkdlogo" alt="Linkedin logo" ></a>
+                <a href="https://www.instagram.com/official100acress" target="_blank"><img src="cid:instalogo" alt="Instagra logom" ></a>
+                <a href="https://www.twitter.com/100acressdotcom" target="_blank"><img src="cid:twlogo" alt="Twitter logo" ></a>
+            </div>
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; 2025 100acress. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Just for demonstration - in actual emails, JavaScript typically isn't used
+            // as most email clients block JavaScript for security reasons
+            console.log("Email template loaded successfully");
+        });
+    </script>
+</body>
+</html>

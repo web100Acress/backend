@@ -21,7 +21,7 @@ require("dotenv").config();
 // const uploadFile = (file) => {
 //   // Read the file content
 //   // console.log("F.KAWHFIOQFJ");
-//   const fileContent = fs.readFileSync(file.path);
+//   const fileContent = fs.promises.readFileSync(file.path);
 
 //   const params = {
 //     Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
@@ -34,7 +34,7 @@ require("dotenv").config();
 //   return s3.upload(params).promise();
 // };
 // const update = (file, objectKey) => {
-//   const fileContent = fs.readFileSync(file.path);
+//   const fileContent = fs.promises.readFileSync(file.path);
 //   if (objectKey != null) {
 //     const params = {
 //       Bucket: "100acress-media-bucket",

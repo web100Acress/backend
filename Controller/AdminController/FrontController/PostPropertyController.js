@@ -8,6 +8,8 @@ const Email_verify = require("../../../models/postProperty/emailVerify");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const { isValidObjectId } = require("mongoose");
+const fs = require("fs");
+const path = require("path");
 const {
   uploadFile,
   deleteFile,
@@ -47,6 +49,11 @@ const transporter = nodemailer.createTransport({
 });
 const sendResetEmail = async (email, token) => {
   // Connect with SMTP Gmail
+  const htmlPath = path.join(__dirname, "../../../Templates/Email/forget.html");
+  const data = await fs.promises.readFile(htmlPath, "utf8");
+  const username = email.split("@")[0];
+  const htmlContent = data.replaceAll("{{token}}", token).replaceAll("{{username}}", username);
+
   const transporter = await nodemailer.createTransport({
     host: "smtpout.secureserver.net",
     secure: true,
@@ -67,33 +74,29 @@ const sendResetEmail = async (email, token) => {
     from: "support@100acress.com", // Sender address
     to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
     subject: "Password Reset",
-    html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>Forget Password</title>
-        </head>
-        <body>
-        <p>Dear User ,</p>
-        <p>click the following link to reset the password :</p>
-        <p>
-
-        <a href="https://100acress.com/resetpassword/${token}" target="_blank" rel="noopener noreferrer">Reset Your Password </a>
-        </p>
-        </p>
-
-        <p>If you didn't request to password reset </p>
-
-       <p>Best regrads ,
-            <br>
-       </p>
-
-        </body>
-        </html>
-`,
+    html: htmlContent,
+    attachments:[
+      {
+        filename: "fblogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+        cid: "fblogo"
+      },
+      {
+        filename: "lnkdlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+        cid: "lnkdlogo"
+      },
+      {
+        filename: "instalogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+        cid: "instalogo"
+      },
+      {
+        filename: "twlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+        cid: "twlogo"
+      }
+    ]
   });
 };
 const sendPostEmail = async (email) => {
@@ -136,29 +139,38 @@ const sendPostEmail = async (email) => {
         </html>
 `,
   });
+
+  const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
+  const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
+  const propertySubmissionHtmlContent = propertySubmissionData;
+
   let info2 = await transporter.sendMail({
     from: "support@100acress.com", // Sender address
     to: email,
     subject: "Post Property",
-    html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-     
-        </head>
-        <body>
-            <h3>Property Listing Submission</h3>
-            <p>Dear User,</p>
-            <p>We are delighted to inform you that your property listing has been successfully submitted on our portal and is currently under review. Once approved, it will be published and visible to other users.</p>
-            <p>Thank you for choosing to associate with us.We wish you to very best in your endeavors.</p>
-            <p>Kind regards,</p>
-             <p>100 acress team</p>
-        </body>
-        </html>
-`,
+    html: propertySubmissionHtmlContent,
+    attachments:[
+      {
+        filename: "fblogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+        cid: "fblogo"
+      },
+      {
+        filename: "lnkdlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+        cid: "lnkdlogo"
+      },
+      {
+        filename: "instalogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+        cid: "instalogo"
+      },
+      {
+        filename: "twlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+        cid: "twlogo"
+      }
+    ]
   });
 };
 class PostPropertyController {
@@ -364,25 +376,25 @@ class PostPropertyController {
     try {
       if (email) {
         const user = await postPropertyModel.findOne({ email: email });
-        console.log(user);
+        // console.log(user);
         if (!user) {
           res.status(404).json({
             message: " User not found , sign in before login  ! ",
           });
         } else {
-          console.log("token");
+          // console.log("token");
           const token = generateToken();
-          console.log("token1");
+          // console.log("token1");
           const resetToken = await postPropertyModel.findByIdAndUpdate(
             user._id,
             {
               token: token,
             },
           );
-          console.log(token, resetToken, "fhwe");
+          // console.log(token, resetToken, "fhwe");
           await resetToken.save();
           await sendResetEmail(email, token);
-          console.log(resetToken, "lhfuiweh");
+          // console.log(resetToken, "lhfuiweh");
           res.status(200).json({
             message: "Password reset link sent successfully",
           });
@@ -978,30 +990,48 @@ class PostPropertyController {
             pass: "Mission@#2025",
           },
         });
+
+        const htmlPath = path.join(__dirname, "../../../Templates/Email/propverification.html");
+        const data = await fs.promises.readFile(htmlPath,{encoding: "utf8"});
+        const htmlContent = data
+                .replaceAll("{{name}}", updatedDoc.postProperty[0].propertyName)
+                .replaceAll("{{address}}", updatedDoc.postProperty[0].address)
+                .replaceAll("{{pUrl}}", updatedDoc.postProperty[0].propertyName.replace(" ", "-"))
+                .replaceAll("{{id}}", id);
+        
         // Send mail with defined transport objec
         let info = await transporter.sendMail({
           from: "support@100acress.com", // Sender address
           to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "Verified Your Property",
-          html: `
-                        <!DOCTYPE html>
-                        <html lang:"en>
-                        <head>
-                        <meta charset:"UTF-8">
-                        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                        <title>Congratulations! Your Property Verified  </title>
-                        </head>
-                        <body>
-                       <p> Congratulations! Your property,${updatedDoc.postProperty[0].propertyName} address ${updatedDoc.postProperty[0].address} , has been successfully verified.
-                        The verification was conducted by 100acress team </p>
-
-                            <p>Please review the details : <a href="http://www.100acress.com">100acress.com</a>
-                            </p>
-                            <p>Thank you!</p>
-                        </body>
-                        </html>
-                `,
+          html: htmlContent,
+          attachments:[
+            {
+              filename: "verified-badge-line.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/verified-badge-line.png"), // Local path to your PNG file
+              cid: "verificationBadge"
+            },
+            {
+              filename: "fblogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+              cid: "fblogo"
+            },
+            {
+              filename: "lnkdlogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+              cid: "lnkdlogo"
+            },
+            {
+              filename: "instalogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+              cid: "instalogo"
+            },
+            {
+              filename: "twlogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+              cid: "twlogo"
+            }
+          ]
         });
       }
 
@@ -1118,6 +1148,7 @@ class PostPropertyController {
   static postProperty_Delete = async (req, res) => {
     try {
       const propertyId = req.params.id;
+      console.log("Property ID:",propertyId)
       const user = await postPropertyModel.findOne({
         "postProperty._id": propertyId,
       });
@@ -1195,61 +1226,52 @@ class PostPropertyController {
           custNumber: custNumber,
           propertyAddress: propertyAddress,
         });
+        const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/ResaleInq.html'), 'utf8');
+        const htmlContent = template.replace('{{agentEmail}}', agentEmail)
+              .replace('{{name}}', custName)
+              .replace('{{email}}', custEmail)
+              .replace('{{customerphone}}', custNumber)
+              .replace('{{agentphone}}', agentNumber)
+              .replace('{{agentemail}}', agentEmail)
+              .replace('{{propertyaddress}}', propertyAddress);
+
         const info = await transporter.sendMail({
           from: "support@100acress.com", // Sender address
-          to: "vinay.aadharhomes@gmail.com",
+          to: `vinay.aadharhomes@gmail.com,${agentEmail}`,
           // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
           subject: "Post Property",
-          html: `
-                      <!DOCTYPE html>
-                      <html lang:"en>
-                      <head>
-                      <meta charset:"UTF-8">
-                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                      <title>New Inquiry on Post-Property </title>
-                      </head>
-                      <body>
-                          <h1>New Lead </h1>
-                          <p>Agent Email Id :${agentEmail}</p>
-                          <p>Agent Number :${agentNumber}</p>
-                          <p>Customer Number:${custNumber}</p>
-                          <p>Customer Email Id:${custEmail}</p>
-                          <p> Inquired Property Address :${propertyAddress}</p>
-                          <p>Please review the details and take necessary actions.</p>
-                          <p>Thank you!</p>
-                      </body>
-                      </html>
-              `,
+          html: htmlContent,
+          attachments:[
+            {
+              filename: "fblogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+              cid: "fblogo"
+            },
+            {
+              filename: "lnkdlogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+              cid: "lnkdlogo"
+            },
+            {
+              filename: "instalogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+              cid: "instalogo"
+            },
+            {
+              filename: "twlogo.png", // Use PNG instead of SVG
+              path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+              cid: "twlogo"
+            }
+          ]
         });
-        const info2 = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: agentEmail,
-          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        // const info2 = await transporter.sendMail({
+        //   from: "support@100acress.com", // Sender address
+        //   to: agentEmail,
+        //   // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
 
-          subject: "Post Property",
-          html: `
-                      <!DOCTYPE html>
-                      <html lang:"en>
-                      <head>
-                      <meta charset:"UTF-8">
-                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                      <title>New Inquiry on Post-Property </title>
-                      </head>
-                      <body>
-                          <h1>New Lead </h1>
-                          <p>Agent Email Id :${agentEmail}</p>
-                          <p>Agent Number :${agentNumber}</p>
-                          <p>Customer Number:${custNumber}</p>
-                          <p>Customer Email Id:${custEmail}</p>
-                          <p> Inquired Property Address :${propertyAddress}</p>
-                          <p>Please review the details and take necessary actions.</p>
-                          <p>Thank you!</p>
-                      </body>
-                      </html>
-              `,
-        });
+        //   subject: "Post Property",
+        //   html: htmlContent,
+        // });
         // await data.save();
         await Promise.all([data.save(), info, info2]);
       } else {
@@ -1280,7 +1302,7 @@ class PostPropertyController {
   };
   // verify email
   static verifyEmail = async (req, res) => {
-    let { email } = req.body;
+    let { email } = req.body;                                                                                      
     if (!email) {
       return res.status(400).json({
         message: "Email is required",
@@ -1294,18 +1316,20 @@ class PostPropertyController {
       const checkEmail = await postPropertyModel.findOne({
         email: emailToLowerCase,
       });
-
       if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy Verified !",
         });
       }
       const otpEmail = await Email_verify.findOne({ email: email });
+
       if (otpEmail) {
+        
         return res.status(409).json({
           message: "check your email otp sent already!",
         });
       }
+
       const transporter = nodemailer.createTransport({
         // SMTP configuration
         host: "smtpout.secureserver.net",
@@ -1322,20 +1346,52 @@ class PostPropertyController {
           pass: "Mission@#2025",
         },
       });
+      const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
+      const username = email.split("@")[0];
+      const htmlContent = template
+                              .replaceAll('{{otp}}', otpNumber)
+                              .replaceAll('{{username}}',username);
+      
+
       const mailOptions = {
         from: "support@100acress.com",
         to: email,
         subject: "Email Verification",
-        text: `Thank you for registering with 100acress.com. We are sending this email only to verify that it is indeed your email address. To complete your registration, verify otp : ${otpNumber}`,
+        html: htmlContent,
+        attachments:[
+          {
+            filename: "fblogo.png", // Use PNG instead of SVG
+            path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+            cid: "fblogo"
+          },
+          {
+            filename: "lnkdlogo.png", // Use PNG instead of SVG
+            path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+            cid: "lnkdlogo"
+          },
+          {
+            filename: "instalogo.png", // Use PNG instead of SVG
+            path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+            cid: "instalogo"
+          },
+          {
+            filename: "twlogo.png", // Use PNG instead of SVG
+            path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+            cid: "twlogo"
+          }
+        ]
       };
       try {
+
         // Send the email using async/await
         let info = await transporter.sendMail(mailOptions);
+
         // If sending the email succeeds, proceed to save the data
         const data = new Email_verify({
           email: email,
           otp: otpNumber,
         });
+        
         await data.save();
         return res.status(200).json({
           message: "Verification email sent and saved successfully!",

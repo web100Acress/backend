@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Password</title>
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css"
+    rel="stylesheet"
+/>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .logo {
+            margin: 0 auto 15px;
+            text-align: center;
+        }
+        .logo-text {
+            background-color: #C13B44;
+            color: white; 
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .icon-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            background-color: #f5f5f5;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .icon-inner {
+            color: #C13B44;
+            font-size: 36px;
+            font-weight: bold;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin: 0 0 5px 0;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            text-align: center;
+            margin-top: 0;
+        }
+        .content {
+            padding: 10px 0;
+        }
+        .btn {
+            display: block;
+            background-color: #f5f5f5;
+            color: white;
+            padding: 14px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 30px auto;
+            font-weight: 600;
+            text-align: center;
+            max-width: 250px;
+        }
+        .reset-link {
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 14px;
+            color: #3f51b5;
+        }
+        .security-notice {
+            background-color: #fff8e1;
+            border-left: 4px solid  #C13B44;
+            padding: 12px 15px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .expiry-notice {
+            font-size: 14px;
+            color: #666;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #888;
+            font-size: 14px;
+        }
+        .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+        .social {
+            margin: 15px 0;
+        }
+        .social a {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            background-color: #f0f0f0;
+            color: #555;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            margin: 0 5px;
+            text-decoration: none;
+            position: relative;
+        }
+        .social img{
+            position: absolute;
+            top: 10%;
+            right: 10%;
+        }
+        #logo{
+            height: 60px;
+            width: 160px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="icon-container">
+            <div class="icon">
+                <div class="icon-inner">🔑</div>
+            </div>
+            <h1>Reset Your Password</h1>
+            <p class="subtitle">We received a request to reset your password</p>
+        </div>
+        
+        <div class="content">
+            <p>Hello {{username}}</p>
+            
+            <p>We received a request to reset the password for your 100acress account. To reset your password, please click on the button below:</p>
+            
+            <a href="https://api.100acress.com/resetpassword/{{token}}" class="btn">Reset Password</a>
+            
+            <p class="expiry-notice"><strong>This link will expire in 30 minutes.</strong></p>
+            
+            <p>If the button above doesn't work, you can paste this link into your browser:</p>
+            
+            <div class="reset-link">https://api.100acress.com/resetpassword/{{token}}</div>
+            
+            <div class="security-notice">
+                <strong>Security Notice:</strong> If you didn't request a password reset, please ignore this email or contact our support team if you believe your account may be compromised.
+            </div>
+            
+            <p class="help-text">Need help? Contact our support team at <a href="mailto:support@100acress.com" style="color: #3f51b5; text-decoration: none;">support@100acress.com</a></p>
+        </div>
+        
+        <div class="footer">
+            <div class="social">
+                <a href="https://www.facebook.com/100Acress" target="_blank"><img src="cid:fblogo" alt="Facebook logo" ></a>
+                <a href="https://www.linkedIn.com/company/100acress/" target="_blank"><img src="cid:lnkdlogo" alt="Linkedin logo" ></a>
+                <a href="https://www.instagram.com/official100acress" target="_blank"><img src="cid:instalogo" alt="Instagra logom" ></a>
+                <a href="https://www.twitter.com/100acressdotcom" target="_blank"><img src="cid:twlogo" alt="Twitter logo" ></a>
+            </div>
+            <p>&copy; 2025 100acress. All rights reserved.</p>
+            <p>
+                <small><a href="#" style="color: #888; text-decoration: none; margin: 0 5px;">Privacy Policy</a> | <a href="#" style="color: #888; text-decoration: none; margin: 0 5px;">Terms of Service</a></small>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

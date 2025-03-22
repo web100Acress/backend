@@ -10,10 +10,10 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-const uploadFFile = (file) => {
+const uploadFFile = async(file) => {
   // Read the file content
   // console.log(file)
-  const fileContent = fs.readFileSync(file.path);
+  const fileContent = await fs.promises.readFile(file.path);
 
   const params = {
     Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
@@ -27,8 +27,8 @@ const uploadFFile = (file) => {
 };
 module.exports = uploadFFile;
 
-const updateFEile = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
+const updateFEile = async(file, objectKey) => {
+  const fileContent = await fs.promises.readFile(file.path);
 
   const params = {
     Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
