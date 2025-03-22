@@ -9,8 +9,8 @@ AWS.config.update({
   region: process.env.AWS_REGION,
 });
 const s3 = new AWS.S3();
-const uploadFile = (file) => {
-  const fileContent = fs.readFileSync(file.path);
+const uploadFile = async(file) => {
+  const fileContent = await fs.promises.readFile(file.path);
 
   const params = {
     Bucket: "100acress-media-bucket",
@@ -77,8 +77,8 @@ const deleteFile = async (fileKey) => {
   }
 };
 
-const updateFile = (file, objectKey) => {
-  const fileContent = fs.readFileSync(file.path);
+const updateFile = async(file, objectKey) => {
+  const fileContent = await fs.promises.readFile(file.path);
   if (objectKey != null) {
     const params = {
       Bucket: "100acress-media-bucket",

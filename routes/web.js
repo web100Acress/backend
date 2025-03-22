@@ -24,6 +24,7 @@ const propertyRoute = require("./property.route");
 const aboutRoute = require("./about.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 
+
 //Router for front home page  controller
 // router.get('/', homeController.home)
 // router for about page

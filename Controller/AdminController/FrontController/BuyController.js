@@ -19,7 +19,7 @@ const {
 
 // const uploadFile=(file)=>{
 
-//     const fileContent=fs.readFileSync(file.path)
+//     const fileContent=fs.promises.readFileSync(file.path)
 
 //     const params={
 //         Bucket:"100acress-media-bucket",
@@ -32,7 +32,7 @@ const {
 
 // }
 // const updateRent = (file, objectKey) => {
-//     const fileContent = fs.readFileSync(file.path);
+//     const fileContent = fs.promises.readFileSync(file.path);
 //     if (objectKey != null) {
 //       const params = {
 //         Bucket: "100acress-media-bucket",
