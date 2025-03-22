@@ -17,7 +17,7 @@ router.post(
 );
 router.get("/logout", PostPropertyController.postPerson_logout);
 router.post("/postProperty_forget", PostPropertyController.postPerson_forget);
-router.post("/reset/:token", PostPropertyController.postPerson_reset);
+router.post("/resetpassword/:token", PostPropertyController.postPerson_reset);
 router.get("/view", PostPropertyController.postPerson_View);
 router.get("/edit/:id", PostPropertyController.postPerson_Edit);
 router.post("/update/:id", PostPropertyController.postPerson_update);
