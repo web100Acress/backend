@@ -17,12 +17,14 @@ const blogSchema = new mongoose.Schema({
   },
   author: {
     type: String,
+    default: "Admin",
   },
   blog_Category: {
     type: String,
   },
   // Using the csdkccn subdocument schema as an array in the main schema
-});
+},{timestamps: true});
+
 
 const blogModel = mongoose.model("Blog", blogSchema);
 

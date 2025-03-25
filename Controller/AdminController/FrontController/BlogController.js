@@ -11,18 +11,20 @@ const fs = require("fs");
 class blogController {
   static blog_insert = async (req, res) => {
     try {
+
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
       }
-      const { blog_Title, author, blog_Description, blog_Category } = req.body;
-      let string_blog_Description = blog_Description[1];
 
+      const { blog_Title, author, blog_Description, blog_Category } = req.body;
+      let string_blog_Description = blog_Description;
       if (
         !blog_Title ||
         !string_blog_Description ||
         !author ||
         !blog_Category
       ) {
+
         return res.status(400).json({ message: "Missing fields" });
       }
       // Upload file to S3
