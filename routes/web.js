@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
+const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -22,6 +23,7 @@ const postPropertyRoute = require("./postProperty.route");
 const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
 const aboutRoute = require("./about.route");
+const blogRoute = require("./blog.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 
 
@@ -101,35 +103,12 @@ router.delete(
 //Property
 //Buy
 router.use("/property", propertyRoute);
-/*router.post("/property/buyInsert",upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]), BuyController.buycommercialInsert);
-// router.get('/property/buy/:type', BuyController.buycommercialView)
-// router.get('/property/buy/:projectName/:type', BuyController.view_Name_type)
-router.get("/property/buy/ViewAll", BuyController.viewAll);
-router.get("/property/view/:id", BuyController.buyView_id);
-router.get("/property/buy/edit/:id", BuyController.buycommercialEdit);
-router.post("/property/buy/update/:id", upload.fields([{name:"frontImage",maxCount:1},{name:"otherImage",maxCount:20}]),BuyController.buycommercialUpdate);
-router.delete("/property/buy/delete/:id", BuyController.buycommercialDelete);
-//rent
-router.post("/property/rentInsert",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentInsert);
-router.get("/property/:id/rentedit", rentController.rentEdit);
-router.get("/property/rent/:id", rentController.rentView_id);
-router.get("/property/:type/rentView", rentController.rentView);
-router.get("/property/viewAll", rentController.rentViewAll);
-router.post("/property/:id/rentUpdate",upload.fields([  { name: "frontImage", maxCount: 1 },   { name: "otherImage", maxCount: 20 }, ]), rentController.rentUpdate);
-router.delete("/property/:id/rentDelete", rentController.rentDelete);
-*/
+
 //About_Page
 //Insert
 
 router.use("/about", aboutRoute);
-/*
-router.post("/about/aboutInsert", aboutController.aboutInsert);
-router.get("/about/:id/aboutView", aboutController.aboutView);
-router.get("/about/viewAll", aboutController.aboutViewAll);
-router.get("/about/:id/aboutEdit", aboutController.aboutEdit);
-router.post("/about/:id/aboutUpdate", aboutController.aboutUpdate);
-router.delete("/about/:id/aboutDelete", aboutController.aboutDelete);
-*/
+
 //testimonial
 
 router.post(
@@ -160,20 +139,22 @@ router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
 //Blog
-router.post(
-  "/blog/insert",
-  upload.single("blog_Image"),
-  blogController.blog_insert,
-);
-router.get("/blog/view", blogController.blog_view);
-router.get("/blog/view/:id", blogController.blog_viewId);
-router.get("/blog/edit/:id", blogController.blog_edit);
-router.put(
-  "/blog/update/:id",
-  upload.single("blog_Image"),
-  blogController.blog_update,
-);
-router.delete("/blog/delete/:id", blogController.blog_delete);
+
+router.use("/blog", blogRoute);
+// router.post(
+//   "/blog/insert",
+//   upload.single("blog_Image"),
+//   blogController.blog_insert,
+// );
+// router.get("/blog/view", blogController.blog_view);
+// router.get("/blog/view/:id", blogController.blog_viewId);
+// router.get("/blog/edit/:id", blogController.blog_edit);
+// router.put(
+//   "/blog/update/:id",
+//   upload.single("blog_Image"),
+//   blogController.blog_update,
+// );
+// router.delete("/blog/delete/:id", blogController.blog_delete);
 
 //Searching routing
 // searching rent and buy
@@ -228,5 +209,6 @@ router.post("/submit", homeController.leadSumbit);
 
 //This route is for admin access to verify admin whether it is admin or not
 router.get("/auth/isAdmin",adminVerify,AuthController.isAdminVerify);
+router.get("/auth/isContentWriter",ContentWriterVerify,AuthController.isContentWriterVerify);
 
 module.exports = router;
