@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const jwtVerification = async (req, res, next) => {
-  console.log("ContentWriterVerifyMiddleware Hit!!!");
+  // console.log("ContentWriterVerifyMiddleware Hit!!!");
   try {
     if (!req.headers.authorization) {
       console.log("No token provided");
