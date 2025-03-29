@@ -10,6 +10,7 @@ router.post(
     upload.single("blog_Image"),
     blogController.blog_insert,
   );
+  router.get("/draft/view", blogController.Draft_view);
   router.get("/view", blogController.blog_view);
   router.get("/view/:id", blogController.blog_viewId);
   router.get("/edit/:id", blogController.blog_edit);
@@ -18,6 +19,11 @@ router.post(
     ContentWriterVerify,
     upload.single("blog_Image"),
     blogController.blog_update,
+  );
+  router.patch(
+    "/update/:id",
+    ContentWriterVerify,
+    blogController.blog_update_ispublished,
   );
   router.delete("/delete/:id",ContentWriterVerify, blogController.blog_delete);
 
