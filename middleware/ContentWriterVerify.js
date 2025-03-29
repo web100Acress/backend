@@ -18,7 +18,7 @@ const jwtVerification = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token_without_quotes, "amitchaudhary100");
-    console.log("Decoded: ",decoded);
+  
 
     if (["ContentWriter", "Admin"].includes(decoded.role)) {
       req.user = decoded;

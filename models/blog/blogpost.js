@@ -22,6 +22,10 @@ const blogSchema = new mongoose.Schema({
   blog_Category: {
     type: String,
   },
+  isPublished: {
+    type: Boolean,
+    default: false,
+  }
   // Using the csdkccn subdocument schema as an array in the main schema
 },{timestamps: true});
 
