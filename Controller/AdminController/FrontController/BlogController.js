@@ -1,3 +1,4 @@
+const { totalmem } = require("os");
 const blogModel = require("../../../models/blog/blogpost");
 const postPropertyModel = require("../../../models/postProperty/post");
 const ObjectId = require("mongodb").ObjectId;
@@ -58,11 +59,19 @@ class blogController {
   static blog_view = async (req, res) => {
     try {
       // res.send("bsdbk.kkjnc cnf")
-      const data = await blogModel.find({isPublished:true});
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+      const skip = (page - 1) * limit;
+
+      const data = await blogModel.find({isPublished:true}).skip(skip).limit(limit);
+      const totalBlogs = await blogModel.countDocuments({isPublished:true});
       if (data) {
         res.status(200).json({
           message: "Data get successfull ! ",
           data,
+          totalPages: Math.floor(totalBlogs / limit),
         });
       } else {
         res.status(200).json({
@@ -79,11 +88,19 @@ class blogController {
   static Draft_view = async (req, res) => {
     try {
       // res.send("bsdbk.kkjnc cnf")
-      const data = await blogModel.find({isPublished:false});
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+
+      const skip = (page - 1) * limit;
+      const data = await blogModel.find({isPublished:false}).skip(skip).limit(limit);
+      const totalDrafts = await blogModel.countDocuments({isPublished:false});
       if (data) {
         return res.status(200).json({
           message: "Data get successfull ! ",
           data,
+          totalPages: Math.floor(totalDrafts/limit)
         });
       } else {
         return res.status(200).json({
