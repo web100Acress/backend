@@ -541,7 +541,7 @@ class PostPropertyController {
       },
       {
         $project: {
-          properties: 1,
+          data: 1,
           total: { $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] },
           totalPages: { $ceil: { $divide: [{ $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] }, limitNumber] } },
           currentPage: page,
