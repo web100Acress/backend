@@ -502,7 +502,7 @@ class PostPropertyController {
         });
       }
       // If cache is empty, fetch from database
-      const aggregatedData = await postPropertyModel.aggregate([
+      const data = await postPropertyModel.aggregate([
         {$unwind:"$postProperty"},
         {
           $facet:{
@@ -541,14 +541,13 @@ class PostPropertyController {
       },
       {
         $project: {
-          data: 1,
+          properties: 1,
           total: { $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] },
           totalPages: { $ceil: { $divide: [{ $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] }, limitNumber] } },
           currentPage: page,
         }
       }
       ]);
-      const data = aggregatedData[0].data;
 
       // Cache the data with an expiration time of 5 minutes
       const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
