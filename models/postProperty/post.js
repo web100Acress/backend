@@ -67,7 +67,9 @@ const property_Schema = new mongoose.Schema({
   propertyLooking: {
     type: String,
   },
-});
+},
+{timestamps:true}
+);
 // Define a text index on propertyName
 property_Schema.index({
   propertyName: "text",

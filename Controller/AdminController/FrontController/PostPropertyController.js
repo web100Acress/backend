@@ -478,6 +478,93 @@ class PostPropertyController {
       });
     }
   };
+  static postPerson_View_AllListedProperty = async (req, res) => {
+    try {
+      // Check cache first
+      const {
+        page  = '1',
+        limit =  '10',
+        sortByField = 'createdAt',
+        sortBy = 'desc',
+      } = req.query;
+
+      const pageNumber = parseInt(page);
+      const limitNumber = parseInt(limit);
+      const skip = (pageNumber - 1) * limitNumber;
+      const sortOrder = sortBy === "desc" ? -1 : 1;
+
+      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}`);
+
+      if (cachedData) {
+        return res.status(200).json({
+          message: "Data from cache",
+          data: cachedData,
+        });
+      }
+      // If cache is empty, fetch from database
+      const aggregatedData = await postPropertyModel.aggregate([
+        {$unwind:"$postProperty"},
+        {
+          $facet:{
+          metadata:[{ $count:"total" }],
+          data:[
+            {
+              $project: {
+                _id: "$postProperty._id", // Include the property's _id if needed
+                frontImage: "$postProperty.frontImage",
+                otherImage: "$postProperty.otherImage",
+                propertyType: "$postProperty.propertyType",
+                propertyName: "$postProperty.propertyName",
+                price: "$postProperty.price",
+                area: "$postProperty.area",
+                availableDate: "$postProperty.availableDate",
+                descripation: "$postProperty.descripation",
+                furnishing: "$postProperty.furnishing",
+                builtYear: "$postProperty.builtYear",
+                amenities: "$postProperty.amenities",
+                landMark: "$postProperty.landMark",
+                type: "$postProperty.type",
+                city: "$postProperty.city",
+                state: "$postProperty.state",
+                address: "$postProperty.address",
+                email: "$postProperty.email",
+                number: "$postProperty.number",
+                verify: "$postProperty.verify",
+                propertyLooking: "$postProperty.propertyLooking"
+              }
+            },
+            { $sort: { [sortByField]: sortOrder } },
+            { $skip: skip },
+            { $limit: limitNumber },
+          ]
+        }
+      },
+      {
+        $project: {
+          data: 1,
+          total: { $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] },
+          totalPages: { $ceil: { $divide: [{ $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] }, limitNumber] } },
+          currentPage: page,
+        }
+      }
+      ]);
+      const data = aggregatedData[0].data;
+
+      // Cache the data with an expiration time of 5 minutes
+      const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+      cache.put(`allProperties-${skip}-${limit}-${sortOrder}`, data, expirationTime);
+
+      return res.status(200).json({
+        message: "Data fetched successfully",
+        data,
+      });
+    } catch (error) {
+      console.error("Error fetching data:", error); // Better logging
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+    }
+  };
   // static postPerson_View = async (req, res) => {
   //     try {
   //         const cachedData = cache.get('allProjects');
