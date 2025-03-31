@@ -39,6 +39,10 @@ const projectSchema = new mongoose.Schema(
         type: String,
         default: "",
       },
+      cdn_url: {
+        type: String,
+        default: "",
+      }
     },
     frontImage: {
       public_id: {
@@ -47,6 +51,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     logo: {
       public_id: {
@@ -55,6 +62,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     project_locationImage: {
       public_id: {
@@ -63,6 +73,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     state: {
       type: String,
@@ -145,6 +158,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     project_Status: {
       type: String,
@@ -167,6 +183,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     projectMaster_plan: {
       public_id: {
@@ -175,6 +194,9 @@ const projectSchema = new mongoose.Schema(
       url: {
         type: String,
       },
+      cdn_url: {
+        type: String,
+      }
     },
     projectGallery: [],
     towerNumber: {

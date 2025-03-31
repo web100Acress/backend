@@ -135,6 +135,8 @@ class projectController {
         projectMaster_plan,
       } = req.files;
 
+      const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
+
       if (
         !projectName &&
         !state &&
@@ -254,38 +256,47 @@ class projectController {
         logo: {
           public_id: logoResult.Key,
           url: logoResult.Location,
+          cdn_url: cloudfrontUrl + logoResult.Key,
         },
         thumbnailImage: {
           public_id: thumbnailResult.Key,
           url: thumbnailResult.Location,
+          cdn_url: cloudfrontUrl + thumbnailResult.Key,
         },
         frontImage: {
           public_id: frontResult.Key,
           url: frontResult.Location,
+          cdn_url: cloudfrontUrl + frontResult.Key,
         },
         project_locationImage: {
           public_id: projectLocationResult.Key,
           url: projectLocationResult.Location,
+          cdn_url: cloudfrontUrl + projectLocationResult.Key,
         },
         highlightImage: {
           public_id: highlightResult.Key,
           url: highlightResult.Location,
+          cdn_url: cloudfrontUrl + highlightResult.Key,
         },
         projectMaster_plan: {
           public_id: projectMasterResult.Key,
           url: projectMasterResult.Location,
+          cdn_url: cloudfrontUrl + projectMasterResult.Key,
         },
         project_Brochure: {
           public_id: project_BrochureResult.Key,
           url: project_BrochureResult.Location,
+          cdn_url: cloudfrontUrl + project_BrochureResult.Key,
         },
         project_floorplan_Image: project_floorplanResult.map((item) => ({
           public_id: item.Key,
           url: item.Location,
+          cdn_url: cloudfrontUrl + item.Key,
         })),
         projectGallery: projectGalleryResult.map((item) => ({
           public_id: item.Key,
           url: item.Location,
+          cdn_url: cloudfrontUrl + item.Key,
         })),
       });
 
@@ -353,7 +364,9 @@ class projectController {
         projectGallery,
         projectMaster_plan,
       } = req.files;
-      console.log(req.body);
+      
+      const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
+
       const id = req.params.id;
       if (isValidObjectId(id)) {
         const update = {};
@@ -366,6 +379,7 @@ class projectController {
           update.logo = {
             public_id: logoResult.Key,
             url: logoResult.Location,
+            cdn_url: cloudfrontUrl + logoResult.Key,
           };
         }
 
@@ -377,6 +391,7 @@ class projectController {
           update.thumbnailImage = {
             public_id: thumbnailImageResult.Key,
             url: thumbnailImageResult.Location,
+            cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
           };
           // console.log("Updated thumbnailImage:", update.thumbnailImage);
         }
@@ -387,6 +402,7 @@ class projectController {
           update.frontImage = {
             public_id: frontResult.Key,
             url: frontResult.Location,
+            cdn_url: cloudfrontUrl + frontResult.Key,
           };
         }
 
@@ -399,6 +415,7 @@ class projectController {
           update.project_locationImage = {
             public_id: locationResult.Key,
             url: locationResult.Location,
+            cdn_url: cloudfrontUrl + locationResult.Key,
           };
         }
 
@@ -411,6 +428,7 @@ class projectController {
           update.highlightImage = {
             public_id: highlightResult.Key,
             url: highlightResult.Location,
+            cdn_url: cloudfrontUrl + highlightResult.Key,
           };
         }
 
@@ -424,6 +442,7 @@ class projectController {
           update.project_Brochure = {
             public_id: brochureResult.Key,
             url: brochureResult.Location,
+            cdn_url: cloudfrontUrl + brochureResult.Key,
           };
         }
 
@@ -437,6 +456,7 @@ class projectController {
           update.projectMaster_plan = {
             public_id: masterResult.Key,
             url: masterResult.Location,
+            cdn_url: cloudfrontUrl + masterResult.Key,
           };
         }
         if (project_floorplan_Image) {
@@ -453,6 +473,7 @@ class projectController {
           update.project_floorplan_Image = floorResult.map((item) => ({
             public_id: item.Key,
             url: item.Location,
+            cdn_url: cloudfrontUrl + item.Key,
           }));
         }
 
@@ -470,6 +491,7 @@ class projectController {
           update.projectGallery = galleryresult.map((item) => ({
             public_id: item.Key,
             url: item.Location,
+            cdn_url: cloudfrontUrl + item.Key,
           }));
         }
         const fieldsToUpdate = [
@@ -511,7 +533,8 @@ class projectController {
             update[field] = req.body[field];
           }
         });
-        console.log(update);
+        
+        console.log("update", update);
 
         const data = await ProjectModel.findByIdAndUpdate({ _id: id }, update);
         await data.save();
