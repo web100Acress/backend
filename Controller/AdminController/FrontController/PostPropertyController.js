@@ -530,7 +530,9 @@ class PostPropertyController {
                 email: "$postProperty.email",
                 number: "$postProperty.number",
                 verify: "$postProperty.verify",
-                propertyLooking: "$postProperty.propertyLooking"
+                propertyLooking: "$postProperty.propertyLooking",
+                createdAt: "$postProperty.createdAt",
+                updatedAt: "$postProperty.updatedAt",
               }
             },
             { $sort: { [sortByField]: sortOrder } },
