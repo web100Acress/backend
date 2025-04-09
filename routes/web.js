@@ -141,20 +141,7 @@ router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 //Blog
 
 router.use("/blog", blogRoute);
-// router.post(
-//   "/blog/insert",
-//   upload.single("blog_Image"),
-//   blogController.blog_insert,
-// );
-// router.get("/blog/view", blogController.blog_view);
-// router.get("/blog/view/:id", blogController.blog_viewId);
-// router.get("/blog/edit/:id", blogController.blog_edit);
-// router.put(
-//   "/blog/update/:id",
-//   upload.single("blog_Image"),
-//   blogController.blog_update,
-// );
-// router.delete("/blog/delete/:id", blogController.blog_delete);
+
 
 //Searching routing
 // searching rent and buy
@@ -163,8 +150,6 @@ router.get("/property/search/:key", homeController.search);
 router.get("/buyproperty/search/:key", homeController.search_buy);
 router.get("/data/filter", homeController.filter_data);
 router.get("/rentproperty/search/:key", homeController.search_rent);
-
-//new launch
 
 //career
 router.post(
