@@ -44,7 +44,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   auth: {
     user: "support@100acress.com",
-    pass: "Mission@#2025",
+    pass: "Mission#@2025",
   },
 });
 const sendResetEmail = async (email, token) => {
@@ -66,7 +66,7 @@ const sendResetEmail = async (email, token) => {
     port: 465,
     auth: {
       user: "support@100acress.com",
-      pass: "Mission@#2025",
+      pass: "Mission#@2025",
     },
   });
   // Send mail with defined transport object
@@ -112,7 +112,7 @@ const sendPostEmail = async (email) => {
     port: 465,
     auth: {
       user: "support@100acress.com",
-      pass: "Mission@#2025",
+      pass: "Mission#@2025",
     },
   });
   // Send mail with defined transport objec
@@ -1075,7 +1075,7 @@ class PostPropertyController {
           port: 465,
           auth: {
             user: "support@100acress.com",
-            pass: "Mission@#2025",
+            pass: "Mission#@2025",
           },
         });
 
@@ -1431,7 +1431,7 @@ class PostPropertyController {
         port: 465,
         auth: {
           user: "support@100acress.com",
-          pass: "Mission@#2025",
+          pass: "Mission#@2025",
         },
       });
       const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
