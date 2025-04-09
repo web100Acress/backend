@@ -518,6 +518,7 @@ class PostPropertyController {
             {
               $project: {
                 _id: "$postProperty._id", // Include the property's _id if needed
+                agentId:"$_id",
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
                 propertyType: "$postProperty.propertyType",
