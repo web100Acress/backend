@@ -15,6 +15,7 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
+const { match } = require("assert");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -486,6 +487,7 @@ class PostPropertyController {
         limit =  '10',
         sortByField = 'createdAt',
         sortBy = 'desc',
+        verify = 'verified',
       } = req.query;
 
       const pageNumber = parseInt(page);
@@ -493,7 +495,7 @@ class PostPropertyController {
       const skip = (pageNumber - 1) * limitNumber;
       const sortOrder = sortBy === "desc" ? -1 : 1;
 
-      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}`);
+      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}-${verify}`);
 
       if (cachedData) {
         return res.status(200).json({
@@ -505,12 +507,18 @@ class PostPropertyController {
       const data = await postPropertyModel.aggregate([
         {$unwind:"$postProperty"},
         {
+          $match:{
+            "postProperty.verify": verify === "verified" ? "verified" : "unverified"
+          }
+        },
+        {
           $facet:{
           metadata:[{ $count:"total" }],
           data:[
             {
               $project: {
                 _id: "$postProperty._id", // Include the property's _id if needed
+                agentId:"$_id",
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
                 propertyType: "$postProperty.propertyType",
@@ -530,6 +538,7 @@ class PostPropertyController {
                 email: "$postProperty.email",
                 number: "$postProperty.number",
                 verify: "$postProperty.verify",
+                isVerified: { $eq:["$postProperty.verify","verified"] },
                 propertyLooking: "$postProperty.propertyLooking",
                 createdAt: "$postProperty.createdAt",
                 updatedAt: "$postProperty.updatedAt",
@@ -566,6 +575,7 @@ class PostPropertyController {
       });
     }
   };
+
   // static postPerson_View = async (req, res) => {
   //     try {
   //         const cachedData = cache.get('allProjects');
