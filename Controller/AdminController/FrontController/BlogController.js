@@ -62,10 +62,12 @@ class blogController {
       const {
         page = 1,
         limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "desc",
       } = req.query;
       const skip = (page - 1) * limit;
 
-      const data = await blogModel.find({isPublished:true}).skip(skip).limit(limit);
+      const data = await blogModel.find({isPublished:true}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
       const totalBlogs = await blogModel.countDocuments({isPublished:true});
       if (data) {
         res.status(200).json({
