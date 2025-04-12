@@ -7,10 +7,11 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
+const {sendOk} = require("../../../Utilities/ApiResponse")
 
 class aboutController {
   static about = async (req, res) => {
-    res.send("about page listen");
+    sendOk(res,"About Page Hitt!!!");
   };
 
   static aboutInsert = async (req, res) => {

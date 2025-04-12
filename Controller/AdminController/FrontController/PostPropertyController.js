@@ -45,7 +45,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   auth: {
     user: "support@100acress.com",
-    pass: "Mission#@2025",
+    pass: "Mission@#2025",
   },
 });
 const sendResetEmail = async (email, token) => {
@@ -67,7 +67,7 @@ const sendResetEmail = async (email, token) => {
     port: 465,
     auth: {
       user: "support@100acress.com",
-      pass: "Mission#@2025",
+      pass: "Mission@#2025",
     },
   });
   // Send mail with defined transport object
@@ -113,7 +113,7 @@ const sendPostEmail = async (email) => {
     port: 465,
     auth: {
       user: "support@100acress.com",
-      pass: "Mission#@2025",
+      pass: "Mission@#2025",
     },
   });
   // Send mail with defined transport objec
@@ -746,7 +746,7 @@ class PostPropertyController {
           availableDate: req.body.availableDate,
           email: email,
           number: number,
-          verify: " ",
+          verify: "unverified",
           agentName: agentName,
           role: role,
           frontImage: {
@@ -1085,7 +1085,7 @@ class PostPropertyController {
           port: 465,
           auth: {
             user: "support@100acress.com",
-            pass: "Mission#@2025",
+            pass: "Mission@#2025",
           },
         });
 
@@ -1313,9 +1313,6 @@ class PostPropertyController {
         propertyAddress,
       } = req.body;
       if (req.body) {
-        res.status(200).json({
-          message: "data sent successfully ! ",
-        });
         const data = new postEnquiryModel({
           agentEmail: agentEmail,
           agentNumber: agentNumber,
@@ -1362,18 +1359,23 @@ class PostPropertyController {
             }
           ]
         });
-        // const info2 = await transporter.sendMail({
-        //   from: "support@100acress.com", // Sender address
-        //   to: agentEmail,
-        //   // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        const info2 = await transporter.sendMail({
+          from: "support@100acress.com", // Sender address
+          to: agentEmail,
+          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
 
-        //   subject: "Post Property",
-        //   html: htmlContent,
-        // });
-        // await data.save();
-        await Promise.all([data.save(), info, info2]);
-      } else {
+          subject: "Post Property",
+          html: htmlContent,
+        });
+
+        const savedData = await data.save();
         return res.status(200).json({
+          message: "We Have Received Your Enquiry! We Will Contact You Soon",
+          data:savedData,
+        });        
+      
+      } else {
+        return res.status(400).json({
           message: "please fill the form !",
         });
       }
@@ -1386,7 +1388,7 @@ class PostPropertyController {
   };
   static postEnquiry_view = async (req, res) => {
     try {
-      const data = await postEnquiryModel.find();
+      const data = await postEnquiryModel.find({});
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1441,7 +1443,7 @@ class PostPropertyController {
         port: 465,
         auth: {
           user: "support@100acress.com",
-          pass: "Mission#@2025",
+          pass: "Mission@#2025",
         },
       });
       const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
