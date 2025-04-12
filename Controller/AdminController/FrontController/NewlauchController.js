@@ -695,7 +695,7 @@ class newlaunchController {
         port: 465,
         auth: {
           user: "support@100acress.com",
-          pass: "Mission#@2025",
+          pass: "Mission@#2025",
         },
       });
       // Send mail with defined transport object
@@ -759,7 +759,7 @@ class newlaunchController {
           port: 465,
           auth: {
             user: "support@100acress.com",
-            pass: "Mission#@2025",
+            pass: "Mission@#2025",
           },
         });
         // Send mail with defined transport objec

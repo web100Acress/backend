@@ -4,19 +4,12 @@ const connectDB = require("./db/connect_db");
 const router = require("./routes/web");
 const Port = process.env.PORT || 3500;
 const rateLimit = require("express-rate-limit");
-const app = express();
-require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const errorHandler = require("./middleware/errorMiddleware");
+const app = express();
+require("dotenv").config();
 
-// For Local Development
-// const https = require('https');
-// const http = require('http');
-// // Add this before your other middleware
-// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-// // Configure axios or other HTTP clients to ignore certificate errors
-// https.globalAgent.options.rejectUnauthorized = false;
 
 // Create a rate limit rule
 const limiter = rateLimit({
@@ -37,7 +30,7 @@ app.use(cors());
 // Apply the rate limit rule to all requests
 app.use(limiter);
 
-// // cloudinary config
+app.use(errorHandler);
 
 
 // Middleware for parsing JSON request bodies
