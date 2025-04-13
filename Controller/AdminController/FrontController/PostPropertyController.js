@@ -15,7 +15,6 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
-const { match } = require("assert");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -174,6 +173,7 @@ const sendPostEmail = async (email) => {
     ]
   });
 };
+
 class PostPropertyController {
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
@@ -487,7 +487,6 @@ class PostPropertyController {
         limit =  '10',
         sortByField = 'createdAt',
         sortBy = 'desc',
-        verify = 'verified',
       } = req.query;
 
       const pageNumber = parseInt(page);
@@ -495,7 +494,7 @@ class PostPropertyController {
       const skip = (pageNumber - 1) * limitNumber;
       const sortOrder = sortBy === "desc" ? -1 : 1;
 
-      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}-${verify}`);
+      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}`);
 
       if (cachedData) {
         return res.status(200).json({
@@ -507,18 +506,12 @@ class PostPropertyController {
       const data = await postPropertyModel.aggregate([
         {$unwind:"$postProperty"},
         {
-          $match:{
-            "postProperty.verify": verify === "verified" ? "verified" : "unverified"
-          }
-        },
-        {
           $facet:{
           metadata:[{ $count:"total" }],
           data:[
             {
               $project: {
                 _id: "$postProperty._id", // Include the property's _id if needed
-                agentId:"$_id",
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
                 propertyType: "$postProperty.propertyType",
@@ -538,10 +531,7 @@ class PostPropertyController {
                 email: "$postProperty.email",
                 number: "$postProperty.number",
                 verify: "$postProperty.verify",
-                isVerified: { $eq:["$postProperty.verify","verified"] },
-                propertyLooking: "$postProperty.propertyLooking",
-                createdAt: "$postProperty.createdAt",
-                updatedAt: "$postProperty.updatedAt",
+                propertyLooking: "$postProperty.propertyLooking"
               }
             },
             { $sort: { [sortByField]: sortOrder } },
@@ -575,7 +565,6 @@ class PostPropertyController {
       });
     }
   };
-
   // static postPerson_View = async (req, res) => {
   //     try {
   //         const cachedData = cache.get('allProjects');
@@ -719,7 +708,9 @@ class PostPropertyController {
     try {
       if (req.files.frontImage && req.files.otherImage) {
         const id = req.params.id;
+        console.log(req.params.id,"id of person")
         const personData = await postPropertyModel.findById({ _id: id });
+        console.log(personData,"personData")
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
@@ -736,6 +727,9 @@ class PostPropertyController {
           city: req.body.city,
           state: req.body.state,
           price: req.body.price,
+          priceunits: req.body.priceunits,
+          bedrooms: req.body.bedrooms,
+          bathrooms: req.body.bathrooms,
           area: req.body.area,
           descripation: req.body.descripation,
           landMark: req.body.landMark,
@@ -759,7 +753,7 @@ class PostPropertyController {
           })),
           propertyLooking: req.body.propertyLooking,
         };
-        // console.log(data)
+
 
         if (id) {
           const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -770,7 +764,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
+          // await sendPostEmail(email);
           res.status(200).json({
             message: "Data pushed successfully ! ",
           });
@@ -826,7 +820,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
+          // await  (email);
           return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
@@ -880,7 +874,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
           // console.log(email, "hello")
-          await sendPostEmail(email);
+          // await sendPostEmail(email);
           return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
