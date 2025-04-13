@@ -1359,14 +1359,14 @@ class PostPropertyController {
             }
           ]
         });
-        const info2 = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: agentEmail,
-          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        // const info2 = await transporter.sendMail({
+        //   from: "support@100acress.com", // Sender address
+        //   to: agentEmail,
+        //   // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
 
-          subject: "Post Property",
-          html: htmlContent,
-        });
+        //   subject: "Post Property",
+        //   html: htmlContent,
+        // });
 
         const savedData = await data.save();
         return res.status(200).json({
