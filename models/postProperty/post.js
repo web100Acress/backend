@@ -19,6 +19,18 @@ const property_Schema = new mongoose.Schema({
   price: {
     type: String,
   },
+  priceunits:{
+    type: String,
+    default:"",
+  },
+  bedrooms:{
+    type: Number,
+    default:0,
+  },
+  bathrooms:{
+    type: Number,
+    default:0,
+  },
   area: {
     type: String,
   },

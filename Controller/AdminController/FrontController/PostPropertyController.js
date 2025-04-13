@@ -15,7 +15,6 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
-const { match } = require("assert");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -45,7 +44,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   auth: {
     user: "support@100acress.com",
-    pass: "Mission#@2025",
+    pass: "Mission@#2025",
   },
 });
 const sendResetEmail = async (email, token) => {
@@ -67,7 +66,7 @@ const sendResetEmail = async (email, token) => {
     port: 465,
     auth: {
       user: "support@100acress.com",
-      pass: "Mission#@2025",
+      pass: "Mission@#2025",
     },
   });
   // Send mail with defined transport object
@@ -100,80 +99,80 @@ const sendResetEmail = async (email, token) => {
     ]
   });
 };
-const sendPostEmail = async (email) => {
-  const transporter = await nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    secure: true,
-    secureConnection: false, // TLS requires secureConnection to be false
-    tls: {
-        ciphers:'SSLv3'
-    },
-    requireTLS:true,
-    debug: true,
-    port: 465,
-    auth: {
-      user: "support@100acress.com",
-      pass: "Mission#@2025",
-    },
-  });
-  // Send mail with defined transport objec
-  let info = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-    subject: "Post Property",
-    html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>New Project Submission</title>
-        </head>
-        <body>
-            <h1>New Project Submission</h1>
-            <p>Hello,</p>
-            <p>A new project has been submitted on your website by : ${email}</p>
-            <p>Please review the details and take necessary actions.</p>
-            <p>Thank you!</p>
-        </body>
-        </html>
-`,
-  });
+// const sendPostEmail = async (email) => {
+//   const transporter = await nodemailer.createTransport({
+//     host: "smtpout.secureserver.net",
+//     secure: true,
+//     secureConnection: false, // TLS requires secureConnection to be false
+//     tls: {
+//         ciphers:'SSLv3'
+//     },
+//     requireTLS:true,
+//     debug: true,
+//     port: 465,
+//     auth: {
+//       user: "support@100acress.com",
+//       pass: "Mission@#2025",
+//     },
+//   });
+//   // Send mail with defined transport objec
+//   let info = await transporter.sendMail({
+//     from: "support@100acress.com", // Sender address
+//     to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+//     subject: "Post Property",
+//     html: `
+//         <!DOCTYPE html>
+//         <html lang:"en>
+//         <head>
+//         <meta charset:"UTF-8">
+//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+//         <title>New Project Submission</title>
+//         </head>
+//         <body>
+//             <h1>New Project Submission</h1>
+//             <p>Hello,</p>
+//             <p>A new project has been submitted on your website by : ${email}</p>
+//             <p>Please review the details and take necessary actions.</p>
+//             <p>Thank you!</p>
+//         </body>
+//         </html>
+// `,
+//   });
 
-  const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
-  const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
-  const propertySubmissionHtmlContent = propertySubmissionData;
+//   const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
+//   const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
+//   const propertySubmissionHtmlContent = propertySubmissionData;
 
-  let info2 = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: email,
-    subject: "Post Property",
-    html: propertySubmissionHtmlContent,
-    attachments:[
-      {
-        filename: "fblogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-        cid: "fblogo"
-      },
-      {
-        filename: "lnkdlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-        cid: "lnkdlogo"
-      },
-      {
-        filename: "instalogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-        cid: "instalogo"
-      },
-      {
-        filename: "twlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-        cid: "twlogo"
-      }
-    ]
-  });
-};
+//   let info2 = await transporter.sendMail({
+//     from: "support@100acress.com", // Sender address
+//     to: email,
+//     subject: "Post Property",
+//     html: propertySubmissionHtmlContent,
+//     attachments:[
+//       {
+//         filename: "fblogo.png", // Use PNG instead of SVG
+//         path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+//         cid: "fblogo"
+//       },
+//       {
+//         filename: "lnkdlogo.png", // Use PNG instead of SVG
+//         path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+//         cid: "lnkdlogo"
+//       },
+//       {
+//         filename: "instalogo.png", // Use PNG instead of SVG
+//         path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+//         cid: "instalogo"
+//       },
+//       {
+//         filename: "twlogo.png", // Use PNG instead of SVG
+//         path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+//         cid: "twlogo"
+//       }
+//     ]
+//   });
+// };
 class PostPropertyController {
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
@@ -487,7 +486,6 @@ class PostPropertyController {
         limit =  '10',
         sortByField = 'createdAt',
         sortBy = 'desc',
-        verify = 'verified',
       } = req.query;
 
       const pageNumber = parseInt(page);
@@ -495,7 +493,7 @@ class PostPropertyController {
       const skip = (pageNumber - 1) * limitNumber;
       const sortOrder = sortBy === "desc" ? -1 : 1;
 
-      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}-${verify}`);
+      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}`);
 
       if (cachedData) {
         return res.status(200).json({
@@ -507,18 +505,12 @@ class PostPropertyController {
       const data = await postPropertyModel.aggregate([
         {$unwind:"$postProperty"},
         {
-          $match:{
-            "postProperty.verify": verify === "verified" ? "verified" : "unverified"
-          }
-        },
-        {
           $facet:{
           metadata:[{ $count:"total" }],
           data:[
             {
               $project: {
                 _id: "$postProperty._id", // Include the property's _id if needed
-                agentId:"$_id",
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
                 propertyType: "$postProperty.propertyType",
@@ -538,10 +530,7 @@ class PostPropertyController {
                 email: "$postProperty.email",
                 number: "$postProperty.number",
                 verify: "$postProperty.verify",
-                isVerified: { $eq:["$postProperty.verify","verified"] },
-                propertyLooking: "$postProperty.propertyLooking",
-                createdAt: "$postProperty.createdAt",
-                updatedAt: "$postProperty.updatedAt",
+                propertyLooking: "$postProperty.propertyLooking"
               }
             },
             { $sort: { [sortByField]: sortOrder } },
@@ -575,7 +564,6 @@ class PostPropertyController {
       });
     }
   };
-
   // static postPerson_View = async (req, res) => {
   //     try {
   //         const cachedData = cache.get('allProjects');
@@ -719,7 +707,9 @@ class PostPropertyController {
     try {
       if (req.files.frontImage && req.files.otherImage) {
         const id = req.params.id;
+        console.log(req.params.id,"id of person")
         const personData = await postPropertyModel.findById({ _id: id });
+        console.log(personData,"personData")
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
@@ -736,6 +726,9 @@ class PostPropertyController {
           city: req.body.city,
           state: req.body.state,
           price: req.body.price,
+          priceunits: req.body.priceunits,
+          bedrooms: req.body.bedrooms,
+          bathrooms: req.body.bathrooms,
           area: req.body.area,
           descripation: req.body.descripation,
           landMark: req.body.landMark,
@@ -746,7 +739,7 @@ class PostPropertyController {
           availableDate: req.body.availableDate,
           email: email,
           number: number,
-          verify: " ",
+          verify: "unverified",
           agentName: agentName,
           role: role,
           frontImage: {
@@ -759,7 +752,7 @@ class PostPropertyController {
           })),
           propertyLooking: req.body.propertyLooking,
         };
-        // console.log(data)
+
 
         if (id) {
           const dataPushed = await postPropertyModel.findOneAndUpdate(
@@ -770,7 +763,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
+          // await sendPostEmail(email);
           res.status(200).json({
             message: "Data pushed successfully ! ",
           });
@@ -826,7 +819,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
+          // await  (email);
           return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
@@ -880,7 +873,7 @@ class PostPropertyController {
 
           const email = dataPushed.email;
           // console.log(email, "hello")
-          await sendPostEmail(email);
+          // await sendPostEmail(email);
           return res.status(200).json({
             message: "Data pushed successfully ! ",
           });
@@ -1085,7 +1078,7 @@ class PostPropertyController {
           port: 465,
           auth: {
             user: "support@100acress.com",
-            pass: "Mission#@2025",
+            pass: "Mission@#2025",
           },
         });
 
@@ -1441,7 +1434,7 @@ class PostPropertyController {
         port: 465,
         auth: {
           user: "support@100acress.com",
-          pass: "Mission#@2025",
+          pass: "Mission@#2025",
         },
       });
       const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
