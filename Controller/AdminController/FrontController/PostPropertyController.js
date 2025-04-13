@@ -908,7 +908,7 @@ class PostPropertyController {
           data,
         });
       } else {
-        return res.status(200).json({
+        return res.status(400).json({
           message: " data not found !",
         });
       }
@@ -1312,6 +1312,7 @@ class PostPropertyController {
         custNumber,
         propertyAddress,
       } = req.body;
+      console.log(req.body);
       if (req.body) {
         const data = new postEnquiryModel({
           agentEmail: agentEmail,
