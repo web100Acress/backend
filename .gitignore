@@ -6,3 +6,4 @@ Migration.js
 test.json
 User.model.js
 Property.model.js
+/logs

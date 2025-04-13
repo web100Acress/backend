@@ -30,7 +30,7 @@ const sendPostEmail = async (email, number, projectName) => {
         port: 465,
         auth: {
           user: "support@100acress.com",
-          pass: "Mission#@2025",
+          pass: "Mission@#2025",
         },
   });
   // Send mail with defined transport objec
@@ -1457,47 +1457,47 @@ static projectSearch = async (req, res) => {
         const emaildata = data.email;
         const project = data.projectName;
 
-        // const transporter = await nodemailer.createTransport({
-        //   host: "smtpout.secureserver.net",
-        //   secure: true,
-        //   secureConnection: false, // TLS requires secureConnection to be false
-        //   tls: {
-        //       ciphers:'SSLv3'
-        //   },
-        //   requireTLS:true,
-        //   debug: true,
-        //   port: 465,
-        //   auth: {
-        //     user: "support@100acress.com",
-        //     pass: "Mission#@2025",
-        //   },
-        // });
+        const transporter = await nodemailer.createTransport({
+          host: "smtpout.secureserver.net",
+          secure: true,
+          secureConnection: false, // TLS requires secureConnection to be false
+          tls: {
+              ciphers:'SSLv3'
+          },
+          requireTLS:true,
+          debug: true,
+          port: 465,
+          auth: {
+            user: "support@100acress.com",
+            pass: "Mission@#2025",
+          },
+        });
 
         //  //Send mail with defined transport objec
-        //  let info = await transporter.sendMail({
-        //    from: "support@100acress.com", // Sender address
-        //    to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-        //    subject: "100acress.com Enquiry",
-        //    html: `
-        //              <!DOCTYPE html>
-        //              <html lang:"en>
-        //              <head>
-        //              <meta charset:"UTF-8">
-        //              <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        //              <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        //              <title>New Enquiry</title>
-        //              </head>
-        //              <body>
-        //                  <h3>Project Enquiry</h3>
-        //                  <p>Customer Name : ${custName}</p>
-        //                  <p>Customer Email Id : ${emaildata}</p>
-        //                  <p>Customer Mobile Number : ${number} </p>
-        //                  <p>ProjectName : ${project}</p>
-        //                  <p>Thank you!</p>
-        //              </body>
-        //              </html>
-        //      `,
-        //  });
+         let info = await transporter.sendMail({
+           from: "support@100acress.com", // Sender address
+           to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+           subject: "100acress.com Enquiry",
+           html: `
+                     <!DOCTYPE html>
+                     <html lang:"en>
+                     <head>
+                     <meta charset:"UTF-8">
+                     <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                     <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                     <title>New Enquiry</title>
+                     </head>
+                     <body>
+                         <h3>Project Enquiry</h3>
+                         <p>Customer Name : ${custName}</p>
+                         <p>Customer Email Id : ${emaildata}</p>
+                         <p>Customer Mobile Number : ${number} </p>
+                         <p>ProjectName : ${project}</p>
+                         <p>Thank you!</p>
+                     </body>
+                     </html>
+             `,
+         });
 
         await data.save();
         return res.status(201).json({

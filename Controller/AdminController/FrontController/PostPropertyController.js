@@ -99,80 +99,81 @@ const sendResetEmail = async (email, token) => {
     ]
   });
 };
-// const sendPostEmail = async (email) => {
-//   const transporter = await nodemailer.createTransport({
-//     host: "smtpout.secureserver.net",
-//     secure: true,
-//     secureConnection: false, // TLS requires secureConnection to be false
-//     tls: {
-//         ciphers:'SSLv3'
-//     },
-//     requireTLS:true,
-//     debug: true,
-//     port: 465,
-//     auth: {
-//       user: "support@100acress.com",
-//       pass: "Mission@#2025",
-//     },
-//   });
-//   // Send mail with defined transport objec
-//   let info = await transporter.sendMail({
-//     from: "support@100acress.com", // Sender address
-//     to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-//     subject: "Post Property",
-//     html: `
-//         <!DOCTYPE html>
-//         <html lang:"en>
-//         <head>
-//         <meta charset:"UTF-8">
-//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-//         <title>New Project Submission</title>
-//         </head>
-//         <body>
-//             <h1>New Project Submission</h1>
-//             <p>Hello,</p>
-//             <p>A new project has been submitted on your website by : ${email}</p>
-//             <p>Please review the details and take necessary actions.</p>
-//             <p>Thank you!</p>
-//         </body>
-//         </html>
-// `,
-//   });
+const sendPostEmail = async (email) => {
+  const transporter = await nodemailer.createTransport({
+    host: "smtpout.secureserver.net",
+    secure: true,
+    secureConnection: false, // TLS requires secureConnection to be false
+    tls: {
+        ciphers:'SSLv3'
+    },
+    requireTLS:true,
+    debug: true,
+    port: 465,
+    auth: {
+      user: "support@100acress.com",
+      pass: "Mission@#2025",
+    },
+  });
+  // Send mail with defined transport objec
+  let info = await transporter.sendMail({
+    from: "support@100acress.com", // Sender address
+    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+    subject: "Post Property",
+    html: `
+        <!DOCTYPE html>
+        <html lang:"en>
+        <head>
+        <meta charset:"UTF-8">
+        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+        <title>New Project Submission</title>
+        </head>
+        <body>
+            <h1>New Project Submission</h1>
+            <p>Hello,</p>
+            <p>A new project has been submitted on your website by : ${email}</p>
+            <p>Please review the details and take necessary actions.</p>
+            <p>Thank you!</p>
+        </body>
+        </html>
+`,
+  });
 
-//   const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
-//   const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
-//   const propertySubmissionHtmlContent = propertySubmissionData;
+  const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
+  const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
+  const propertySubmissionHtmlContent = propertySubmissionData;
 
-//   let info2 = await transporter.sendMail({
-//     from: "support@100acress.com", // Sender address
-//     to: email,
-//     subject: "Post Property",
-//     html: propertySubmissionHtmlContent,
-//     attachments:[
-//       {
-//         filename: "fblogo.png", // Use PNG instead of SVG
-//         path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-//         cid: "fblogo"
-//       },
-//       {
-//         filename: "lnkdlogo.png", // Use PNG instead of SVG
-//         path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-//         cid: "lnkdlogo"
-//       },
-//       {
-//         filename: "instalogo.png", // Use PNG instead of SVG
-//         path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-//         cid: "instalogo"
-//       },
-//       {
-//         filename: "twlogo.png", // Use PNG instead of SVG
-//         path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-//         cid: "twlogo"
-//       }
-//     ]
-//   });
-// };
+  let info2 = await transporter.sendMail({
+    from: "support@100acress.com", // Sender address
+    to: email,
+    subject: "Post Property",
+    html: propertySubmissionHtmlContent,
+    attachments:[
+      {
+        filename: "fblogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+        cid: "fblogo"
+      },
+      {
+        filename: "lnkdlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+        cid: "lnkdlogo"
+      },
+      {
+        filename: "instalogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+        cid: "instalogo"
+      },
+      {
+        filename: "twlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+        cid: "twlogo"
+      }
+    ]
+  });
+};
+
 class PostPropertyController {
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
@@ -1306,9 +1307,6 @@ class PostPropertyController {
         propertyAddress,
       } = req.body;
       if (req.body) {
-        res.status(200).json({
-          message: "data sent successfully ! ",
-        });
         const data = new postEnquiryModel({
           agentEmail: agentEmail,
           agentNumber: agentNumber,
@@ -1355,18 +1353,23 @@ class PostPropertyController {
             }
           ]
         });
-        // const info2 = await transporter.sendMail({
-        //   from: "support@100acress.com", // Sender address
-        //   to: agentEmail,
-        //   // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+        const info2 = await transporter.sendMail({
+          from: "support@100acress.com", // Sender address
+          to: agentEmail,
+          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
 
-        //   subject: "Post Property",
-        //   html: htmlContent,
-        // });
-        // await data.save();
-        await Promise.all([data.save(), info, info2]);
-      } else {
+          subject: "Post Property",
+          html: htmlContent,
+        });
+
+        const savedData = await data.save();
         return res.status(200).json({
+          message: "We Have Received Your Enquiry! We Will Contact You Soon",
+          data:savedData,
+        });        
+      
+      } else {
+        return res.status(400).json({
           message: "please fill the form !",
         });
       }
@@ -1379,7 +1382,7 @@ class PostPropertyController {
   };
   static postEnquiry_view = async (req, res) => {
     try {
-      const data = await postEnquiryModel.find();
+      const data = await postEnquiryModel.find({});
       return res.status(200).json({
         message: "data get successfully !",
         data,
