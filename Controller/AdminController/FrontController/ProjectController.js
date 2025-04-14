@@ -12,54 +12,40 @@ const {
   uploadThumbnailImage
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
+const transporter = require("../../../Utilities/Nodemailer");
 const path = require("path");
-// const mongoose = require("mongoose");
 
 require("dotenv").config();
 
-const sendPostEmail = async (email, number, projectName) => {
-  const transporter = await nodemailer.createTransport({
-        host: "smtpout.secureserver.net",
-        secure: true,
-        secureConnection: false, // TLS requires secureConnection to be false
-        tls: {
-            ciphers:'SSLv3'
-        },
-        requireTLS:true,
-        debug: true,
-        port: 465,
-        auth: {
-          user: "support@100acress.com",
-          pass: "Mission@#2025",
-        },
-  });
-  // Send mail with defined transport objec
-  let info = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-    subject: "Project Enquiry",
-    html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>New Project Submission</title>
-        </head>
-        <body>
-            <h1>New Lead</h1>
-            <h3>A new Enquiry</h3>
-            <p>Customer Email Id : ${email}</p>
-            <p>Customer Mobile Number : ${number} </p>
-            <p>ProjectName : ${projectName}</p>
-            <p>Please review the details and take necessary actions.</p>
-            <p>Thank you!</p>
-        </body>
-        </html>
-`,
-  });
-};
+// const sendPostEmail = async (email, number, projectName) => {
+
+//   // Send mail with defined transport objec
+//   let info = await transporter.sendMail({
+//     from: "support@100acress.com", // Sender address
+//     to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+//     subject: "Project Enquiry",
+//     html: `
+//         <!DOCTYPE html>
+//         <html lang:"en>
+//         <head>
+//         <meta charset:"UTF-8">
+//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+//         <title>New Project Submission</title>
+//         </head>
+//         <body>
+//             <h1>New Lead</h1>
+//             <h3>A new Enquiry</h3>
+//             <p>Customer Email Id : ${email}</p>
+//             <p>Customer Mobile Number : ${number} </p>
+//             <p>ProjectName : ${projectName}</p>
+//             <p>Please review the details and take necessary actions.</p>
+//             <p>Thank you!</p>
+//         </body>
+//         </html>
+// `,
+//   });
+// };
 
 const fetchDataFromDatabase = async () => {
   try {
@@ -1457,52 +1443,46 @@ static projectSearch = async (req, res) => {
         const emaildata = data.email;
         const project = data.projectName;
 
-        const transporter = await nodemailer.createTransport({
-          host: "smtpout.secureserver.net",
-          secure: true,
-          secureConnection: false, // TLS requires secureConnection to be false
-          tls: {
-              ciphers:'SSLv3'
-          },
-          requireTLS:true,
-          debug: true,
-          port: 465,
-          auth: {
-            user: "support@100acress.com",
-            pass: "Mission@#2025",
-          },
-        });
+        //Send mail with defined transport object
+        const emailSuccess = true;
+        try {
+          await transporter.sendMail({
+            from: "support@100acress.com", // Sender address
+            to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+            subject: "100acress.com Enquiry",
+            html: `
+                      <!DOCTYPE html>
+                      <html lang:"en>
+                      <head>
+                      <meta charset:"UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Enquiry</title>
+                      </head>
+                      <body>
+                          <h3>Project Enquiry</h3>
+                          <p>Customer Name : ${custName}</p>
+                          <p>Customer Email Id : ${emaildata}</p>
+                          <p>Customer Mobile Number : ${number} </p>
+                          <p>ProjectName : ${project}</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>
+              `,
+          });
+          
+          emailSuccess = true;
+        } catch (error) {
+          console.log("Error in sending enquiry email",error);
+          emailSuccess = false;
+        }
 
-        //  //Send mail with defined transport objec
-         let info = await transporter.sendMail({
-           from: "support@100acress.com", // Sender address
-           to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-           subject: "100acress.com Enquiry",
-           html: `
-                     <!DOCTYPE html>
-                     <html lang:"en>
-                     <head>
-                     <meta charset:"UTF-8">
-                     <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                     <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                     <title>New Enquiry</title>
-                     </head>
-                     <body>
-                         <h3>Project Enquiry</h3>
-                         <p>Customer Name : ${custName}</p>
-                         <p>Customer Email Id : ${emaildata}</p>
-                         <p>Customer Mobile Number : ${number} </p>
-                         <p>ProjectName : ${project}</p>
-                         <p>Thank you!</p>
-                     </body>
-                     </html>
-             `,
-         });
 
         await data.save();
         return res.status(201).json({
-          message:
-            "User data submitted successfully , and the data has been sent via email",
+          message: emailSuccess
+            ? "User data submitted successfully , and the data has been sent via email"
+            : "User data submitted successfully , but the data has not been sent via email",
           // dataInsert: data
         });
       } else {

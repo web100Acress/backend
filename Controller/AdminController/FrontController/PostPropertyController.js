@@ -15,7 +15,7 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
-const { match } = require("assert");
+const transporter = require("../../../Utilities/Nodemailer");
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -33,21 +33,7 @@ const generateToken = () => {
   // Convert to string and pad with leading zeros if necessary
   return String(otp).padStart(6, "0");
 };
-const transporter = nodemailer.createTransport({
-  host: "smtpout.secureserver.net",
-  secure: true,
-  secureConnection: false, // TLS requires secureConnection to be false
-  tls: {
-      ciphers:'SSLv3'
-  },
-  requireTLS:true,
-  debug: true,
-  port: 465,
-  auth: {
-    user: "support@100acress.com",
-    pass: "Mission@#2025",
-  },
-});
+
 const sendResetEmail = async (email, token) => {
   // Connect with SMTP Gmail
   const htmlPath = path.join(__dirname, "../../../Templates/Email/forget.html");
@@ -55,125 +41,108 @@ const sendResetEmail = async (email, token) => {
   const username = email.split("@")[0];
   const htmlContent = data.replaceAll("{{token}}", token).replaceAll("{{username}}", username);
 
-  const transporter = await nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    secure: true,
-    secureConnection: false, // TLS requires secureConnection to be false
-    tls: {
-        ciphers:'SSLv3'
-    },
-    requireTLS:true,
-    debug: true,
-    port: 465,
-    auth: {
-      user: "support@100acress.com",
-      pass: "Mission@#2025",
-    },
-  });
+  let emailSuccess = true;
   // Send mail with defined transport object
-  let info = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-    subject: "Password Reset",
-    html: htmlContent,
-    attachments:[
-      {
-        filename: "fblogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-        cid: "fblogo"
-      },
-      {
-        filename: "lnkdlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-        cid: "lnkdlogo"
-      },
-      {
-        filename: "instalogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-        cid: "instalogo"
-      },
-      {
-        filename: "twlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-        cid: "twlogo"
-      }
-    ]
-  });
+  try {
+    let info = await transporter.sendMail({
+      from: "support@100acress.com", // Sender address
+      to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+      subject: "Password Reset",
+      html: htmlContent,
+      attachments:[
+        {
+          filename: "fblogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+          cid: "fblogo"
+        },
+        {
+          filename: "lnkdlogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+          cid: "lnkdlogo"
+        },
+        {
+          filename: "instalogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+          cid: "instalogo"
+        },
+        {
+          filename: "twlogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+          cid: "twlogo"
+        }
+      ]
+    });
+  } catch (error) {
+    emailSuccess = false;
+  }
+  return emailSuccess;
 };
 const sendPostEmail = async (email) => {
-  const transporter = await nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    secure: true,
-    secureConnection: false, // TLS requires secureConnection to be false
-    tls: {
-        ciphers:'SSLv3'
-    },
-    requireTLS:true,
-    debug: true,
-    port: 465,
-    auth: {
-      user: "support@100acress.com",
-      pass: "Mission@#2025",
-    },
-  });
-  // Send mail with defined transport objec
-  let info = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-    subject: "Post Property",
-    html: `
-        <!DOCTYPE html>
-        <html lang:"en>
-        <head>
-        <meta charset:"UTF-8">
-        <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-        <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-        <title>New Project Submission</title>
-        </head>
-        <body>
-            <h1>New Project Submission</h1>
-            <p>Hello,</p>
-            <p>A new project has been submitted on your website by : ${email}</p>
-            <p>Please review the details and take necessary actions.</p>
-            <p>Thank you!</p>
-        </body>
-        </html>
-`,
-  });
 
-  const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
-  const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
-  const propertySubmissionHtmlContent = propertySubmissionData;
-
-  let info2 = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: email,
-    subject: "Post Property",
-    html: propertySubmissionHtmlContent,
-    attachments:[
-      {
-        filename: "fblogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-        cid: "fblogo"
-      },
-      {
-        filename: "lnkdlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-        cid: "lnkdlogo"
-      },
-      {
-        filename: "instalogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-        cid: "instalogo"
-      },
-      {
-        filename: "twlogo.png", // Use PNG instead of SVG
-        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-        cid: "twlogo"
-      }
-    ]
-  });
+  let emailSuccess = true;
+  try {
+    let info = await transporter.sendMail({
+      from: "support@100acress.com", // Sender address
+      to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+      subject: "Post Property",
+      html: `
+          <!DOCTYPE html>
+          <html lang:"en>
+          <head>
+          <meta charset:"UTF-8">
+          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+          <title>New Project Submission</title>
+          </head>
+          <body>
+              <h1>New Project Submission</h1>
+              <p>Hello,</p>
+              <p>A new project has been submitted on your website by : ${email}</p>
+              <p>Please review the details and take necessary actions.</p>
+              <p>Thank you!</p>
+          </body>
+          </html>
+  `,
+    });
+  
+    const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
+    const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
+    const propertySubmissionHtmlContent = propertySubmissionData;
+  
+    let info2 = await transporter.sendMail({
+      from: "support@100acress.com", // Sender address
+      to: email,
+      subject: "Post Property",
+      html: propertySubmissionHtmlContent,
+      attachments:[
+        {
+          filename: "fblogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+          cid: "fblogo"
+        },
+        {
+          filename: "lnkdlogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+          cid: "lnkdlogo"
+        },
+        {
+          filename: "instalogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+          cid: "instalogo"
+        },
+        {
+          filename: "twlogo.png", // Use PNG instead of SVG
+          path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+          cid: "twlogo"
+        }
+      ]
+    });
+  } catch (error) {
+    emailSuccess = false;
+  }
+  return emailSuccess;
 };
+
 class PostPropertyController {
   static postPerson_Register = async (req, res) => {
     const session = await mongoose.startSession();
@@ -394,11 +363,16 @@ class PostPropertyController {
           );
           // console.log(token, resetToken, "fhwe");
           await resetToken.save();
-          await sendResetEmail(email, token);
-          // console.log(resetToken, "lhfuiweh");
-          res.status(200).json({
-            message: "Password reset link sent successfully",
-          });
+          const emailSuccess = await sendResetEmail(email, token);
+          if(emailSuccess){
+            return res.status(200).json({
+              message: "Password reset link sent successfully",
+            });
+          }else{
+            return res.status(500).json({
+              message: "Failed to send password reset link",
+            });
+          }
         }
       } else {
         res.status(403).json({
@@ -770,12 +744,12 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
-          res.status(200).json({
-            message: "Data pushed successfully ! ",
+          const emailSuccess = await sendPostEmail(email);
+          return res.status(200).json({
+            message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",
           });
         } else {
-          res.status(200).json({
+          return res.status(400).json({
             message: "user id not found ! ",
           });
         }
@@ -826,9 +800,9 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          await sendPostEmail(email);
+          const emailSuccess = await sendPostEmail(email);
           return res.status(200).json({
-            message: "Data pushed successfully ! ",
+            message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",
           });
         } else {
           return res.status(200).json({
@@ -880,9 +854,9 @@ class PostPropertyController {
 
           const email = dataPushed.email;
           // console.log(email, "hello")
-          await sendPostEmail(email);
+          const emailSuccess = await sendPostEmail(email);
           return res.status(200).json({
-            message: "Data pushed successfully ! ",
+            message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",
           });
         } else {
           return res.status(200).json({
@@ -1072,22 +1046,8 @@ class PostPropertyController {
 
       const agentEmail = updatedDoc.email;
       if (data.postProperty[0].verify !== "verified" && verify == "verified") {
-        console.log("Your property has been verified");
-        const transporter = await nodemailer.createTransport({
-          host: "smtpout.secureserver.net",
-          secure: true,
-          secureConnection: false, // TLS requires secureConnection to be false
-          tls: {
-              ciphers:'SSLv3'
-          },
-          requireTLS:true,
-          debug: true,
-          port: 465,
-          auth: {
-            user: "support@100acress.com",
-            pass: "Mission@#2025",
-          },
-        });
+        // console.log("Your property has been verified");
+
 
         const htmlPath = path.join(__dirname, "../../../Templates/Email/propverification.html");
         const data = await fs.promises.readFile(htmlPath,{encoding: "utf8"});
@@ -1330,51 +1290,57 @@ class PostPropertyController {
               .replace('{{agentphone}}', agentNumber)
               .replace('{{agentemail}}', agentEmail)
               .replace('{{propertyaddress}}', propertyAddress);
-
-        const info = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: `vinay.aadharhomes@gmail.com,${agentEmail}`,
-          // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-          subject: "Post Property",
-          html: htmlContent,
-          attachments:[
-            {
-              filename: "fblogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-              cid: "fblogo"
-            },
-            {
-              filename: "lnkdlogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-              cid: "lnkdlogo"
-            },
-            {
-              filename: "instalogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-              cid: "instalogo"
-            },
-            {
-              filename: "twlogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-              cid: "twlogo"
-            }
-          ]
-        });
-        // const info2 = await transporter.sendMail({
-        //   from: "support@100acress.com", // Sender address
-        //   to: agentEmail,
-        //   // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-
-        //   subject: "Post Property",
-        //   html: htmlContent,
-        // });
+        let emailSuccess = true;
+        try {
+          const info = await transporter.sendMail({
+            from: "support@100acress.com", // Sender address
+            to: `vinay.aadharhomes@gmail.com,${agentEmail}`,
+            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+            subject: "Post Property",
+            html: htmlContent,
+            attachments:[
+              {
+                filename: "fblogo.png", // Use PNG instead of SVG
+                path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+                cid: "fblogo"
+              },
+              {
+                filename: "lnkdlogo.png", // Use PNG instead of SVG
+                path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+                cid: "lnkdlogo"
+              },
+              {
+                filename: "instalogo.png", // Use PNG instead of SVG
+                path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+                cid: "instalogo"
+              },
+              {
+                filename: "twlogo.png", // Use PNG instead of SVG
+                path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+                cid: "twlogo"
+              }
+            ]
+          });
+  
+          const info2 = await transporter.sendMail({
+            from: "support@100acress.com", // Sender address
+            to: agentEmail,
+            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
+  
+            subject: "Post Property",
+            html: htmlContent,
+          });
+        } catch (error) {
+          console.log("Error in sending email: ",error);
+          emailSuccess = false;
+        }
 
         const savedData = await data.save();
+
         return res.status(200).json({
-          message: "We Have Received Your Enquiry! We Will Contact You Soon",
+          message: emailSuccess ?  "We Have Received Your Enquiry! We Will Contact You Soon" : "Enquiry received! We saved your details but there was an issue sending confirmation emails",
           data:savedData,
         });        
-      
       } else {
         return res.status(400).json({
           message: "please fill the form !",
@@ -1431,22 +1397,6 @@ class PostPropertyController {
         });
       }
 
-      const transporter = nodemailer.createTransport({
-        // SMTP configuration
-        host: "smtpout.secureserver.net",
-        secure: true,
-        secureConnection: false, // TLS requires secureConnection to be false
-        tls: {
-            ciphers:'SSLv3'
-        },
-        requireTLS:true,
-        debug: true,
-        port: 465,
-        auth: {
-          user: "support@100acress.com",
-          pass: "Mission@#2025",
-        },
-      });
       const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
       const username = email.split("@")[0];
       const htmlContent = template
