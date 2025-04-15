@@ -463,14 +463,23 @@ class PostPropertyController {
         limit =  '10',
         sortByField = 'createdAt',
         sortBy = 'desc',
+        verify = 'verified',
       } = req.query;
+
+          // Validate sort field
+      const allowedSortFields = ['createdAt', 'price', 'updatedAt'];
+      if (!allowedSortFields.includes(sortByField)) {
+        return res.status(400).json({ message: "Invalid sort field" });
+      }
 
       const pageNumber = parseInt(page);
       const limitNumber = parseInt(limit);
       const skip = (pageNumber - 1) * limitNumber;
       const sortOrder = sortBy === "desc" ? -1 : 1;
 
-      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}`);
+      const isVerified = verify === 'verified' ? 'verified' : 'unverified';
+
+      const cachedData = cache.get(`allProperties-${skip}-${limit}-${sortOrder}-${isVerified}`);
 
       if (cachedData) {
         return res.status(200).json({
@@ -528,7 +537,7 @@ class PostPropertyController {
 
       // Cache the data with an expiration time of 5 minutes
       const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
-      cache.put(`allProperties-${skip}-${limit}-${sortOrder}`, data, expirationTime);
+      cache.put(`allProperties-${skip}-${limit}-${sortOrder}-${isVerified}`, data, expirationTime);
 
       return res.status(200).json({
         message: "Data fetched successfully",
