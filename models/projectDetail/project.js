@@ -145,6 +145,9 @@ const projectSchema = new mongoose.Schema(
     builderName: {
       type: String,
     },
+    paymentPlan: {
+      type: String,
+    },
     AboutDeveloper: {
       type: String,
     },

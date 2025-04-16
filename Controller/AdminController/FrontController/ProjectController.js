@@ -120,6 +120,7 @@ class projectController {
         launchingDate,
         mobileNumber,
         possessionDate,
+        paymentPlan,
         minPrice,
         maxPrice,
       } = req.body;
@@ -249,6 +250,7 @@ class projectController {
         totalLandArea: totalLandArea,
         totalUnit: totalUnit,
         towerNumber: towerNumber,
+        paymentPlan:paymentPlan,
         maxPrice: maxPrice,
         minPrice: minPrice,
         meta_title: meta_title,
@@ -524,6 +526,7 @@ class projectController {
           "launchingDate",
           "mobileNumber",
           "possessionDate",
+          "paymentPlan",
           "minPrice",
           "maxPrice",
         ];
