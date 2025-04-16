@@ -1,7 +1,6 @@
 const postPropertyModel = require("../../../models/postProperty/post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
@@ -14,9 +13,8 @@ const {
   uploadFile,
   deleteFile,
   updateFile,
+  sendEmail
 } = require("../../../Utilities/s3HelperUtility");
-
-const transporter = require("../../../Utilities/Nodemailer");
 
 
 // Function to get all project data and cache it
@@ -46,100 +44,75 @@ const sendResetEmail = async (email, token) => {
   let emailSuccess = true;
   // Send mail with defined transport object
   try {
-    let info = await transporter.sendMail({
-      from: "support@100acress.com", // Sender address
-      to: email, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-      subject: "Password Reset",
-      html: htmlContent,
-      attachments:[
-        {
-          filename: "fblogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-          cid: "fblogo"
-        },
-        {
-          filename: "lnkdlogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-          cid: "lnkdlogo"
-        },
-        {
-          filename: "instalogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-          cid: "instalogo"
-        },
-        {
-          filename: "twlogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-          cid: "twlogo"
-        }
-      ]
-    });
+    const subject = "Password Reset";
+    const attachments = [
+      {
+        filename: "fblogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+        cid: "fblogo"
+      },
+      {
+        filename: "lnkdlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+        cid: "lnkdlogo"
+      },
+      {
+        filename: "instalogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+        cid: "instalogo"
+      },
+      {
+        filename: "twlogo.png", // Use PNG instead of SVG
+        path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+        cid: "twlogo"
+      }
+    ]
+    emailSuccess = await sendEmail(email,"support@100acress.com",[],subject,htmlContent,true)
   } catch (error) {
-    emailSuccess = false;
+    console.log("Error in sending password reset email",error);
   }
   return emailSuccess;
 };
+
+
 const sendPostEmail = async (email) => {
 
   let emailSuccess = true;
+  let emailSuccess1;
+  let emailSuccess2;
+  
   try {
-    let info = await transporter.sendMail({
-      from: "support@100acress.com", // Sender address
-      to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-      subject: "Post Property",
-      html: `
-          <!DOCTYPE html>
-          <html lang:"en>
-          <head>
-          <meta charset:"UTF-8">
-          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-          <title>New Project Submission</title>
-          </head>
-          <body>
-              <h1>New Project Submission</h1>
-              <p>Hello,</p>
-              <p>A new project has been submitted on your website by : ${email}</p>
-              <p>Please review the details and take necessary actions.</p>
-              <p>Thank you!</p>
-          </body>
-          </html>
-  `,
-    });
+    let from = "support@100acress.com";
+    let to = "web.100acress@gmail.com";
+    let subject = "New Project Submission";
+    let html = `<!DOCTYPE html>
+                  <html lang:"en>
+                  <head>
+                  <meta charset:"UTF-8">
+                  <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                  <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                  <title>New Project Submission</title>
+                  </head>
+                  <body>
+                      <h1>New Project Submission</h1>
+                      <p>Hello,</p>
+                      <p>A new project has been submitted on your website by : ${email}</p>
+                      <p>Please review the details and take necessary actions.</p>
+                      <p>Thank you!</p>
+                  </body>
+                  </html>`
+    emailSuccess1 = await sendEmail(to,from,[],subject,html,false);
   
     const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
     const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
     const propertySubmissionHtmlContent = propertySubmissionData;
+
+    emailSuccess2 = await sendEmail(email, from, [], subject, propertySubmissionHtmlContent, true);
+
+    emailSuccess = emailSuccess1 && emailSuccess2;
   
-    let info2 = await transporter.sendMail({
-      from: "support@100acress.com", // Sender address
-      to: email,
-      subject: "Post Property",
-      html: propertySubmissionHtmlContent,
-      attachments:[
-        {
-          filename: "fblogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-          cid: "fblogo"
-        },
-        {
-          filename: "lnkdlogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-          cid: "lnkdlogo"
-        },
-        {
-          filename: "instalogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-          cid: "instalogo"
-        },
-        {
-          filename: "twlogo.png", // Use PNG instead of SVG
-          path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-          cid: "twlogo"
-        }
-      ]
-    });
   } catch (error) {
+    console.log("Error in sending post property email",error);
     emailSuccess = false;
   }
   return emailSuccess;
@@ -1053,9 +1026,6 @@ class PostPropertyController {
 
       const agentEmail = updatedDoc.email;
       if (data.postProperty[0].verify !== "verified" && verify == "verified") {
-        // console.log("Your property has been verified");
-
-
         const htmlPath = path.join(__dirname, "../../../Templates/Email/propverification.html");
         const data = await fs.promises.readFile(htmlPath,{encoding: "utf8"});
         const htmlContent = data
@@ -1064,45 +1034,27 @@ class PostPropertyController {
                 .replaceAll("{{pUrl}}", updatedDoc.postProperty[0].propertyName.replace(" ", "-"))
                 .replaceAll("{{id}}", id);
         
-        // Send mail with defined transport objec
-        let info = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: agentEmail, // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-          subject: "Verified Your Property",
-          html: htmlContent,
-          attachments:[
-            {
-              filename: "verified-badge-line.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/verified-badge-line.png"), // Local path to your PNG file
-              cid: "verificationBadge"
-            },
-            {
-              filename: "fblogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-              cid: "fblogo"
-            },
-            {
-              filename: "lnkdlogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-              cid: "lnkdlogo"
-            },
-            {
-              filename: "instalogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-              cid: "instalogo"
-            },
-            {
-              filename: "twlogo.png", // Use PNG instead of SVG
-              path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-              cid: "twlogo"
-            }
-          ]
-        });
+        // Send mail with AWS
+        let sourceEmail = "support@100acress.com";
+        let to = agentEmail;
+        let subject = "Verified Your Property";
+        let html = htmlContent;
+        let emailSuccess;
+
+        try {
+
+          emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,true);
+        } catch (error) {
+          console.log("Error in sending email",error);
+          emailSuccess = false;
+        }
+
       }
 
       return res.status(200).json({
-        message: "Property updated successfully",
+        message: emailSuccess ? "Property updated successfully" : "Property updated successfully but there was an issue sending confirmation emails",
       });
+
     } catch (error) {
       console.error("Update error:", error);
       return res.status(500).json({ error: "Internal server error!" });
@@ -1299,44 +1251,15 @@ class PostPropertyController {
               .replace('{{propertyaddress}}', propertyAddress);
         let emailSuccess = true;
         try {
-          const info = await transporter.sendMail({
-            from: "support@100acress.com", // Sender address
-            to: `vinay.aadharhomes@gmail.com,${agentEmail}`,
-            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "Post Property",
-            html: htmlContent,
-            attachments:[
-              {
-                filename: "fblogo.png", // Use PNG instead of SVG
-                path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-                cid: "fblogo"
-              },
-              {
-                filename: "lnkdlogo.png", // Use PNG instead of SVG
-                path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-                cid: "lnkdlogo"
-              },
-              {
-                filename: "instalogo.png", // Use PNG instead of SVG
-                path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-                cid: "instalogo"
-              },
-              {
-                filename: "twlogo.png", // Use PNG instead of SVG
-                path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-                cid: "twlogo"
-              }
-            ]
-          });
-  
-          const info2 = await transporter.sendMail({
-            from: "support@100acress.com", // Sender address
-            to: agentEmail,
-            // to:'amit100acre@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-  
-            subject: "Post Property",
-            html: htmlContent,
-          });
+
+          let sourceEmail = "support@100acress.com";
+          let to = agentEmail;
+          let cc = ["vinay.aadharhomes@gmail.com"];
+          let subject = "Post Property";
+          let html = htmlContent;
+          let attachments = true;
+          emailSuccess =  await sendEmail(to,sourceEmail,cc,subject,html,attachments);
+
         } catch (error) {
           console.log("Error in sending email: ",error);
           emailSuccess = false;
@@ -1410,40 +1333,15 @@ class PostPropertyController {
                               .replaceAll('{{otp}}', otpNumber)
                               .replaceAll('{{username}}',username);
       
-
-      const mailOptions = {
-        from: "support@100acress.com",
-        to: email,
-        subject: "Email Verification",
-        html: htmlContent,
-        attachments:[
-          {
-            filename: "fblogo.png", // Use PNG instead of SVG
-            path: path.join(__dirname, "../../../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
-            cid: "fblogo"
-          },
-          {
-            filename: "lnkdlogo.png", // Use PNG instead of SVG
-            path: path.join(__dirname, "../../../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
-            cid: "lnkdlogo"
-          },
-          {
-            filename: "instalogo.png", // Use PNG instead of SVG
-            path: path.join(__dirname, "../../../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
-            cid: "instalogo"
-          },
-          {
-            filename: "twlogo.png", // Use PNG instead of SVG
-            path: path.join(__dirname, "../../../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
-            cid: "twlogo"
-          }
-        ]
-      };
       try {
+        let sourceEmail = "support@100acress.com";
+        let to = email;
+        let subject = "Email Verification";
+        let html = htmlContent;
+        let attachments = true;
 
-        // Send the email using async/await
-        let info = await transporter.sendMail(mailOptions);
-
+        const emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,attachments);
+        console.log("Email sent successfully",emailSuccess);
         // If sending the email succeeds, proceed to save the data
         const data = new Email_verify({
           email: email,

@@ -1,5 +1,6 @@
 const newlaunchModel = require("../../../models/newlaunch/newProject");
 const nodemailer = require("nodemailer");
+const {sendEmail} = require("../../../Utilities/s3HelperUtility");
 class newlaunchController {
   static newlaunch_Insert = async (req, res) => {
     try {
@@ -680,53 +681,30 @@ class newlaunchController {
         paymentPlan,
       } = req.body;
 
-      // const ema=email
-
-      // await sendPostEmail(email,number,projectName)
-      const transporter = await nodemailer.createTransport({
-        host: "smtpout.secureserver.net",
-        secure: true,
-        secureConnection: false, // TLS requires secureConnection to be false
-        tls: {
-            ciphers:'SSLv3'
-        },
-        requireTLS:true,
-        debug: true,
-        port: 465,
-        auth: {
-          user: "support@100acress.com",
-          pass: "Mission#@2025",
-        },
-      });
-      // Send mail with defined transport object
-      let info = await transporter.sendMail({
-        from: "query.aadharhomes@gmail.com", // Sender address
-        to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-        subject: "Shopping Complex Delhi",
-        html: `
-                          <!DOCTYPE html>
-                          <html lang:"en>
-                          <head>
-                          <meta charset:"UTF-8">
-                          <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                          <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                          <title>New Enquiry-Shopping Complex Delhi </title>
-                          </head>
-                          <body>
-                              <h3>Project Enquiry</h3>
-                              <p>Customer Name: ${salutation} ${name} ${lastname}</p>
-                              <p>Customer Email Id: ${email}</p>
-                              <p>Contact Number: ${mobile}</p>
-                              <p>Floor: ${floor}</p>
-                              <p>Area: ${area}</p>
-                              <p>Unit: ${unit}</p>
-                              <p>Payment Plan:${paymentPlan}</p>
-                              <p>Thank you!</p>
-                          </body>
-                          </html>
-                  `,
-      });
-
+      let sourceEmail = "support@100acress.com";
+      let to = "query.aadharhomes@gmail.com";
+      let subject = "100acress Enquiry-Home Page";
+      let html =  `
+                    <!DOCTYPE html>
+                    <html lang:"en>
+                    <head>
+                    <meta charset:"UTF-8">
+                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                    <title>New Enquiry-Shopping Complex Delhi </title>
+                    </head>
+                    <body>
+                        <h3>Project Enquiry</h3>
+                        <p>Customer Name: ${salutation} ${name} ${lastname}</p>
+                        <p>Customer Email Id: ${email}</p>
+                        <p>Contact Number: ${mobile}</p>
+                        <p>Floor: ${floor}</p>
+                        <p>Area: ${area}</p>
+                        <p>Unit: ${unit}</p>
+                        <p>Payment Plan:${paymentPlan}</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>`
       res.status(201).json({
         message:
           "User data submitted successfully , and the data has been sent via email",
@@ -746,28 +724,11 @@ class newlaunchController {
 
       // const ema=email
       if (mobile && username && email) {
-        // await sendPostEmail(email,number,projectName)
-        const transporter = await nodemailer.createTransport({
-          host: "smtpout.secureserver.net",
-          secure: true,
-          secureConnection: false, // TLS requires secureConnection to be false
-          tls: {
-              ciphers:'SSLv3'
-          },
-          requireTLS:true,
-          debug: true,
-          port: 465,
-          auth: {
-            user: "support@100acress.com",
-            pass: "Mission#@2025",
-          },
-        });
-        // Send mail with defined transport objec
-        let info = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-          subject: "100acress.com Enquiry",
-          html: `
+
+        let sourceEmail = "support@100acress.com";
+        let to = "query.aadharhomes@gmail.com";
+        let subject = "100acress.com Enquiry";
+        let html = `
                           <!DOCTYPE html>
                           <html lang:"en>
                           <head>
@@ -785,17 +746,22 @@ class newlaunchController {
                               <p>Thank you!</p>
                           </body>
                           </html>
-                  `,
-        });
+                  `
+        let emailSuccess;
+        try {
+          emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,false);
+        } catch (error) {
+          console.log("Error sending email",error);
+          emailSuccess = false;
+        }
 
         res.status(201).json({
-          message:
-            "User data submitted successfully , and the data has been sent via email",
+          message: emailSuccess ? "User data submitted successfully , and the data has been sent via email" : "User data not submitted successfully , and the data has been not sent via email",
           // dataInsert: data
         });
       } else {
         res.status(403).json({
-          message: "not success",
+          message: "Some field are missing",
         });
       }
     } catch (error) {

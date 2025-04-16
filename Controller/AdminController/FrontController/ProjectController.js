@@ -1,51 +1,20 @@
 const ProjectModel = require("../../../models/projectDetail/project");
 const UserModel = require("../../../models/projectDetail/user");
-// const dotenv = require("dotenv").config();
 const cache = require("memory-cache");
-const nodemailer = require("nodemailer");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
 const {
   uploadFile,
   deleteFile,
   updateFile,
-  uploadThumbnailImage
+  uploadThumbnailImage,
+  sendEmail
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
-const transporter = require("../../../Utilities/Nodemailer");
 const path = require("path");
 
 require("dotenv").config();
 
-// const sendPostEmail = async (email, number, projectName) => {
-
-//   // Send mail with defined transport objec
-//   let info = await transporter.sendMail({
-//     from: "support@100acress.com", // Sender address
-//     to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-//     subject: "Project Enquiry",
-//     html: `
-//         <!DOCTYPE html>
-//         <html lang:"en>
-//         <head>
-//         <meta charset:"UTF-8">
-//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-//         <title>New Project Submission</title>
-//         </head>
-//         <body>
-//             <h1>New Lead</h1>
-//             <h3>A new Enquiry</h3>
-//             <p>Customer Email Id : ${email}</p>
-//             <p>Customer Mobile Number : ${number} </p>
-//             <p>ProjectName : ${projectName}</p>
-//             <p>Please review the details and take necessary actions.</p>
-//             <p>Thank you!</p>
-//         </body>
-//         </html>
-// `,
-//   });
-// };
 
 const fetchDataFromDatabase = async () => {
   try {
@@ -1436,48 +1405,43 @@ static projectSearch = async (req, res) => {
           projectName: projectName,
           address: address,
         });
-        // const email = data.email
-        // const number = data.mobile
-        // const projectName=data.projectName
-        // await sendPostEmail(email,number,projectName)
 
         const custName = data.name;
         const number = data.mobile;
         const emaildata = data.email;
         const project = data.projectName;
 
-        //Send mail with defined transport object
-        const emailSuccess = true;
+        //Send mail with AWS SES
+        let emailSuccess;
         try {
-          await transporter.sendMail({
-            from: "support@100acress.com", // Sender address
-            to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-            subject: "100acress.com Enquiry",
-            html: `
-                      <!DOCTYPE html>
-                      <html lang:"en>
-                      <head>
-                      <meta charset:"UTF-8">
-                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                      <title>New Enquiry</title>
-                      </head>
-                      <body>
-                          <h3>Project Enquiry</h3>
-                          <p>Customer Name : ${custName}</p>
-                          <p>Customer Email Id : ${emaildata}</p>
-                          <p>Customer Mobile Number : ${number} </p>
-                          <p>ProjectName : ${project}</p>
-                          <p>Thank you!</p>
-                      </body>
-                      </html>
-              `,
-          });
+
+          let html = `<!DOCTYPE html>
+                    <html lang:"en>
+                    <head>
+                    <meta charset:"UTF-8">
+                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                    <title>New Enquiry</title>
+                    </head>
+                    <body>
+                        <h3>Project Enquiry</h3>
+                        <p>Customer Name : ${custName}</p>
+                        <p>Customer Email Id : ${emaildata}</p>
+                        <p>Customer Mobile Number : ${number} </p>
+                        <p>ProjectName : ${project}</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>`
+          const to = "query.aadharhomes@gmail.com";
+          const cc = ["anshuman.100acress@gmail.com"];
+          const sourceEmail = "support@100acress.com";
+          const subject = "100acress.com Enquiry";
           
-          emailSuccess = true;
+          emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
+
+          console.log("Email sent successfully", emailSuccess);
         } catch (error) {
           console.log("Error in sending enquiry email",error);
-          emailSuccess = false;
         }
 
 
@@ -1500,55 +1464,7 @@ static projectSearch = async (req, res) => {
       });
     }
   };
-  // Enquiry viewAll
-  // static userViewAll = async (req, res) => {
-  //   // console.log("hello")
-  //   try {
-  //     // console.log("hellcadco")
 
-  //     const data = await UserModel.find();
-  //     if (data) {
-  //       res.status(200).json({
-  //         message: "data get successfully !",
-  //         data: data,
-  //       });
-  //     } else {
-  //       res.status(200).json({
-  //         message: "data not found ! ",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({
-  //       message: "Internal server error ! ",
-  //     });
-  //   }
-  // };
-  // static userViewAll = async (req, res) => {
-  //   try {
-  //     // Check if data is in cache
-  //     const cacheData = cache.get('projectEnquiry');
-  //     if (cacheData) {
-  //       return res.status(200).json({
-  //         message: "Data retrieved successfully from cache!",
-  //         data: cacheData,
-  //       });
-  //     }
-  //     // If data is not in cache, fetch from database
-  //     const data = await UserModel.find();
-  //     const expirationTime = 5 * 60 * 1000;
-  //     cache.put('projectEnquiry', data, expirationTime);
-  //     res.status(200).json({
-  //       message: "Data retrieved successfully from database!",
-  //       data: data,
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).json({
-  //       message: "Internal server error!",
-  //     });
-  //   }
-  // };
   // Enquiry user detail view
   static userViewDetail = async (req, res) => {
     // console.log("hello")

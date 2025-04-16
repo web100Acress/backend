@@ -3,51 +3,9 @@
 const contactModel = require("../../../models/contact");
 const nodemailer = require("nodemailer");
 const contactPagedetailModel = require("../../../models/contactdetail");
+const {sendEmail} = require("../../../Utilities/s3HelperUtility");
 
-// const sendPostEmail = async (email ,mobile) => {
-//     const transporter = await nodemailer.createTransport({
-//         service:'gmail',
-//         port:465,
-//         secure:true,
-//         logger:false,
-//         debug:true,
-//         secureConnection:false,
-//         auth: {
-//             // user: process.env.Email,
-//             //pass: process.env.EmailPass
-//             user:"web.100acress@gmail.com",
-//             pass:"txww gexw wwpy vvda"
-//         },
-//         tls:{
-//             rejectUnAuthorized:true
-//         }
-//     });
-//     // Send mail with defined transport objec
-//     let info = await transporter.sendMail({
-//         from: 'amit100acre@gmail.com', // Sender address
-//         to: 'query.aadharhomes@gmail.com', // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-//         subject: 'Project Enquiry',
-//         html: `
-//         <!DOCTYPE html>
-//         <html lang:"en>
-//         <head>
-//         <meta charset:"UTF-8">
-//         <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-//         <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-//         <title>New Customer Message </title>
-//         </head>
-//         <body>
-//             <h1>Customer Message</h1>
-//             <p>A new Enquiry : ${email}</p>
-//             <p>A new Enquiry : ${mobile}</p>
-//             <p>Please review the details and take necessary actions.</p>
-//             <p>Thank you!</p>
-//         </body>
-//         </html>
-// `
-//     });
 
-// }
 
 class contactController {
   static contact = async (req, res) => {
@@ -79,49 +37,36 @@ class contactController {
         const custMobile = userData.mobile;
         const custMessage = userData.message;
 
-        //   await sendPostEmail(email,mobile)
-        const transporter = await nodemailer.createTransport({
-          host: "smtpout.secureserver.net",
-          secure: true,
-          secureConnection: false, // TLS requires secureConnection to be false
-          tls: {
-              ciphers:'SSLv3'
-          },
-          requireTLS:true,
-          debug: true,
-          port: 465,
-          auth: {
-            user: "support@100acress.com",
-            pass: "Mission#@2025",
-          },
-        });
-        // Send mail with defined transport objec
-        let info = await transporter.sendMail({
-          from: "support@100acress.com", // Sender address
-          to: "query.aadharhomes@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com' email
-          subject: "100acress Enquiry-Home Page",
-          html: `
-            <!DOCTYPE html>
-            <html lang:"en>
-            <head>
-            <meta charset:"UTF-8">
-            <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-            <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-            <title>New Customer Message </title>
-            </head>
-            <body>
-                <p>Customer Name : ${custName}</p>
-                <p>Customer Email : ${custEmail}</p>
-                <p>Customer Mobile : ${custMobile}</p>
-                <p>Customer Message : ${custMessage}</p>
-                <p>Thank you!</p>
-            </body>
-            </html>
-    `,
-        });
+        let sourceEmail = "support@100acress.com";
+        let to = "query.aadharhomes@gmail.com";
+        let subject = "100acress Enquiry-Home Page";
+        let html = `<!DOCTYPE html>
+                      <html lang:"en>
+                      <head>
+                      <meta charset:"UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Customer Message </title>
+                      </head>
+                      <body>
+                          <p>Customer Name : ${custName}</p>
+                          <p>Customer Email : ${custEmail}</p>
+                          <p>Customer Mobile : ${custMobile}</p>
+                          <p>Customer Message : ${custMessage}</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>`
+        try {
+          const emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,false);
+          console.log("Email sent successfully",emailSuccess);
+        } catch (error) {
+          console.log("Error sending email",error);
+          emailSuccess = false;
+        }
+
 
         res.status(200).json({
-          message: "your message send !",
+          message: emailSuccess ? "your message send !" : "your message not send !",
           data: userData,
         });
       } else {
