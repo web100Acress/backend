@@ -3,12 +3,16 @@ const AWS = require("aws-sdk");
 const {Stream} = require("stream");
 const path = require("path");
 const {compressImage} = require("./ImageResizer");
+const nodemailer = require("nodemailer");
 AWS.config.update({
   secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
   accessKeyId: process.env.AWS_S3_ACCESS_KEY,
   region: process.env.AWS_REGION,
 });
+
 const s3 = new AWS.S3();
+const SES = new AWS.SES();
+
 const uploadFile = async(file) => {
   const fileContent = await fs.promises.readFile(file.path);
 
@@ -20,6 +24,7 @@ const uploadFile = async(file) => {
   };
   return s3.upload(params).promise();
 };
+
 const uploadThumbnailImage = async(file) => {
   try {
 
@@ -61,6 +66,7 @@ const uploadThumbnailImage = async(file) => {
     throw error; // Let the caller handle the error
   }
 };
+
 const deleteFile = async (fileKey) => {
   const params = {
     Bucket: "100acress-media-bucket",
@@ -124,4 +130,86 @@ const getS3File = async(objectKey) => {
   }
 };
 
-module.exports = { uploadFile, deleteFile, updateFile, getS3File, uploadThumbnailImage };
+const sendEmail = async (to, sourceEmail , cc = [], subject, html, attachments = true ) => {
+
+  const EmailAttachments = [
+    {
+      filename: "fblogo.png", // Use PNG instead of SVG
+      path: path.join(__dirname, "../Templates/Email/Icons/facebook-circle-fill.png"), // Local path to your PNG file
+      cid: "fblogo"
+    },
+    {
+      filename: "lnkdlogo.png", // Use PNG instead of SVG
+      path: path.join(__dirname, "../Templates/Email/Icons/linkedin-box-fill.png"), // Local path to your PNG file
+      cid: "lnkdlogo"
+    },
+    {
+      filename: "instalogo.png", // Use PNG instead of SVG
+      path: path.join(__dirname, "../Templates/Email/Icons/instagram-fill.png"), // Local path to your PNG file
+      cid: "instalogo"
+    },
+    {
+      filename: "twlogo.png", // Use PNG instead of SVG
+      path: path.join(__dirname, "../Templates/Email/Icons/twitter-x-line.png"), // Local path to your PNG file
+      cid: "twlogo"
+    }
+  ]
+
+  const transporter = nodemailer.createTransport({
+    SES:{
+      ses:SES,
+      aws:AWS
+    }
+  });
+
+  const mailOptions = {
+    from: sourceEmail,
+    to: to,
+    cc: cc.length > 0 ? cc.join(',') : undefined,
+    subject: subject,
+    html: html,
+    attachments: attachments ? EmailAttachments : []
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully : ", result.envelope.from, result.envelope.to);
+    return true;
+  } catch (error) {
+    console.error("Error sending email", error);
+    return false;
+  }
+  
+  // const params = {
+
+  //   Destination:{
+  //     ToAddresses: [to],
+  //     CcAddresses: [...cc],
+  //   },
+  //   Message:{
+  //     Body:{
+  //       Html:{
+  //         Charset: "UTF-8",
+  //         Data: html
+  //       }
+  //     },
+  //     Subject:{
+  //       Charset: "UTF-8",
+  //       Data: subject
+  //     },
+  //     Attachments: [...attachments]
+  //   },
+  //   Source: sourceEmail,
+  // }
+  // try {
+  //   const result = await SES.sendEmail(params).promise();
+  //   console.log("Email sent successfully", result);
+  //   return true;
+  // }
+  // catch (error) {
+  //   console.error("Error sending email", error);
+  //   return false;
+  // }
+}
+
+module.exports = { uploadFile, deleteFile, updateFile, getS3File, uploadThumbnailImage, sendEmail };

@@ -1,17 +1,13 @@
 const postPropertyModel = require("../../../models/postProperty/post");
-const buyCommercial_Model = require("../../../models/property/buyCommercial");
 const rent_Model = require("../../../models/property/rent");
 const NodeCache = require("node-cache");
-const cache = new NodeCache();
-const nodemailer = require("nodemailer");
-const fs = require("fs");
-const path = require("path");
 const AWS = require("aws-sdk");
 const { isValidObjectId } = require("mongoose");
 const {
   uploadFile,
   deleteFile,
   updateFile,
+  sendEmail
 } = require("../../../Utilities/s3HelperUtility");
 // const { url } = require("inspector");
 require("dotenv").config();
@@ -22,46 +18,6 @@ AWS.config.update({
   region: process.env.AWS_REGION,
 });
 
-const sendPostEmail = async (email) => {
-  const transporter = await nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    secure: true,
-    secureConnection: false, // TLS requires secureConnection to be false
-    tls: {
-        ciphers:'SSLv3'
-    },
-    requireTLS:true,
-    debug: true,
-    port: 465,
-    auth: {
-      user: "support@100acress.com",
-      pass: "Mission#@2025",
-    }
-  });
-  // Send mail with defined transport object
-  let info = await transporter.sendMail({
-    from: "support@100acress.com", // Sender address
-    to: "web.100acress@gmail.com", // List of receivers (admin's email) =='query.aadharhomes@gmail.com'
-    subject: "New User Enquiry Detail", // Subject line
-    text: "", // Plain text body
-    html: `
-       <div class="card">
-        <div>
-       <div class="header">
-       <h2>Customer Contact Detail</h2>
-       </div>
-       </div>
-       <center>
-       <div>  Customer Contact  Detail:</div>
-   
-       <center>
-   
-        <br>
-   
-        </div>
-   `,
-  });
-};
 
 class rentController {
   //Insert
