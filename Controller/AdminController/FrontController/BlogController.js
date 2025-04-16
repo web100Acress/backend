@@ -73,7 +73,7 @@ class blogController {
         res.status(200).json({
           message: "Data get successfull ! ",
           data,
-          totalPages: Math.floor(totalBlogs / limit),
+          totalPages: Math.ceil(totalBlogs / limit),
         });
       } else {
         res.status(200).json({
@@ -102,7 +102,7 @@ class blogController {
         return res.status(200).json({
           message: "Data get successfull ! ",
           data,
-          totalPages: Math.floor(totalDrafts/limit)
+          totalPages: Math.ceil(totalDrafts/limit)
         });
       } else {
         return res.status(200).json({

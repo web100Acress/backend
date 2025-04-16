@@ -1,59 +1,15 @@
 const postPropertyModel = require("../../../models/postProperty/post");
 const buyCommercial_Model = require("../../../models/property/buyCommercial");
-const NodeCache = require("node-cache");
 const cache = require("memory-cache");
 require("dotenv").config();
 
-const { isValidObjectId } = require("mongoose");
+const { isValidObjectId, default: mongoose } = require("mongoose");
+
 const {
   uploadFile,
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
-// AWS.config.update({
-//     secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-//     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-//     region: process.env.AWS_REGION,
-// })
-// const s3=new AWS.S3()
-
-// const uploadFile=(file)=>{
-
-//     const fileContent=fs.promises.readFileSync(file.path)
-
-//     const params={
-//         Bucket:"100acress-media-bucket",
-//         Body:fileContent,
-//         Key:`uploads/${Date.now()}-${file.originalname}`,
-//         ContentType:file.mimetype
-
-//     }
-//     return s3.upload(params).promise();
-
-// }
-// const updateRent = (file, objectKey) => {
-//     const fileContent = fs.promises.readFileSync(file.path);
-//     if (objectKey != null) {
-//       const params = {
-//         Bucket: "100acress-media-bucket",
-//         Key: objectKey,
-//         Body: fileContent,
-//         ContentType: file.mimetype,
-//       };
-//       return s3.upload(params).promise();
-//     } else {
-//       const params = {
-//         Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-//         Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-//         Body: fileContent,
-//         ContentType: file.mimetype,
-//       };
-
-//       // Return the promise from s3.upload
-//       return s3.upload(params).promise();
-//     }
-//   };
-
 class BuyController {
   // Buy Commercial Insert Edit View Update Delete
   static buycommercialInsert = async (req, res) => {
@@ -262,32 +218,40 @@ class BuyController {
   static buyView_id = async (req, res) => {
     try {
       const id = req.params.id;
+      console.log(id, "id");
 
       if (id) {
-        const data = await buyCommercial_Model.findById({ _id: id });
-
-        const postData = await postPropertyModel.findOne(
-          { "postProperty._id": id },
+        const postData = await postPropertyModel.aggregate([
           {
-            postProperty: {
-              $elemMatch: {
-                _id: id,
-              },
-            },
+            $match: {
+              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id) // Match parent documents containing the target array element
+            }
           },
-        );
-
-        if (data) {
-          res.status(200).json({
-            message: "data get successfully !! ",
-            data,
-          });
-        } else {
-          res.status(200).json({
-            message: "data get  successfully ! ",
-            postData,
-          });
-        }
+          {
+            $unwind: "$postProperty"
+          },
+          {
+            $match: {
+              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id) // Match parent documents containing the target array element
+            }
+          },
+          {
+            $project:{
+              agentId: "$_id",
+              agentName: "$name",
+              agentEmail: "$email",
+              agentNumber: "$postProperty.number",
+              postProperty: "$postProperty"
+            }
+          }
+        ]);
+        
+      console.log(postData[0], "postData");
+      res.status(200).json({
+        message: "data get  successfully ! ",
+        data:postData[0],
+      });
+        
       } else {
         res.status(404).json({
           message: "id does not found in url !",
@@ -300,27 +264,6 @@ class BuyController {
       });
     }
   };
-
-  //    res.send('search with name and type')
-  // static view_Name_type = async (req, res) => {
-  //     try {
-
-  //         const propertyName = req.params.propertyName;
-  //         const type = req.params.type;
-  //         const query = { propertyName: propertyName, type: type };
-  //         const data = await buyCommercial_Model.find(query)
-  //         res.status(200).json({
-  //             message: "data get succesfull",
-  //             data: data
-  //         })
-
-  //     } catch (error) {
-  //         console.log(error)
-  //         res.status(500).json({
-  //             message: "something went wrong ! ",
-  //         })
-  //     }
-  // }
 
   static buycommercialEdit = async (req, res) => {
     try {
