@@ -53,8 +53,8 @@ router.delete(
 
 //from
 router.post("/userInsert", projectController.userInsert);
-router.get("/userViewAll", projectController.userViewAll);
-router.get("/userViewAll/dowloadData", projectController.enquiryDownload);
+router.get("/userViewAll",adminVerify, projectController.userViewAll);
+router.get("/userViewAll/dowloadData",adminVerify, projectController.enquiryDownload);
 router.get("/userviewDetail/:id", projectController.userViewDetail);
 router.post("/userUpdate/:id", projectController.userUpdate);
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete);
