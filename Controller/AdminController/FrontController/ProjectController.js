@@ -1433,7 +1433,7 @@ static projectSearch = async (req, res) => {
                     </body>
                     </html>`
           const to = "query.aadharhomes@gmail.com";
-          const cc = ["anshuman.100acress@gmail.com"];
+          const cc = ["officialhunderedacress@gmail.com"];
           const sourceEmail = "support@100acress.com";
           const subject = "100acress.com Enquiry";
           
