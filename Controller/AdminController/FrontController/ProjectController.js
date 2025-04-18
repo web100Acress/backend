@@ -1604,7 +1604,7 @@ static projectSearch = async (req, res) => {
         });
       }
       // If data is not in cache, fetch from database
-      const data = await UserModel.find().skip(skip).limit(limit);
+      const data = await UserModel.find().skip(skip).limit(limit).sort({ createdAt: -1 });
       const fileName = `EnquiryDate page-${page} ${Date.now()}`;
 
       // Calculate cache expiration time (5 minutes in milliseconds)
@@ -1677,7 +1677,7 @@ static projectSearch = async (req, res) => {
       } else {
         // If data is not in cache, fetch from the database
         console.log("Fetching data from database");
-        const data = await UserModel.find().lean().skip(skip).limit(limit);
+        const data = await UserModel.find().lean().skip(skip).limit(limit).sort({ createdAt: -1 });
         // Cache the fetched data for 5 minutes
         const expirationTime = 5 * 60 * 1000;
         cache.put(cacheKey, data, expirationTime);

@@ -464,6 +464,11 @@ class PostPropertyController {
       const data = await postPropertyModel.aggregate([
         {$unwind:"$postProperty"},
         {
+          $match:{
+          "postProperty.verify": isVerified,
+          }
+        },
+        {
           $facet:{
           metadata:[{ $count:"total" }],
           data:[
