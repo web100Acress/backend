@@ -16,7 +16,7 @@ class AuthController {
     }
     static isContentWriterVerify = async (req, res) => {
         const ContentWriterDetails = req.user;
-        if (ContentWriterDetails.role == "ContentWriter") {
+        if (ContentWriterDetails.role == "ContentWriter" || ContentWriterDetails.role == "Admin") {
             return res.status(200).json({
                 success: true,
                 message: "ContentWriter is verified !",
