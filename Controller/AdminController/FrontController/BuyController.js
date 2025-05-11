@@ -169,6 +169,9 @@ class BuyController {
             "postProperty.propertyLooking": "Sell"
           }
         },
+        {
+          $sort: {"postProperty.createdAt":-1}
+        },
         // Step 2: Project only the fields from postProperty (excluding other user-related fields)
         {
           $project: {
