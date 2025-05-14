@@ -1033,6 +1033,8 @@ class PostPropertyController {
       }
 
       const agentEmail = updatedDoc.email;
+      let emailSuccess;
+
       if (data.postProperty[0].verify !== "verified" && verify == "verified") {
         const htmlPath = path.join(__dirname, "../../../Templates/Email/propverification.html");
         const data = await fs.promises.readFile(htmlPath,{encoding: "utf8"});
@@ -1047,7 +1049,7 @@ class PostPropertyController {
         let to = agentEmail;
         let subject = "Verified Your Property";
         let html = htmlContent;
-        let emailSuccess;
+
 
         try {
 
