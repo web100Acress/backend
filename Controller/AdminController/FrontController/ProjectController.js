@@ -1,6 +1,7 @@
 const ProjectModel = require("../../../models/projectDetail/project");
 const UserModel = require("../../../models/projectDetail/user");
 const cache = require("memory-cache");
+const mongoose = require("mongoose");
 const { isValidObjectId } = require("mongoose");
 const fs = require("fs");
 const {
@@ -1364,14 +1365,17 @@ static projectSearch = async (req, res) => {
   static bhk_delete = async (req, res) => {
     try {
       const id = req.params.id;
+      const bhkObjectId = new mongoose.Types.ObjectId(id);
+
       if (id) {
-        const update = {
-          $pull: {
-            BhK_Details: { _id: id },
-          },
-        };
         // console.log(id)
-        const data = await ProjectModel.updateOne(update);
+        const data = await ProjectModel.updateOne(
+          { "BhK_Details._id": bhkObjectId },
+          { $pull: { BhK_Details: { _id: bhkObjectId } } }
+        );
+        if (data.matchedCount === 0) {
+          return res.status(404).json({ message: "BHK entry not found!" });
+        }
         return res.status(200).json({
           message: "Delete successful!",
           data,
