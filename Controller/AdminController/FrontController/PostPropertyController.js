@@ -475,6 +475,7 @@ class PostPropertyController {
           data:[
             {
               $project: {
+                name: "$name",
                 _id: "$postProperty._id", // Include the property's _id if needed
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
@@ -863,7 +864,9 @@ class PostPropertyController {
   static postProperty_View = async (req, res) => {
     try {
       const id = req.params.id;
-      const data = await postPropertyModel.findById({ _id: id });
+      const data = await postPropertyModel.findById({ _id: id }).select(
+        "-password -token -__v -verify -createdAt -updatedAt -emailVerified -role",
+      );
       if (data) {
         return res.status(200).json({
           message: "All project Data get  !",
