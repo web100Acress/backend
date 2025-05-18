@@ -695,7 +695,12 @@ static projectSearch = async (req, res) => {
     if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
     if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
 
-    const cacheKey = JSON.stringify(query);
+    const cacheKey = JSON.stringify({
+      query,
+      page: parseInt(page),
+        limit: parseInt(limit),
+        sort: sort || '-createdAt'
+  });
 
     // Check if result exists in cache
     const cachedResult = cache.get(cacheKey);
