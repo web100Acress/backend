@@ -788,6 +788,8 @@ class PostPropertyController {
           const email = dataPushed.email;
 
           const emailSuccess = await sendPostEmail(email);
+          //Clear all the cache if new property posted
+          cache.clear();
 
           return res.status(200).json({
             message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",
@@ -1063,7 +1065,9 @@ class PostPropertyController {
         }
 
       }
-
+      //clear the cache if property updated successfully
+      cache.clear();
+      
       return res.status(200).json({
         message: emailSuccess ? "Property updated successfully" : "Property updated successfully but there was an issue sending confirmation emails",
       });
