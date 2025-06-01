@@ -237,8 +237,12 @@ class rentController {
             email: "$postProperty.email",
             number: "$postProperty.number",
             verify: "$postProperty.verify",
-            propertyLooking: "$postProperty.propertyLooking"
+            propertyLooking: "$postProperty.propertyLooking",
+            // createdAt: "$postProperty.createdAt",
           }
+        },
+        {
+          $sort: { createdAt: -1 } 
         }
       ])
       
