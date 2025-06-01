@@ -189,6 +189,8 @@ class BuyController {
             amenities: "$postProperty.amenities",
             landMark: "$postProperty.landMark",
             type: "$postProperty.type",
+            bedrooms: "$postProperty.bedrooms",
+            bathrooms: "$postProperty.bathrooms",
             city: "$postProperty.city",
             state: "$postProperty.state",
             address: "$postProperty.address",
