@@ -45,3 +45,6 @@ const careerSchema = new mongoose.Schema(
 );
 const careerModal = mongoose.model("Career", careerSchema);
 module.exports = careerModal;
+
+
+// sdfblfb
