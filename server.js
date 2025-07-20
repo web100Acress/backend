@@ -21,8 +21,19 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://your-frontend-domain.com' // add your deployed frontend domain if needed
+  ],
+  credentials: true,
+}));
+
 // cors
-app.use(cors());
+// app.use(cors());
 
 // for storing data into cache and if want to clear cache autometic pass under this SSTDL=time
 // const NodeCache=new NodeCache()
