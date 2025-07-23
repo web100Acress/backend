@@ -15,7 +15,7 @@ jobs:
       - name: Login to docker hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker Image
-        run: docker build -t hunderedacress/100acressbackend  .
+        run: docker build -t hunderedacress/100acressbackend .
       - name: Publish Image to docker hub
         run: docker push hunderedacress/100acressbackend:latest
 
@@ -23,6 +23,14 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      # 🧹 Step 1: Clean disk space before pulling image
+      - name: Free up disk space on self-hosted runner
+        run: |
+          echo "Cleaning up Docker system to free up space..."
+          docker system prune -af
+          rm -rf ~/.npm/_cacache || true
+          echo "Disk cleanup done."
+
       - name: Pull image from docker hub
         run: docker pull hunderedacress/100acressbackend:latest
 
@@ -34,7 +42,6 @@ jobs:
           echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}" >> .env
           echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
           echo "AWS_SDK_LOAD_CONFIG=1" >> .env 
-
           cat .env
 
       - name: Delete old container
@@ -46,3 +53,6 @@ jobs:
       - name: Run Docker Container with `.env`
         run: |
           docker run -d -p 3500:3500 --name hundredacress-backend-container --env-file .env hunderedacress/100acressbackend:latest
+# dxVJ
+# jjjj
+# l  wiuehfu  wg
