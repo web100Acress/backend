@@ -1599,30 +1599,24 @@ static projectSearch = async (req, res) => {
     try {
       //Get page and limit from query parameters, with default values
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 1000;
+      const limit = parseInt(req.query.limit) || 100;
       const skip = (page - 1) * limit;
 
-      // Create a unique cache key for each page
-      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
-      // Check if data is in cache
-      const cacheData = cache.get(cacheKey);
-      if (cacheData) {
-        return res.status(200).json({
-          message: "Data retrieved successfully from cache!",
-          data: cacheData,
-        });
-      }
-      // If data is not in cache, fetch from database
-      const data = await UserModel.find().skip(skip).limit(limit).sort({ createdAt: -1 });
-      const fileName = `EnquiryDate page-${page} ${Date.now()}`;
+      // Get total count
+      const total = await UserModel.countDocuments();
 
-      // Calculate cache expiration time (5 minutes in milliseconds)
-      const expirationTime = 5 * 60 * 1000;
-      cache.put(cacheKey, data, expirationTime);
+      // Get paginated data
+      const data = await UserModel.find()
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
 
       return res.status(200).json({
-        message: "Data retrieved successfully from database!",
-        data: data,
+        message: "Data retrieved successfully!",
+        data,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
       });
     } catch (error) {
       console.error(error);
