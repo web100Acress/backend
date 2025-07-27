@@ -775,11 +775,38 @@ static projectSearch = async (req, res) => {
     if(possesionafter2026 === "1") query.possessionDate = { $gte: new Date("2026-01-01") };
     // Handle price range if both min and max are provided
     if (minPrice && maxPrice) {
-      query.minPrice = { $gte: parseFloat(minPrice) };
-      query.maxPrice = { $lte: parseFloat(maxPrice) };
+      console.log("Price filtering - minPrice:", minPrice, "maxPrice:", maxPrice);
+      console.log("Price filtering - minPrice type:", typeof minPrice, "maxPrice type:", typeof maxPrice);
+      
+      // Convert to numbers for comparison
+      const minPriceNum = parseFloat(minPrice);
+      const maxPriceNum = parseFloat(maxPrice);
+      
+      // Create price filter
+      const priceFilter = {
+        $or: [
+          // Projects that start within the range
+          { minPrice: { $gte: minPriceNum, $lte: maxPriceNum } },
+          // Projects that end within the range
+          { maxPrice: { $gte: minPriceNum, $lte: maxPriceNum } },
+          // Projects that span the entire range
+          { $and: [{ minPrice: { $lte: minPriceNum } }, { maxPrice: { $gte: maxPriceNum } }] }
+        ]
+      };
+      
+      // Combine with existing query using $and
+      if (Object.keys(query).length > 0) {
+        query = { $and: [query, priceFilter] };
+      } else {
+        query = priceFilter;
+      }
+      
+      console.log("Final price query:", JSON.stringify(query, null, 2));
     } else if (minPrice) {
+      console.log("Price filtering - minPrice only:", minPrice);
       query.minPrice = { $gte: parseFloat(minPrice) };
     } else if (maxPrice) {
+      console.log("Price filtering - maxPrice only:", maxPrice);
       query.maxPrice = { $lte: parseFloat(maxPrice) };
     }
     //Handle DLF Project Unable to find the project with the parameteres for the dlf projects
