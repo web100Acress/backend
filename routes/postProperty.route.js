@@ -61,6 +61,7 @@ router.post(
 );
 router.delete(
   "/propertyDelete/:id",
+  adminVerify,
   PostPropertyController.postProperty_Delete,
 );
 router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
