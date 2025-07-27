@@ -351,7 +351,7 @@ class projectController {
       
       console.log("Saving to database...");
       try {
-        await data.save();
+      await data.save();
         console.log("Project saved successfully!");
       } catch (saveError) {
         console.error("Database save error:", saveError);
