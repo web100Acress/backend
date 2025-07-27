@@ -1205,11 +1205,11 @@ class PostPropertyController {
         return res.status(404).json({ error: "Post property not found" });
       }
 
-      // Try to delete files from S3
-      let s3DeleteSuccess = true;
+      // Try to delete files from S3 (but don't abort if it fails)
       try {
         // Delete front image if exists
         if (matchedPostProperty.frontImage && matchedPostProperty.frontImage.public_id) {
+          console.log("Deleting front image:", matchedPostProperty.frontImage.public_id);
           await deleteFile(matchedPostProperty.frontImage.public_id);
         }
 
@@ -1218,37 +1218,34 @@ class PostPropertyController {
           for (let i = 0; i < matchedPostProperty.otherImage.length; i++) {
             const image = matchedPostProperty.otherImage[i];
             if (image && image.public_id) {
+              console.log("Deleting other image:", image.public_id);
               await deleteFile(image.public_id);
             }
           }
         }
+        console.log("S3 files deleted successfully");
       } catch (s3Error) {
-        s3DeleteSuccess = false;
         console.error("Failed to delete some S3 files:", s3Error);
+        // Continue with database deletion even if S3 deletion fails
+        console.log("Continuing with database deletion despite S3 errors");
       }
 
-      // Only proceed with database deletion if S3 deletion was successful
-      if (s3DeleteSuccess) {
-        const index = user.postProperty.findIndex(
-          (postProperty) => postProperty._id.toString() === propertyId,
-        );
-        
-        if (index === -1) {
-          return res.status(404).json({ error: "Post property not found" });
-        }
-        
-        user.postProperty.splice(index, 1);
-        await user.save();
-        
-        // Clear cache after successful deletion
-        cache.clear();
-        
-        res.status(200).json({ message: "Post property deleted successfully" });
-      } else {
-        res
-          .status(500)
-          .json({ error: "Failed to delete S3 files. Operation aborted." });
+      // Proceed with database deletion regardless of S3 deletion status
+      const index = user.postProperty.findIndex(
+        (postProperty) => postProperty._id.toString() === propertyId,
+      );
+      
+      if (index === -1) {
+        return res.status(404).json({ error: "Post property not found" });
       }
+      
+      user.postProperty.splice(index, 1);
+      await user.save();
+      
+      // Clear cache after successful deletion
+      cache.clear();
+      
+      res.status(200).json({ message: "Post property deleted successfully" });
     } catch (error) {
       console.error("Delete property error:", error);
       res.status(500).json({ error: "Internal server error" });
