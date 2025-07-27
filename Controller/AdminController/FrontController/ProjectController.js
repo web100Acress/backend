@@ -94,91 +94,68 @@ class projectController {
 
       const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
 
-      if (
-        !projectName &&
-        !state &&
-        !projectAddress &&
-        !project_discripation &&
-        !AboutDeveloper &&
-        !builderName &&
-        !projectRedefine_Connectivity &&
-        !projectRedefine_Education &&
-        !projectRedefine_Business &&
-        !projectRedefine_Entertainment &&
-        !Amenities &&
-        !meta_title &&
-        !meta_description &&
-        !projectBgContent &&
-        !projectReraNo &&
-        !type &&
-        !city &&
-        !projectOverview &&
-        !project_url &&
-        !project_Status &&
-        !towerNumber &&
-        !totalUnit &&
-        !totalLandArea &&
-        !launchingDate &&
-        !mobileNumber &&
-        !possessionDate &&
-        !minPrice &&
-        !maxPrice &&
-        !country &&
-        !luxury && 
-        !spotlight
-      ) {
+      // Check for required fields - at least projectName should be present
+      if (!projectName) {
         return res.status(400).json({
-          error: "Check Input field !",
-        });
-      }
-      // console.log(req.files,";vjlah")
-      if (
-        !logo &&
-        !frontImage &&
-        !project_locationImage &&
-        !project_floorplan_Image &&
-        !highlightImage &&
-        !project_Brochure &&
-        !projectGallery &&
-        !projectMaster_plan &&
-        !thumbnailImage
-      ) {
-        return res.status(400).json({
-          error: "Check image field !",
+          error: "Project name is required!",
         });
       }
 
-      // Prepare an array of promises for all uploads
-      const uploadPromises = [
-        uploadFile(logo[0]),
-        uploadFile(frontImage[0]),
-        uploadFile(project_locationImage[0]),
-        uploadFile(highlightImage[0]),
-        uploadFile(projectMaster_plan[0]),
-        uploadFile(project_Brochure[0]),
-        uploadThumbnailImage(thumbnailImage[0]),
-      ];
+      // Initialize upload promises array
+      const uploadPromises = [];
+      const uploadResults = {
+        logoResult: null,
+        frontResult: null,
+        projectLocationResult: null,
+        highlightResult: null,
+        projectMasterResult: null,
+        project_BrochureResult: null,
+        thumbnailResult: null,
+      };
 
-      // Use Promise.all to upload all files concurrently
-      const [
-        logoResult,
-        frontResult,
-        projectLocationResult,
-        highlightResult,
-        projectMasterResult,
-        project_BrochureResult,
-        thumbnailResult,
-      ] = await Promise.all(uploadPromises);
+      // Handle single file uploads if they exist
+      if (logo && logo[0]) {
+        uploadPromises.push(uploadFile(logo[0]).then(result => { uploadResults.logoResult = result; }));
+      }
+      if (frontImage && frontImage[0]) {
+        uploadPromises.push(uploadFile(frontImage[0]).then(result => { uploadResults.frontResult = result; }));
+      }
+      if (project_locationImage && project_locationImage[0]) {
+        uploadPromises.push(uploadFile(project_locationImage[0]).then(result => { uploadResults.projectLocationResult = result; }));
+      }
+      if (highlightImage && highlightImage[0]) {
+        uploadPromises.push(uploadFile(highlightImage[0]).then(result => { uploadResults.highlightResult = result; }));
+      }
+      if (projectMaster_plan && projectMaster_plan[0]) {
+        uploadPromises.push(uploadFile(projectMaster_plan[0]).then(result => { uploadResults.projectMasterResult = result; }));
+      }
+      if (project_Brochure && project_Brochure[0]) {
+        uploadPromises.push(uploadFile(project_Brochure[0]).then(result => { uploadResults.project_BrochureResult = result; }));
+      }
+      if (thumbnailImage && thumbnailImage[0]) {
+        uploadPromises.push(uploadThumbnailImage(thumbnailImage[0]).then(result => { uploadResults.thumbnailResult = result; }));
+      }
 
-      let project_floorplanResult = await Promise.all(
-        req.files.project_floorplan_Image.map((file) => uploadFile(file)),
-      );
+      // Wait for all single file uploads to complete
+      await Promise.all(uploadPromises);
 
-      let projectGalleryResult = await Promise.all(
-        req.files.projectGallery.map((file) => uploadFile(file)),
-      );
+      // Handle multiple file uploads
+      let project_floorplanResult = [];
+      if (project_floorplan_Image && project_floorplan_Image.length > 0) {
+        project_floorplanResult = await Promise.all(
+          project_floorplan_Image.map((file) => uploadFile(file)),
+        );
+      }
 
-      const data = new ProjectModel({
+      let projectGalleryResult = [];
+      if (projectGallery && projectGallery.length > 0) {
+        projectGalleryResult = await Promise.all(
+          projectGallery.map((file) => uploadFile(file)),
+        );
+      }
+
+      // Prepare the data object with conditional image fields
+      const projectData = {
         projectName: projectName,
         state: state,
         country: country,
@@ -199,65 +176,86 @@ class projectController {
         projectRedefine_Education: projectRedefine_Education,
         Amenities: Amenities,
         luxury: luxury,
-        spotlight:spotlight,
+        spotlight: spotlight,
         possessionDate: possessionDate,
         launchingDate: launchingDate,
         mobileNumber: mobileNumber,
         totalLandArea: totalLandArea,
         totalUnit: totalUnit,
         towerNumber: towerNumber,
-        paymentPlan:paymentPlan,
+        paymentPlan: paymentPlan,
         maxPrice: maxPrice,
         minPrice: minPrice,
         meta_title: meta_title,
         meta_description: meta_description,
-        logo: {
-          public_id: logoResult.Key,
-          url: logoResult.Location,
-          cdn_url: cloudfrontUrl + logoResult.Key,
-        },
-        thumbnailImage: {
-          public_id: thumbnailResult.Key,
-          url: thumbnailResult.Location,
-          cdn_url: cloudfrontUrl + thumbnailResult.Key,
-        },
-        frontImage: {
-          public_id: frontResult.Key,
-          url: frontResult.Location,
-          cdn_url: cloudfrontUrl + frontResult.Key,
-        },
-        project_locationImage: {
-          public_id: projectLocationResult.Key,
-          url: projectLocationResult.Location,
-          cdn_url: cloudfrontUrl + projectLocationResult.Key,
-        },
-        highlightImage: {
-          public_id: highlightResult.Key,
-          url: highlightResult.Location,
-          cdn_url: cloudfrontUrl + highlightResult.Key,
-        },
-        projectMaster_plan: {
-          public_id: projectMasterResult.Key,
-          url: projectMasterResult.Location,
-          cdn_url: cloudfrontUrl + projectMasterResult.Key,
-        },
-        project_Brochure: {
-          public_id: project_BrochureResult.Key,
-          url: project_BrochureResult.Location,
-          cdn_url: cloudfrontUrl + project_BrochureResult.Key,
-        },
-        project_floorplan_Image: project_floorplanResult.map((item) => ({
-          public_id: item.Key,
-          url: item.Location,
-          cdn_url: cloudfrontUrl + item.Key,
-        })),
-        projectGallery: projectGalleryResult.map((item) => ({
-          public_id: item.Key,
-          url: item.Location,
-          cdn_url: cloudfrontUrl + item.Key,
-        })),
-      });
+      };
 
+      // Add image fields only if they exist
+      if (uploadResults.logoResult) {
+        projectData.logo = {
+          public_id: uploadResults.logoResult.Key,
+          url: uploadResults.logoResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.logoResult.Key,
+        };
+      }
+      if (uploadResults.thumbnailResult) {
+        projectData.thumbnailImage = {
+          public_id: uploadResults.thumbnailResult.Key,
+          url: uploadResults.thumbnailResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.thumbnailResult.Key,
+        };
+      }
+      if (uploadResults.frontResult) {
+        projectData.frontImage = {
+          public_id: uploadResults.frontResult.Key,
+          url: uploadResults.frontResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.frontResult.Key,
+        };
+      }
+      if (uploadResults.projectLocationResult) {
+        projectData.project_locationImage = {
+          public_id: uploadResults.projectLocationResult.Key,
+          url: uploadResults.projectLocationResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.projectLocationResult.Key,
+        };
+      }
+      if (uploadResults.highlightResult) {
+        projectData.highlightImage = {
+          public_id: uploadResults.highlightResult.Key,
+          url: uploadResults.highlightResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.highlightResult.Key,
+        };
+      }
+      if (uploadResults.projectMasterResult) {
+        projectData.projectMaster_plan = {
+          public_id: uploadResults.projectMasterResult.Key,
+          url: uploadResults.projectMasterResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.projectMasterResult.Key,
+        };
+      }
+      if (uploadResults.project_BrochureResult) {
+        projectData.project_Brochure = {
+          public_id: uploadResults.project_BrochureResult.Key,
+          url: uploadResults.project_BrochureResult.Location,
+          cdn_url: cloudfrontUrl + uploadResults.project_BrochureResult.Key,
+        };
+      }
+      if (project_floorplanResult.length > 0) {
+        projectData.project_floorplan_Image = project_floorplanResult.map((item) => ({
+          public_id: item.Key,
+          url: item.Location,
+          cdn_url: cloudfrontUrl + item.Key,
+        }));
+      }
+      if (projectGalleryResult.length > 0) {
+        projectData.projectGallery = projectGalleryResult.map((item) => ({
+          public_id: item.Key,
+          url: item.Location,
+          cdn_url: cloudfrontUrl + item.Key,
+        }));
+      }
+
+      const data = new ProjectModel(projectData);
       await data.save();
       return res.status(200).json({
         message: "Submitted successfully !",
