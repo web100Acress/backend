@@ -775,7 +775,8 @@ static projectSearch = async (req, res) => {
     if(possesionafter2026 === "1") query.possessionDate = { $gte: new Date("2026-01-01") };
     // Handle price range if both min and max are provided
     if (minPrice && maxPrice) {
-      query = { minPrice:{$gte: parseFloat(minPrice)}, maxPrice:{$lte: parseFloat(maxPrice)} };
+      query.minPrice = { $gte: parseFloat(minPrice) };
+      query.maxPrice = { $lte: parseFloat(maxPrice) };
     } else if (minPrice) {
       query.minPrice = { $gte: parseFloat(minPrice) };
     } else if (maxPrice) {
