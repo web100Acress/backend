@@ -782,6 +782,14 @@ static projectSearch = async (req, res) => {
       const minPriceNum = parseFloat(minPrice);
       const maxPriceNum = parseFloat(maxPrice);
       
+      console.log("Converted - minPriceNum:", minPriceNum, "maxPriceNum:", maxPriceNum);
+      
+      // SIMPLER ALTERNATIVE: Just check if minPrice is within range
+      // This is more straightforward and should work for most cases
+      const simplePriceFilter = {
+        minPrice: { $gte: minPriceNum, $lte: maxPriceNum }
+      };
+      
       // Create price filter with more precise logic
       const priceFilter = {
         $or: [
@@ -800,8 +808,10 @@ static projectSearch = async (req, res) => {
       
       // Combine with existing query using $and
       if (Object.keys(query).length > 0) {
+        console.log("Combining with existing query:", JSON.stringify(query, null, 2));
         query = { $and: [query, priceFilter] };
       } else {
+        console.log("No existing query, using price filter only");
         query = priceFilter;
       }
       
@@ -857,6 +867,24 @@ static projectSearch = async (req, res) => {
       .sort(sort || '-createdAt')
       .skip(options.skip)
       .limit(options.limit).lean();
+
+    console.log("Query executed:", JSON.stringify(query, null, 2));
+    console.log("Total results found:", results.length);
+    console.log("Sample results:", results.slice(0, 3).map(r => ({
+      projectName: r.projectName,
+      city: r.city,
+      minPrice: r.minPrice,
+      maxPrice: r.maxPrice
+    })));
+
+    // Debug: Check all Dubai projects
+    const dubaiProjects = await ProjectModel.find({ city: "Dubai" }).lean();
+    console.log("All Dubai projects:", dubaiProjects.map(p => ({
+      projectName: p.projectName,
+      minPrice: p.minPrice,
+      maxPrice: p.maxPrice,
+      city: p.city
+    })));
 
     const total = await ProjectModel.countDocuments(query);
 
