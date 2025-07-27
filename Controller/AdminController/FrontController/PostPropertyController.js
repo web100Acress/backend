@@ -1182,7 +1182,13 @@ class PostPropertyController {
   static postProperty_Delete = async (req, res) => {
     try {
       const propertyId = req.params.id;
-      console.log("Property ID:",propertyId)
+      console.log("Property ID:", propertyId);
+      
+      // Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+        return res.status(400).json({ error: "Invalid property ID format" });
+      }
+
       const user = await postPropertyModel.findOne({
         "postProperty._id": propertyId,
       });
@@ -1191,24 +1197,28 @@ class PostPropertyController {
         return res.status(404).json({ error: "Post property not found" });
       }
 
-      const matchedPostProperties = user.postProperty.find(
+      const matchedPostProperty = user.postProperty.find(
         (postProperty) => postProperty._id.toString() === propertyId,
       );
+
+      if (!matchedPostProperty) {
+        return res.status(404).json({ error: "Post property not found" });
+      }
 
       // Try to delete files from S3
       let s3DeleteSuccess = true;
       try {
-        const frontId = matchedPostProperties.frontImage.public_id;
-        if (frontId) {
-          await deleteFile(frontId);
+        // Delete front image if exists
+        if (matchedPostProperty.frontImage && matchedPostProperty.frontImage.public_id) {
+          await deleteFile(matchedPostProperty.frontImage.public_id);
         }
 
-        const other = matchedPostProperties.otherImage;
-        if (other) {
-          for (let i = 0; i < other.length; i++) {
-            const id = matchedPostProperties.otherImage[i].public_id;
-            if (id) {
-              await deleteFile(id);
+        // Delete other images if exist
+        if (matchedPostProperty.otherImage && Array.isArray(matchedPostProperty.otherImage)) {
+          for (let i = 0; i < matchedPostProperty.otherImage.length; i++) {
+            const image = matchedPostProperty.otherImage[i];
+            if (image && image.public_id) {
+              await deleteFile(image.public_id);
             }
           }
         }
@@ -1222,11 +1232,17 @@ class PostPropertyController {
         const index = user.postProperty.findIndex(
           (postProperty) => postProperty._id.toString() === propertyId,
         );
+        
         if (index === -1) {
           return res.status(404).json({ error: "Post property not found" });
         }
+        
         user.postProperty.splice(index, 1);
         await user.save();
+        
+        // Clear cache after successful deletion
+        cache.clear();
+        
         res.status(200).json({ message: "Post property deleted successfully" });
       } else {
         res
@@ -1234,7 +1250,7 @@ class PostPropertyController {
           .json({ error: "Failed to delete S3 files. Operation aborted." });
       }
     } catch (error) {
-      console.error(error);
+      console.error("Delete property error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   };
