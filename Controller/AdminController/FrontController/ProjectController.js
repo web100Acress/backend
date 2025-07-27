@@ -782,7 +782,7 @@ static projectSearch = async (req, res) => {
       const minPriceNum = parseFloat(minPrice);
       const maxPriceNum = parseFloat(maxPrice);
       
-      // Create price filter
+      // Create price filter with more precise logic
       const priceFilter = {
         $or: [
           // Projects that start within the range
@@ -790,7 +790,11 @@ static projectSearch = async (req, res) => {
           // Projects that end within the range
           { maxPrice: { $gte: minPriceNum, $lte: maxPriceNum } },
           // Projects that span the entire range
-          { $and: [{ minPrice: { $lte: minPriceNum } }, { maxPrice: { $gte: maxPriceNum } }] }
+          { $and: [{ minPrice: { $lte: minPriceNum } }, { maxPrice: { $gte: maxPriceNum } }] },
+          // Projects that start before range but end within range
+          { $and: [{ minPrice: { $lt: minPriceNum } }, { maxPrice: { $gte: minPriceNum, $lte: maxPriceNum } }] },
+          // Projects that start within range but end after range
+          { $and: [{ minPrice: { $gte: minPriceNum, $lte: maxPriceNum } }, { maxPrice: { $gt: maxPriceNum } }] }
         ]
       };
       
