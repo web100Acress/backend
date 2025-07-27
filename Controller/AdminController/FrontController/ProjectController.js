@@ -41,11 +41,12 @@ class projectController {
   // Project data insert api
 
   static projectInsert = async (req, res) => {
-    // console.log("Headers: ",req.headers);
-    // console.log("Body: ",req.body);
-    // console.log("hello")
+    console.log("=== Project Insert API Called ===");
+    console.log("Headers:", req.headers);
+    console.log("Body keys:", Object.keys(req.body));
+    console.log("Files keys:", req.files ? Object.keys(req.files) : "No files");
+    
     try {
-      // console.log(req.body)
       const {
         projectName,
         state,
@@ -80,6 +81,10 @@ class projectController {
         minPrice,
         maxPrice,
       } = req.body;
+      
+      console.log("Extracted projectName:", projectName);
+      console.log("Extracted type:", type);
+      
       const {
         logo,
         frontImage,
@@ -90,16 +95,31 @@ class projectController {
         project_Brochure,
         projectGallery,
         projectMaster_plan,
-      } = req.files;
+      } = req.files || {};
+
+      console.log("Files received:", {
+        logo: logo ? logo.length : 0,
+        frontImage: frontImage ? frontImage.length : 0,
+        thumbnailImage: thumbnailImage ? thumbnailImage.length : 0,
+        project_locationImage: project_locationImage ? project_locationImage.length : 0,
+        project_floorplan_Image: project_floorplan_Image ? project_floorplan_Image.length : 0,
+        highlightImage: highlightImage ? highlightImage.length : 0,
+        project_Brochure: project_Brochure ? project_Brochure.length : 0,
+        projectGallery: projectGallery ? projectGallery.length : 0,
+        projectMaster_plan: projectMaster_plan ? projectMaster_plan.length : 0,
+      });
 
       const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
 
       // Check for required fields - at least projectName should be present
       if (!projectName) {
+        console.log("Error: Project name is missing");
         return res.status(400).json({
           error: "Project name is required!",
         });
       }
+
+      console.log("Starting file uploads...");
 
       // Initialize upload promises array
       const uploadPromises = [];
@@ -115,44 +135,102 @@ class projectController {
 
       // Handle single file uploads if they exist
       if (logo && logo[0]) {
-        uploadPromises.push(uploadFile(logo[0]).then(result => { uploadResults.logoResult = result; }));
+        console.log("Uploading logo...");
+        uploadPromises.push(uploadFile(logo[0]).then(result => { 
+          uploadResults.logoResult = result; 
+          console.log("Logo uploaded successfully");
+        }).catch(err => {
+          console.error("Logo upload failed:", err);
+        }));
       }
       if (frontImage && frontImage[0]) {
-        uploadPromises.push(uploadFile(frontImage[0]).then(result => { uploadResults.frontResult = result; }));
+        console.log("Uploading front image...");
+        uploadPromises.push(uploadFile(frontImage[0]).then(result => { 
+          uploadResults.frontResult = result; 
+          console.log("Front image uploaded successfully");
+        }).catch(err => {
+          console.error("Front image upload failed:", err);
+        }));
       }
       if (project_locationImage && project_locationImage[0]) {
-        uploadPromises.push(uploadFile(project_locationImage[0]).then(result => { uploadResults.projectLocationResult = result; }));
+        console.log("Uploading project location image...");
+        uploadPromises.push(uploadFile(project_locationImage[0]).then(result => { 
+          uploadResults.projectLocationResult = result; 
+          console.log("Project location image uploaded successfully");
+        }).catch(err => {
+          console.error("Project location image upload failed:", err);
+        }));
       }
       if (highlightImage && highlightImage[0]) {
-        uploadPromises.push(uploadFile(highlightImage[0]).then(result => { uploadResults.highlightResult = result; }));
+        console.log("Uploading highlight image...");
+        uploadPromises.push(uploadFile(highlightImage[0]).then(result => { 
+          uploadResults.highlightResult = result; 
+          console.log("Highlight image uploaded successfully");
+        }).catch(err => {
+          console.error("Highlight image upload failed:", err);
+        }));
       }
       if (projectMaster_plan && projectMaster_plan[0]) {
-        uploadPromises.push(uploadFile(projectMaster_plan[0]).then(result => { uploadResults.projectMasterResult = result; }));
+        console.log("Uploading project master plan...");
+        uploadPromises.push(uploadFile(projectMaster_plan[0]).then(result => { 
+          uploadResults.projectMasterResult = result; 
+          console.log("Project master plan uploaded successfully");
+        }).catch(err => {
+          console.error("Project master plan upload failed:", err);
+        }));
       }
       if (project_Brochure && project_Brochure[0]) {
-        uploadPromises.push(uploadFile(project_Brochure[0]).then(result => { uploadResults.project_BrochureResult = result; }));
+        console.log("Uploading project brochure...");
+        uploadPromises.push(uploadFile(project_Brochure[0]).then(result => { 
+          uploadResults.project_BrochureResult = result; 
+          console.log("Project brochure uploaded successfully");
+        }).catch(err => {
+          console.error("Project brochure upload failed:", err);
+        }));
       }
       if (thumbnailImage && thumbnailImage[0]) {
-        uploadPromises.push(uploadThumbnailImage(thumbnailImage[0]).then(result => { uploadResults.thumbnailResult = result; }));
+        console.log("Uploading thumbnail image...");
+        uploadPromises.push(uploadThumbnailImage(thumbnailImage[0]).then(result => { 
+          uploadResults.thumbnailResult = result; 
+          console.log("Thumbnail image uploaded successfully");
+        }).catch(err => {
+          console.error("Thumbnail image upload failed:", err);
+        }));
       }
 
       // Wait for all single file uploads to complete
+      console.log("Waiting for file uploads to complete...");
       await Promise.all(uploadPromises);
+      console.log("All single file uploads completed");
 
       // Handle multiple file uploads
       let project_floorplanResult = [];
       if (project_floorplan_Image && project_floorplan_Image.length > 0) {
-        project_floorplanResult = await Promise.all(
-          project_floorplan_Image.map((file) => uploadFile(file)),
-        );
+        console.log("Uploading floor plan images...");
+        try {
+          project_floorplanResult = await Promise.all(
+            project_floorplan_Image.map((file) => uploadFile(file)),
+          );
+          console.log("Floor plan images uploaded successfully");
+        } catch (err) {
+          console.error("Floor plan images upload failed:", err);
+        }
       }
 
       let projectGalleryResult = [];
       if (projectGallery && projectGallery.length > 0) {
-        projectGalleryResult = await Promise.all(
-          projectGallery.map((file) => uploadFile(file)),
-        );
+        console.log("Uploading gallery images...");
+        try {
+          projectGalleryResult = await Promise.all(
+            projectGallery.map((file) => uploadFile(file)),
+          );
+          console.log("Gallery images uploaded successfully");
+        } catch (err) {
+          console.error("Gallery images upload failed:", err);
+        }
       }
+
+      console.log("Preparing project data...");
 
       // Prepare the data object with conditional image fields
       const projectData = {
@@ -179,16 +257,18 @@ class projectController {
         spotlight: spotlight,
         possessionDate: possessionDate,
         launchingDate: launchingDate,
-        mobileNumber: mobileNumber,
-        totalLandArea: totalLandArea,
-        totalUnit: totalUnit,
-        towerNumber: towerNumber,
+        mobileNumber: mobileNumber ? parseInt(mobileNumber) : undefined,
+        totalLandArea: totalLandArea ? parseInt(totalLandArea) : undefined,
+        totalUnit: totalUnit ? parseInt(totalUnit) : undefined,
+        towerNumber: towerNumber ? parseInt(towerNumber) : undefined,
         paymentPlan: paymentPlan,
-        maxPrice: maxPrice,
-        minPrice: minPrice,
+        maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
+        minPrice: minPrice ? parseInt(minPrice) : undefined,
         meta_title: meta_title,
         meta_description: meta_description,
       };
+
+      console.log("Project data prepared:", Object.keys(projectData));
 
       // Add image fields only if they exist
       if (uploadResults.logoResult) {
@@ -197,6 +277,7 @@ class projectController {
           url: uploadResults.logoResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.logoResult.Key,
         };
+        console.log("Logo added to project data");
       }
       if (uploadResults.thumbnailResult) {
         projectData.thumbnailImage = {
@@ -204,6 +285,7 @@ class projectController {
           url: uploadResults.thumbnailResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.thumbnailResult.Key,
         };
+        console.log("Thumbnail image added to project data");
       }
       if (uploadResults.frontResult) {
         projectData.frontImage = {
@@ -211,6 +293,7 @@ class projectController {
           url: uploadResults.frontResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.frontResult.Key,
         };
+        console.log("Front image added to project data");
       }
       if (uploadResults.projectLocationResult) {
         projectData.project_locationImage = {
@@ -218,6 +301,7 @@ class projectController {
           url: uploadResults.projectLocationResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.projectLocationResult.Key,
         };
+        console.log("Project location image added to project data");
       }
       if (uploadResults.highlightResult) {
         projectData.highlightImage = {
@@ -225,6 +309,7 @@ class projectController {
           url: uploadResults.highlightResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.highlightResult.Key,
         };
+        console.log("Highlight image added to project data");
       }
       if (uploadResults.projectMasterResult) {
         projectData.projectMaster_plan = {
@@ -232,6 +317,7 @@ class projectController {
           url: uploadResults.projectMasterResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.projectMasterResult.Key,
         };
+        console.log("Project master plan added to project data");
       }
       if (uploadResults.project_BrochureResult) {
         projectData.project_Brochure = {
@@ -239,6 +325,7 @@ class projectController {
           url: uploadResults.project_BrochureResult.Location,
           cdn_url: cloudfrontUrl + uploadResults.project_BrochureResult.Key,
         };
+        console.log("Project brochure added to project data");
       }
       if (project_floorplanResult.length > 0) {
         projectData.project_floorplan_Image = project_floorplanResult.map((item) => ({
@@ -246,6 +333,7 @@ class projectController {
           url: item.Location,
           cdn_url: cloudfrontUrl + item.Key,
         }));
+        console.log("Floor plan images added to project data");
       }
       if (projectGalleryResult.length > 0) {
         projectData.projectGallery = projectGalleryResult.map((item) => ({
@@ -253,17 +341,37 @@ class projectController {
           url: item.Location,
           cdn_url: cloudfrontUrl + item.Key,
         }));
+        console.log("Gallery images added to project data");
       }
 
+      console.log("Creating ProjectModel instance...");
       const data = new ProjectModel(projectData);
-      await data.save();
+      
+      console.log("Project data to save:", JSON.stringify(projectData, null, 2));
+      
+      console.log("Saving to database...");
+      try {
+        await data.save();
+        console.log("Project saved successfully!");
+      } catch (saveError) {
+        console.error("Database save error:", saveError);
+        console.error("Save error message:", saveError.message);
+        console.error("Save error code:", saveError.code);
+        console.error("Save error name:", saveError.name);
+        throw saveError;
+      }
+      
       return res.status(200).json({
         message: "Submitted successfully !",
       });
     } catch (error) {
-      console.log(error);
+      console.error("=== Project Insert Error ===");
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Full error object:", error);
       return res.status(500).json({
         message: "Internal server error !",
+        error: error.message,
       });
     }
   };
