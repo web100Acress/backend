@@ -174,7 +174,7 @@ class blogController {
           const data = await blogModel.findById({ _id: id });
           const objectKey = data.blog_Image.public_id;
 
-          const imageData = await upda(req.file, objectKey);
+          const imageData = await updateFile(req.file, objectKey);
 
           const update = await blogModel.findByIdAndUpdate(
             { _id: id },
