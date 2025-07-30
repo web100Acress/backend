@@ -48,7 +48,7 @@ class blogController {
         // Fallback: use local file path temporarily
         imageData = {
           Key: `temp/${Date.now()}-${req.file.originalname}`,
-          Location: `https://via.placeholder.com/400x300?text=Upload+Failed`
+          Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EUpload Failed%3C/text%3E%3C/svg%3E`
         };
       }
       
