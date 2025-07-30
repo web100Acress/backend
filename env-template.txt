@@ -1,0 +1,15 @@
+# AWS S3 Configuration
+AWS_S3_ACCESS_KEY=your_aws_access_key_here
+AWS_S3_SECRET_ACESS_KEY=your_aws_secret_access_key_here
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=100acress-media-bucket
+
+# MongoDB Configuration
+MONGODB_URI=your_mongodb_connection_string_here
+
+# JWT Secret
+JWT_SECRET=your_jwt_secret_here
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development 
