@@ -321,26 +321,77 @@ class blogController {
 
   static blog_delete = async (req, res) => {
     try {
+      console.log('Delete request received for blog ID:', req.params.id);
+      
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
-        const data = await blogModel.findById({ _id: id });
-        const imageId = data.blog_Image.public_id;
-        if (imageId) {
-          await deleteFile(imageId);
-        }
-        await blogModel.findByIdAndDelete({ _id: id });
-        res.status(200).json({
-          message: "data delete successfully !",
-        });
-      } else {
-        res.status(404).json({
-          message: "not found !",
+      if (!ObjectId.isValid(id)) {
+        console.log('Invalid blog ID format:', id);
+        return res.status(400).json({
+          message: "Invalid blog ID format",
         });
       }
+
+      // Find the blog first
+      const data = await blogModel.findById({ _id: id });
+      if (!data) {
+        console.log('Blog not found with ID:', id);
+        return res.status(404).json({
+          message: "Blog not found",
+        });
+      }
+
+      console.log('Blog found:', data.blog_Title);
+
+      // Delete from S3 if image exists
+      if (data.blog_Image && data.blog_Image.public_id) {
+        try {
+          console.log('Deleting image from S3:', data.blog_Image.public_id);
+          await deleteFile(data.blog_Image.public_id);
+          console.log('S3 image deleted successfully');
+        } catch (s3Error) {
+          console.error('S3 delete error:', s3Error);
+          // Continue with blog deletion even if S3 delete fails
+        }
+      } else {
+        console.log('No S3 image to delete');
+      }
+
+      // Delete from database
+      console.log('Deleting blog from database...');
+      const deleteResult = await blogModel.findByIdAndDelete({ _id: id });
+      
+      if (!deleteResult) {
+        console.log('Database delete failed');
+        return res.status(500).json({
+          message: "Failed to delete blog from database",
+        });
+      }
+
+      console.log('Blog deleted successfully');
+      res.status(200).json({
+        message: "Blog deleted successfully",
+        deletedBlog: {
+          id: data._id,
+          title: data.blog_Title
+        }
+      });
+      
     } catch (error) {
-      console.log(error);
+      console.error('Blog delete error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Internal server error";
+      if (error.name === 'CastError') {
+        errorMessage = "Invalid blog ID format";
+      } else if (error.name === 'ValidationError') {
+        errorMessage = "Database validation error";
+      } else if (error.code === 'CredentialsError') {
+        errorMessage = "AWS credentials error";
+      }
+      
       res.status(500).json({
-        message: "Internal server error !",
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   };
