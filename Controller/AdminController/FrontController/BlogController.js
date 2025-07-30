@@ -196,23 +196,57 @@ class blogController {
   };
   static blog_edit = async (req, res) => {
     try {
-      //    res.send(req.params.id)
+      console.log('Blog edit request received for ID:', req.params.id);
+      
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
-        const data = await blogModel.findById({ _id: id });
-        res.status(200).json({
-          message: "Data get successfully ! ",
-          data,
-        });
-      } else {
-        res.status(404).json({
-          message: "Not found !",
+      if (!ObjectId.isValid(id)) {
+        console.log('Invalid blog ID format:', id);
+        return res.status(400).json({
+          message: "Invalid blog ID format",
         });
       }
+
+      // Test database connection
+      console.log('Testing database connection...');
+      const dbState = blogModel.db.readyState;
+      console.log('Database state:', dbState);
+      
+      if (dbState !== 1) {
+        console.error('Database not connected. State:', dbState);
+        return res.status(500).json({
+          message: "Database connection error",
+        });
+      }
+
+      const data = await blogModel.findById({ _id: id });
+      if (!data) {
+        console.log('Blog not found with ID:', id);
+        return res.status(404).json({
+          message: "Blog not found",
+        });
+      }
+
+      console.log('Blog found:', data.blog_Title);
+      res.status(200).json({
+        message: "Data get successfully ! ",
+        data,
+      });
     } catch (error) {
-      console.log(error);
+      console.error('Blog edit error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Internal server error";
+      if (error.name === 'CastError') {
+        errorMessage = "Invalid blog ID format";
+      } else if (error.name === 'ValidationError') {
+        errorMessage = "Database validation error";
+      } else if (error.name === 'MongoError') {
+        errorMessage = "Database connection error";
+      }
+      
       res.status(500).json({
-        message: "Internal server error !",
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   };
