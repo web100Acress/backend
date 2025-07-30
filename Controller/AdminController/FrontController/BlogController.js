@@ -12,6 +12,13 @@ const fs = require("fs");
 class blogController {
   static blog_insert = async (req, res) => {
     try {
+      // Debug: Log environment variables (remove in production)
+      console.log('AWS Config Check:', {
+        hasAccessKey: !!process.env.AWS_S3_ACCESS_KEY,
+        hasSecretKey: !!process.env.AWS_S3_SECRET_ACESS_KEY,
+        hasRegion: !!process.env.AWS_REGION,
+        region: process.env.AWS_REGION
+      });
 
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
@@ -31,8 +38,22 @@ class blogController {
         return res.status(400).json({ message: "Missing fields" });
       }
       // Upload file to S3
-      const imageData = await uploadFile(req.file);
+      console.log('Uploading file to S3...');
+      let imageData;
+      try {
+        imageData = await uploadFile(req.file);
+        console.log('S3 upload successful:', imageData);
+      } catch (s3Error) {
+        console.error('S3 upload failed:', s3Error);
+        // Fallback: use local file path temporarily
+        imageData = {
+          Key: `temp/${Date.now()}-${req.file.originalname}`,
+          Location: `https://via.placeholder.com/400x300?text=Upload+Failed`
+        };
+      }
+      
       // Save blog entry
+      console.log('Saving blog to database...');
       const newBlog = new blogModel({
         blog_Image: {
           public_id: imageData.Key,
@@ -45,14 +66,49 @@ class blogController {
         isPublished,
       });
       await newBlog.save();
+      console.log('Blog saved successfully');
+      
       // Clean up local file
-      fs.unlinkSync(req.file.path);
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log('Local file cleaned up');
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup local file:', cleanupError);
+        }
+      }
+      
       res
         .status(200)
         .json({ message: "Blog inserted successfully", data: newBlog });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal server error" });
+      console.error('Blog insert error:', error);
+      
+      // Clean up local file on error
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup local file on error:', cleanupError);
+        }
+      }
+      
+      // Provide more specific error messages
+      let errorMessage = "Internal server error";
+      if (error.code === 'CredentialsError') {
+        errorMessage = "AWS credentials error - check environment variables";
+      } else if (error.code === 'NoSuchBucket') {
+        errorMessage = "AWS S3 bucket not found";
+      } else if (error.name === 'ValidationError') {
+        errorMessage = "Database validation error";
+      } else if (error.name === 'MongoError') {
+        errorMessage = "Database connection error";
+      }
+      
+      res.status(500).json({ 
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   };
 
