@@ -1172,7 +1172,7 @@ static projectSearch = async (req, res) => {
   };
   static project_budgetHomes = async (req, res) => {
     try {
-      const BudgetProperty = ["M3M Antalya Hills","Signature Global City 93","Signature Global City 81","M3M Soulitude"];
+      const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
       const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
       //  console.log(data)
       return res.status(200).json({
