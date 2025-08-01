@@ -68,7 +68,6 @@ const uploadFile = async(file) => {
       Body: fileContent,
       Key: `uploads/${Date.now()}-${file.originalname}`,
       ContentType: file.mimetype,
-      ACL: 'public-read', // Make the file publicly accessible
     };
 
     console.log('🚀 Uploading to S3 with params:', {
@@ -101,6 +100,8 @@ const uploadFile = async(file) => {
       throw new Error('S3 bucket does not exist');
     } else if (error.code === 'AccessDenied') {
       throw new Error('Access denied to S3 bucket - check permissions');
+    } else if (error.code === 'AccessControlListNotSupported') {
+      throw new Error('S3 bucket does not support ACLs - files will be uploaded without public access');
     } else if (error.code === 'NetworkError') {
       throw new Error('Network error connecting to AWS');
     } else {
