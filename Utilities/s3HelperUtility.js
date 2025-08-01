@@ -124,7 +124,7 @@ const uploadThumbnailImage = async(file) => {
   const fileContent = await fs.promises.readFile(file.path);
   
   const params = {
-    Bucket: "100acress-media-bucket",
+    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
     Body: fileContent,
     Key: `thumbnails/${Date.now()}-${file.originalname}`,
     ContentType: file.mimetype,
@@ -153,7 +153,7 @@ const uploadThumbnailImage = async(file) => {
 
 const deleteFile = async (fileKey) => {
   const params = {
-    Bucket: "100acress-media-bucket",
+    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
     Key: fileKey,
   };
 
@@ -171,7 +171,7 @@ const updateFile = async(file, objectKey) => {
   const fileContent = await fs.promises.readFile(file.path);
   if (objectKey != null) {
     const params = {
-      Bucket: "100acress-media-bucket",
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
       Key: objectKey,
       Body: fileContent,
       ContentType: file.mimetype,
@@ -179,7 +179,7 @@ const updateFile = async(file, objectKey) => {
     return s3.upload(params).promise();
   } else {
     const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
       Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
       Body: fileContent,
       ContentType: file.mimetype,
@@ -193,7 +193,7 @@ const updateFile = async(file, objectKey) => {
 const getS3File = async(objectKey) => {
   try {
     const params = {
-      Bucket: "100acress-media-bucket",
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
       Key: objectKey
     }
 
