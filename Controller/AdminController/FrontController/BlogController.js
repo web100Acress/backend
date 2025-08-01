@@ -13,12 +13,22 @@ class blogController {
   static blog_insert = async (req, res) => {
     try {
       // Debug: Log environment variables (remove in production)
-      console.log('AWS Config Check:', {
+      console.log('🔍 AWS Config Check:', {
         hasAccessKey: !!process.env.AWS_S3_ACCESS_KEY,
         hasSecretKey: !!process.env.AWS_S3_SECRET_ACESS_KEY,
         hasRegion: !!process.env.AWS_REGION,
-        region: process.env.AWS_REGION
+        region: process.env.AWS_REGION,
+        bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket"
       });
+
+      // Check if AWS credentials are configured
+      if (!process.env.AWS_S3_ACCESS_KEY || !process.env.AWS_S3_SECRET_ACESS_KEY) {
+        console.error('❌ AWS credentials not configured!');
+        return res.status(500).json({ 
+          message: "AWS S3 not configured. Please set AWS_S3_ACCESS_KEY and AWS_S3_SECRET_ACESS_KEY environment variables.",
+          error: "AWS_CREDENTIALS_MISSING"
+        });
+      }
 
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
@@ -38,14 +48,33 @@ class blogController {
         return res.status(400).json({ message: "Missing fields" });
       }
       // Upload file to S3
-      console.log('Uploading file to S3...');
+      console.log('📤 Uploading file to S3...');
       let imageData;
       try {
         imageData = await uploadFile(req.file);
-        console.log('S3 upload successful:', imageData);
+        console.log('✅ S3 upload successful:', imageData);
       } catch (s3Error) {
-        console.error('S3 upload failed:', s3Error);
-        // Fallback: use local file path temporarily
+        console.error('❌ S3 upload failed:', s3Error);
+        
+        // Provide specific error response based on error type
+        if (s3Error.message.includes('AWS credentials')) {
+          return res.status(500).json({ 
+            message: "AWS S3 not configured properly. Please check your AWS credentials.",
+            error: "AWS_CREDENTIALS_ERROR"
+          });
+        } else if (s3Error.message.includes('bucket')) {
+          return res.status(500).json({ 
+            message: "S3 bucket not found or access denied. Please check your bucket configuration.",
+            error: "S3_BUCKET_ERROR"
+          });
+        } else if (s3Error.message.includes('Network')) {
+          return res.status(500).json({ 
+            message: "Network error connecting to AWS. Please check your internet connection.",
+            error: "NETWORK_ERROR"
+          });
+        }
+        
+        // Fallback: use embedded SVG placeholder
         imageData = {
           Key: `temp/${Date.now()}-${req.file.originalname}`,
           Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EUpload Failed%3C/text%3E%3C/svg%3E`
@@ -71,7 +100,7 @@ class blogController {
       // Clean up local file
       if (req.file && req.file.path) {
         try {
-          fs.unlinkSync(req.file.path);
+      fs.unlinkSync(req.file.path);
           console.log('Local file cleaned up');
         } catch (cleanupError) {
           console.warn('Failed to cleanup local file:', cleanupError);
@@ -366,7 +395,7 @@ class blogController {
       }
 
       // Find the blog first
-      const data = await blogModel.findById({ _id: id });
+        const data = await blogModel.findById({ _id: id });
       if (!data) {
         console.log('Blog not found with ID:', id);
         return res.status(404).json({

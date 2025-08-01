@@ -4,25 +4,109 @@ const {Stream} = require("stream");
 const path = require("path");
 const {compressImage} = require("./ImageResizer");
 const nodemailer = require("nodemailer");
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+
+// Enhanced AWS configuration with better error handling
+const configureAWS = () => {
+  console.log('Configuring AWS S3...');
+  console.log('Environment variables check:', {
+    hasAccessKey: !!process.env.AWS_S3_ACCESS_KEY,
+    hasSecretKey: !!process.env.AWS_S3_SECRET_ACESS_KEY,
+    hasRegion: !!process.env.AWS_REGION,
+    region: process.env.AWS_REGION,
+    bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket"
+  });
+
+  if (!process.env.AWS_S3_ACCESS_KEY || !process.env.AWS_S3_SECRET_ACESS_KEY) {
+    console.error('❌ AWS credentials missing! Please set AWS_S3_ACCESS_KEY and AWS_S3_SECRET_ACESS_KEY');
+    throw new Error('AWS credentials not configured');
+  }
+
+  if (!process.env.AWS_REGION) {
+    console.error('❌ AWS region missing! Please set AWS_REGION');
+    throw new Error('AWS region not configured');
+  }
+
+  AWS.config.update({
+    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+  });
+
+  console.log('✅ AWS S3 configured successfully');
+};
+
+// Initialize AWS configuration
+try {
+  configureAWS();
+} catch (error) {
+  console.error('Failed to configure AWS:', error.message);
+}
 
 const s3 = new AWS.S3();
 const SES = new AWS.SES();
 
 const uploadFile = async(file) => {
-  const fileContent = await fs.promises.readFile(file.path);
+  try {
+    console.log('📤 Starting S3 upload for file:', file.originalname);
+    console.log('File details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: file.path
+    });
 
-  const params = {
-    Bucket: "100acress-media-bucket",
-    Body: fileContent,
-    Key: `uploads/${Date.now()}-${file.originalname}`,
-    ContentType: file.mimetype,
-  };
-  return s3.upload(params).promise();
+    // Check if file exists
+    if (!file.path || !fs.existsSync(file.path)) {
+      throw new Error('File not found on disk');
+    }
+
+    const fileContent = await fs.promises.readFile(file.path);
+    console.log('📁 File read successfully, size:', fileContent.length, 'bytes');
+
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
+      Body: fileContent,
+      Key: `uploads/${Date.now()}-${file.originalname}`,
+      ContentType: file.mimetype,
+      ACL: 'public-read', // Make the file publicly accessible
+    };
+
+    console.log('🚀 Uploading to S3 with params:', {
+      Bucket: params.Bucket,
+      Key: params.Key,
+      ContentType: params.ContentType
+    });
+
+    const result = await s3.upload(params).promise();
+    
+    console.log('✅ S3 upload successful:', {
+      Location: result.Location,
+      Key: result.Key,
+      Bucket: result.Bucket
+    });
+
+    return result;
+  } catch (error) {
+    console.error('❌ S3 upload failed:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      statusCode: error.statusCode
+    });
+
+    // Provide specific error messages
+    if (error.code === 'CredentialsError') {
+      throw new Error('AWS credentials are invalid or missing');
+    } else if (error.code === 'NoSuchBucket') {
+      throw new Error('S3 bucket does not exist');
+    } else if (error.code === 'AccessDenied') {
+      throw new Error('Access denied to S3 bucket - check permissions');
+    } else if (error.code === 'NetworkError') {
+      throw new Error('Network error connecting to AWS');
+    } else {
+      throw new Error(`S3 upload failed: ${error.message}`);
+    }
+  }
 };
 
 const uploadThumbnailImage = async(file) => {
@@ -40,7 +124,7 @@ const uploadThumbnailImage = async(file) => {
   const fileContent = await fs.promises.readFile(file.path);
   
   const params = {
-    Bucket: "100acress-media-bucket",
+    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
     Body: fileContent,
     Key: `thumbnails/${Date.now()}-${file.originalname}`,
     ContentType: file.mimetype,
@@ -69,7 +153,7 @@ const uploadThumbnailImage = async(file) => {
 
 const deleteFile = async (fileKey) => {
   const params = {
-    Bucket: "100acress-media-bucket",
+    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
     Key: fileKey,
   };
 
@@ -87,7 +171,7 @@ const updateFile = async(file, objectKey) => {
   const fileContent = await fs.promises.readFile(file.path);
   if (objectKey != null) {
     const params = {
-      Bucket: "100acress-media-bucket",
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
       Key: objectKey,
       Body: fileContent,
       ContentType: file.mimetype,
@@ -95,7 +179,7 @@ const updateFile = async(file, objectKey) => {
     return s3.upload(params).promise();
   } else {
     const params = {
-      Bucket: "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
       Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
       Body: fileContent,
       ContentType: file.mimetype,
@@ -109,7 +193,7 @@ const updateFile = async(file, objectKey) => {
 const getS3File = async(objectKey) => {
   try {
     const params = {
-      Bucket: "100acress-media-bucket",
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
       Key: objectKey
     }
 
