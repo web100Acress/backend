@@ -42,5 +42,4 @@ class BadRequestError extends ApiError {
   }
 }
 
-
-module.exports = { ApiError, NotFoundError, BadRequestError };
+module.exports = ApiError;
