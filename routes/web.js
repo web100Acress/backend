@@ -26,6 +26,7 @@ const aboutRoute = require("./about.route");
 const blogRoute = require("./blog.route");
 const projectOrderRoute = require("./projectOrder.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
+const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 
 
 //Router for front home page  controller
@@ -199,5 +200,8 @@ router.post("/submit", homeController.leadSumbit);
 //This route is for admin access to verify admin whether it is admin or not
 router.get("/auth/isAdmin",adminVerify,AuthController.isAdminVerify);
 router.get("/auth/isContentWriter",ContentWriterVerify,AuthController.isContentWriterVerify);
+
+// User delete route (admin only)
+router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperties);
 
 module.exports = router;

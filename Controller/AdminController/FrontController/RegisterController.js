@@ -2,6 +2,7 @@ const registerModel = require("../../../models/register/registerModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const postPropertyModel = require("../../../models/postProperty/post");
 
 // const generateToken = () => {
 //     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -229,6 +230,32 @@ class registerController {
       res.status(500).json({
         message: "Internal server error",
       });
+    }
+  };
+  static deleteUserAndProperties = async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Find user by id
+      const user = await registerModel.findById(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      // Delete user
+      await registerModel.findByIdAndDelete(id);
+      // Delete all properties linked to this user (by email or mobile)
+      const propertyDeleteResult = await postPropertyModel.deleteMany({
+        $or: [
+          { email: user.email },
+          { mobile: user.mobile }
+        ]
+      });
+      return res.status(200).json({
+        message: "User and all their properties deleted successfully!",
+        deletedProperties: propertyDeleteResult.deletedCount
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   };
 }
