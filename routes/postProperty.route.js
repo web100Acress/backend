@@ -67,4 +67,6 @@ router.delete(
 router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 
+
+
 module.exports = router;
