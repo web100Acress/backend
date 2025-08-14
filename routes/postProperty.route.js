@@ -24,6 +24,93 @@ router.get("/view/allListedProperty",adminVerify, PostPropertyController.postPer
 router.get("/edit/:id", PostPropertyController.postPerson_Edit);
 router.post("/update/:id", PostPropertyController.postPerson_update);
 router.delete("/delete/:id", PostPropertyController.postPerson_accountDelete);
+
+// REAL DATABASE USER DELETION - Add this new endpoint
+router.delete("/deleteUser/:id", adminVerify, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    console.log(`🗑️ Admin attempting to delete user: ${userId}`);
+    
+    // Import models (adjust paths according to your project structure)
+    const postPerson = require("../models/postPerson");
+    const postProperty = require("../models/postProperty");
+    
+    // Validate user ID format (MongoDB ObjectId)
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID format' 
+      });
+    }
+
+    // Check if user exists before deletion
+    const userToDelete = await postPerson.findById(userId);
+    if (!userToDelete) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found in database' 
+      });
+    }
+
+    console.log(`📋 Found user to delete: ${userToDelete.name} (${userToDelete.email})`);
+
+    // Step 1: Delete all properties associated with this user
+    const deletedProperties = await postProperty.deleteMany({ 
+      $or: [
+        { postPerson: userId },
+        { userId: userId },
+        { owner: userId }
+      ]
+    });
+    
+    console.log(`🏠 Deleted ${deletedProperties.deletedCount} properties for user ${userId}`);
+
+    // Step 2: Delete the user from database
+    const deletedUser = await postPerson.findByIdAndDelete(userId);
+    
+    if (!deletedUser) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to delete user from database' 
+      });
+    }
+
+    // Log successful deletion
+    console.log(`✅ Successfully deleted user from database: ${deletedUser.name} and ${deletedProperties.deletedCount} properties`);
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message: 'User permanently deleted from database',
+      data: {
+        deletedUser: {
+          id: deletedUser._id,
+          name: deletedUser.name,
+          email: deletedUser.email,
+          mobile: deletedUser.mobile
+        },
+        deletedPropertiesCount: deletedProperties.deletedCount,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Database deletion error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Critical error during database deletion',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// Alternative endpoints for user deletion
+router.delete("/userDelete/:id", adminVerify, async (req, res) => {
+  req.url = `/postPerson/deleteUser/${req.params.id}`;
+  req.params.id = req.params.id;
+  return router.handle(req, res);
+});
 router.post("/changePassword", PostPropertyController.Post_changePassword);
 
 //property routing
