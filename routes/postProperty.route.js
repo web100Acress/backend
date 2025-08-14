@@ -19,16 +19,16 @@ router.post(
 router.get("/logout", PostPropertyController.postPerson_logout);
 router.post("/postProperty_forget", PostPropertyController.postPerson_forget);
 router.post("/reset/:token", PostPropertyController.postPerson_reset);
-// Enhanced user viewing endpoint with debugging
+// Enhanced user viewing endpoint with correct model path
 router.get("/view/allusers", adminVerify, async (req, res) => {
   try {
     console.log('🔍 Admin requesting all users data...');
     
-    // Import the postPerson model
-    const postPerson = require("../models/postPerson");
+    // Import the correct user model from register directory
+    const registerModel = require("../models/register/registerModel");
     
     // Fetch all users from database
-    const allUsers = await postPerson.find({}).sort({ createdAt: -1 });
+    const allUsers = await registerModel.find({}).sort({ createdAt: -1 });
     
     console.log(`📊 Found ${allUsers.length} users in database`);
     
@@ -40,7 +40,7 @@ router.get("/view/allusers", adminVerify, async (req, res) => {
       });
     }
     
-    // Return users data
+    // Return users data in the expected format
     res.status(200).json({
       success: true,
       message: 'Users retrieved successfully',
