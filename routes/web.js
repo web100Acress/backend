@@ -25,6 +25,7 @@ const propertyRoute = require("./property.route");
 const aboutRoute = require("./about.route");
 const blogRoute = require("./blog.route");
 const projectOrderRoute = require("./projectOrder.route");
+const builderRoute = require("./builder.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 
@@ -146,6 +147,9 @@ router.use("/blog", blogRoute);
 
 //Project Order
 router.use("/projectOrder", projectOrderRoute);
+
+//Builder
+router.use("/builder", builderRoute);
 
 
 //Searching routing
