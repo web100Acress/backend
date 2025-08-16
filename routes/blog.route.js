@@ -11,6 +11,7 @@ router.post(
     blogController.blog_insert,
   );
   router.get("/draft/view", blogController.Draft_view);
+  router.get("/admin/view", blogController.admin_blog_view);
   router.get("/view", blogController.blog_view);
   router.get("/view/:id", blogController.blog_viewId);
   router.get("/edit/:id", blogController.blog_edit);
