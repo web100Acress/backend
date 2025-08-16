@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
-// Import your models (adjust paths according to your project structure)
-const User = require("../models/User"); // Adjust path to your User model
-const Property = require("../models/Property"); // Adjust path to your Property model
+// Import actual models from the codebase
+// User records with embedded postProperty array live in models/postProperty/post.js
+const User = require("../models/postProperty/post");
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -32,7 +32,8 @@ const authenticateToken = (req, res, next) => {
 
 // Admin authorization middleware
 const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  // Accept both 'admin' and 'Admin' roles
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'Admin')) {
     next();
   } else {
     return res.status(403).json({ 
@@ -71,18 +72,10 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
 
     console.log(`📋 Found user to delete: ${userToDelete.name} (${userToDelete.email})`);
 
-    // Step 1: Delete all properties associated with this user
-    const deletedProperties = await Property.deleteMany({ 
-      $or: [
-        { userId: userId },
-        { postPerson: userId },
-        { owner: userId }
-      ]
-    });
-    
-    console.log(`🏠 Deleted ${deletedProperties.deletedCount} properties for user ${userId}`);
+    // Determine how many embedded properties will be removed (postProperty is embedded in user)
+    const embeddedCount = Array.isArray(userToDelete.postProperty) ? userToDelete.postProperty.length : 0;
 
-    // Step 2: Delete the user from database
+    // Delete the user document (removes embedded properties as well)
     const deletedUser = await User.findByIdAndDelete(userId);
     
     if (!deletedUser) {
@@ -93,7 +86,7 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
     }
 
     // Log successful deletion
-    console.log(`✅ Successfully deleted user from database: ${deletedUser.name} and ${deletedProperties.deletedCount} properties`);
+    console.log(`✅ Successfully deleted user from database: ${deletedUser.name} and ${embeddedCount} embedded properties`);
 
     // Return success response
     res.status(200).json({
@@ -106,7 +99,7 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
           email: deletedUser.email,
           mobile: deletedUser.mobile
         },
-        deletedPropertiesCount: deletedProperties.deletedCount,
+        deletedPropertiesCount: embeddedCount,
         timestamp: new Date().toISOString()
       }
     });
