@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 // Import actual models from the codebase
 // User records with embedded postProperty array live in models/postProperty/post.js
-const User = require("../models/postProperty/post");
+const PostUser = require("../models/postProperty/post");
+// Some environments may also store users in register/registerModel.js
+const RegisterUser = require("../models/register/registerModel");
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -50,43 +53,53 @@ const requireAdmin = (req, res, next) => {
 router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log(`🗑️ Admin ${req.user.email || req.user.id} attempting to delete user: ${userId}`);
-    
+
     // Validate user ID format (MongoDB ObjectId)
-    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid user ID format' 
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
       });
     }
 
-    // Check if user exists before deletion
-    const userToDelete = await User.findById(userId);
+    // Try in postProperty collection first
+    let userToDelete = await PostUser.findById(userId);
+    let source = 'postProperty';
+
+    // Fallback: try in RegisterData collection
     if (!userToDelete) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found in database' 
+      userToDelete = await RegisterUser.findById(userId);
+      source = 'register';
+    }
+
+    if (!userToDelete) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found in database'
       });
     }
 
-    console.log(`📋 Found user to delete: ${userToDelete.name} (${userToDelete.email})`);
+    console.log(`📋 Found user to delete [${source}]: ${userToDelete.name || userToDelete.email} (${userToDelete.email || 'no-email'})`);
 
-    // Determine how many embedded properties will be removed (postProperty is embedded in user)
-    const embeddedCount = Array.isArray(userToDelete.postProperty) ? userToDelete.postProperty.length : 0;
+    // Determine embedded property count if from postProperty model
+    const embeddedCount = source === 'postProperty' && Array.isArray(userToDelete.postProperty)
+      ? userToDelete.postProperty.length
+      : 0;
 
-    // Delete the user document (removes embedded properties as well)
-    const deletedUser = await User.findByIdAndDelete(userId);
-    
+    // Delete from the correct collection
+    const Model = source === 'postProperty' ? PostUser : RegisterUser;
+    const deletedUser = await Model.findByIdAndDelete(userId);
+
     if (!deletedUser) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Failed to delete user from database' 
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete user from database'
       });
     }
 
-    // Log successful deletion
-    console.log(`✅ Successfully deleted user from database: ${deletedUser.name} and ${embeddedCount} embedded properties`);
+    console.log(`✅ Successfully deleted user from [${source}] database: ${(deletedUser.name) || deletedUser.email} and ${embeddedCount} embedded properties`);
 
     // Return success response
     res.status(200).json({
@@ -95,11 +108,12 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
       data: {
         deletedUser: {
           id: deletedUser._id,
-          name: deletedUser.name,
-          email: deletedUser.email,
-          mobile: deletedUser.mobile
+          name: deletedUser.name || '',
+          email: deletedUser.email || '',
+          mobile: deletedUser.mobile || ''
         },
         deletedPropertiesCount: embeddedCount,
+        source,
         timestamp: new Date().toISOString()
       }
     });
@@ -109,7 +123,7 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
     res.status(500).json({
       success: false,
       message: 'Critical error during database deletion',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: process.env.NODE_ENV !== 'production' ? (error && error.message) : 'Internal server error'
     });
   }
 });

@@ -3,6 +3,7 @@ const PostPropertyController = require("../Controller/AdminController/FrontContr
 const authAdmin = require("../middleware/registerAuth");
 const adminVerify = require("../middleware/adminVerify");
 const upload = require("../aws/multerConfig");
+const mongoose = require("mongoose");
 
 
 const router = express.Router();
@@ -25,59 +26,50 @@ router.get("/edit/:id", PostPropertyController.postPerson_Edit);
 router.post("/update/:id", PostPropertyController.postPerson_update);
 router.delete("/delete/:id", PostPropertyController.postPerson_accountDelete);
 
-// REAL DATABASE USER DELETION - Add this new endpoint
+// REAL DATABASE USER DELETION - corrected to match actual models
 router.delete("/deleteUser/:id", adminVerify, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log(`🗑️ Admin attempting to delete user: ${userId}`);
-    
-    // Import models (adjust paths according to your project structure)
-    const postPerson = require("../models/postPerson");
-    const postProperty = require("../models/postProperty");
-    
+
     // Validate user ID format (MongoDB ObjectId)
-    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid user ID format' 
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
       });
     }
+
+    // Use the real user model with embedded postProperty
+    const PostUser = require("../models/postProperty/post");
 
     // Check if user exists before deletion
-    const userToDelete = await postPerson.findById(userId);
+    const userToDelete = await PostUser.findById(userId);
     if (!userToDelete) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found in database' 
+      return res.status(404).json({
+        success: false,
+        message: 'User not found in database'
       });
     }
 
-    console.log(`📋 Found user to delete: ${userToDelete.name} (${userToDelete.email})`);
+    console.log(`📋 Found user to delete: ${(userToDelete.name) || userToDelete.email} (${userToDelete.email || 'no-email'})`);
 
-    // Step 1: Delete all properties associated with this user
-    const deletedProperties = await postProperty.deleteMany({ 
-      $or: [
-        { postPerson: userId },
-        { userId: userId },
-        { owner: userId }
-      ]
-    });
-    
-    console.log(`🏠 Deleted ${deletedProperties.deletedCount} properties for user ${userId}`);
+    // Determine how many embedded properties will be removed (postProperty is embedded in user)
+    const embeddedCount = Array.isArray(userToDelete.postProperty) ? userToDelete.postProperty.length : 0;
 
-    // Step 2: Delete the user from database
-    const deletedUser = await postPerson.findByIdAndDelete(userId);
-    
+    // Delete the user document (removes embedded properties as well)
+    const deletedUser = await PostUser.findByIdAndDelete(userId);
+
     if (!deletedUser) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Failed to delete user from database' 
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete user from database'
       });
     }
 
     // Log successful deletion
-    console.log(`✅ Successfully deleted user from database: ${deletedUser.name} and ${deletedProperties.deletedCount} properties`);
+    console.log(`✅ Successfully deleted user from database: ${(deletedUser.name) || deletedUser.email} and ${embeddedCount} embedded properties`);
 
     // Return success response
     res.status(200).json({
@@ -86,11 +78,11 @@ router.delete("/deleteUser/:id", adminVerify, async (req, res) => {
       data: {
         deletedUser: {
           id: deletedUser._id,
-          name: deletedUser.name,
-          email: deletedUser.email,
-          mobile: deletedUser.mobile
+          name: deletedUser.name || '',
+          email: deletedUser.email || '',
+          mobile: deletedUser.mobile || ''
         },
-        deletedPropertiesCount: deletedProperties.deletedCount,
+        deletedPropertiesCount: embeddedCount,
         timestamp: new Date().toISOString()
       }
     });
@@ -100,7 +92,7 @@ router.delete("/deleteUser/:id", adminVerify, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Critical error during database deletion',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: process.env.NODE_ENV !== 'production' ? (error && error.message) : 'Internal server error'
     });
   }
 });
