@@ -172,6 +172,47 @@ class blogController {
       });
     }
   };
+
+  // Admin endpoint to view ALL blogs (published + drafts)
+  static admin_blog_view = async (req, res) => {
+    try {
+      const {
+        page = 1,
+        limit = 1000, // High limit for admin to see all blogs
+        sortBy = "createdAt",
+        sortOrder = "desc",
+      } = req.query;
+      const skip = (page - 1) * limit;
+
+      // Get ALL blogs regardless of publish status
+      const data = await blogModel.find({}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
+      const totalBlogs = await blogModel.countDocuments({});
+      
+      console.log(`Admin blog view: Found ${data.length} blogs out of ${totalBlogs} total`);
+      
+      if (data) {
+        res.status(200).json({
+          message: "Admin data retrieved successfully",
+          data,
+          totalPages: Math.ceil(totalBlogs / limit),
+          totalBlogs,
+          publishedBlogs: data.filter(blog => blog.isPublished === true).length,
+          draftBlogs: data.filter(blog => blog.isPublished === false).length,
+        });
+      } else {
+        res.status(200).json({
+          message: "No data found",
+          data: [],
+        });
+      }
+    } catch (error) {
+      console.error("Admin blog view error:", error);
+      res.status(500).json({
+        message: "Internal server error",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  };
   static Draft_view = async (req, res) => {
     try {
       // res.send("bsdbk.kkjnc cnf")
