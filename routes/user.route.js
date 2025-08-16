@@ -140,4 +140,3 @@ router.delete('/admin/user/delete/:id', authenticateToken, requireAdmin, async (
 });
 
 module.exports = router;
-  
