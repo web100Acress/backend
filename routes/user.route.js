@@ -147,3 +147,51 @@ router.delete('/admin/user/delete/:id', authenticateToken, requireAdmin, async (
 });
 
 module.exports = router;
+
+// --- Role update endpoint ---
+// PATCH /postPerson/users/:id/role
+// Updates a user's role in the RegisterData collection
+router.patch('/postPerson/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body || {};
+
+    // Validate ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    // Validate role
+    const allowedRoles = new Set(['user', 'blog', 'admin', 'agent', 'owner', 'builder']);
+    if (!role || !allowedRoles.has(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role value' });
+    }
+
+    // Update role in RegisterUser (primary user store for auth)
+    const updated = await RegisterUser.findByIdAndUpdate(
+      userId,
+      { $set: { role } },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Role updated successfully',
+      data: {
+        id: updated._id,
+        name: updated.name,
+        email: updated.email,
+        mobile: updated.mobile,
+        role: updated.role,
+        updatedAt: updated.updatedAt,
+      }
+    });
+  } catch (err) {
+    console.error('Failed to update role:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
