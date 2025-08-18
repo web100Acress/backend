@@ -9,6 +9,8 @@ const bodyParser = require("body-parser");
 const errorHandler = require("./middleware/errorMiddleware");
 const app = express();
 require("dotenv").config();
+const http = require("http");
+const { Server } = require("socket.io");
 
 // Create a rate limit rule
 const limiter = rateLimit({
@@ -46,6 +48,24 @@ app.use(cookieParser());
 // Router Link
 app.use("/", router);
 
-app.listen(Port, () => {
+// Create HTTP server and bind Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || "*",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true,
+  },
+});
+
+// Make io available inside routes via req.app.get('io')
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+  socket.on("disconnect", () => console.log("Socket disconnected:", socket.id));
+});
+
+server.listen(Port, () => {
   console.log(`App Listen On the ${Port}`);
 });
