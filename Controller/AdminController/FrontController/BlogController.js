@@ -499,5 +499,37 @@ class blogController {
       });
     }
   };
+
+  // Inline image upload endpoint for the editor toolbar
+  static upload_inline_image = async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image uploaded" });
+      }
+
+      // Upload the received file to S3 (reuse existing helper)
+      let imageData;
+      try {
+        imageData = await uploadFile(req.file);
+      } catch (s3Error) {
+        // Ensure local temp file is removed even on failure
+        if (req.file && req.file.path) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(500).json({ message: "Failed to upload to storage" });
+      }
+
+      // Clean up local file after successful upload
+      if (req.file && req.file.path) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+
+      // Respond with the public URL in the expected shape
+      return res.status(200).json({ data: { url: imageData.Location } });
+    } catch (error) {
+      console.error('upload_inline_image error:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
 }
 module.exports = blogController;

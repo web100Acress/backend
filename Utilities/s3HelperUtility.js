@@ -8,28 +8,35 @@ const nodemailer = require("nodemailer");
 // Enhanced AWS configuration with better error handling
 const configureAWS = () => {
   console.log('Configuring AWS S3...');
+
+  // Support both custom and standard env var names, and handle the misspelling
+  const ACCESS_KEY = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
+  const SECRET_KEY = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY; // note: ACESS (legacy) or ACCESS (standard)
+  const REGION = process.env.AWS_REGION;
+  const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
+
   console.log('Environment variables check:', {
-    hasAccessKey: !!process.env.AWS_S3_ACCESS_KEY,
-    hasSecretKey: !!process.env.AWS_S3_SECRET_ACESS_KEY,
-    hasRegion: !!process.env.AWS_REGION,
-    region: process.env.AWS_REGION,
-    bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket"
+    hasAccessKey: !!ACCESS_KEY,
+    hasSecretKey: !!SECRET_KEY,
+    hasRegion: !!REGION,
+    region: REGION,
+    bucket: BUCKET
   });
 
-  if (!process.env.AWS_S3_ACCESS_KEY || !process.env.AWS_S3_SECRET_ACESS_KEY) {
-    console.error('❌ AWS credentials missing! Please set AWS_S3_ACCESS_KEY and AWS_S3_SECRET_ACESS_KEY');
+  if (!ACCESS_KEY || !SECRET_KEY) {
+    console.error('❌ AWS credentials missing! Set AWS_S3_ACCESS_KEY/AWS_ACCESS_KEY_ID and AWS_S3_SECRET_ACESS_KEY/AWS_SECRET_ACCESS_KEY');
     throw new Error('AWS credentials not configured');
   }
 
-  if (!process.env.AWS_REGION) {
+  if (!REGION) {
     console.error('❌ AWS region missing! Please set AWS_REGION');
     throw new Error('AWS region not configured');
   }
 
   AWS.config.update({
-    secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    region: process.env.AWS_REGION,
+    accessKeyId: ACCESS_KEY,
+    secretAccessKey: SECRET_KEY,
+    region: REGION,
   });
 
   console.log('✅ AWS S3 configured successfully');

@@ -4,6 +4,14 @@
   const ContentWriterVerify = require("../middleware/ContentWriterVerify");
   const blogController = require("../Controller/AdminController/FrontController/BlogController");
 
+  // Inline image upload for editor content
+  router.post(
+    "/upload-image",
+    ContentWriterVerify,
+    upload.single("image"),
+    blogController.upload_inline_image,
+  );
+
   router.post(
       "/insert",
       ContentWriterVerify,
