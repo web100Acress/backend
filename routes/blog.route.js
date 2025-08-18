@@ -18,6 +18,9 @@
       upload.single("blog_Image"),
       blogController.blog_insert,
     );
+    // Categories
+    router.get("/categories", blogController.list_categories);
+    router.post("/categories", ContentWriterVerify, blogController.create_category);
     router.get("/draft/view", blogController.Draft_view);
     router.get("/admin/view", blogController.admin_blog_view);
     router.get("/view", blogController.blog_view);
