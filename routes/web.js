@@ -28,7 +28,7 @@ const projectOrderRoute = require("./projectOrder.route");
 const builderRoute = require("./builder.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
-
+const usersRoute = require("./user.route");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -151,6 +151,8 @@ router.use("/projectOrder", projectOrderRoute);
 //Builder
 router.use("/builder", builderRoute);
 
+// Mount user admin routes (role update, deletions, etc.)
+router.use("/", usersRoute);
 
 //Searching routing
 // searching rent and buy
