@@ -22,8 +22,26 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 
-// cors
-app.use(cors());
+// CORS - explicitly allow PATCH + Authorization and handle OPTIONS preflight
+const allowedOrigins = (process.env.CORS_ORIGIN || "*")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    return cb(null, false);
+  },
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Apply the rate limit rule to all requests
 app.use(limiter);
