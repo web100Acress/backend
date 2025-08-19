@@ -1,5 +1,6 @@
 const { totalmem } = require("os");
 const blogModel = require("../../../models/blog/blogpost");
+const Category = require("../../../models/blog/category");
 const postPropertyModel = require("../../../models/postProperty/post");
 const ObjectId = require("mongodb").ObjectId;
 const {
@@ -34,7 +35,7 @@ class blogController {
         return res.status(400).json({ message: "No image uploaded" });
       }
 
-      const { blog_Title, author, blog_Description, blog_Category } = req.body;
+      const { blog_Title, author, blog_Description, blog_Category, metaTitle, metaDescription, slug } = req.body;
       let string_blog_Description = blog_Description;
       const isPublished = req.body.isPublished === 'true';
 
@@ -93,6 +94,10 @@ class blogController {
         author,
         blog_Category,
         isPublished,
+        // SEO fields
+        metaTitle: metaTitle || undefined,
+        metaDescription: metaDescription || undefined,
+        slug: slug || undefined,
       });
       await newBlog.save();
       console.log('Blog saved successfully');
@@ -324,55 +329,44 @@ class blogController {
     try {
       const id = req.params.id;
       if (ObjectId.isValid(id)) {
-        const { blog_Title, blog_Description, author, blog_Category } =
-          req.body;
+        const { blog_Title, blog_Description, author, blog_Category, metaTitle, metaDescription, slug } = req.body;
+        const isPublished = req.body.isPublished === 'true';
+        console.log("isPublished: ", isPublished);
 
-          const isPublished = req.body.isPublished === 'true';
-          console.log("isPublished: ",isPublished);
-
-        if (req.file) {
-          const data = await blogModel.findById({ _id: id });
-          const objectKey = data.blog_Image.public_id;
-
-          const imageData = await updateFile(req.file, objectKey);
-
-          const update = await blogModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              blog_Image: {
-                public_id: imageData.Key,
-                url: imageData.Location,
-              },
-              blog_Title: blog_Title,
-              blog_Description: blog_Description,
-              author: author,
-              blog_Category: blog_Category,
-              isPublished,
-            },
-          );
-
-          await update.save();
-          // Clean up local file
-          fs.unlinkSync(req.file.path);
-          res.status(200).json({
-            message: "data updated successfully !",
-          });
-        } else {
-          const update = await blogModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              blog_Title: blog_Title,
-              blog_Description: blog_Description,
-              author: author,
-              blog_Category: blog_Category,
-              isPublished,
-            },
-          );
-          await update.save();
-          res.status(200).json({
-            message: "data updated successfully !",
-          });
+        const doc = await blogModel.findById({ _id: id });
+        if (!doc) {
+          return res.status(404).json({ message: "Blog not found" });
         }
+
+        // Update core fields
+        if (typeof blog_Title !== 'undefined') doc.blog_Title = blog_Title;
+        if (typeof blog_Description !== 'undefined') doc.blog_Description = blog_Description;
+        if (typeof author !== 'undefined') doc.author = author;
+        if (typeof blog_Category !== 'undefined') doc.blog_Category = blog_Category;
+        if (typeof isPublished !== 'undefined') doc.isPublished = isPublished;
+
+        // SEO fields
+        if (typeof metaTitle !== 'undefined') doc.metaTitle = metaTitle;
+        if (typeof metaDescription !== 'undefined') doc.metaDescription = metaDescription;
+        if (typeof slug !== 'undefined' && slug !== '') doc.slug = slug; // will be normalized in pre-save
+
+        // Optional image update
+        if (req.file) {
+          try {
+            const currentKey = doc.blog_Image?.public_id;
+            const imageData = await updateFile(req.file, currentKey);
+            doc.blog_Image = {
+              public_id: imageData.Key,
+              url: imageData.Location,
+            };
+          } finally {
+            // Clean up local temp file
+            try { if (req.file?.path) fs.unlinkSync(req.file.path); } catch {}
+          }
+        }
+
+        await doc.save();
+        return res.status(200).json({ message: "data updated successfully !" });
       } else {
         res.status(404).json({
           message: "not found!",
@@ -497,6 +491,73 @@ class blogController {
         message: errorMessage,
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
+    }
+  };
+
+  // Inline image upload endpoint for the editor toolbar
+  static upload_inline_image = async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image uploaded" });
+      }
+
+      // Upload the received file to S3 (reuse existing helper)
+      let imageData;
+      try {
+        imageData = await uploadFile(req.file);
+      } catch (s3Error) {
+        // Ensure local temp file is removed even on failure
+        if (req.file && req.file.path) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(500).json({ message: "Failed to upload to storage" });
+      }
+
+      // Clean up local file after successful upload
+      if (req.file && req.file.path) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+
+      // Respond with the public URL in the expected shape
+      return res.status(200).json({ data: { url: imageData.Location } });
+    } catch (error) {
+      console.error('upload_inline_image error:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Categories
+  static list_categories = async (req, res) => {
+    try {
+      const cats = await Category.find({}).sort({ name: 1 }).lean();
+      return res.status(200).json({ message: "OK", data: cats });
+    } catch (error) {
+      console.error('list_categories error:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static create_category = async (req, res) => {
+    try {
+      const nameRaw = (req.body?.name || '').trim();
+      if (!nameRaw) {
+        return res.status(400).json({ message: "Category name is required" });
+      }
+      // Case-insensitive dedupe
+      const regex = new RegExp(`^${nameRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+      let existing = await Category.findOne({ name: regex });
+      if (existing) {
+        return res.status(200).json({ message: "Category already exists", data: existing });
+      }
+      const created = await Category.create({ name: nameRaw });
+      return res.status(201).json({ message: "Category created", data: created });
+    } catch (error) {
+      console.error('create_category error:', error);
+      // Handle duplicate key
+      if (error?.code === 11000) {
+        return res.status(200).json({ message: "Category already exists" });
+      }
+      return res.status(500).json({ message: "Internal server error" });
     }
   };
 }

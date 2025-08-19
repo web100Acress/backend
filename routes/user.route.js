@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const adminVerify = require("../middleware/adminVerify");
 
 // Import actual models from the codebase
 // User records with embedded postProperty array live in models/postProperty/post.js
@@ -50,7 +51,7 @@ const requireAdmin = (req, res, next) => {
  * DELETE /postPerson/deleteUser/:id
  * REAL DATABASE DELETION - Permanently removes user and all associated data
  */
-router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/postPerson/deleteUser/:id', adminVerify, async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -131,7 +132,7 @@ router.delete('/postPerson/deleteUser/:id', authenticateToken, requireAdmin, asy
 /**
  * Alternative endpoint for user deletion
  */
-router.delete('/postPerson/userDelete/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/postPerson/userDelete/:id', adminVerify, async (req, res) => {
   // Redirect to main deletion endpoint
   req.url = `/postPerson/deleteUser/${req.params.id}`;
   return router.handle(req, res);
@@ -140,7 +141,7 @@ router.delete('/postPerson/userDelete/:id', authenticateToken, requireAdmin, asy
 /**
  * Admin endpoint for user deletion
  */
-router.delete('/admin/user/delete/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/admin/user/delete/:id', adminVerify, async (req, res) => {
   // Redirect to main deletion endpoint
   req.url = `/postPerson/deleteUser/${req.params.id}`;
   return router.handle(req, res);
@@ -151,7 +152,7 @@ module.exports = router;
 // --- Role update endpoint ---
 // PATCH /postPerson/users/:id/role
 // Updates a user's role in the RegisterData collection
-router.patch('/postPerson/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
+router.patch('/postPerson/users/:id/role', adminVerify, async (req, res) => {
   try {
     const userId = req.params.id;
     const { role } = req.body || {};
@@ -161,20 +162,55 @@ router.patch('/postPerson/users/:id/role', authenticateToken, requireAdmin, asyn
       return res.status(400).json({ success: false, message: 'Invalid user ID format' });
     }
 
-    // Validate role
-    const allowedRoles = new Set(['user', 'blog', 'admin', 'agent', 'owner', 'builder']);
-    if (!role || !allowedRoles.has(role)) {
+    // Validate role (case-insensitive)
+    const allowedRolesLower = new Set(['user', 'blog', 'admin', 'agent', 'owner', 'builder']);
+    const roleNormalized = typeof role === 'string' ? role.trim() : '';
+    if (!roleNormalized || !allowedRolesLower.has(roleNormalized.toLowerCase())) {
       return res.status(400).json({ success: false, message: 'Invalid role value' });
     }
 
-    // Update role in RegisterUser (primary user store for auth)
-    const updated = await RegisterUser.findByIdAndUpdate(
+    let updatedDoc = null;
+    let updatedSource = null;
+
+    // 1) Try update in RegisterUser by id
+    updatedDoc = await RegisterUser.findByIdAndUpdate(
       userId,
-      { $set: { role } },
+      { $set: { role: roleNormalized } },
       { new: true }
     );
+    if (updatedDoc) {
+      updatedSource = 'register';
+      // Best-effort sync into PostUser by email if exists
+      if (updatedDoc.email) {
+        await PostUser.findOneAndUpdate(
+          { email: updatedDoc.email },
+          { $set: { role: roleNormalized } },
+          { new: false }
+        );
+      }
+    }
 
-    if (!updated) {
+    // 2) If not found in RegisterUser, try update in PostUser by id
+    if (!updatedDoc) {
+      updatedDoc = await PostUser.findByIdAndUpdate(
+        userId,
+        { $set: { role: roleNormalized } },
+        { new: true }
+      );
+      if (updatedDoc) {
+        updatedSource = 'postProperty';
+        // Best-effort sync into RegisterUser by email if exists
+        if (updatedDoc.email) {
+          await RegisterUser.findOneAndUpdate(
+            { email: updatedDoc.email },
+            { $set: { role: roleNormalized } },
+            { new: false }
+          );
+        }
+      }
+    }
+
+    if (!updatedDoc) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
@@ -182,12 +218,13 @@ router.patch('/postPerson/users/:id/role', authenticateToken, requireAdmin, asyn
       success: true,
       message: 'Role updated successfully',
       data: {
-        id: updated._id,
-        name: updated.name,
-        email: updated.email,
-        mobile: updated.mobile,
-        role: updated.role,
-        updatedAt: updated.updatedAt,
+        id: updatedDoc._id,
+        name: updatedDoc.name,
+        email: updatedDoc.email,
+        mobile: updatedDoc.mobile,
+        role: updatedDoc.role,
+        updatedAt: updatedDoc.updatedAt,
+        source: updatedSource,
       }
     });
   } catch (err) {

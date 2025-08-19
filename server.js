@@ -2,13 +2,16 @@ const express = require("express");
 const compression = require("compression");
 const connectDB = require("./db/connect_db");
 const router = require("./routes/web");
-const Port = process.env.PORT || 3500;
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const errorHandler = require("./middleware/errorMiddleware");
 const app = express();
+// Load environment variables BEFORE using them
 require("dotenv").config();
+// Resolve port: in non-production, always bind to 3500 to match frontend
+const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
+const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -35,7 +38,7 @@ const corsOptions = {
     }
     return cb(null, false);
   },
-  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false,
   optionsSuccessStatus: 204,
@@ -85,5 +88,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(Port, () => {
-  console.log(`App Listen On the ${Port}`);
+  console.log(`App Listen On the ${Port} (env NODE_ENV='${process.env.NODE_ENV || ''}', effective PORT='${Port}')`);
 });
