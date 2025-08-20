@@ -619,24 +619,54 @@ class PostPropertyController {
   //change password
   static Post_changePassword = async (req, res) => {
     try {
-      const { email, password } = req.body;
-      if (email && password) {
-        const hashpassword = await bcrypt.hash(password, 10);
-        const data = await postPropertyModel.findOneAndUpdate(
-          { email: email },
-          {
-            password: hashpassword,
-          },
-        );
-        await data.save();
-        res.status(200).json({
-          message: "Your password has been updated successfuly !",
-        });
-      } else {
-        res.status(200).json({
-          message: "check your field ! ",
-        });
+      const { email, password, currentPassword } = req.body;
+      // Debug log (no sensitive data)
+      try { console.log('[Post_changePassword] hit', { email, ip: req.ip }); } catch {}
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and new password are required" });
       }
+
+      // Basic policy: keep consistent with register (min length)
+      if (typeof password !== 'string' || password.length < 5) {
+        return res.status(400).json({ message: "Password must be at least 5 characters" });
+      }
+
+      const emailLower = String(email).toLowerCase();
+      const user = await postPropertyModel.findOne({ email: emailLower });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // If currentPassword is provided, verify it matches existing
+      if (currentPassword && typeof currentPassword === 'string') {
+        const ok = await bcrypt.compare(currentPassword, user.password || '');
+        if (!ok) {
+          return res.status(400).json({ message: "Current password is incorrect" });
+        }
+      }
+
+      const hashpassword = await bcrypt.hash(password, 10);
+      user.password = hashpassword;
+      await user.save();
+
+      // Send confirmation email (no sensitive info)
+      try {
+        const subject = "Your 100acress password was changed";
+        const username = user.email.split('@')[0];
+        const html = `<!DOCTYPE html>
+        <html><body>
+          <p>Hi ${username},</p>
+          <p>This is a confirmation that the password for your account was just changed.</p>
+          <p>If you did not perform this action, please reset your password immediately or contact support.</p>
+          <p>— 100acress Support</p>
+        </body></html>`;
+        await sendEmail(user.email, "support@100acress.com", [], subject, html, true);
+      } catch (mailErr) {
+        // Log but don't fail the API if email sending fails
+        console.log("Error sending password change confirmation email", mailErr);
+      }
+
+      return res.status(200).json({ message: "Your password has been updated successfully" });
     } catch (error) {
       console.log(error);
       res.status(500).json({
