@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const compression = require("compression");
 const connectDB = require("./db/connect_db");
 const router = require("./routes/web");
@@ -68,6 +69,9 @@ app.use(cookieParser());
 
 // Router Link
 app.use("/", router);
+
+// Serve uploaded files statically so avatar URLs like /uploads/<file> work
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Create HTTP server and bind Socket.IO
 const server = http.createServer(app);

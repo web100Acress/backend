@@ -115,6 +115,11 @@ const post_Schema = new mongoose.Schema(
       minlength: 5,
       match: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/,
     },
+    // Optional profile image URL to keep parity with RegisterData model
+    avatarUrl: {
+      type: String,
+      default: "",
+    },
     postProperty: [property_Schema],
 
     role: {

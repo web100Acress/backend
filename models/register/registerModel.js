@@ -23,6 +23,11 @@ const register_Schema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  // Optional profile image URL (served from /uploads or external storage)
+  avatarUrl: {
+    type: String,
+    default: "",
+  },
   token: {
     type: String,
     default: "",

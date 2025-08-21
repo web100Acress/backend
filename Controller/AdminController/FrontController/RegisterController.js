@@ -115,7 +115,7 @@ class registerController {
             if (user.role == "admin") {
               const token = jwt.sign(
                 { user_id: user._id, role: "Admin" },
-                "amitchaudhary100",
+                process.env.JWT_SECRET || "amitchaudhary100",
               );
               // console.log(token)
               //  console.log(token)
@@ -128,7 +128,7 @@ class registerController {
             } else {
               const token = jwt.sign(
                 { user_id: user._id, role: "user" },
-                "amitchaudhary100",
+                process.env.JWT_SECRET || "amitchaudhary100",
               );
               res.cookie("token", token);
               res.status(200).json({
