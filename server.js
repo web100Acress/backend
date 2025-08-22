@@ -47,6 +47,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+// Immediately answer preflight to avoid any interference (rate limits, auth, etc.)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    try {
+      const origin = req.headers.origin || "*";
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Vary", "Origin");
+      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.header("Access-Control-Max-Age", "86400");
+    } catch {}
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // Apply the rate limit rule to all requests
 app.use(limiter);
 

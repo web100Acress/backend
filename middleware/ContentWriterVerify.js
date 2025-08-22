@@ -17,10 +17,14 @@ const jwtVerification = async (req, res, next) => {
       return res.status(401).json({success:false, message: "No token provided" });
     }
 
-    const decoded = jwt.verify(token_without_quotes, "amitchaudhary100");
-  
-
-    if (["ContentWriter", "Admin"].includes(decoded.role)) {
+    // Verify using the same secret used when signing tokens
+    const decoded = jwt.verify(
+      token_without_quotes,
+      process.env.JWT_SECRET || "amitchaudhary100"
+    );
+    const role = (decoded.role || "").toString();
+    const roleLc = role.toLowerCase();
+    if (role === "ContentWriter" || role === "Admin" || roleLc === "blog") {
       req.user = decoded;
       return next(); // Critical return statement
     }

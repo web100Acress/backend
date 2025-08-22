@@ -18,6 +18,9 @@
       upload.single("blog_Image"),
       blogController.blog_insert,
     );
+    
+    // Slug availability check
+    router.get("/slug/:slug", blogController.slug_check);
     // Categories
     router.get("/categories", blogController.list_categories);
     router.post("/categories", ContentWriterVerify, blogController.create_category);
