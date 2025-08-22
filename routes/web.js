@@ -29,6 +29,7 @@ const builderRoute = require("./builder.route");
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 const usersRoute = require("./user.route");
+const SettingsController = require("../Controller/AdminController/SettingsController");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -209,5 +210,9 @@ router.get("/auth/isContentWriter",ContentWriterVerify,AuthController.isContentW
 
 // User delete route (admin only)
 router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperties);
+
+// Site settings: Shorts video ID
+router.get("/settings/shorts-video-id", SettingsController.getShortsVideoId);
+router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateShortsVideoId);
 
 module.exports = router;
