@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../aws/multerConfig");
+const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Require Controller Front
@@ -194,6 +195,30 @@ router.get("/career/opening/View/:id", CareerController.openingView_id);
 router.get("/career/opening/edit/:id", CareerController.openingEdit);
 router.put("/career/opening/update/:id", CareerController.openingUpdate);
 router.delete("/career/opening/delete/:id", CareerController.openingDelete);
+
+// Applications for job openings
+router.post(
+  "/career/opening/:id/apply",
+  resumeUpload.single("resume"),
+  CareerController.applyForOpening,
+);
+router.get(
+  "/career/opening/:id/applications",
+  adminVerify,
+  CareerController.listApplicationsByOpening,
+);
+router.put(
+  "/career/application/:appId/approve",
+  adminVerify,
+  CareerController.approveApplication,
+);
+
+// Career: Applications aggregate counts
+router.get(
+  "/career/application/count",
+  adminVerify,
+  CareerController.applicationsCount,
+);
 
 router.post("/pahleGhar", newlaunchController.pahleGhar);
 router.post("/Valley", newlaunchController.Valley);
