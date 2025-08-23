@@ -19,6 +19,6 @@ const openSchema = new mongoose.Schema({
   jobProfile: {
     type: String,
   },
-});
+}, { timestamps: true });
 const openModal = mongoose.model("Opening", openSchema);
 module.exports = openModal;

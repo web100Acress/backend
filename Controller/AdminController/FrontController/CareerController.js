@@ -2,6 +2,8 @@ const { isValidObjectId } = require("mongoose");
 const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
+const Application = require("../../../models/career/application");
+const transporter = require("../../../Utilities/Nodemailer");
 const fs = require("fs");
 const {
   uploadFile,
@@ -326,14 +328,78 @@ class CareerController {
   };
   static openingView_all = async (req, res) => {
     try {
-      const data = await openModal.find();
+      // Query params: q, loc, exp, sort(newest|oldest), page, limit
+      const {
+        q = "",
+        loc,
+        exp,
+        sort = "newest",
+        page = 1,
+        limit = 10,
+      } = req.query || {};
 
-      res.status(200).json({
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+
+      // Build filter
+      const filter = {};
+      if (loc) {
+        filter.$or = [
+          { jobLocation: loc },
+          { location: loc },
+        ];
+      }
+      if (q) {
+        const regex = new RegExp(q, 'i');
+        filter.$and = (filter.$and || []).concat([{
+          $or: [
+            { jobTitle: regex },
+            { skill: regex },
+            { jobLocation: regex },
+            { location: regex },
+          ],
+        }]);
+      }
+      if (exp) {
+        // Match textually in experience field for flexibility (e.g., "0-1", "2-4", "5+")
+        const expRegex = new RegExp(exp, 'i');
+        filter.$and = (filter.$and || []).concat([{ experience: expRegex }]);
+      }
+
+      const sortObj = sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
+
+      const total = await openModal.countDocuments(filter);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const safePage = Math.min(pageNum, totalPages);
+
+      const data = await openModal
+        .find(filter)
+        .sort(sortObj)
+        .skip((safePage - 1) * pageSize)
+        .limit(pageSize);
+
+      // Distinct locations across all openings for stable filter dropdown
+      const distinctJobLocations = await openModal.distinct('jobLocation');
+      const distinctLocations = await openModal.distinct('location');
+      const locationsDistinct = Array.from(new Set([
+        ...distinctJobLocations.filter(Boolean),
+        ...distinctLocations.filter(Boolean),
+      ]));
+
+      return res.status(200).json({
         message: "data get successfully !",
         data,
+        meta: {
+          page: safePage,
+          pageSize,
+          total,
+          totalPages,
+          locationsDistinct,
+        },
       });
     } catch (error) {
-      console.log(error).json({
+      console.log(error);
+      return res.status(500).json({
         message: "Internal server error !",
       });
     }
@@ -443,6 +509,110 @@ class CareerController {
       res.status(500).json({
         message: "Internal server error !",
       });
+    }
+  };
+
+  ///////////// Applications API ///////////
+  static applyForOpening = async (req, res) => {
+    try {
+      const openingId = req.params.id;
+      const { name, email, phone, resumeUrl, coverLetter } = req.body || {};
+      if (!openingId || !isValidObjectId(openingId)) {
+        return res.status(400).json({ message: "Invalid opening id" });
+      }
+      if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
+      }
+
+      const opening = await openModal.findById(openingId);
+      if (!opening) return res.status(404).json({ message: "Opening not found" });
+
+      // If resume file is attached, upload to S3
+      let resumeUrlFinal = resumeUrl;
+      if (req.file) {
+        try {
+          const uploaded = await uploadFile(req.file);
+          resumeUrlFinal = uploaded?.Location || resumeUrlFinal;
+        } catch (e) {
+          console.error("Resume upload failed", e);
+        }
+      }
+
+      const app = await Application.create({
+        openingId,
+        name,
+        email,
+        phone,
+        resumeUrl: resumeUrlFinal,
+        coverLetter,
+      });
+      return res.status(200).json({ message: "Application submitted", data: app });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static listApplicationsByOpening = async (req, res) => {
+    try {
+      const openingId = req.params.id;
+      if (!openingId || !isValidObjectId(openingId)) {
+        return res.status(400).json({ message: "Invalid opening id" });
+      }
+      const list = await Application.find({ openingId }).sort({ createdAt: -1 });
+      return res.status(200).json({ message: "ok", data: list });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static approveApplication = async (req, res) => {
+    try {
+      const appId = req.params.appId;
+      if (!appId || !isValidObjectId(appId)) {
+        return res.status(400).json({ message: "Invalid application id" });
+      }
+      // Load application first
+      const app = await Application.findById(appId);
+      if (!app) return res.status(404).json({ message: "Application not found" });
+
+      // Attempt to send email FIRST
+      try {
+        const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@localhost';
+        await transporter.sendMail({
+          from: fromAddr,
+          to: app.email,
+          subject: 'Application Approved - 100acress',
+          html: `<p>Dear ${app.name},</p><p>Your application has been approved. Our team will contact you shortly.</p><p>Regards,<br/>100acress HR</p>`,
+        });
+      } catch (mailErr) {
+        console.error('Mail error:', mailErr);
+        // Do NOT mark approved if email failed
+        return res.status(502).json({ message: 'Mail send failed, approval not saved' });
+      }
+
+      // Only if mail succeeded, persist approved status
+      app.status = 'approved';
+      await app.save();
+
+      return res.status(200).json({ message: "Application approved and email sent", data: app });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Lightweight aggregate: total applications (and by status)
+  static applicationsCount = async (req, res) => {
+    try {
+      const total = await Application.countDocuments({});
+      const approved = await Application.countDocuments({ status: 'approved' });
+      const pending = await Application.countDocuments({ status: { $ne: 'approved' } });
+      return res.status(200).json({ message: 'ok', count: total, byStatus: { approved, pending } });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   };
 }
