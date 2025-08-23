@@ -16,7 +16,11 @@ const jwtVerification = async (req, res, next) => {
       return res.status(401).json({success:false, message: "No token provided" });
     }
 
-    const decoded = jwt.verify(token_without_quotes, "amitchaudhary100");
+    // Verify using the same secret used when signing tokens
+    const decoded = jwt.verify(
+      token_without_quotes,
+      process.env.JWT_SECRET || "amitchaudhary100"
+    );
     // console.log("Decoded: ",decoded);
 
     if (decoded.role !== "Admin") {

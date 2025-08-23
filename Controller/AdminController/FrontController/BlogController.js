@@ -560,5 +560,32 @@ class blogController {
       return res.status(500).json({ message: "Internal server error" });
     }
   };
+
+  // Check slug availability (normalized)
+  static slug_check = async (req, res) => {
+    try {
+      const raw = (req.params?.slug || '').toString();
+      const normalized = raw
+        .toLowerCase()
+        .trim()
+        .replace(/['"]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 100);
+
+      if (!normalized) {
+        return res.status(400).json({ message: 'Invalid slug' });
+      }
+
+      const existing = await blogModel.findOne({ slug: normalized }).select('_id slug blog_Title');
+      if (existing) {
+        return res.status(200).json({ message: 'Slug taken', data: { exists: true, id: existing._id, slug: existing.slug, title: existing.blog_Title } });
+      }
+      return res.status(200).json({ message: 'Slug available', data: { exists: false, slug: normalized } });
+    } catch (error) {
+      console.error('slug_check error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
 }
 module.exports = blogController;

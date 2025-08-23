@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -221,6 +222,94 @@ router.get('/users/:id/profile', async (req, res) => {
   }
 });
 
+// --- Email verification update endpoint ---
+// PATCH /postPerson/users/:id/email-verified
+// Updates a user's emailVerified boolean (admin only)
+router.patch('/postPerson/users/:id/email-verified', adminVerify, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    let { emailVerified } = req.body || {};
+
+    // Default to true if not explicitly provided
+    if (typeof emailVerified === 'undefined') emailVerified = true;
+
+    // Validate ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    // Validate boolean
+    if (typeof emailVerified !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'emailVerified must be a boolean' });
+    }
+
+    let updatedDoc = null;
+    let updatedSource = null;
+
+    // 1) Try RegisterUser by id
+    updatedDoc = await RegisterUser.findByIdAndUpdate(
+      userId,
+      { $set: { emailVerified } },
+      { new: true }
+    );
+    if (updatedDoc) {
+      updatedSource = 'register';
+      // Best-effort sync PostUser by email
+      if (updatedDoc.email) {
+        await PostUser.findOneAndUpdate(
+          { email: updatedDoc.email },
+          { $set: { emailVerified } },
+          { new: false }
+        );
+      }
+    }
+
+    // 2) Fallback: PostUser by id
+    if (!updatedDoc) {
+      updatedDoc = await PostUser.findByIdAndUpdate(
+        userId,
+        { $set: { emailVerified } },
+        { new: true }
+      );
+      if (updatedDoc) {
+        updatedSource = 'postProperty';
+        // Best-effort sync RegisterUser by email
+        if (updatedDoc.email) {
+          await RegisterUser.findOneAndUpdate(
+            { email: updatedDoc.email },
+            { $set: { emailVerified } },
+            { new: false }
+          );
+        }
+      }
+    }
+
+    if (!updatedDoc) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Email verification status updated',
+      data: {
+        id: updatedDoc._id,
+        name: updatedDoc.name,
+        email: updatedDoc.email,
+        mobile: updatedDoc.mobile,
+        emailVerified: updatedDoc.emailVerified === true,
+        updatedAt: updatedDoc.updatedAt,
+        source: updatedSource,
+      }
+    });
+  } catch (err) {
+    console.error('Failed to update emailVerified:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Explicit preflight for email-verified endpoint (helps some environments)
+router.options('/postPerson/users/:id/email-verified', cors());
+
 // Admin authorization middleware
 const requireAdmin = (req, res, next) => {
   // Accept both 'admin' and 'Admin' roles
@@ -340,6 +429,7 @@ module.exports = router;
 // PATCH /postPerson/users/:id/role
 // Updates a user's role in the RegisterData collection
 router.patch('/postPerson/users/:id/role', adminVerify, async (req, res) => {
+
   try {
     const userId = req.params.id;
     const { role } = req.body || {};
