@@ -3,12 +3,13 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
-const transporter = require("../../../Utilities/Nodemailer");
+// Use AWS SES-based mail helper instead of raw SMTP transporter
 const fs = require("fs");
 const {
   uploadFile,
   deleteFile,
   updateFile,
+  sendEmail,
 } = require("../../../Utilities/s3HelperUtility");
 // const AWS = require("aws-sdk");
 require("dotenv").config();
@@ -57,6 +58,15 @@ require("dotenv").config();
 //     return s3.upload(params).promise();
 //   }
 // };
+
+// Helper: resolve a verified sender address. Prefer SES_FROM, then SMTP_FROM, then SMTP_USER.
+// If nothing is configured, return an empty string so callers can fail fast with a clear message.
+const getFromAddr = () => {
+  const v = (process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+  // prevent accidental localhost fallback
+  if (!v || v.toLowerCase().endsWith("@localhost")) return "";
+  return v;
+};
 
 class CareerController {
   static careerInsert = async (req, res) => {
@@ -579,13 +589,48 @@ class CareerController {
 
       // Attempt to send email FIRST
       try {
-        const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@localhost';
-        await transporter.sendMail({
-          from: fromAddr,
-          to: app.email,
-          subject: 'Application Approved - 100acress',
-          html: `<p>Dear ${app.name},</p><p>Your application has been approved. Our team will contact you shortly.</p><p>Regards,<br/>100acress HR</p>`,
-        });
+        const fromAddr = getFromAddr();
+        if (!fromAddr) {
+          return res.status(500).json({ message: 'Email sender not configured. Set SES_FROM or SMTP_FROM to a verified SES identity.' });
+        }
+        const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+        const html = `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+            <tr><td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.06);">
+                <tr>
+                  <td style="background:#0ea5e9;padding:18px 24px;color:#fff;font-size:20px;font-weight:bold;">
+                    100acress — Application Shortlisted
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:24px 24px 8px;font-size:16px;">Hi ${app.name || 'Candidate'},</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 8px;font-size:16px;line-height:1.6;">
+                    Great news! Your application has been <strong style="color:#16a34a;">shortlisted</strong> for the next round. Our team will contact you shortly with the next steps.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 16px;font-size:16px;line-height:1.6;">
+                    In the meantime, feel free to explore more about us at <a href="${siteUrl}" style="color:#0ea5e9;text-decoration:none;">100acress.com</a>.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 24px;">
+                    <a href="${siteUrl}" style="background:#0ea5e9;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;">Visit 100acress</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f9fafb;color:#6b7280;padding:16px 24px;font-size:13px;">
+                    Regards,<br/>100acress HR Team • <a href="${siteUrl}" style="color:#0ea5e9;text-decoration:none;">100acress.com</a>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>`;
+        const ok = await sendEmail(app.email, fromAddr, [], 'Application Shortlisted - 100acress', html, true);
+        if (!ok) throw new Error('SES sendEmail returned false');
       } catch (mailErr) {
         console.error('Mail error:', mailErr);
         // Do NOT mark approved if email failed
@@ -600,6 +645,74 @@ class CareerController {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static rejectApplication = async (req, res) => {
+    try {
+      const appId = req.params.appId;
+      if (!appId || !isValidObjectId(appId)) {
+        return res.status(400).json({ message: "Invalid application id" });
+      }
+      const app = await Application.findById(appId);
+      if (!app) return res.status(404).json({ message: "Application not found" });
+
+      // Send regret mail FIRST
+      try {
+        const fromAddr = getFromAddr();
+        if (!fromAddr) {
+          return res.status(500).json({ message: 'Email sender not configured. Set SES_FROM or SMTP_FROM to a verified SES identity.' });
+        }
+        const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+        const html = `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+            <tr><td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.06);">
+                <tr>
+                  <td style="background:#ef4444;padding:18px 24px;color:#fff;font-size:20px;font-weight:bold;">
+                    100acress — Application Update
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:24px 24px 8px;font-size:16px;">Hi ${app.name || 'Candidate'},</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 8px;font-size:16px;line-height:1.6;">
+                    Thank you for your interest in joining <strong>100acress</strong>. After careful consideration, we regret to inform you that we will not be moving forward with your application at this time.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 16px;font-size:16px;line-height:1.6;">
+                    We encourage you to stay connected and explore future opportunities with us at <a href="${siteUrl}" style="color:#0ea5e9;text-decoration:none;">100acress.com</a>.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 24px;">
+                    <a href="${siteUrl}" style="background:#374151;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;">Explore Careers</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f9fafb;color:#6b7280;padding:16px 24px;font-size:13px;">
+                    Regards,<br/>100acress HR Team • <a href="${siteUrl}" style="color:#0ea5e9;text-decoration:none;">100acress.com</a>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>`;
+        const ok = await sendEmail(app.email, fromAddr, [], 'Application Update - 100acress', html, true);
+        if (!ok) throw new Error('SES sendEmail returned false');
+      } catch (mailErr) {
+        console.error('Mail error:', mailErr);
+        return res.status(502).json({ message: 'Mail send failed, rejection not saved' });
+      }
+
+      // Persist rejected status after successful mail
+      app.status = 'rejected';
+      await app.save();
+      return res.status(200).json({ message: 'Application rejected and email sent', data: app });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   };
 
