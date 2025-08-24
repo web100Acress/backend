@@ -40,8 +40,9 @@ const corsOptions = {
     return cb(null, false);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: false,
+  // Allow common headers; if browser sends more, our manual OPTIONS handler will echo them
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"],
+  credentials: true,
   optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
@@ -55,7 +56,13 @@ app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", origin);
       res.header("Vary", "Origin");
       res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      const reqHeaders = req.headers["access-control-request-headers"];
+      if (reqHeaders) {
+        res.header("Access-Control-Allow-Headers", reqHeaders);
+      } else {
+        res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With, Origin");
+      }
+      res.header("Access-Control-Allow-Credentials", "true");
       res.header("Access-Control-Max-Age", "86400");
     } catch {}
     return res.sendStatus(204);
