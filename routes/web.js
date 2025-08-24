@@ -212,6 +212,11 @@ router.put(
   adminVerify,
   CareerController.approveApplication,
 );
+router.put(
+  "/career/application/:appId/reject",
+  adminVerify,
+  CareerController.rejectApplication,
+);
 
 // Career: Applications aggregate counts
 router.get(
