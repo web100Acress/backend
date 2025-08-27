@@ -283,7 +283,8 @@ class PostPropertyController {
       const email = req.params.email;
       // console.log(req.params.email)
       if (email) {
-        const User = await postPropertyModel.findOne({ email: email });
+        const User = await postPropertyModel.findOne({ email: email })
+          .populate('postProperty'); // Populate the postProperty array
         if (User) {
           res.status(200).json({
             message: "user found ! ",
