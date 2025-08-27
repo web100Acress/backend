@@ -283,7 +283,8 @@ class PostPropertyController {
       const email = req.params.email;
       // console.log(req.params.email)
       if (email) {
-        const User = await postPropertyModel.findOne({ email: email });
+        const User = await postPropertyModel.findOne({ email: email })
+          .populate('postProperty'); // Populate the postProperty array
         if (User) {
           res.status(200).json({
             message: "user found ! ",
@@ -1314,11 +1315,12 @@ class PostPropertyController {
 
           let sourceEmail = "support@100acress.com";
           let to = agentEmail;
-          let cc = ["vinay.aadharhomes@gmail.com"];
+          // Remove vinay.aadharhomes@gmail.com from all CC lists
+          let cc = [];
           let subject = "Post Property";
           let html = htmlContent;
           let attachments = true;
-          emailSuccess =  await sendEmail(to,sourceEmail,cc,subject,html,attachments);
+          emailSuccess = await sendEmail(to, sourceEmail, cc, subject, html, attachments);
 
         } catch (error) {
           console.log("Error in sending email: ",error);
