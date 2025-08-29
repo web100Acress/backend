@@ -47,8 +47,10 @@ router.get("/contact", contactController.contact);
 //router for agent page
 router.get("/agent", agentController.agent);
 
+// Mount project routes
+router.use("/project", projectRoute);
+
 // Admin Controller routing
-// Project routes are mounted at /project in the route file
 // Page with detail
 
 router.delete(
