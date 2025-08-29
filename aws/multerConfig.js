@@ -12,10 +12,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { 
+    fileSize: 50 * 1024 * 1024, // 50MB per file
+    files: 30 // Maximum 30 files
+  },
   fileFilter: (req, file, cb) => {
     const isImage = (file.mimetype || '').toLowerCase().startsWith('image/');
-    if (!isImage) return cb(new Error('Only image files are allowed'));
+    const isPDF = (file.mimetype || '').toLowerCase() === 'application/pdf';
+    if (!isImage && !isPDF) return cb(new Error('Only image files and PDF documents are allowed'));
     cb(null, true);
   },
 });
@@ -23,7 +27,7 @@ const upload = multer({
 // A dedicated uploader for resumes (PDF/DOC/DOCX/TXT)
 const resumeUpload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB for resumes
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB for resumes
   fileFilter: (req, file, cb) => {
     const mime = (file.mimetype || '').toLowerCase();
     const allowed = [
