@@ -3,8 +3,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const postPropertyModel = require("../../../models/postProperty/post");
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // const generateToken = () => {
 //     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -258,80 +256,6 @@ class registerController {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Internal server error" });
-    }
-  }
-
-  // Google OAuth login/signup
-  static googleAuth = async (req, res) => {
-    try {
-      const { token } = req.body;
-      
-      if (!token) {
-        return res.status(400).json({ success: false, message: 'Token is required' });
-      }
-
-      // Verify the Google token
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID
-      });
-      
-      const payload = ticket.getPayload();
-      const { email, name, picture, sub: googleId } = payload;
-
-      // Check if user exists with this Google ID
-      let user = await registerModel.findOne({ googleId });
-
-      if (!user) {
-        // Check if user exists with this email but signed up without Google
-        user = await registerModel.findOne({ email });
-        
-        if (user) {
-          // Update existing user with Google ID
-          user.googleId = googleId;
-          if (!user.avatarUrl) user.avatarUrl = picture;
-          await user.save();
-        } else {
-          // Create new user with Google
-          user = new registerModel({
-            name,
-            email,
-            googleId,
-            avatarUrl: picture,
-            role: 'user',
-            // Google-authenticated users don't need a password
-          });
-          await user.save();
-        }
-      }
-
-      // Generate JWT token
-      const jwtToken = jwt.sign(
-        { user_id: user._id, role: user.role },
-        process.env.JWT_SECRET || 'amitchaudhary100',
-        { expiresIn: '30d' }
-      );
-
-      res.status(200).json({
-        success: true,
-        token: jwtToken,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatarUrl: user.avatarUrl
-        },
-        message: 'Logged in successfully with Google!'
-      });
-
-    } catch (error) {
-      console.error('Google auth error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error authenticating with Google',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
     }
   };
 }
