@@ -383,7 +383,7 @@ class blogController {
   static blog_update_ispublished = async (req, res) => {
     try {
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
+      if (isValidObjectId(id)) {
           const isPublished = req.body.isPublished ;
           
           if (typeof isPublished !== 'boolean') {
@@ -422,7 +422,7 @@ class blogController {
       console.log('Delete request received for blog ID:', req.params.id);
       
       const id = req.params.id;
-      if (!ObjectId.isValid(id)) {
+      if (!isValidObjectId(id)) {
         console.log('Invalid blog ID format:', id);
         return res.status(400).json({
           message: "Invalid blog ID format",
