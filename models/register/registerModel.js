@@ -3,21 +3,29 @@ const mongoose = require("mongoose");
 const register_Schema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; },
   },
   email: {
     type: String,
-    rquired: true,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; },
     minlength: 8, // Minimum password length
     match: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/, // Password pattern
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   mobile: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; },
   },
   role: {
     type: String,
