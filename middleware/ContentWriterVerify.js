@@ -9,11 +9,18 @@ const jwtVerification = async (req, res, next) => {
     }
 
     // Extract token - handle both "Bearer token" and raw token formats
-    const token = req.headers.authorization.split(" ")[1];
+    let token = req.headers.authorization;
+    
+    // If it starts with "Bearer ", extract the token part
+    if (token.startsWith("Bearer ")) {
+      token = token.split(" ")[1];
+    }
+    
+    // Remove any quotes from the token
     const token_without_quotes = token.replace(/"/g, "");
-    // console.log(token_without_quotes);
+    
     if (!token_without_quotes) {
-      // console.log("No token after extraction");
+      console.log("No token after extraction");
       return res.status(401).json({success:false, message: "No token provided" });
     }
 

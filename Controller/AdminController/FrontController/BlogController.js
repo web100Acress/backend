@@ -23,17 +23,12 @@ class blogController {
       });
 
       // Check if AWS credentials are configured
-      if (!process.env.AWS_S3_ACCESS_KEY || !process.env.AWS_S3_SECRET_ACESS_KEY) {
-        console.error('❌ AWS credentials not configured!');
-        return res.status(500).json({ 
-          message: "AWS S3 not configured. Please set AWS_S3_ACCESS_KEY and AWS_S3_SECRET_ACESS_KEY environment variables.",
-          error: "AWS_CREDENTIALS_MISSING"
-        });
+      const hasAWSConfig = process.env.AWS_S3_ACCESS_KEY && process.env.AWS_S3_SECRET_ACESS_KEY;
+      if (!hasAWSConfig) {
+        console.warn('⚠️ AWS credentials not configured - will use placeholder image');
       }
 
-      if (!req.file) {
-        return res.status(400).json({ message: "No image uploaded" });
-      }
+      // Image upload is now completely optional
 
       const { blog_Title, author, blog_Description, blog_Category, metaTitle, metaDescription, slug } = req.body;
       let string_blog_Description = blog_Description;
@@ -48,37 +43,30 @@ class blogController {
 
         return res.status(400).json({ message: "Missing fields" });
       }
-      // Upload file to S3
-      console.log('📤 Uploading file to S3...');
+      // Handle image upload
       let imageData;
-      try {
-        imageData = await uploadFile(req.file);
-        console.log('✅ S3 upload successful:', imageData);
-      } catch (s3Error) {
-        console.error('❌ S3 upload failed:', s3Error);
-        
-        // Provide specific error response based on error type
-        if (s3Error.message.includes('AWS credentials')) {
-          return res.status(500).json({ 
-            message: "AWS S3 not configured properly. Please check your AWS credentials.",
-            error: "AWS_CREDENTIALS_ERROR"
-          });
-        } else if (s3Error.message.includes('bucket')) {
-          return res.status(500).json({ 
-            message: "S3 bucket not found or access denied. Please check your bucket configuration.",
-            error: "S3_BUCKET_ERROR"
-          });
-        } else if (s3Error.message.includes('Network')) {
-          return res.status(500).json({ 
-            message: "Network error connecting to AWS. Please check your internet connection.",
-            error: "NETWORK_ERROR"
-          });
+      
+      if (req.file && hasAWSConfig) {
+        // Upload file to S3 if AWS is configured
+        console.log('📤 Uploading file to S3...');
+        try {
+          imageData = await uploadFile(req.file);
+          console.log('✅ S3 upload successful:', imageData);
+        } catch (s3Error) {
+          console.error('❌ S3 upload failed:', s3Error);
+          
+          // Fallback: use embedded SVG placeholder
+          imageData = {
+            Key: `temp/${Date.now()}-${req.file?.originalname || 'placeholder'}`,
+            Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E`
+          };
         }
-        
-        // Fallback: use embedded SVG placeholder
+      } else {
+        // Use placeholder image when no file or no AWS config
+        console.log('📷 Using placeholder image');
         imageData = {
-          Key: `temp/${Date.now()}-${req.file.originalname}`,
-          Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EUpload Failed%3C/text%3E%3C/svg%3E`
+          Key: `placeholder/${Date.now()}-blog-image`,
+          Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E`
         };
       }
       
