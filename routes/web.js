@@ -1,15 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const passport = require('passport');
-const jwt = require('jsonwebtoken');
 const upload = require("../aws/multerConfig");
 const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
-
-// Auth Controllers
-const AuthGoogleController = require("../Controller/AdminController/FrontController/AuthGoogleController");
-
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -39,46 +33,7 @@ const RegisterController = require("../Controller/AdminController/FrontControlle
 const usersRoute = require("./user.route");
 const SettingsController = require("../Controller/AdminController/SettingsController");
 
-// Google OAuth Routes
-router.get('/auth/google/client-id', AuthGoogleController.getGoogleClientId);
-router.get('/auth/google/health', AuthGoogleController.googleHealth);
-router.post('/auth/google/verify-client-id', express.json(), AuthGoogleController.verifyClientId);
-router.post('/auth/google', AuthGoogleController.googleAuth);
-router.post('/auth/refresh-token', AuthGoogleController.refreshToken);
-router.get('/auth/me', AuthGoogleController.getCurrentUser);
-router.post('/auth/logout', AuthGoogleController.logout);
-
-// Server-side OAuth flow (kept for compatibility, but not recommended for SPA)
-router.get('/auth/google/server',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-router.get('/auth/google/server/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    // This is a fallback for server-side flow
-    const token = jwt.sign(
-      { 
-        userId: req.user._id, 
-        email: req.user.email,
-        role: req.user.role 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
-  }
-);
-
-// Client-side Google OAuth callback
-router.post('/auth/google/callback', 
-  express.json(),
-  AuthGoogleController.googleCallback
-);
-
-// (Removed unprotected duplicates; see protected routes below)
-
-// Router for front home page  controller
+//Router for front home page  controller
 // router.get('/', homeController.home)
 // router for about page
 router.get("/about", aboutController.about);
@@ -283,44 +238,9 @@ router.get("/projectCount", projectController.projectCount_city);
 // This routes used for the navigate leads from other domains
 router.post("/submit", homeController.leadSumbit);
 
-// Import the enhanced JWT middleware
-const { isAuthenticated, isAdmin, isContentWriter } = require('../middleware/authJwt');
-
-// Get current authenticated user (protected)
-router.get("/auth/current_user", isAuthenticated, async (req, res) => {
-  try {
-    // The user is already verified by verifyToken middleware
-    // Just return the user info
-    return res.status(200).json({
-      success: true,
-      user: req.user
-    });
-  } catch (error) {
-    console.error('Error in current_user route:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// Verify admin access using the isAdmin middleware
-router.get("/auth/isAdmin", isAdmin, (req, res) => {
-  return res.status(200).json({
-    success: true,
-    isAdmin: true,
-    user: req.user // Optionally include user info
-  });
-});
-
-// Verify content writer access using the isContentWriter middleware
-router.get("/auth/isContentWriter", isContentWriter, (req, res) => {
-  return res.status(200).json({
-    success: true,
-    isContentWriter: true,
-    user: req.user // Optionally include user info
-  });
-});
+//This route is for admin access to verify admin whether it is admin or not
+router.get("/auth/isAdmin",adminVerify,AuthController.isAdminVerify);
+router.get("/auth/isContentWriter",ContentWriterVerify,AuthController.isContentWriterVerify);
 
 // User delete route (admin only)
 router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperties);
