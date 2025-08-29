@@ -353,6 +353,11 @@ class projectController {
       try {
       await data.save();
         console.log("Project saved successfully!");
+        
+        // Clear cache after successful insertion so new data appears immediately
+        cache.del("projectData");
+        console.log("Project cache cleared");
+        
       } catch (saveError) {
         console.error("Database save error:", saveError);
         console.error("Save error message:", saveError.message);
