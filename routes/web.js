@@ -23,6 +23,7 @@ const CareerController = require("../Controller/AdminController/FrontController/
 const postPropertyRoute = require("./postProperty.route");
 const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
+
 const aboutRoute = require("./about.route");
 const blogRoute = require("./blog.route");
 const projectOrderRoute = require("./projectOrder.route");
@@ -47,9 +48,8 @@ router.get("/contact", contactController.contact);
 router.get("/agent", agentController.agent);
 
 // Admin Controller routing
-//projectDetail page
-router.use("/project", projectRoute);
-//page with detail
+// Project routes are mounted at /project in the route file
+// Page with detail
 
 router.delete(
   "/floorImage/:id/:indexNumber",
