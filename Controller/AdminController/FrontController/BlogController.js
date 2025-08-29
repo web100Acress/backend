@@ -2,7 +2,7 @@ const { totalmem } = require("os");
 const blogModel = require("../../../models/blog/blogpost");
 const Category = require("../../../models/blog/category");
 const postPropertyModel = require("../../../models/postProperty/post");
-const ObjectId = require("mongodb").ObjectId;
+const { isValidObjectId } = require("mongoose");
 const {
   uploadFile,
   deleteFile,
@@ -251,7 +251,7 @@ class blogController {
     // console.log("hsbasdjk")
     try {
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
+      if (isValidObjectId(id)) {
         const data = await blogModel.findById({ _id: id });
         res.status(201).json({
           message: "Data get successfully",
@@ -274,7 +274,7 @@ class blogController {
       console.log('Blog edit request received for ID:', req.params.id);
       
       const id = req.params.id;
-      if (!ObjectId.isValid(id)) {
+      if (!isValidObjectId(id)) {
         console.log('Invalid blog ID format:', id);
         return res.status(400).json({
           message: "Invalid blog ID format",
@@ -328,7 +328,7 @@ class blogController {
   static blog_update = async (req, res) => {
     try {
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
+      if (isValidObjectId(id)) {
         const { blog_Title, blog_Description, author, blog_Category, metaTitle, metaDescription, slug } = req.body;
         const isPublished = req.body.isPublished === 'true';
         console.log("isPublished: ", isPublished);
