@@ -72,11 +72,21 @@ class blogController {
       
       // Save blog entry
       console.log('Saving blog to database...');
+      
+      // Add CDN URL if it's a real S3 upload
+      const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
+      let blogImageData = {
+        public_id: imageData.Key,
+        url: imageData.Location,
+      };
+      
+      // Add CDN URL for S3 uploads
+      if (imageData.Key && !imageData.Location.startsWith('data:')) {
+        blogImageData.cdn_url = cloudfrontUrl + imageData.Key;
+      }
+      
       const newBlog = new blogModel({
-        blog_Image: {
-          public_id: imageData.Key,
-          url: imageData.Location,
-        },
+        blog_Image: blogImageData,
         blog_Title,
         blog_Description: string_blog_Description,
         author,
@@ -182,6 +192,11 @@ class blogController {
       const totalBlogs = await blogModel.countDocuments({});
       
       console.log(`Admin blog view: Found ${data.length} blogs out of ${totalBlogs} total`);
+      
+      // Debug: Log image data for each blog
+      data.forEach(blog => {
+        console.log(`Blog "${blog.blog_Title}": Image URL = ${blog.blog_Image?.url}, CDN URL = ${blog.blog_Image?.cdn_url}`);
+      });
       
       if (data) {
         res.status(200).json({
