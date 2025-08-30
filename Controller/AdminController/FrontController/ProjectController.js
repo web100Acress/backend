@@ -443,152 +443,90 @@ class projectController {
         const projectData = await ProjectModel.findById({ _id: id });
 
         if (logo) {
-          if (projectData.logo && projectData.logo.public_id) {
-            const logoId = projectData.logo.public_id;
-            const logoResult = await updateFile(logo[0], logoId);
-            update.logo = {
-              public_id: logoResult.Key,
-              url: logoResult.Location,
-              cdn_url: cloudfrontUrl + logoResult.Key,
-            };
-          } else {
-            const logoResult = await uploadFile(logo[0]);
-            update.logo = {
-              public_id: logoResult.Key,
-              url: logoResult.Location,
-              cdn_url: cloudfrontUrl + logoResult.Key,
-            };
-          }
+          const logoId = projectData.logo.public_id;
+          const logoResult = await updateFile(logo[0], logoId);
+          update.logo = {
+            public_id: logoResult.Key,
+            url: logoResult.Location,
+            cdn_url: cloudfrontUrl + logoResult.Key,
+          };
         }
 
         if (thumbnailImage) {
           // console.log("Inside Thumbnail Image");
-          if (projectData.thumbnailImage && projectData.thumbnailImage.public_id) {
-            // Update existing thumbnail
-            const thumbnailImageId = projectData.thumbnailImage.public_id;
-            const thumbnailImageResult = await updateFile(thumbnailImage[0], thumbnailImageId);
-            update.thumbnailImage = {
-              public_id: thumbnailImageResult.Key,
-              url: thumbnailImageResult.Location,
-              cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
-            };
-          } else {
-            // Upload new thumbnail if none exists
-            const thumbnailImageResult = await uploadThumbnailImage(thumbnailImage[0]);
-            update.thumbnailImage = {
-              public_id: thumbnailImageResult.Key,
-              url: thumbnailImageResult.Location,
-              cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
-            };
-          }
+          const thumbnailImageId = projectData.thumbnailImage.public_id;
+          const thumbnailImageResult = await updateFile(thumbnailImage[0], thumbnailImageId);
+          // console.log("File updated successfully:", thumbnailImageResult);
+          update.thumbnailImage = {
+            public_id: thumbnailImageResult.Key,
+            url: thumbnailImageResult.Location,
+            cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
+          };
           // console.log("Updated thumbnailImage:", update.thumbnailImage);
         }
 
         if (frontImage) {
-          if (projectData.frontImage && projectData.frontImage.public_id) {
-            const frontId = projectData.frontImage.public_id;
-            const frontResult = await updateFile(frontImage[0], frontId);
-            update.frontImage = {
-              public_id: frontResult.Key,
-              url: frontResult.Location,
-              cdn_url: cloudfrontUrl + frontResult.Key,
-            };
-          } else {
-            const frontResult = await uploadFile(frontImage[0]);
-            update.frontImage = {
-              public_id: frontResult.Key,
-              url: frontResult.Location,
-              cdn_url: cloudfrontUrl + frontResult.Key,
-            };
-          }
+          const frontId = projectData.frontImage.public_id;
+          const frontResult = await updateFile(frontImage[0], frontId);
+          update.frontImage = {
+            public_id: frontResult.Key,
+            url: frontResult.Location,
+            cdn_url: cloudfrontUrl + frontResult.Key,
+          };
         }
 
         if (project_locationImage) {
-          if (projectData.project_locationImage && projectData.project_locationImage.public_id) {
-            const locationId = projectData.project_locationImage.public_id;
-            const locationResult = await updateFile(
-              project_locationImage[0],
-              locationId,
-            );
-            update.project_locationImage = {
-              public_id: locationResult.Key,
-              url: locationResult.Location,
-              cdn_url: cloudfrontUrl + locationResult.Key,
-            };
-          } else {
-            const locationResult = await uploadFile(project_locationImage[0]);
-            update.project_locationImage = {
-              public_id: locationResult.Key,
-              url: locationResult.Location,
-              cdn_url: cloudfrontUrl + locationResult.Key,
-            };
-          }
+          const locationId = projectData.project_locationImage.public_id;
+          const locationResult = await updateFile(
+            project_locationImage[0],
+            locationId,
+          );
+          update.project_locationImage = {
+            public_id: locationResult.Key,
+            url: locationResult.Location,
+            cdn_url: cloudfrontUrl + locationResult.Key,
+          };
         }
 
         if (highlightImage) {
-          if (projectData.highlightImage && projectData.highlightImage.public_id) {
-            const highlightId = projectData.highlightImage.public_id;
-            const highlightResult = await updateFile(
-              highlightImage[0],
-              highlightId,
-            );
-            update.highlightImage = {
-              public_id: highlightResult.Key,
-              url: highlightResult.Location,
-              cdn_url: cloudfrontUrl + highlightResult.Key,
-            };
-          } else {
-            const highlightResult = await uploadFile(highlightImage[0]);
-            update.highlightImage = {
-              public_id: highlightResult.Key,
-              url: highlightResult.Location,
-              cdn_url: cloudfrontUrl + highlightResult.Key,
-            };
-          }
+          const highlightId = projectData.highlightImage.public_id;
+          const highlightResult = await updateFile(
+            highlightImage[0],
+            highlightId,
+          );
+          update.highlightImage = {
+            public_id: highlightResult.Key,
+            url: highlightResult.Location,
+            cdn_url: cloudfrontUrl + highlightResult.Key,
+          };
         }
 
         if (project_Brochure) {
-          if (projectData.project_Brochure && projectData.project_Brochure.public_id) {
-            const brochureId = projectData.project_Brochure.public_id;
-            const brochureResult = await updateFile(
-              project_Brochure[0],
-              brochureId,
-            );
-            update.project_Brochure = {
-              public_id: brochureResult.Key,
-              url: brochureResult.Location,
-              cdn_url: cloudfrontUrl + brochureResult.Key,
-            };
-          } else {
-            const brochureResult = await uploadFile(project_Brochure[0]);
-            update.project_Brochure = {
-              public_id: brochureResult.Key,
-              url: brochureResult.Location,
-              cdn_url: cloudfrontUrl + brochureResult.Key,
-            };
-          }
+          const brochureId = projectData.project_Brochure.public_id;
+
+          const brochureResult = await updateFile(
+            project_Brochure[0],
+            brochureId,
+          );
+          update.project_Brochure = {
+            public_id: brochureResult.Key,
+            url: brochureResult.Location,
+            cdn_url: cloudfrontUrl + brochureResult.Key,
+          };
         }
 
         if (projectMaster_plan) {
-          if (projectData.projectMaster_plan && projectData.projectMaster_plan.public_id) {
-            const masterId = projectData.projectMaster_plan.public_id;
-            const masterResult = await updateFile(
-              projectMaster_plan[0],
-              masterId,
-            );
-            update.projectMaster_plan = {
-              public_id: masterResult.Key,
-              url: masterResult.Location,
-              cdn_url: cloudfrontUrl + masterResult.Key,
-            };
-          } else {
-            const masterResult = await uploadFile(projectMaster_plan[0]);
-            update.projectMaster_plan = {
-              public_id: masterResult.Key,
-              url: masterResult.Location,
-              cdn_url: cloudfrontUrl + masterResult.Key,
-            };
-          }
+          const masterId = projectData.projectMaster_plan.public_id;
+
+          const masterResult = await updateFile(
+            projectMaster_plan[0],
+            masterId,
+          );
+          update.projectMaster_plan = {
+            public_id: masterResult.Key,
+            url: masterResult.Location,
+            cdn_url: cloudfrontUrl + masterResult.Key,
+          };
         }
         if (project_floorplan_Image) {
           const floorId = projectData.project_floorplan_Image.map((item) => {
