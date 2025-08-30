@@ -97,6 +97,21 @@ app.use("/", router);
 // Serve uploaded files statically so avatar URLs like /uploads/<file> work
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Error handling middleware - should be after all other middleware and routes
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
+
 // Create HTTP server and bind Socket.IO with timeout configuration
 const server = http.createServer(app);
 
