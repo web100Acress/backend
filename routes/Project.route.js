@@ -2,6 +2,7 @@ const express = require("express");
 const projectController = require("../Controller/AdminController/FrontController/ProjectController");
 const upload = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
+const uploadErrorHandler = require("../middleware/uploadErrorHandler");
 const router = express.Router();
 
 router.post(
@@ -14,10 +15,11 @@ router.post(
     { name: "highlightImage", maxCount: 1 },
     { name: "projectMaster_plan", maxCount: 1 },
     { name: "project_Brochure", maxCount: 1 },
-    { name: "project_floorplan_Image", maxCount: 20 },
-    { name: "projectGallery", maxCount: 20 },
+    { name: "project_floorplan_Image", maxCount: 15 },
+    { name: "projectGallery", maxCount: 15 },
     { name: "thumbnailImage", maxCount: 1 },
   ]),
+  uploadErrorHandler,
   projectController.projectInsert,
 );
 router.get("/View/:project_url", projectController.projectView);
@@ -32,16 +34,16 @@ router.post(
   adminVerify,
   upload.fields([
     { name: "logo", maxCount: 1 },
-      { name: "thumbnailImage", maxCount: 1 },
+    { name: "thumbnailImage", maxCount: 1 },
     { name: "frontImage", maxCount: 1 },
     { name: "project_locationImage", maxCount: 1 },
     { name: "highlightImage", maxCount: 1 },
     { name: "projectMaster_plan", maxCount: 1 },
     { name: "project_Brochure", maxCount: 1 },
-    { name: "project_floorplan_Image", maxCount: 20 },
-    { name: "projectGallery", maxCount: 20 },
-
+    { name: "project_floorplan_Image", maxCount: 15 },
+    { name: "projectGallery", maxCount: 15 },
   ]),
+  uploadErrorHandler,
   projectController.projectUpdate,
 );
 router.delete("/Delete/:id", adminVerify, projectController.projectDelete);

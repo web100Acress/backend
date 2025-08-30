@@ -1,5 +1,6 @@
 const multer = require("multer");
 const path = require("path");
+const uploadLimits = require("../config/uploadLimits");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -13,12 +14,18 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { 
-    fileSize: 50 * 1024 * 1024, // 50MB per file
-    files: 30 // Maximum 30 files
+    fileSize: uploadLimits.fileSize,
+    files: uploadLimits.maxFiles
   },
   fileFilter: (req, file, cb) => {
     const isImage = (file.mimetype || '').toLowerCase().startsWith('image/');
     const isPDF = (file.mimetype || '').toLowerCase() === 'application/pdf';
+    
+    // Check file size before processing
+    if (file.size && file.size > uploadLimits.fileSize) {
+      return cb(new Error('File size too large. Please reduce file size and try again.'));
+    }
+    
     if (!isImage && !isPDF) return cb(new Error('Only image files and PDF documents are allowed'));
     cb(null, true);
   },
@@ -27,7 +34,7 @@ const upload = multer({
 // A dedicated uploader for resumes (PDF/DOC/DOCX/TXT)
 const resumeUpload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB for resumes
+  limits: { fileSize: uploadLimits.resumeSize }, // Environment-specific resume size
   fileFilter: (req, file, cb) => {
     const mime = (file.mimetype || '').toLowerCase();
     const allowed = [

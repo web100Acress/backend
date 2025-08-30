@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const errorHandler = require("./middleware/errorMiddleware");
+const uploadLimits = require("./config/uploadLimits");
 const app = express();
 // Load environment variables BEFORE using them
 require("dotenv").config();
@@ -96,8 +97,11 @@ app.use("/", router);
 // Serve uploaded files statically so avatar URLs like /uploads/<file> work
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Create HTTP server and bind Socket.IO
+// Create HTTP server and bind Socket.IO with timeout configuration
 const server = http.createServer(app);
+
+// Set server timeout for large file uploads
+server.timeout = uploadLimits.timeout;
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN || "*",
