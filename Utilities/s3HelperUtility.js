@@ -119,43 +119,61 @@ const uploadFile = async(file) => {
 
 const uploadThumbnailImage = async(file) => {
   try {
+    console.log('📤 Starting S3 thumbnail upload for file:', file.originalname);
+    console.log('Thumbnail file details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: file.path
+    });
 
-  /*Image Compression before uploading to AWS on hold for temp*/
-  /*
-    const originalPath = file.path;
-    const compressedDir = path.join(__dirname, '../temp/Compressed');
-    const compressedFileName = `${Date.now()}-${file.originalname}`;    
-    const compressedPath = path.join(compressedDir, compressedFileName);
-    await fs.promises.mkdir(compressedDir, { recursive: true });
-    await compressImage(originalPath, compressedPath, 25);
-  */  
-  const fileContent = await fs.promises.readFile(file.path);
+    // Check if file exists
+    if (!file.path || !fs.existsSync(file.path)) {
+      throw new Error('Thumbnail file not found on disk');
+    }
+
+    const fileContent = await fs.promises.readFile(file.path);
+    console.log('📁 Thumbnail file read successfully, size:', fileContent.length, 'bytes');
   
-  const params = {
-    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-    Body: fileContent,
-    Key: `thumbnails/${Date.now()}-${file.originalname}`,
-    ContentType: file.mimetype,
-  };
-  const uploadResult = await s3.upload(params).promise();
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
+      Body: fileContent,
+      Key: `thumbnails/${Date.now()}-${file.originalname}`,
+      ContentType: file.mimetype,
+    };
+    
+    console.log('🚀 Uploading thumbnail to S3...');
+    const uploadResult = await s3.upload(params).promise();
+    console.log('✅ Thumbnail uploaded successfully to:', uploadResult.Location);
 
-  /*Deleting temp file after upload S3*/
-  /*
-    console.log(uploadResult);
-    console.log('Starting cleanup');
-    console.log("Original Path: ",originalPath);
-    console.log("Compressed Path: ",compressedPath);
-    if(fs.existsSync(originalPath)){
-      fs.unlinkSync(originalPath);
-    };
-    if(fs.existsSync(compressedPath)){
-      fs.unlinkSync(compressedPath);
-    };
-  */
-  return uploadResult; // Return S3 upload result
+    // Clean up temp file
+    try {
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+        console.log('🗑️ Temporary thumbnail file cleaned up');
+      }
+    } catch (cleanupError) {
+      console.warn('⚠️ Failed to clean up temporary thumbnail file:', cleanupError.message);
+    }
+
+    return uploadResult;
   } catch (error) {
-    console.error('Error in uploadThumbnailImage:', error);
-    throw error; // Let the caller handle the error
+    console.error('❌ Error in uploadThumbnailImage:', error);
+    
+    // Enhanced error handling like uploadFile
+    if (error.code === 'ENOENT') {
+      throw new Error('Thumbnail file not found on server');
+    } else if (error.code === 'NoSuchBucket') {
+      throw new Error('S3 bucket does not exist');
+    } else if (error.code === 'AccessDenied') {
+      throw new Error('Access denied to S3 bucket - check permissions');
+    } else if (error.code === 'AccessControlListNotSupported') {
+      throw new Error('S3 bucket does not support ACLs - thumbnail will be uploaded without public access');
+    } else if (error.code === 'NetworkError') {
+      throw new Error('Network error connecting to AWS');
+    } else {
+      throw new Error(`Thumbnail S3 upload failed: ${error.message}`);
+    }
   }
 };
 
