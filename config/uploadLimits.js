@@ -5,7 +5,7 @@ const uploadLimits = {
   // File size limits based on environment
   fileSize: isDevelopment 
     ? 50 * 1024 * 1024  // 50MB in development
-    : 10 * 1024 * 1024,  // 10MB in production (increased for project images)
+    : 100 * 1024 * 1024,  // 10MB in production (increased for project images)
     
   // Maximum files based on environment  
   maxFiles: isDevelopment ? 30 : 15,
