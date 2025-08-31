@@ -14,8 +14,7 @@ router.post("/register", PostPropertyController.postPerson_Register);
 router.get("/Role/:email", PostPropertyController.postPerson_verifyRole);
 router.post(
   "/verify_Login",
-  authAdmin,
-  PostPropertyController.postPerson_VerifyLogin,
+  PostPropertyController.postPerson_VerifyLogin
 );
 router.get("/logout", PostPropertyController.postPerson_logout);
 router.post("/postProperty_forget", PostPropertyController.postPerson_forget);

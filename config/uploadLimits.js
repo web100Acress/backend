@@ -4,8 +4,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const uploadLimits = {
   // File size limits based on environment
   fileSize: isDevelopment 
-    ? 50 * 1024 * 1024  // 50MB per file in development
-    : 50 * 1024 * 1024,  // 50MB per file in production
+    ? 100 * 1024 * 1024  // 100MB per file in development
+    : 100 * 1024 * 1024,  // 100MB per file in production
     
   // Maximum files per request (sum across all fields)
   maxFiles: isDevelopment ? 60 : 50,
