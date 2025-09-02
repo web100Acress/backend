@@ -135,6 +135,13 @@ const post_Schema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Array of liked project ids for consistency with RegisterData
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "projectData",
+      },
+    ],
   },
   {
     timestamps: true,
