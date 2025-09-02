@@ -28,6 +28,13 @@ const register_Schema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  // Array of liked project ids
+  favorites: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "projectData",
+    },
+  ],
   token: {
     type: String,
     default: "",

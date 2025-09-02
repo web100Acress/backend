@@ -145,6 +145,7 @@ router.use("/postPerson", postPropertyRoute);
 //post enquiry
 router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
+router.delete("/postEnq_delete/:id", PostPropertyController.postEnquiry_delete);
 
 //Blog
 
