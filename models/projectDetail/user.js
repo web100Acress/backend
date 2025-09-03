@@ -23,6 +23,19 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "Pending",
     },
+    assign: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    emailReceived: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

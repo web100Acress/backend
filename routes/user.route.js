@@ -14,6 +14,8 @@ const { uploadFile } = require("../aws/s3Helper");
 const PostUser = require("../models/postProperty/post");
 // Some environments may also store users in register/registerModel.js
 const RegisterUser = require("../models/register/registerModel");
+// Projects collection for validating and optionally populating favorites
+const ProjectModel = require("../models/projectDetail/project");
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -423,7 +425,168 @@ router.delete('/admin/user/delete/:id', adminVerify, async (req, res) => {
   return router.handle(req, res);
 });
 
-module.exports = router;
+/**
+ * GET /users/:id/favorites
+ * Returns array of liked project ids and optional populated summaries
+ */
+router.get('/users/:id/favorites', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    // Allow if token user matches or role is admin
+    const tokenUserId = req.user && (req.user.user_id || req.user.userId || req.user.id || req.user.sub);
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'Admin');
+    if (!isAdmin && tokenUserId && String(tokenUserId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    let doc = await RegisterUser.findById(userId, { favorites: 1, email: 1 }).lean();
+    if (!doc) {
+      doc = await PostUser.findById(userId, { favorites: 1, email: 1 }).lean();
+    }
+    if (!doc) return res.status(404).json({ success: false, message: 'User not found' });
+    const ids = Array.isArray(doc.favorites) ? doc.favorites : [];
+
+    // Best-effort populate minimal fields
+    let items = [];
+    try {
+      items = await ProjectModel.find({ _id: { $in: ids } })
+        .select('_id projectName city state frontImage.url thumbnailImage.url builderName minPrice maxPrice project_Status')
+        .lean();
+    } catch {}
+
+    return res.status(200).json({ success: true, data: { ids, items } });
+  } catch (err) {
+    console.error('Fetch favorites failed:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /users/:id/favorites
+ * Body: { projectId }
+ * Adds a project to the user's favorites
+ */
+router.post('/users/:id/favorites', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { projectId } = req.body || {};
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+    if (!projectId || !mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({ success: false, message: 'Valid projectId is required' });
+    }
+
+    const tokenUserId = req.user && (req.user.user_id || req.user.userId || req.user.id || req.user.sub);
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'Admin');
+    if (!isAdmin && tokenUserId && String(tokenUserId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    // Ensure project exists
+    const exists = await ProjectModel.findById(projectId).select('_id').lean();
+    if (!exists) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    // 1) Try RegisterUser by id
+    let updated = await RegisterUser.findByIdAndUpdate(
+      userId,
+      { $addToSet: { favorites: projectId } },
+      { new: true, select: 'favorites email' }
+    ).lean();
+
+    // 2) If not there, try PostUser by id
+    if (!updated) {
+      updated = await PostUser.findByIdAndUpdate(
+        userId,
+        { $addToSet: { favorites: projectId } },
+        { new: true, select: 'favorites email' }
+      ).lean();
+      // Sync RegisterUser by email best-effort
+      if (updated && updated.email) {
+        await RegisterUser.findOneAndUpdate(
+          { email: { $regex: new RegExp(`^${updated.email}$`, 'i') } },
+          { $addToSet: { favorites: projectId } },
+          { new: false }
+        );
+      }
+    } else if (updated && updated.email) {
+      // If we updated RegisterUser, sync PostUser by email best-effort
+      await PostUser.findOneAndUpdate(
+        { email: { $regex: new RegExp(`^${updated.email}$`, 'i') } },
+        { $addToSet: { favorites: projectId } },
+        { new: false }
+      );
+    }
+
+    if (!updated) return res.status(404).json({ success: false, message: 'User not found' });
+
+    return res.status(200).json({ success: true, message: 'Added to favorites', data: { ids: updated.favorites } });
+  } catch (err) {
+    console.error('Add favorite failed:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /users/:id/favorites/:projectId
+ * Removes a project from the user's favorites
+ */
+router.delete('/users/:id/favorites/:projectId', authenticateToken, async (req, res) => {
+  try {
+    const { id: userId, projectId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({ success: false, message: 'Invalid id(s)' });
+    }
+
+    const tokenUserId = req.user && (req.user.user_id || req.user.userId || req.user.id || req.user.sub);
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'Admin');
+    if (!isAdmin && tokenUserId && String(tokenUserId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    // 1) Try RegisterUser by id
+    let updated = await RegisterUser.findByIdAndUpdate(
+      userId,
+      { $pull: { favorites: projectId } },
+      { new: true, select: 'favorites email' }
+    ).lean();
+
+    // 2) Fallback PostUser and sync by email
+    if (!updated) {
+      updated = await PostUser.findByIdAndUpdate(
+        userId,
+        { $pull: { favorites: projectId } },
+        { new: true, select: 'favorites email' }
+      ).lean();
+      if (updated && updated.email) {
+        await RegisterUser.findOneAndUpdate(
+          { email: { $regex: new RegExp(`^${updated.email}$`, 'i') } },
+          { $pull: { favorites: projectId } },
+          { new: false }
+        );
+      }
+    } else if (updated && updated.email) {
+      await PostUser.findOneAndUpdate(
+        { email: { $regex: new RegExp(`^${updated.email}$`, 'i') } },
+        { $pull: { favorites: projectId } },
+        { new: false }
+      );
+    }
+
+    if (!updated) return res.status(404).json({ success: false, message: 'User not found' });
+
+    return res.status(200).json({ success: true, message: 'Removed from favorites', data: { ids: updated.favorites } });
+  } catch (err) {
+    console.error('Remove favorite failed:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 // --- Role update endpoint ---
 // PATCH /postPerson/users/:id/role
@@ -509,3 +672,5 @@ router.patch('/postPerson/users/:id/role', adminVerify, async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+module.exports = router;

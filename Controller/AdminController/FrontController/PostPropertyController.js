@@ -1359,6 +1359,19 @@ class PostPropertyController {
       });
     }
   };
+  static postEnquiry_delete = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ message: 'id is required' });
+      const existing = await postEnquiryModel.findById(id);
+      if (!existing) return res.status(404).json({ message: 'Enquiry not found' });
+      await postEnquiryModel.findByIdAndDelete(id);
+      return res.status(200).json({ message: 'Deleted successfully' });
+    } catch (error) {
+      console.error('postEnquiry_delete error', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
   // verify email
   static verifyEmail = async (req, res) => {
     let { email } = req.body;                                                                                      

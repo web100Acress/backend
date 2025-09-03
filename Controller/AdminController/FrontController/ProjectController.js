@@ -463,7 +463,7 @@ class projectController {
             cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
           };
           // console.log("Updated thumbnailImage:", update.thumbnailImage);
-        }
+          }
 
         if (frontImage) {
           const frontId = projectData.frontImage.public_id;
@@ -1584,6 +1584,7 @@ static projectSearch = async (req, res) => {
           mobile: mobile,
           projectName: projectName,
           address: address,
+          emailReceived: false,
         });
 
         const custName = data.name;
@@ -1613,7 +1614,7 @@ static projectSearch = async (req, res) => {
                     </body>
                     </html>`
           const to = "query.aadharhomes@gmail.com";
-          const cc = ["officialhundredacress@gmail.com"];
+          const cc = ["officialhundredacress@gmail.com"]; 
           const sourceEmail = "support@100acress.com";
           const subject = "100acress.com Enquiry";
           
@@ -1624,12 +1625,14 @@ static projectSearch = async (req, res) => {
           console.log("Error in sending enquiry email",error);
         }
 
+        data.emailReceived = Boolean(emailSuccess);
 
         await data.save();
         return res.status(201).json({
           message: emailSuccess
             ? "User data submitted successfully , and the data has been sent via email"
             : "User data submitted successfully , but the data has not been sent via email",
+          emailReceived: data.emailReceived,
           // dataInsert: data
         });
       } else {
@@ -1674,27 +1677,33 @@ static projectSearch = async (req, res) => {
       // console.log("hello")
       // console.log(req.body)
       const id = req.params.id;
-      const { name, email, mobile, projectName, address, status } = req.body;
+      const { name, email, mobile, projectName, address, status, assign, emailReceived } = req.body;
 
       if (id) {
-        if (status) {
+        if (status || assign !== undefined || emailReceived !== undefined) {
+          const updateDoc = {
+            ...(name !== undefined && { name }),
+            ...(email !== undefined && { email }),
+            ...(mobile !== undefined && { mobile }),
+            ...(projectName !== undefined && { projectName }),
+            ...(address !== undefined && { address }),
+            ...(status !== undefined && { status }),
+            ...(assign !== undefined && { assign }),
+            ...(emailReceived !== undefined && { emailReceived }),
+          };
+
           const data = await UserModel.findByIdAndUpdate(
             { _id: id },
-            {
-              name: name,
-              email: email,
-              mobile: mobile,
-              projectName: projectName,
-              address: address,
-              status: status,
-            },
+            updateDoc,
+            { new: true },
           );
           // console.log(data)
           await data.save();
+          return res.status(200).json({ message: "Updated successfully!", data });
         } else {
           // console.log("hello ")
           return res.status(403).json({
-            message: "Check status field ! ",
+            message: "No valid fields provided to update!",
           });
         }
       } else {
@@ -1715,7 +1724,11 @@ static projectSearch = async (req, res) => {
 
     try {
       const id = req.params.id;
-      const data = await UserModel.findByIdAndDelete({ _id: id });
+      const data = await UserModel.findByIdAndUpdate(
+        { _id: id },
+        { deletedAt: new Date() },
+        { new: true },
+      );
 
       return res.status(201).json({
         message: "message delete",
@@ -1723,49 +1736,17 @@ static projectSearch = async (req, res) => {
       });
     } catch (error) {
       console.log(error);
+      return res.status(500).json({ message: "Internal server error !" });
     }
   };
   static floorImage = async (req, res) => {
     try {
-      const id = req.params.id;
-      const indexNumber = req.params.indexNumber;
-      console.log(id, indexNumber, "snkkwhvs");
-
-      if (isValidObjectId) {
-        const data = await ProjectModel.findById({ _id: id });
-        const floorplan = data.project_floorplan_Image;
-        const Imagelength = floorplan.length;
-        // console.log(Imagelength)
-        if (indexNumber < Imagelength) {
-          const public_id = floorplan[0].public_id;
-          if (public_id) {
-            await deleteFile(public_id);
-            floorplan.splice(indexNumber, 1);
-            // Update the data in the database
-            await ProjectModel.findByIdAndUpdate(
-              { _id: id },
-              { project_floorplan_Image: floorplan },
-            );
-            return res
-              .status(200)
-              .json({ message: "Image removed successfully", floorplan });
-          }
-        } else {
-          return res.status(200).json({
-            message: "Object Index number not found !",
-            indexNumber,
-          });
-        }
-      } else {
-        return res.status(400).json({
-          message: "object id is invalid !",
-        });
-      }
+      return res.status(501).json({ message: "Not implemented" });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error !" });
     }
   };
-  // trying something new from here
   static userViewAll = async (req, res) => {
     try {
       //Get page and limit from query parameters, with default values
@@ -1773,11 +1754,25 @@ static projectSearch = async (req, res) => {
       const limit = parseInt(req.query.limit) || 100;
       const skip = (page - 1) * limit;
 
+      const search = (req.query.search || '').trim();
+      const includeDeleted = String(req.query.includeDeleted || '0') === '1';
+
+      // Soft-delete filter unless explicitly included
+      const filter = includeDeleted ? {} : { deletedAt: { $in: [null, undefined] } };
+
+      if (search) {
+        filter.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { mobile: { $regex: search, $options: 'i' } },
+          { projectName: { $regex: search, $options: 'i' } },
+        ];
+      }
+
       // Get total count
-      const total = await UserModel.countDocuments();
+      const total = await UserModel.countDocuments(filter);
 
       // Get paginated data
-      const data = await UserModel.find()
+      const data = await UserModel.find(filter)
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
@@ -1803,8 +1798,11 @@ static projectSearch = async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 2000;
       const skip = (page - 1) * limit;
+      // Include deleted toggle
+      const includeDeleted = String(req.query.includeDeleted || '0') === '1';
+      const filter = includeDeleted ? {} : { deletedAt: { $in: [null, undefined] } };
       // Create a unique cache key for each page
-      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}`;
+      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}_includeDeleted_${includeDeleted}`;
       console.log("CacheKey", cacheKey);
       // Check if data is in cache
       const cacheData = cache.get(cacheKey);
@@ -1851,7 +1849,7 @@ static projectSearch = async (req, res) => {
       } else {
         // If data is not in cache, fetch from the database
         console.log("Fetching data from database");
-        const data = await UserModel.find().lean().skip(skip).limit(limit).sort({ createdAt: -1 });
+        const data = await UserModel.find(filter).lean().skip(skip).limit(limit).sort({ createdAt: -1 });
         // Cache the fetched data for 5 minutes
         const expirationTime = 5 * 60 * 1000;
         cache.put(cacheKey, data, expirationTime);
@@ -1937,6 +1935,66 @@ static projectSearch = async (req, res) => {
       const count = await ProjectModel.countDocuments();
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  // Resend email for an enquiry and mark emailReceived accordingly
+  static userSendEmail = async (req, res) => {
+    try {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).json({ message: "Missing id" });
+      }
+      const record = await UserModel.findById(id);
+      if (!record) {
+        return res.status(404).json({ message: "Record not found" });
+      }
+
+      const custName = record.name || "";
+      const number = record.mobile || "";
+      const emaildata = record.email || "";
+      const project = record.projectName || "";
+
+      let emailSuccess = false;
+      try {
+        let html = `<!DOCTYPE html>
+                    <html lang:\"en>
+                    <head>
+                    <meta charset:\"UTF-8\">
+                    <meta http-equiv=\"X-UA-Compatible\"  content=\"IE=edge\">
+                    <meta name=\"viewport\"  content=\"width=device-width, initial-scale=1.0\">
+                    <title>New Enquiry</title>
+                    </head>
+                    <body>
+                        <h3>Project Enquiry</h3>
+                        <p>Customer Name : ${custName}</p>
+                        <p>Customer Email Id : ${emaildata}</p>
+                        <p>Customer Mobile Number : ${number} </p>
+                        <p>ProjectName : ${project}</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>`;
+        const to = "query.aadharhomes@gmail.com";
+        const cc = ["officialhundredacress@gmail.com"]; 
+        const sourceEmail = "support@100acress.com";
+        const subject = "100acress.com Enquiry";
+        
+        emailSuccess = await sendEmail(to, sourceEmail, cc, subject, html, false);
+        console.log("Resend Email result:", emailSuccess);
+      } catch (err) {
+        console.error("Resend email error:", err);
+      }
+
+      record.emailReceived = Boolean(emailSuccess);
+      await record.save();
+
+      return res.status(200).json({
+        message: emailSuccess ? "Email sent successfully" : "Email not sent",
+        emailReceived: record.emailReceived,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error!" });
     }
   };
 }
