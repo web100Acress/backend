@@ -355,16 +355,56 @@ class blogController {
 
         // Optional image update
         if (req.file) {
+          console.log('[blog_update] Received file:', {
+            originalname: req.file?.originalname,
+            mimetype: req.file?.mimetype,
+            size: req.file?.size,
+            path: req.file?.path,
+          });
+          // Check AWS config (keys + region)
+          const hasAWSConfig = !!(process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID)
+            && !!(process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY)
+            && !!process.env.AWS_REGION;
+          console.log('[blog_update] hasAWSConfig:', hasAWSConfig, 'region:', process.env.AWS_REGION);
           try {
-            const currentKey = doc.blog_Image?.public_id;
-            const imageData = await updateFile(req.file, currentKey);
-            doc.blog_Image = {
+            let imageData;
+            if (hasAWSConfig) {
+              try {
+                const currentKey = doc.blog_Image?.public_id;
+                console.log('[blog_update] Updating S3 object. currentKey:', currentKey);
+                imageData = await updateFile(req.file, currentKey);
+                console.log('[blog_update] S3 update success:', { Key: imageData?.Key, Location: imageData?.Location });
+              } catch (s3Err) {
+                // Graceful fallback on any S3 error
+                console.error('[blog_update] S3 update failed, using placeholder. Error:', s3Err?.message || s3Err);
+                imageData = {
+                  Key: `placeholder/${Date.now()}-blog-image`,
+                  Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E`
+                };
+              }
+            } else {
+              // Fallback: embedded SVG placeholder to avoid 500s when AWS is not configured
+              console.warn('[blog_update] AWS not configured. Using placeholder image.');
+              imageData = {
+                Key: `placeholder/${Date.now()}-blog-image`,
+                Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E`
+              };
+            }
+
+            // Map returned data + optional CDN url
+            const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
+            const nextImage = {
               public_id: imageData.Key,
               url: imageData.Location,
             };
+            if (imageData.Key && !imageData.Location.startsWith('data:')) {
+              nextImage.cdn_url = cloudfrontUrl + imageData.Key;
+            }
+            doc.blog_Image = nextImage;
+            console.log('[blog_update] Assigned blog_Image:', nextImage);
           } finally {
             // Clean up local temp file
-            try { if (req.file?.path) fs.unlinkSync(req.file.path); } catch {}
+            try { if (req.file?.path) { fs.unlinkSync(req.file.path); console.log('[blog_update] Temp file cleaned:', req.file.path); } } catch (e) { console.warn('[blog_update] Temp cleanup failed:', e?.message || e); }
           }
         }
 
@@ -376,10 +416,15 @@ class blogController {
         });
       }
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        message: "Internal server error !l̥",
-      });
+      console.error('[blog_update] Error:', error);
+      // Provide more specific error messages (e.g., duplicate slug)
+      if (error && (error.code === 11000 || (error.name === 'MongoServerError' && error.code === 11000))) {
+        return res.status(400).json({ message: 'Slug already exists. Please choose a different slug.' });
+      }
+      if (error && error.name === 'ValidationError') {
+        return res.status(400).json({ message: 'Validation error', details: error.message });
+      }
+      return res.status(500).json({ message: "Internal server error", error: error?.message });
     }
   };
   

@@ -27,8 +27,11 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 
-// CORS - explicitly allow all necessary methods and headers
-const allowedOrigins = (process.env.CORS_ORIGIN || "*").split(",").map(s => s.trim()).filter(Boolean);
+// CORS - explicitly allow PATCH + Authorization and handle OPTIONS preflight
+const allowedOrigins = (process.env.CORS_ORIGIN || "*")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const corsOptions = {
   origin: (origin, cb) => {

@@ -15,7 +15,10 @@ const upload = multer({
   storage,
   limits: { 
     fileSize: uploadLimits.fileSize,
-    files: uploadLimits.maxFiles
+    files: uploadLimits.maxFiles,
+    fieldSize: 20 * 1024 * 1024, // 20MB for non-file fields
+    fieldNameSize: 500, // Max field name size
+    fields: 50, // Max number of non-file fields
   },
   fileFilter: (req, file, cb) => {
     const isImage = (file.mimetype || '').toLowerCase().startsWith('image/');
