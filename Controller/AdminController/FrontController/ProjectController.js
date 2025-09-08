@@ -529,39 +529,31 @@ class projectController {
           };
         }
         if (project_floorplan_Image) {
-          const floorId = projectData.project_floorplan_Image.map((item) => {
-            return item.public_id;
-          });
-
-          let floorResult = await Promise.all(
-            project_floorplan_Image.map((item, index) =>
-              updateFile(item, floorId[index]),
-            ),
+          // Append new floor plan images without touching existing ones
+          const existingImages = projectData.project_floorplan_Image || [];
+          const uploaded = await Promise.all(
+            project_floorplan_Image.map((file) => uploadFile(file))
           );
-
-          update.project_floorplan_Image = floorResult.map((item) => ({
+          const newItems = uploaded.map((item) => ({
             public_id: item.Key,
             url: item.Location,
             cdn_url: cloudfrontUrl + item.Key,
           }));
+          update.project_floorplan_Image = [...existingImages, ...newItems];
         }
 
         if (projectGallery) {
-          const GalleryId = projectData.projectGallery.map((item) => {
-            return item.public_id;
-          });
-
-          let galleryresult = await Promise.all(
-            projectGallery.map((item, index) =>
-              updateFile(item, GalleryId[index]),
-            ),
+          // Append new gallery images without touching existing ones
+          const existingGallery = projectData.projectGallery || [];
+          const uploadedGallery = await Promise.all(
+            projectGallery.map((file) => uploadFile(file))
           );
-
-          update.projectGallery = galleryresult.map((item) => ({
+          const galleryItems = uploadedGallery.map((item) => ({
             public_id: item.Key,
             url: item.Location,
             cdn_url: cloudfrontUrl + item.Key,
           }));
+          update.projectGallery = [...existingGallery, ...galleryItems];
         }
         const fieldsToUpdate = [
           "projectName",
@@ -606,11 +598,19 @@ class projectController {
         
         console.log("update", update);
 
-        const data = await ProjectModel.findByIdAndUpdate({ _id: id }, update);
-        await data.save();
-        //  fs.unlinkSync(req.files.path);
+        // Perform atomic update and return the updated document
+        const updatedProject = await ProjectModel.findByIdAndUpdate(
+          id,
+          update,
+          { new: true }
+        );
+
+        // Invalidate cached project lists so fresh data is served after update
+        try { cache.del("projectData"); } catch (_) {}
+
         return res.status(200).json({
           message: "Updated successfully !",
+          data: updatedProject,
         });
       }
     } catch (error) {
@@ -1741,7 +1741,94 @@ static projectSearch = async (req, res) => {
   };
   static floorImage = async (req, res) => {
     try {
-      return res.status(501).json({ message: "Not implemented" });
+      const { id, indexNumber } = req.params;
+      
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      const project = await ProjectModel.findById(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const index = parseInt(indexNumber);
+      if (isNaN(index) || index < 0 || index >= project.project_floorplan_Image.length) {
+        return res.status(400).json({ message: "Invalid image index" });
+      }
+
+      // Get the image to delete from S3
+      const imageToDelete = project.project_floorplan_Image[index];
+      
+      // Delete from S3 if it exists
+      if (imageToDelete && imageToDelete.key) {
+        try {
+          await deleteFile(imageToDelete.key);
+        } catch (s3Error) {
+          console.error("S3 deletion error:", s3Error);
+          // Continue with database update even if S3 deletion fails
+        }
+      }
+
+      // Remove from array
+      project.project_floorplan_Image.splice(index, 1);
+      await project.save();
+
+      // Invalidate cache to reflect deletion on listings
+      try { cache.del("projectData"); } catch (_) {}
+
+      return res.status(200).json({ 
+        message: "Floor plan image deleted successfully",
+        remainingImages: project.project_floorplan_Image.length
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error !" });
+    }
+  };
+
+  static galleryImage = async (req, res) => {
+    try {
+      const { id, indexNumber } = req.params;
+      
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      const project = await ProjectModel.findById(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const index = parseInt(indexNumber);
+      if (isNaN(index) || index < 0 || index >= project.projectGallery.length) {
+        return res.status(400).json({ message: "Invalid image index" });
+      }
+
+      // Get the image to delete from S3
+      const imageToDelete = project.projectGallery[index];
+      
+      // Delete from S3 if it exists
+      if (imageToDelete && imageToDelete.key) {
+        try {
+          await deleteFile(imageToDelete.key);
+        } catch (s3Error) {
+          console.error("S3 deletion error:", s3Error);
+          // Continue with database update even if S3 deletion fails
+        }
+      }
+
+      // Remove from array
+      project.projectGallery.splice(index, 1);
+      await project.save();
+
+      // Invalidate cache to reflect deletion on listings
+      try { cache.del("projectData"); } catch (_) {}
+
+      return res.status(200).json({ 
+        message: "Gallery image deleted successfully",
+        remainingImages: project.projectGallery.length
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Internal server error !" });

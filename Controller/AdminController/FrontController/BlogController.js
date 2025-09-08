@@ -694,5 +694,57 @@ class blogController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   };
+
+  // Search projects for admin blog editor
+  static search_projects = async (req, res) => {
+    try {
+      const { q = '', limit = 10 } = req.query;
+      const searchTerm = q.toString().trim();
+      
+      let query = {};
+      
+      // If search term is provided, use search criteria
+      if (searchTerm && searchTerm.length >= 2) {
+        const searchRegex = new RegExp(searchTerm, 'i');
+        query = {
+          $or: [
+            { projectName: searchRegex },
+            { pUrl: searchRegex },
+            { builderName: searchRegex }
+          ]
+        };
+      }
+      // If no search term, get all projects (for dropdown)
+
+      console.log('[search_projects] Query:', query);
+      console.log('[search_projects] Limit:', Math.min(parseInt(limit) || 100, 100));
+      
+      const projects = await postPropertyModel
+        .find(query)
+        .select('projectName pUrl thumbnailImage builderName city state')
+        .limit(Math.min(parseInt(limit) || 100, 100))
+        .lean();
+
+      console.log('[search_projects] Found projects count:', projects.length);
+      console.log('[search_projects] Sample project:', projects[0]);
+
+      const formattedProjects = projects.map(project => ({
+        project_url: project.pUrl || '',
+        projectName: project.projectName || '',
+        thumbnail: project.thumbnailImage || '',
+        builderName: project.builderName || '',
+        location: `${project.city || ''}, ${project.state || ''}`.replace(/^,\s*|,\s*$/g, '')
+      }));
+
+      return res.status(200).json({
+        message: 'Projects found',
+        data: formattedProjects,
+        total: formattedProjects.length
+      });
+    } catch (error) {
+      console.error('search_projects error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
 }
 module.exports = blogController;

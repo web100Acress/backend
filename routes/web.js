@@ -59,6 +59,12 @@ router.delete(
   projectController.floorImage,
 );
 
+router.delete(
+  "/galleryImage/:id/:indexNumber",
+  adminVerify,
+  projectController.galleryImage,
+);
+
 //from
 router.post("/userInsert", projectController.userInsert);
 router.get("/userViewAll",adminVerify, projectController.userViewAll);
