@@ -85,6 +85,24 @@ class blogController {
         blogImageData.cdn_url = cloudfrontUrl + imageData.Key;
       }
       
+      // Parse related projects (accept JSON string or array)
+      let relatedProjects = [];
+      try {
+        const raw = req.body.relatedProjects;
+        if (raw) {
+          const arr = Array.isArray(raw) ? raw : JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            relatedProjects = arr
+              .map((p) => ({
+                project_url: (p.project_url || p.pUrl || p.slug || '').toString().trim(),
+                projectName: (p.projectName || p.name || '').toString().trim(),
+                thumbnail: (p.thumbnail || p.thumb || p.thumbnailImage || '').toString().trim(),
+              }))
+              .filter((p) => p.project_url);
+          }
+        }
+      } catch (_) {}
+
       const newBlog = new blogModel({
         blog_Image: blogImageData,
         blog_Title,
@@ -92,6 +110,7 @@ class blogController {
         author,
         blog_Category,
         isPublished,
+        relatedProjects: relatedProjects && relatedProjects.length ? relatedProjects : undefined,
         // SEO fields
         metaTitle: metaTitle || undefined,
         metaDescription: metaDescription || undefined,
@@ -153,15 +172,26 @@ class blogController {
         sortBy = "createdAt",
         sortOrder = "desc",
       } = req.query;
-      const skip = (page - 1) * limit;
+      // Coerce and clamp params for performance and safety
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+      const sortField = (typeof sortBy === 'string' && sortBy.trim()) || 'createdAt';
+      const sortDir = (String(sortOrder).toLowerCase() === 'asc') ? 1 : -1;
+      const skip = (pageNum - 1) * limitNum;
 
-      const data = await blogModel.find({isPublished:true}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
-      const totalBlogs = await blogModel.countDocuments({isPublished:true});
+      const data = await blogModel
+        .find({ isPublished: true })
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished')
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ [sortField]: sortDir })
+        .lean();
+      const totalBlogs = await blogModel.countDocuments({ isPublished: true });
       if (data) {
         res.status(200).json({
           message: "Data get successfull ! ",
           data,
-          totalPages: Math.ceil(totalBlogs / limit),
+          totalPages: Math.ceil(totalBlogs / limitNum),
         });
       } else {
         res.status(200).json({
@@ -185,10 +215,20 @@ class blogController {
         sortBy = "createdAt",
         sortOrder = "desc",
       } = req.query;
-      const skip = (page - 1) * limit;
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(1000, Math.max(1, parseInt(limit, 10) || 100));
+      const sortField = (typeof sortBy === 'string' && sortBy.trim()) || 'createdAt';
+      const sortDir = (String(sortOrder).toLowerCase() === 'asc') ? 1 : -1;
+      const skip = (pageNum - 1) * limitNum;
 
-      // Get ALL blogs regardless of publish status
-      const data = await blogModel.find({}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
+      // Get ALL blogs regardless of publish status, but project only list fields
+      const data = await blogModel
+        .find({})
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished')
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ [sortField]: sortDir })
+        .lean();
       const totalBlogs = await blogModel.countDocuments({});
       
       console.log(`Admin blog view: Found ${data.length} blogs out of ${totalBlogs} total`);
@@ -202,7 +242,7 @@ class blogController {
         res.status(200).json({
           message: "Admin data retrieved successfully",
           data,
-          totalPages: Math.ceil(totalBlogs / limit),
+          totalPages: Math.ceil(totalBlogs / limitNum),
           totalBlogs,
           publishedBlogs: data.filter(blog => blog.isPublished === true).length,
           draftBlogs: data.filter(blog => blog.isPublished === false).length,
@@ -352,6 +392,25 @@ class blogController {
         if (typeof metaTitle !== 'undefined') doc.metaTitle = metaTitle;
         if (typeof metaDescription !== 'undefined') doc.metaDescription = metaDescription;
         if (typeof slug !== 'undefined' && slug !== '') doc.slug = slug; // will be normalized in pre-save
+
+        // Related projects (optional)
+        try {
+          const raw = req.body.relatedProjects;
+          if (typeof raw !== 'undefined') {
+            const arr = Array.isArray(raw) ? raw : JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              doc.relatedProjects = arr
+                .map((p) => ({
+                  project_url: (p.project_url || p.pUrl || p.slug || '').toString().trim(),
+                  projectName: (p.projectName || p.name || '').toString().trim(),
+                  thumbnail: (p.thumbnail || p.thumb || p.thumbnailImage || '').toString().trim(),
+                }))
+                .filter((p) => p.project_url);
+            } else if (raw === null) {
+              doc.relatedProjects = [];
+            }
+          }
+        } catch (_) { /* ignore */ }
 
         // Optional image update
         if (req.file) {

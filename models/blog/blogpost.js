@@ -41,9 +41,23 @@ const blogSchema = new mongoose.Schema({
   isPublished: {
     type: Boolean,
     default: false,
-  }
+  },
+  // Optional list of related projects to feature on the blog page
+  relatedProjects: [
+    new mongoose.Schema({
+      project_url: { type: String, trim: true }, // canonical slug (pUrl)
+      projectName: { type: String, trim: true },
+      thumbnail: { type: String, trim: true }, // optional cached thumbnail URL
+    }, { _id: false })
+  ]
   // Using the csdkccn subdocument schema as an array in the main schema
 },{timestamps: true});
+
+// Performance indexes for fast listings
+// Compound index used by public listing: find({ isPublished: true }).sort({ createdAt: -1 })
+blogSchema.index({ isPublished: 1, createdAt: -1 });
+// Helpful standalone index for createdAt sorting in admin listing
+blogSchema.index({ createdAt: -1 });
 
 // helper to slugify strings
 function slugify(text) {
