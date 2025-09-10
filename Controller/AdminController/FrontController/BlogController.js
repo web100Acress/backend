@@ -2,6 +2,7 @@ const { totalmem } = require("os");
 const blogModel = require("../../../models/blog/blogpost");
 const Category = require("../../../models/blog/category");
 const postPropertyModel = require("../../../models/postProperty/post");
+const ProjectModel = require("../../../models/projectDetail/project");
 const ObjectId = require("mongodb").ObjectId;
 const {
   uploadFile,
@@ -9,6 +10,8 @@ const {
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
 const fs = require("fs");
+const BlogEnquiry = require("../../../models/blog/blogEnquiry");
+const mailer = require("../../../Utilities/Nodemailer");
 
 class blogController {
   static blog_insert = async (req, res) => {
@@ -103,6 +106,25 @@ class blogController {
         }
       } catch (_) {}
 
+      // Parse FAQs
+      let enableFAQ = false;
+      let faqs = [];
+      try {
+        enableFAQ = String(req.body.enableFAQ).toLowerCase() === 'true' || req.body.enableFAQ === true;
+      } catch (_) {}
+      try {
+        const rawFaqs = req.body.faqs;
+        if (rawFaqs) {
+          const arr = Array.isArray(rawFaqs) ? rawFaqs : JSON.parse(rawFaqs);
+          if (Array.isArray(arr)) {
+            faqs = arr.map(f => ({
+              question: (f.question || '').toString().trim(),
+              answer: (f.answer || '').toString(),
+            })).filter(f => f.question && f.answer);
+          }
+        }
+      } catch (_) {}
+
       const newBlog = new blogModel({
         blog_Image: blogImageData,
         blog_Title,
@@ -111,6 +133,8 @@ class blogController {
         blog_Category,
         isPublished,
         relatedProjects: relatedProjects && relatedProjects.length ? relatedProjects : undefined,
+        enableFAQ: enableFAQ || (faqs && faqs.length > 0) || false,
+        faqs: faqs && faqs.length ? faqs : undefined,
         // SEO fields
         metaTitle: metaTitle || undefined,
         metaDescription: metaDescription || undefined,
@@ -412,6 +436,35 @@ class blogController {
           }
         } catch (_) { /* ignore */ }
 
+        // FAQs (optional)
+        try {
+          // enableFAQ can be boolean or string 'true'/'false'
+          if (typeof req.body.enableFAQ !== 'undefined') {
+            const flag = (String(req.body.enableFAQ).toLowerCase() === 'true') || (req.body.enableFAQ === true);
+            doc.enableFAQ = flag;
+          }
+          if (typeof req.body.faqs !== 'undefined') {
+            const rawFaqs = req.body.faqs;
+            if (rawFaqs === null) {
+              doc.faqs = [];
+            } else {
+              const arr = Array.isArray(rawFaqs) ? rawFaqs : JSON.parse(rawFaqs);
+              if (Array.isArray(arr)) {
+                doc.faqs = arr
+                  .map(f => ({
+                    question: (f.question || '').toString().trim(),
+                    answer: (f.answer || '').toString(),
+                  }))
+                  .filter(f => f.question && f.answer);
+                // if entries exist, auto-enable
+                if (doc.faqs.length > 0 && typeof req.body.enableFAQ === 'undefined') {
+                  doc.enableFAQ = true;
+                }
+              }
+            }
+          }
+        } catch (_) { /* ignore */ }
+
         // Optional image update
         if (req.file) {
           console.log('[blog_update] Received file:', {
@@ -633,6 +686,101 @@ class blogController {
     }
   };
 
+  // Submit a blog enquiry (public)
+  static submit_blog_enquiry = async (req, res) => {
+    try {
+      const { name, mobile, email = "", message = "", blogId, blogTitle = "", blogSlug = "", project } = req.body || {};
+      if (!name || !mobile || !blogId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const doc = await BlogEnquiry.create({
+        name,
+        mobile,
+        email,
+        message,
+        blogId,
+        blogTitle,
+        blogSlug,
+        project: {
+          project_url: project?.project_url || "",
+          projectName: project?.projectName || "",
+          thumbnail: project?.thumbnail || "",
+        },
+        source: req.body?.source || 'blog-modal',
+      });
+
+      // Send email (best-effort)
+      try {
+        const to = process.env.ENQUIRY_TO_EMAIL || process.env.SMTP_USER;
+        if (to && mailer) {
+          await mailer.sendMail({
+            to,
+            from: process.env.ENQUIRY_FROM_EMAIL || process.env.SMTP_USER || 'no-reply@100acress.com',
+            subject: `New Blog Enquiry: ${blogTitle || 'Blog'} - ${name}`,
+            html: `
+              <h2>New Blog Enquiry</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Phone:</strong> ${mobile}</p>
+              ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
+              ${message ? `<p><strong>Message:</strong> ${message}</p>` : ''}
+              <hr />
+              <p><strong>Blog:</strong> ${blogTitle} (${blogSlug})</p>
+              ${doc.project?.projectName ? `<p><strong>Related Project:</strong> ${doc.project.projectName}</p>` : ''}
+              ${doc.project?.project_url ? `<p><strong>Project URL:</strong> ${doc.project.project_url}</p>` : ''}
+            `.trim(),
+          });
+          try { await BlogEnquiry.findByIdAndUpdate(doc._id, { $set: { emailSent: true } }); } catch (_) {}
+        }
+      } catch (mailErr) {
+        console.warn('submit_blog_enquiry: mail send failed:', mailErr?.message || mailErr);
+      }
+
+      return res.status(201).json({ message: 'Enquiry submitted', data: doc });
+    } catch (error) {
+      console.error('submit_blog_enquiry error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // Admin list of blog enquiries
+  static list_blog_enquiries = async (req, res) => {
+    try {
+      const { page = 1, limit = 50 } = req.query;
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [rows, total] = await Promise.all([
+        BlogEnquiry.find({}).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+        BlogEnquiry.countDocuments({}),
+      ]);
+
+      return res.status(200).json({ message: 'OK', data: rows, total, totalPages: Math.ceil(total / limitNum) });
+    } catch (error) {
+      console.error('list_blog_enquiries error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // Admin delete blog enquiry
+  static delete_blog_enquiry = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id || !ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid id' });
+      }
+      const deleted = await BlogEnquiry.findByIdAndDelete(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Not found' });
+      }
+      return res.status(200).json({ message: 'Deleted', data: { id } });
+    } catch (error) {
+      console.error('delete_blog_enquiry error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
   // Categories
   static list_categories = async (req, res) => {
     try {
@@ -709,7 +857,7 @@ class blogController {
         query = {
           $or: [
             { projectName: searchRegex },
-            { pUrl: searchRegex },
+            { project_url: searchRegex },
             { builderName: searchRegex }
           ]
         };
@@ -719,9 +867,10 @@ class blogController {
       console.log('[search_projects] Query:', query);
       console.log('[search_projects] Limit:', Math.min(parseInt(limit) || 100, 100));
       
-      const projects = await postPropertyModel
+      // Use the correct Project model rather than postPropertyModel
+      const projects = await ProjectModel
         .find(query)
-        .select('projectName pUrl thumbnailImage builderName city state')
+        .select('projectName project_url thumbnailImage builderName city state minPrice maxPrice')
         .limit(Math.min(parseInt(limit) || 100, 100))
         .lean();
 
@@ -729,11 +878,16 @@ class blogController {
       console.log('[search_projects] Sample project:', projects[0]);
 
       const formattedProjects = projects.map(project => ({
-        project_url: project.pUrl || '',
+        project_url: project.project_url || '',
         projectName: project.projectName || '',
-        thumbnail: project.thumbnailImage || '',
+        // Prefer CDN URL if present, else fall back to URL string or nested object shapes
+        thumbnail: (typeof project.thumbnailImage === 'string')
+          ? project.thumbnailImage
+          : (project.thumbnailImage?.cdn_url || project.thumbnailImage?.url || ''),
         builderName: project.builderName || '',
-        location: `${project.city || ''}, ${project.state || ''}`.replace(/^,\s*|,\s*$/g, '')
+        location: `${project.city || ''}, ${project.state || ''}`.replace(/^,\s*|,\s*$/g, ''),
+        minPrice: project.minPrice ?? null,
+        maxPrice: project.maxPrice ?? null
       }));
 
       return res.status(200).json({

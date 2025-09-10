@@ -31,6 +31,18 @@ const blogSchema = new mongoose.Schema({
   blog_Description: {
     type: String,
   },
+  // FAQ support
+  enableFAQ: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  faqs: [
+    new mongoose.Schema({
+      question: { type: String, trim: true },
+      answer: { type: String }, // allow HTML
+    }, { _id: false })
+  ],
   author: {
     type: String,
     default: "Admin",

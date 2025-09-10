@@ -32,6 +32,11 @@ router.post(
   router.get("/view/:id", blogController.blog_viewId);
   router.get("/edit/:id", blogController.blog_edit);
   
+  // Blog enquiries
+  router.post("/enquiry", blogController.submit_blog_enquiry); // public
+  router.get("/enquiry", ContentWriterVerify, blogController.list_blog_enquiries); // admin
+  router.delete("/enquiry/:id", ContentWriterVerify, blogController.delete_blog_enquiry); // admin
+  
   // Update blog with featured image (catch Multer errors early)
   router.put(
     "/update/:id",
