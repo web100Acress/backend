@@ -31,6 +31,41 @@ const blogSchema = new mongoose.Schema({
   blog_Description: {
     type: String,
   },
+  // Views counter
+  views: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
+  // Engagement counters
+  likes: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
+  shares: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
+  // Track which users have liked (stores userId or email string)
+  likedBy: {
+    type: [String],
+    default: [],
+    index: true,
+  },
+  commentsCount: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
+  comments: [
+    new mongoose.Schema({
+      name: { type: String, trim: true },
+      message: { type: String, trim: true },
+      createdAt: { type: Date, default: Date.now }
+    }, { _id: false })
+  ],
   // FAQ support
   enableFAQ: {
     type: Boolean,
@@ -70,6 +105,8 @@ const blogSchema = new mongoose.Schema({
 blogSchema.index({ isPublished: 1, createdAt: -1 });
 // Helpful standalone index for createdAt sorting in admin listing
 blogSchema.index({ createdAt: -1 });
+// Optional index to sort by popularity
+blogSchema.index({ views: -1 });
 
 // helper to slugify strings
 function slugify(text) {

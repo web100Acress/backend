@@ -31,6 +31,12 @@ router.post(
   router.get("/view", blogController.blog_view);
   router.get("/view/:id", blogController.blog_viewId);
   router.get("/edit/:id", blogController.blog_edit);
+// Engagement
+router.post("/:id/like", blogController.like);
+router.post("/:id/unlike", blogController.unlike);
+router.post("/:id/share", blogController.share);
+router.post("/:id/comment", blogController.add_comment);
+router.get("/:id/engagement", blogController.get_engagement);
   
   // Blog enquiries
   router.post("/enquiry", blogController.submit_blog_enquiry); // public

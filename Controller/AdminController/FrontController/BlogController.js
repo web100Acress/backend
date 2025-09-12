@@ -205,7 +205,7 @@ class blogController {
 
       const data = await blogModel
         .find({ isPublished: true })
-        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished')
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished views likes shares commentsCount')
         .skip(skip)
         .limit(limitNum)
         .sort({ [sortField]: sortDir })
@@ -248,7 +248,7 @@ class blogController {
       // Get ALL blogs regardless of publish status, but project only list fields
       const data = await blogModel
         .find({})
-        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished')
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished views likes shares commentsCount')
         .skip(skip)
         .limit(limitNum)
         .sort({ [sortField]: sortDir })
@@ -319,7 +319,42 @@ class blogController {
     try {
       const id = req.params.id;
       if (ObjectId.isValid(id)) {
-        const data = await blogModel.findById({ _id: id });
+        // Determine whether to count the view for this request
+        const shouldCount = (() => {
+          const q = (req.query?.countView || '').toString().toLowerCase();
+          return q === '1' || q === 'true';
+        })();
+        // Helper: extract client IP
+        const getClientIp = (req) => {
+          try {
+            let ip = (req.headers['x-forwarded-for'] || '').toString();
+            if (ip) ip = ip.split(',')[0].trim();
+            if (!ip) ip = req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+            if (ip && ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+            return ip;
+          } catch (_) { return ''; }
+        };
+        // Private/local IP detection
+        const isPrivateIp = (ip) => {
+          if (!ip) return true; // treat unknown as private to be safe
+          if (ip === '::1' || ip === '0:0:0:0:0:0:0:1') return true;
+          if (/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(ip)) return true;
+          return false;
+        };
+        const clientIp = getClientIp(req);
+        const excludedList = (process.env.EXCLUDED_VIEW_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+        const isExcluded = excludedList.includes(clientIp) || isPrivateIp(clientIp);
+        let data;
+        if (shouldCount && !isExcluded) {
+          // Atomically increment views and return the updated doc
+          data = await blogModel.findByIdAndUpdate(
+            { _id: id },
+            { $inc: { views: 1 } },
+            { new: true }
+          );
+        } else {
+          data = await blogModel.findById({ _id: id });
+        }
         res.status(201).json({
           message: "Data get successfully",
           data,
@@ -543,31 +578,29 @@ class blogController {
   static blog_update_ispublished = async (req, res) => {
     try {
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
-          const isPublished = req.body.isPublished ;
-          
-          if (typeof isPublished !== 'boolean') {
-            return res.status(400).json({ message: "Invalid isPublished value" });
-          }
-
-          const updatedBlog  = await blogModel.findByIdAndUpdate(
-            { _id: id },
-            {$set: { isPublished:isPublished }},
-            { new: true }
-          );
-
-          if (!updatedBlog) {
-            return res.status(404).json({ message: "Blog not found" });
-          }
-    
-          return res.status(200).json({
-            message: "Status updated successfully!",
-            data: updatedBlog
-          });
-        
-      } else {
+      if (!ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
+
+      const isPublished = req.body.isPublished;
+      if (typeof isPublished !== 'boolean') {
+        return res.status(400).json({ message: "Invalid isPublished value" });
+      }
+
+      const updatedBlog = await blogModel.findByIdAndUpdate(
+        { _id: id },
+        { $set: { isPublished } },
+        { new: true }
+      );
+
+      if (!updatedBlog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      return res.status(200).json({
+        message: "Status updated successfully!",
+        data: updatedBlog
+      });
     } catch (error) {
       console.error("Update error:", error);
       return res.status(500).json({
@@ -897,6 +930,94 @@ class blogController {
       });
     } catch (error) {
       console.error('search_projects error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // --- Engagement Endpoints ---
+  static like = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const userIdentity = (req.headers['x-user-id'] || req.body?.userId || req.body?.email || req.headers['x-user-email'] || req.ip || '').toString().trim().toLowerCase();
+      const doc = await blogModel.findById(id).select('likes shares commentsCount views likedBy');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      const already = userIdentity && Array.isArray(doc.likedBy) && doc.likedBy.includes(userIdentity);
+      if (!already) {
+        doc.likes = (doc.likes || 0) + 1;
+        if (!Array.isArray(doc.likedBy)) doc.likedBy = [];
+        if (userIdentity) doc.likedBy.push(userIdentity);
+        await doc.save();
+      }
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static share = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const updated = await blogModel.findByIdAndUpdate(
+        { _id: id },
+        { $inc: { shares: 1 } },
+        { new: true }
+      ).select('likes shares commentsCount views');
+      if (!updated) return res.status(404).json({ message: 'Not found' });
+      return res.status(200).json({ message: 'OK', data: updated });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static unlike = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const userIdentity = (req.headers['x-user-id'] || req.body?.userId || req.body?.email || req.headers['x-user-email'] || req.ip || '').toString().trim().toLowerCase();
+      const doc = await blogModel.findById(id).select('likes shares commentsCount views likedBy');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      const had = userIdentity && Array.isArray(doc.likedBy) && doc.likedBy.includes(userIdentity);
+      if (had) {
+        doc.likes = Math.max(0, (doc.likes || 0) - 1);
+        doc.likedBy = doc.likedBy.filter(u => u !== userIdentity);
+        await doc.save();
+      }
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static add_comment = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const name = (req.body?.name || 'Anonymous').toString().trim().slice(0, 80);
+      const message = (req.body?.message || '').toString().trim();
+      if (!message) return res.status(400).json({ message: 'Message is required' });
+      const update = {
+        $push: { comments: { name, message, createdAt: new Date() } },
+        $inc: { commentsCount: 1 }
+      };
+      const updated = await blogModel.findByIdAndUpdate({ _id: id }, update, { new: true })
+        .select('likes shares commentsCount views comments');
+      if (!updated) return res.status(404).json({ message: 'Not found' });
+      return res.status(201).json({ message: 'Comment added', data: updated });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static get_engagement = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const doc = await blogModel.findById({ _id: id }).select('likes shares commentsCount views comments');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
       return res.status(500).json({ message: 'Internal server error' });
     }
   };
