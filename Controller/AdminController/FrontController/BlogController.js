@@ -343,7 +343,8 @@ class blogController {
         };
         const clientIp = getClientIp(req);
         const excludedList = (process.env.EXCLUDED_VIEW_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
-        const isExcluded = excludedList.includes(clientIp) || isPrivateIp(clientIp);
+        const countLocal = String(process.env.COUNT_LOCAL_VIEWS || '').toLowerCase() === 'true';
+        const isExcluded = excludedList.includes(clientIp) || (!countLocal && isPrivateIp(clientIp));
         let data;
         if (shouldCount && !isExcluded) {
           // Atomically increment views and return the updated doc
