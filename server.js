@@ -31,8 +31,8 @@ const limiter = rateLimit({
       const m = (req.method || '').toUpperCase();
       // Skip project insert/update and builder insert
       if (
-        (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert')))
-        || (m === 'POST' && p.startsWith('/project/update'))
+        (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert') || p.startsWith('/api/project/insert') || p.startsWith('/api/builder/insert')))
+        || (m === 'POST' && (p.startsWith('/project/update') || p.startsWith('/api/project/update')))
         || (m === 'POST' && p.includes('/career/page/insert'))
       ) {
         return true;
