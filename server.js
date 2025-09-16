@@ -22,6 +22,24 @@ const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 250, // Limit each IP to 250 requests per windowMs
   message: "Too many requests, please try again after sometime.",
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Do not rate limit heavy, authenticated admin uploads to avoid blocking legitimate actions
+  skip: (req) => {
+    try {
+      const p = (req.originalUrl || req.url || '').toLowerCase();
+      const m = (req.method || '').toUpperCase();
+      // Skip project insert/update and builder insert
+      if (
+        (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert')))
+        || (m === 'POST' && p.startsWith('/project/update'))
+        || (m === 'POST' && p.includes('/career/page/insert'))
+      ) {
+        return true;
+      }
+    } catch {}
+    return false;
+  },
 });
 
 // compress the response
