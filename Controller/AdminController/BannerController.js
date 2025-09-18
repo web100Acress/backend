@@ -1,4 +1,4 @@
-const Banner = require('../../Models/Banner');
+const Banner = require('../../models/Banner');
 const { uploadFile } = require('../../Utilities/s3HelperUtility');
 
 class BannerController {
