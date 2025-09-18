@@ -33,6 +33,7 @@ const AuthController = require("../Controller/AdminController/FrontController/Au
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 const usersRoute = require("./user.route");
 const SettingsController = require("../Controller/AdminController/SettingsController");
+const bannerRoute = require("./admin.banners");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -257,5 +258,12 @@ router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperti
 // Site settings: Shorts video ID
 router.get("/settings/shorts-video-id", SettingsController.getShortsVideoId);
 router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateShortsVideoId);
+
+// Banner management routes
+router.use("/api/admin/banners", bannerRoute);
+
+// Public banner routes (no authentication required)
+const publicBannerRoute = require("./public.banners");
+router.use("/api/banners", publicBannerRoute);
 
 module.exports = router;

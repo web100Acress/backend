@@ -443,8 +443,10 @@ class projectController {
         const projectData = await ProjectModel.findById({ _id: id });
 
         if (logo) {
-          const logoId = projectData.logo.public_id;
-          const logoResult = await updateFile(logo[0], logoId);
+          const existing = projectData?.logo?.public_id;
+          const logoResult = existing
+            ? await updateFile(logo[0], existing)
+            : await uploadFile(logo[0]);
           update.logo = {
             public_id: logoResult.Key,
             url: logoResult.Location,
@@ -453,21 +455,22 @@ class projectController {
         }
 
         if (thumbnailImage) {
-          // console.log("Inside Thumbnail Image");
-          const thumbnailImageId = projectData.thumbnailImage.public_id;
-          const thumbnailImageResult = await updateFile(thumbnailImage[0], thumbnailImageId);
-          // console.log("File updated successfully:", thumbnailImageResult);
+          const existing = projectData?.thumbnailImage?.public_id;
+          const thumbnailImageResult = existing
+            ? await updateFile(thumbnailImage[0], existing)
+            : await uploadThumbnailImage(thumbnailImage[0]);
           update.thumbnailImage = {
             public_id: thumbnailImageResult.Key,
             url: thumbnailImageResult.Location,
             cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
           };
-          // console.log("Updated thumbnailImage:", update.thumbnailImage);
-          }
+        }
 
         if (frontImage) {
-          const frontId = projectData.frontImage.public_id;
-          const frontResult = await updateFile(frontImage[0], frontId);
+          const existing = projectData?.frontImage?.public_id;
+          const frontResult = existing
+            ? await updateFile(frontImage[0], existing)
+            : await uploadFile(frontImage[0]);
           update.frontImage = {
             public_id: frontResult.Key,
             url: frontResult.Location,
@@ -476,11 +479,10 @@ class projectController {
         }
 
         if (project_locationImage) {
-          const locationId = projectData.project_locationImage.public_id;
-          const locationResult = await updateFile(
-            project_locationImage[0],
-            locationId,
-          );
+          const existing = projectData?.project_locationImage?.public_id;
+          const locationResult = existing
+            ? await updateFile(project_locationImage[0], existing)
+            : await uploadFile(project_locationImage[0]);
           update.project_locationImage = {
             public_id: locationResult.Key,
             url: locationResult.Location,
@@ -489,11 +491,10 @@ class projectController {
         }
 
         if (highlightImage) {
-          const highlightId = projectData.highlightImage.public_id;
-          const highlightResult = await updateFile(
-            highlightImage[0],
-            highlightId,
-          );
+          const existing = projectData?.highlightImage?.public_id;
+          const highlightResult = existing
+            ? await updateFile(highlightImage[0], existing)
+            : await uploadFile(highlightImage[0]);
           update.highlightImage = {
             public_id: highlightResult.Key,
             url: highlightResult.Location,
@@ -502,12 +503,10 @@ class projectController {
         }
 
         if (project_Brochure) {
-          const brochureId = projectData.project_Brochure.public_id;
-
-          const brochureResult = await updateFile(
-            project_Brochure[0],
-            brochureId,
-          );
+          const existing = projectData?.project_Brochure?.public_id;
+          const brochureResult = existing
+            ? await updateFile(project_Brochure[0], existing)
+            : await uploadFile(project_Brochure[0]);
           update.project_Brochure = {
             public_id: brochureResult.Key,
             url: brochureResult.Location,
@@ -516,12 +515,10 @@ class projectController {
         }
 
         if (projectMaster_plan) {
-          const masterId = projectData.projectMaster_plan.public_id;
-
-          const masterResult = await updateFile(
-            projectMaster_plan[0],
-            masterId,
-          );
+          const existing = projectData?.projectMaster_plan?.public_id;
+          const masterResult = existing
+            ? await updateFile(projectMaster_plan[0], existing)
+            : await uploadFile(projectMaster_plan[0]);
           update.projectMaster_plan = {
             public_id: masterResult.Key,
             url: masterResult.Location,
