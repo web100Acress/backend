@@ -6,3 +6,4 @@ const BannerController = require('../Controller/AdminController/BannerController
 router.get('/active', BannerController.getActiveBanners);
 
 module.exports = router;
+

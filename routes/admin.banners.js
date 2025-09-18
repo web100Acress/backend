@@ -57,3 +57,4 @@ router.patch('/:id/toggle', BannerController.toggleBannerStatus);
 router.delete('/:id', BannerController.deleteBanner);
 
 module.exports = router;
+
