@@ -738,7 +738,13 @@ static projectSearch = async (req, res) => {
     if (scoplots === "1") query.type = "SCO Plots";
     if (residentiaProject === "1") query.type = "Residential Flats";
     if (allupcomingproject === "1") query.project_Status = "comingsoon";
-    if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
+    if (budgethomesgurugram === "1") {
+      // Get budget homes for Gurugram from query parameters or use default
+      const budgetHomesGurugram = req.query.budgetHomesGurugram ? 
+        req.query.budgetHomesGurugram.split(',') : 
+        ["M3M Soulitude", "M3M Antalya Hills", "Signature Global City 93", "Signature Global City 81"];
+      query.$or = budgetHomesGurugram.map(name => ({projectName: name}));
+    }
     
     // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
     if (builderName) query.builderName = builderName;
@@ -1174,18 +1180,54 @@ static projectSearch = async (req, res) => {
   };
   static project_budgetHomes = async (req, res) => {
     try {
-      const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
-      const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
-      //  console.log(data)
+      // Get budget projects from query parameters or use default
+      const budgetProjects = req.query.projects ? 
+        req.query.projects.split(',') : 
+        [
+          "M3M Antalya Hills",
+          "ROF Pravasa", 
+          "Signature Global City 81",
+          "M3M Soulitude"
+        ];
+      
+      const data = await ProjectModel.find({ projectName: {$in: budgetProjects}});
+      
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
         message: "Internal server error !",
+      });
+    }
+  };
+
+  // New method to get projects by category with dynamic ordering
+  static getProjectsByCategory = async (req, res) => {
+    try {
+      const { category, projects } = req.query;
+      
+      if (!category || !projects) {
+        return res.status(400).json({
+          message: "Category and projects parameters are required!",
+        });
+      }
+
+      const projectNames = projects.split(',');
+      const data = await ProjectModel.find({ projectName: {$in: projectNames}});
+      
+      return res.status(200).json({
+        message: `${category} projects retrieved successfully!`,
+        data,
+        category,
+        total: data.length
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error!",
       });
     }
   };

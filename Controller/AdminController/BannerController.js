@@ -45,7 +45,16 @@ class BannerController {
   // Upload new banner
   static uploadBanner = async (req, res) => {
     try {
-      const { title, subtitle, link, isActive, order } = req.body;
+      const { title, subtitle, slug, isActive, order } = req.body;
+      
+      // Debug log to see what's being received
+      console.log('Received banner data:', {
+        title,
+        subtitle,
+        slug,
+        isActive,
+        order
+      });
       
       if (!title) {
         return res.status(400).json({
@@ -70,7 +79,7 @@ class BannerController {
         console.error('❌ S3 upload failed:', s3Error);
         return res.status(500).json({
           success: false,
-          message: 'Failed to upload image to S3'
+          message: 'Failed to upload image to S3: ' + (s3Error.message || 'Unknown error')
         });
       }
 
@@ -86,7 +95,7 @@ class BannerController {
       const banner = new Banner({
         title,
         subtitle: subtitle || '',
-        link: link || '',
+        slug: slug || '',
         image: bannerImageData,
         isActive: isActive === 'true' || isActive === true,
         order: parseInt(order) || 0,
@@ -105,7 +114,7 @@ class BannerController {
       console.error('Error uploading banner:', error);
       res.status(500).json({
         success: false,
-        message: 'Internal server error'
+        message: 'Internal server error: ' + (error.message || 'Unknown error')
       });
     }
   };
@@ -114,7 +123,7 @@ class BannerController {
   static updateBanner = async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, subtitle, link, isActive, order } = req.body;
+      const { title, subtitle, slug, isActive, order } = req.body;
 
       const banner = await Banner.findById(id);
       if (!banner) {
@@ -127,7 +136,7 @@ class BannerController {
       // Update fields
       if (title) banner.title = title;
       if (subtitle !== undefined) banner.subtitle = subtitle;
-      if (link !== undefined) banner.link = link;
+      if (slug !== undefined) banner.slug = slug;
       if (isActive !== undefined) banner.isActive = isActive === 'true' || isActive === true;
       if (order !== undefined) banner.order = parseInt(order) || 0;
 

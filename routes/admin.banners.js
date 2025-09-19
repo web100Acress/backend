@@ -7,7 +7,16 @@ const BannerController = require('../Controller/AdminController/BannerController
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'temp/uploads/');
+    // Ensure the directory exists
+    const fs = require('fs');
+    const path = require('path');
+    const uploadDir = path.join(process.cwd(), 'temp', 'uploads');
+    try {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {
+      console.error('Failed to create upload directory:', e);
+    }
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -30,6 +39,31 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
   fileFilter: fileFilter
+});
+
+// Error handling middleware for multer
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 5MB.'
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Unexpected field name. Expected "bannerImage".'
+      });
+    }
+  }
+  if (error.message === 'Only image files are allowed!') {
+    return res.status(400).json({
+      success: false,
+      message: 'Only image files are allowed.'
+    });
+  }
+  next(error);
 });
 
 // Apply admin verification middleware to all routes

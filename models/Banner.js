@@ -10,9 +10,10 @@ const bannerSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  link: {
+  slug: {
     type: String,
-    trim: true
+    trim: true,
+    lowercase: true
   },
   image: {
     public_id: {
@@ -45,6 +46,7 @@ const bannerSchema = new mongoose.Schema({
 
 // Index for better query performance
 bannerSchema.index({ isActive: 1, order: 1 });
+bannerSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Banner', bannerSchema);
 

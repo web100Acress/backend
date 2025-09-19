@@ -323,5 +323,22 @@ class contactController {
       });
     }
   };
+
+  // Get contact count for admin dashboard
+  static contactCount = async (req, res) => {
+    try {
+      const count = await contactModel.countDocuments();
+      res.status(200).json({
+        success: true,
+        count: count
+      });
+    } catch (error) {
+      console.error('Error getting contact count:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  };
 }
 module.exports = contactController;
