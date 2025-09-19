@@ -172,12 +172,28 @@ class SmallBannerController {
       // Update fields
       if (title) smallBanner.title = title;
       if (subtitle !== undefined) smallBanner.subtitle = subtitle;
-      if (slug !== undefined) smallBanner.slug = slug;
       if (link !== undefined) smallBanner.link = link;
       if (isActive !== undefined) smallBanner.isActive = isActive;
       if (order !== undefined) smallBanner.order = parseInt(order);
       if (position !== undefined) smallBanner.position = position;
       if (size !== undefined) smallBanner.size = size;
+      
+      // Handle slug update with conflict resolution
+      if (slug !== undefined && slug !== smallBanner.slug) {
+        // Check if slug already exists for another banner
+        const existingBanner = await SmallBanner.findOne({ 
+          slug: slug, 
+          _id: { $ne: id } 
+        });
+        
+        if (existingBanner) {
+          // Generate unique slug by appending timestamp
+          const timestamp = Date.now().toString().slice(-6);
+          smallBanner.slug = `${slug}-${timestamp}`;
+        } else {
+          smallBanner.slug = slug;
+        }
+      }
 
       // Handle new image upload
       if (req.file) {
