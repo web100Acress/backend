@@ -266,6 +266,12 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
 
+// Project order management routes
+const adminProjectOrderRoute = require("./admin.project-orders");
+const publicProjectOrderRoute = require("./public.project-orders");
+router.use("/api/admin/project-orders", adminProjectOrderRoute);
+router.use("/api/project-orders", publicProjectOrderRoute);
+
 // Public banner routes (no authentication required)
 const publicBannerRoute = require("./public.banners");
 const publicSmallBannerRoute = require("./public.small-banners");

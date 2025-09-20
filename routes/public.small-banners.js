@@ -6,3 +6,4 @@ const SmallBannerController = require('../Controller/AdminController/SmallBanner
 router.get('/active', SmallBannerController.getActiveSmallBanners);
 
 module.exports = router;
+
