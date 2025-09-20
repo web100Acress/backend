@@ -33,6 +33,8 @@ const AuthController = require("../Controller/AdminController/FrontController/Au
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 const usersRoute = require("./user.route");
 const SettingsController = require("../Controller/AdminController/SettingsController");
+const bannerRoute = require("./admin.banners");
+const smallBannerRoute = require("./admin.small-banners");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -57,6 +59,12 @@ router.delete(
   "/floorImage/:id/:indexNumber",
   adminVerify,
   projectController.floorImage,
+);
+
+router.delete(
+  "/galleryImage/:id/:indexNumber",
+  adminVerify,
+  projectController.galleryImage,
 );
 
 //from
@@ -86,6 +94,8 @@ router.post("/contact_Insert", contactController.contact_Insert);
 router.get("/contact_view/:id/customer", contactController.contact_view);
 router.get("/contact/viewAll", contactController.contactviewAll);
 router.delete("/contact_delete/:id/delete", contactController.contact_delete);
+// Contact count for admin dashboard
+router.get("/api/admin/contact/count", adminVerify, contactController.contactCount);
 // contact page detail handler
 router.post("/contact_pagedetail", contactController.contact_pagedetail);
 router.get(
@@ -251,5 +261,15 @@ router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperti
 // Site settings: Shorts video ID
 router.get("/settings/shorts-video-id", SettingsController.getShortsVideoId);
 router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateShortsVideoId);
+
+// Banner management routes
+router.use("/api/admin/banners", bannerRoute);
+router.use("/api/admin/small-banners", smallBannerRoute);
+
+// Public banner routes (no authentication required)
+const publicBannerRoute = require("./public.banners");
+const publicSmallBannerRoute = require("./public.small-banners");
+router.use("/api/banners", publicBannerRoute);
+router.use("/api/small-banners", publicSmallBannerRoute);
 
 module.exports = router;

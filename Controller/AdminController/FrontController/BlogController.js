@@ -2,6 +2,7 @@ const { totalmem } = require("os");
 const blogModel = require("../../../models/blog/blogpost");
 const Category = require("../../../models/blog/category");
 const postPropertyModel = require("../../../models/postProperty/post");
+const ProjectModel = require("../../../models/projectDetail/project");
 const ObjectId = require("mongodb").ObjectId;
 const {
   uploadFile,
@@ -9,6 +10,8 @@ const {
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
 const fs = require("fs");
+const BlogEnquiry = require("../../../models/blog/blogEnquiry");
+const mailer = require("../../../Utilities/Nodemailer");
 
 class blogController {
   static blog_insert = async (req, res) => {
@@ -85,6 +88,43 @@ class blogController {
         blogImageData.cdn_url = cloudfrontUrl + imageData.Key;
       }
       
+      // Parse related projects (accept JSON string or array)
+      let relatedProjects = [];
+      try {
+        const raw = req.body.relatedProjects;
+        if (raw) {
+          const arr = Array.isArray(raw) ? raw : JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            relatedProjects = arr
+              .map((p) => ({
+                project_url: (p.project_url || p.pUrl || p.slug || '').toString().trim(),
+                projectName: (p.projectName || p.name || '').toString().trim(),
+                thumbnail: (p.thumbnail || p.thumb || p.thumbnailImage || '').toString().trim(),
+              }))
+              .filter((p) => p.project_url);
+          }
+        }
+      } catch (_) {}
+
+      // Parse FAQs
+      let enableFAQ = false;
+      let faqs = [];
+      try {
+        enableFAQ = String(req.body.enableFAQ).toLowerCase() === 'true' || req.body.enableFAQ === true;
+      } catch (_) {}
+      try {
+        const rawFaqs = req.body.faqs;
+        if (rawFaqs) {
+          const arr = Array.isArray(rawFaqs) ? rawFaqs : JSON.parse(rawFaqs);
+          if (Array.isArray(arr)) {
+            faqs = arr.map(f => ({
+              question: (f.question || '').toString().trim(),
+              answer: (f.answer || '').toString(),
+            })).filter(f => f.question && f.answer);
+          }
+        }
+      } catch (_) {}
+
       const newBlog = new blogModel({
         blog_Image: blogImageData,
         blog_Title,
@@ -92,6 +132,9 @@ class blogController {
         author,
         blog_Category,
         isPublished,
+        relatedProjects: relatedProjects && relatedProjects.length ? relatedProjects : undefined,
+        enableFAQ: enableFAQ || (faqs && faqs.length > 0) || false,
+        faqs: faqs && faqs.length ? faqs : undefined,
         // SEO fields
         metaTitle: metaTitle || undefined,
         metaDescription: metaDescription || undefined,
@@ -153,15 +196,26 @@ class blogController {
         sortBy = "createdAt",
         sortOrder = "desc",
       } = req.query;
-      const skip = (page - 1) * limit;
+      // Coerce and clamp params for performance and safety
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+      const sortField = (typeof sortBy === 'string' && sortBy.trim()) || 'createdAt';
+      const sortDir = (String(sortOrder).toLowerCase() === 'asc') ? 1 : -1;
+      const skip = (pageNum - 1) * limitNum;
 
-      const data = await blogModel.find({isPublished:true}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
-      const totalBlogs = await blogModel.countDocuments({isPublished:true});
+      const data = await blogModel
+        .find({ isPublished: true })
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished views likes shares commentsCount')
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ [sortField]: sortDir })
+        .lean();
+      const totalBlogs = await blogModel.countDocuments({ isPublished: true });
       if (data) {
         res.status(200).json({
           message: "Data get successfull ! ",
           data,
-          totalPages: Math.ceil(totalBlogs / limit),
+          totalPages: Math.ceil(totalBlogs / limitNum),
         });
       } else {
         res.status(200).json({
@@ -185,10 +239,20 @@ class blogController {
         sortBy = "createdAt",
         sortOrder = "desc",
       } = req.query;
-      const skip = (page - 1) * limit;
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(1000, Math.max(1, parseInt(limit, 10) || 100));
+      const sortField = (typeof sortBy === 'string' && sortBy.trim()) || 'createdAt';
+      const sortDir = (String(sortOrder).toLowerCase() === 'asc') ? 1 : -1;
+      const skip = (pageNum - 1) * limitNum;
 
-      // Get ALL blogs regardless of publish status
-      const data = await blogModel.find({}).skip(skip).limit(limit).sort({[sortBy]: sortOrder});
+      // Get ALL blogs regardless of publish status, but project only list fields
+      const data = await blogModel
+        .find({})
+        .select('blog_Title blog_Image blog_Category author createdAt slug isPublished views likes shares commentsCount')
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ [sortField]: sortDir })
+        .lean();
       const totalBlogs = await blogModel.countDocuments({});
       
       console.log(`Admin blog view: Found ${data.length} blogs out of ${totalBlogs} total`);
@@ -202,7 +266,7 @@ class blogController {
         res.status(200).json({
           message: "Admin data retrieved successfully",
           data,
-          totalPages: Math.ceil(totalBlogs / limit),
+          totalPages: Math.ceil(totalBlogs / limitNum),
           totalBlogs,
           publishedBlogs: data.filter(blog => blog.isPublished === true).length,
           draftBlogs: data.filter(blog => blog.isPublished === false).length,
@@ -255,7 +319,43 @@ class blogController {
     try {
       const id = req.params.id;
       if (ObjectId.isValid(id)) {
-        const data = await blogModel.findById({ _id: id });
+        // Determine whether to count the view for this request
+        const shouldCount = (() => {
+          const q = (req.query?.countView || '').toString().toLowerCase();
+          return q === '1' || q === 'true';
+        })();
+        // Helper: extract client IP
+        const getClientIp = (req) => {
+          try {
+            let ip = (req.headers['x-forwarded-for'] || '').toString();
+            if (ip) ip = ip.split(',')[0].trim();
+            if (!ip) ip = req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+            if (ip && ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+            return ip;
+          } catch (_) { return ''; }
+        };
+        // Private/local IP detection
+        const isPrivateIp = (ip) => {
+          if (!ip) return true; // treat unknown as private to be safe
+          if (ip === '::1' || ip === '0:0:0:0:0:0:0:1') return true;
+          if (/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(ip)) return true;
+          return false;
+        };
+        const clientIp = getClientIp(req);
+        const excludedList = (process.env.EXCLUDED_VIEW_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+        const countLocal = String(process.env.COUNT_LOCAL_VIEWS || '').toLowerCase() === 'true';
+        const isExcluded = excludedList.includes(clientIp) || (!countLocal && isPrivateIp(clientIp));
+        let data;
+        if (shouldCount && !isExcluded) {
+          // Atomically increment views and return the updated doc
+          data = await blogModel.findByIdAndUpdate(
+            { _id: id },
+            { $inc: { views: 1 } },
+            { new: true }
+          );
+        } else {
+          data = await blogModel.findById({ _id: id });
+        }
         res.status(201).json({
           message: "Data get successfully",
           data,
@@ -353,6 +453,54 @@ class blogController {
         if (typeof metaDescription !== 'undefined') doc.metaDescription = metaDescription;
         if (typeof slug !== 'undefined' && slug !== '') doc.slug = slug; // will be normalized in pre-save
 
+        // Related projects (optional)
+        try {
+          const raw = req.body.relatedProjects;
+          if (typeof raw !== 'undefined') {
+            const arr = Array.isArray(raw) ? raw : JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              doc.relatedProjects = arr
+                .map((p) => ({
+                  project_url: (p.project_url || p.pUrl || p.slug || '').toString().trim(),
+                  projectName: (p.projectName || p.name || '').toString().trim(),
+                  thumbnail: (p.thumbnail || p.thumb || p.thumbnailImage || '').toString().trim(),
+                }))
+                .filter((p) => p.project_url);
+            } else if (raw === null) {
+              doc.relatedProjects = [];
+            }
+          }
+        } catch (_) { /* ignore */ }
+
+        // FAQs (optional)
+        try {
+          // enableFAQ can be boolean or string 'true'/'false'
+          if (typeof req.body.enableFAQ !== 'undefined') {
+            const flag = (String(req.body.enableFAQ).toLowerCase() === 'true') || (req.body.enableFAQ === true);
+            doc.enableFAQ = flag;
+          }
+          if (typeof req.body.faqs !== 'undefined') {
+            const rawFaqs = req.body.faqs;
+            if (rawFaqs === null) {
+              doc.faqs = [];
+            } else {
+              const arr = Array.isArray(rawFaqs) ? rawFaqs : JSON.parse(rawFaqs);
+              if (Array.isArray(arr)) {
+                doc.faqs = arr
+                  .map(f => ({
+                    question: (f.question || '').toString().trim(),
+                    answer: (f.answer || '').toString(),
+                  }))
+                  .filter(f => f.question && f.answer);
+                // if entries exist, auto-enable
+                if (doc.faqs.length > 0 && typeof req.body.enableFAQ === 'undefined') {
+                  doc.enableFAQ = true;
+                }
+              }
+            }
+          }
+        } catch (_) { /* ignore */ }
+
         // Optional image update
         if (req.file) {
           console.log('[blog_update] Received file:', {
@@ -431,31 +579,29 @@ class blogController {
   static blog_update_ispublished = async (req, res) => {
     try {
       const id = req.params.id;
-      if (ObjectId.isValid(id)) {
-          const isPublished = req.body.isPublished ;
-          
-          if (typeof isPublished !== 'boolean') {
-            return res.status(400).json({ message: "Invalid isPublished value" });
-          }
-
-          const updatedBlog  = await blogModel.findByIdAndUpdate(
-            { _id: id },
-            {$set: { isPublished:isPublished }},
-            { new: true }
-          );
-
-          if (!updatedBlog) {
-            return res.status(404).json({ message: "Blog not found" });
-          }
-    
-          return res.status(200).json({
-            message: "Status updated successfully!",
-            data: updatedBlog
-          });
-        
-      } else {
+      if (!ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
+
+      const isPublished = req.body.isPublished;
+      if (typeof isPublished !== 'boolean') {
+        return res.status(400).json({ message: "Invalid isPublished value" });
+      }
+
+      const updatedBlog = await blogModel.findByIdAndUpdate(
+        { _id: id },
+        { $set: { isPublished } },
+        { new: true }
+      );
+
+      if (!updatedBlog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      return res.status(200).json({
+        message: "Status updated successfully!",
+        data: updatedBlog
+      });
     } catch (error) {
       console.error("Update error:", error);
       return res.status(500).json({
@@ -574,6 +720,101 @@ class blogController {
     }
   };
 
+  // Submit a blog enquiry (public)
+  static submit_blog_enquiry = async (req, res) => {
+    try {
+      const { name, mobile, email = "", message = "", blogId, blogTitle = "", blogSlug = "", project } = req.body || {};
+      if (!name || !mobile || !blogId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const doc = await BlogEnquiry.create({
+        name,
+        mobile,
+        email,
+        message,
+        blogId,
+        blogTitle,
+        blogSlug,
+        project: {
+          project_url: project?.project_url || "",
+          projectName: project?.projectName || "",
+          thumbnail: project?.thumbnail || "",
+        },
+        source: req.body?.source || 'blog-modal',
+      });
+
+      // Send email (best-effort)
+      try {
+        const to = process.env.ENQUIRY_TO_EMAIL || process.env.SMTP_USER;
+        if (to && mailer) {
+          await mailer.sendMail({
+            to,
+            from: process.env.ENQUIRY_FROM_EMAIL || process.env.SMTP_USER || 'no-reply@100acress.com',
+            subject: `New Blog Enquiry: ${blogTitle || 'Blog'} - ${name}`,
+            html: `
+              <h2>New Blog Enquiry</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Phone:</strong> ${mobile}</p>
+              ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
+              ${message ? `<p><strong>Message:</strong> ${message}</p>` : ''}
+              <hr />
+              <p><strong>Blog:</strong> ${blogTitle} (${blogSlug})</p>
+              ${doc.project?.projectName ? `<p><strong>Related Project:</strong> ${doc.project.projectName}</p>` : ''}
+              ${doc.project?.project_url ? `<p><strong>Project URL:</strong> ${doc.project.project_url}</p>` : ''}
+            `.trim(),
+          });
+          try { await BlogEnquiry.findByIdAndUpdate(doc._id, { $set: { emailSent: true } }); } catch (_) {}
+        }
+      } catch (mailErr) {
+        console.warn('submit_blog_enquiry: mail send failed:', mailErr?.message || mailErr);
+      }
+
+      return res.status(201).json({ message: 'Enquiry submitted', data: doc });
+    } catch (error) {
+      console.error('submit_blog_enquiry error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // Admin list of blog enquiries
+  static list_blog_enquiries = async (req, res) => {
+    try {
+      const { page = 1, limit = 50 } = req.query;
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [rows, total] = await Promise.all([
+        BlogEnquiry.find({}).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+        BlogEnquiry.countDocuments({}),
+      ]);
+
+      return res.status(200).json({ message: 'OK', data: rows, total, totalPages: Math.ceil(total / limitNum) });
+    } catch (error) {
+      console.error('list_blog_enquiries error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // Admin delete blog enquiry
+  static delete_blog_enquiry = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id || !ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid id' });
+      }
+      const deleted = await BlogEnquiry.findByIdAndDelete(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Not found' });
+      }
+      return res.status(200).json({ message: 'Deleted', data: { id } });
+    } catch (error) {
+      console.error('delete_blog_enquiry error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
   // Categories
   static list_categories = async (req, res) => {
     try {
@@ -632,6 +873,152 @@ class blogController {
       return res.status(200).json({ message: 'Slug available', data: { exists: false, slug: normalized } });
     } catch (error) {
       console.error('slug_check error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // Search projects for admin blog editor
+  static search_projects = async (req, res) => {
+    try {
+      const { q = '', limit = 10 } = req.query;
+      const searchTerm = q.toString().trim();
+      
+      let query = {};
+      
+      // If search term is provided, use search criteria
+      if (searchTerm && searchTerm.length >= 2) {
+        const searchRegex = new RegExp(searchTerm, 'i');
+        query = {
+          $or: [
+            { projectName: searchRegex },
+            { project_url: searchRegex },
+            { builderName: searchRegex }
+          ]
+        };
+      }
+      // If no search term, get all projects (for dropdown)
+
+      console.log('[search_projects] Query:', query);
+      console.log('[search_projects] Limit:', Math.min(parseInt(limit) || 100, 100));
+      
+      // Use the correct Project model rather than postPropertyModel
+      const projects = await ProjectModel
+        .find(query)
+        .select('projectName project_url thumbnailImage builderName city state minPrice maxPrice')
+        .limit(Math.min(parseInt(limit) || 100, 100))
+        .lean();
+
+      console.log('[search_projects] Found projects count:', projects.length);
+      console.log('[search_projects] Sample project:', projects[0]);
+
+      const formattedProjects = projects.map(project => ({
+        project_url: project.project_url || '',
+        projectName: project.projectName || '',
+        // Prefer CDN URL if present, else fall back to URL string or nested object shapes
+        thumbnail: (typeof project.thumbnailImage === 'string')
+          ? project.thumbnailImage
+          : (project.thumbnailImage?.cdn_url || project.thumbnailImage?.url || ''),
+        builderName: project.builderName || '',
+        location: `${project.city || ''}, ${project.state || ''}`.replace(/^,\s*|,\s*$/g, ''),
+        minPrice: project.minPrice ?? null,
+        maxPrice: project.maxPrice ?? null
+      }));
+
+      return res.status(200).json({
+        message: 'Projects found',
+        data: formattedProjects,
+        total: formattedProjects.length
+      });
+    } catch (error) {
+      console.error('search_projects error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // --- Engagement Endpoints ---
+  static like = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const userIdentity = (req.headers['x-user-id'] || req.body?.userId || req.body?.email || req.headers['x-user-email'] || req.ip || '').toString().trim().toLowerCase();
+      const doc = await blogModel.findById(id).select('likes shares commentsCount views likedBy');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      const already = userIdentity && Array.isArray(doc.likedBy) && doc.likedBy.includes(userIdentity);
+      if (!already) {
+        doc.likes = (doc.likes || 0) + 1;
+        if (!Array.isArray(doc.likedBy)) doc.likedBy = [];
+        if (userIdentity) doc.likedBy.push(userIdentity);
+        await doc.save();
+      }
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static share = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const updated = await blogModel.findByIdAndUpdate(
+        { _id: id },
+        { $inc: { shares: 1 } },
+        { new: true }
+      ).select('likes shares commentsCount views');
+      if (!updated) return res.status(404).json({ message: 'Not found' });
+      return res.status(200).json({ message: 'OK', data: updated });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static unlike = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const userIdentity = (req.headers['x-user-id'] || req.body?.userId || req.body?.email || req.headers['x-user-email'] || req.ip || '').toString().trim().toLowerCase();
+      const doc = await blogModel.findById(id).select('likes shares commentsCount views likedBy');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      const had = userIdentity && Array.isArray(doc.likedBy) && doc.likedBy.includes(userIdentity);
+      if (had) {
+        doc.likes = Math.max(0, (doc.likes || 0) - 1);
+        doc.likedBy = doc.likedBy.filter(u => u !== userIdentity);
+        await doc.save();
+      }
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static add_comment = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const name = (req.body?.name || 'Anonymous').toString().trim().slice(0, 80);
+      const message = (req.body?.message || '').toString().trim();
+      if (!message) return res.status(400).json({ message: 'Message is required' });
+      const update = {
+        $push: { comments: { name, message, createdAt: new Date() } },
+        $inc: { commentsCount: 1 }
+      };
+      const updated = await blogModel.findByIdAndUpdate({ _id: id }, update, { new: true })
+        .select('likes shares commentsCount views comments');
+      if (!updated) return res.status(404).json({ message: 'Not found' });
+      return res.status(201).json({ message: 'Comment added', data: updated });
+    } catch (e) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static get_engagement = async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' });
+      const doc = await blogModel.findById({ _id: id }).select('likes shares commentsCount views comments');
+      if (!doc) return res.status(404).json({ message: 'Not found' });
+      return res.status(200).json({ message: 'OK', data: doc });
+    } catch (e) {
       return res.status(500).json({ message: 'Internal server error' });
     }
   };

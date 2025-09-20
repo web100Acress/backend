@@ -443,8 +443,10 @@ class projectController {
         const projectData = await ProjectModel.findById({ _id: id });
 
         if (logo) {
-          const logoId = projectData.logo.public_id;
-          const logoResult = await updateFile(logo[0], logoId);
+          const existing = projectData?.logo?.public_id;
+          const logoResult = existing
+            ? await updateFile(logo[0], existing)
+            : await uploadFile(logo[0]);
           update.logo = {
             public_id: logoResult.Key,
             url: logoResult.Location,
@@ -453,21 +455,22 @@ class projectController {
         }
 
         if (thumbnailImage) {
-          // console.log("Inside Thumbnail Image");
-          const thumbnailImageId = projectData.thumbnailImage.public_id;
-          const thumbnailImageResult = await updateFile(thumbnailImage[0], thumbnailImageId);
-          // console.log("File updated successfully:", thumbnailImageResult);
+          const existing = projectData?.thumbnailImage?.public_id;
+          const thumbnailImageResult = existing
+            ? await updateFile(thumbnailImage[0], existing)
+            : await uploadThumbnailImage(thumbnailImage[0]);
           update.thumbnailImage = {
             public_id: thumbnailImageResult.Key,
             url: thumbnailImageResult.Location,
             cdn_url: cloudfrontUrl + thumbnailImageResult.Key,
           };
-          // console.log("Updated thumbnailImage:", update.thumbnailImage);
-          }
+        }
 
         if (frontImage) {
-          const frontId = projectData.frontImage.public_id;
-          const frontResult = await updateFile(frontImage[0], frontId);
+          const existing = projectData?.frontImage?.public_id;
+          const frontResult = existing
+            ? await updateFile(frontImage[0], existing)
+            : await uploadFile(frontImage[0]);
           update.frontImage = {
             public_id: frontResult.Key,
             url: frontResult.Location,
@@ -476,11 +479,10 @@ class projectController {
         }
 
         if (project_locationImage) {
-          const locationId = projectData.project_locationImage.public_id;
-          const locationResult = await updateFile(
-            project_locationImage[0],
-            locationId,
-          );
+          const existing = projectData?.project_locationImage?.public_id;
+          const locationResult = existing
+            ? await updateFile(project_locationImage[0], existing)
+            : await uploadFile(project_locationImage[0]);
           update.project_locationImage = {
             public_id: locationResult.Key,
             url: locationResult.Location,
@@ -489,11 +491,10 @@ class projectController {
         }
 
         if (highlightImage) {
-          const highlightId = projectData.highlightImage.public_id;
-          const highlightResult = await updateFile(
-            highlightImage[0],
-            highlightId,
-          );
+          const existing = projectData?.highlightImage?.public_id;
+          const highlightResult = existing
+            ? await updateFile(highlightImage[0], existing)
+            : await uploadFile(highlightImage[0]);
           update.highlightImage = {
             public_id: highlightResult.Key,
             url: highlightResult.Location,
@@ -502,12 +503,10 @@ class projectController {
         }
 
         if (project_Brochure) {
-          const brochureId = projectData.project_Brochure.public_id;
-
-          const brochureResult = await updateFile(
-            project_Brochure[0],
-            brochureId,
-          );
+          const existing = projectData?.project_Brochure?.public_id;
+          const brochureResult = existing
+            ? await updateFile(project_Brochure[0], existing)
+            : await uploadFile(project_Brochure[0]);
           update.project_Brochure = {
             public_id: brochureResult.Key,
             url: brochureResult.Location,
@@ -516,12 +515,10 @@ class projectController {
         }
 
         if (projectMaster_plan) {
-          const masterId = projectData.projectMaster_plan.public_id;
-
-          const masterResult = await updateFile(
-            projectMaster_plan[0],
-            masterId,
-          );
+          const existing = projectData?.projectMaster_plan?.public_id;
+          const masterResult = existing
+            ? await updateFile(projectMaster_plan[0], existing)
+            : await uploadFile(projectMaster_plan[0]);
           update.projectMaster_plan = {
             public_id: masterResult.Key,
             url: masterResult.Location,
@@ -529,39 +526,31 @@ class projectController {
           };
         }
         if (project_floorplan_Image) {
-          const floorId = projectData.project_floorplan_Image.map((item) => {
-            return item.public_id;
-          });
-
-          let floorResult = await Promise.all(
-            project_floorplan_Image.map((item, index) =>
-              updateFile(item, floorId[index]),
-            ),
+          // Append new floor plan images without touching existing ones
+          const existingImages = projectData.project_floorplan_Image || [];
+          const uploaded = await Promise.all(
+            project_floorplan_Image.map((file) => uploadFile(file))
           );
-
-          update.project_floorplan_Image = floorResult.map((item) => ({
+          const newItems = uploaded.map((item) => ({
             public_id: item.Key,
             url: item.Location,
             cdn_url: cloudfrontUrl + item.Key,
           }));
+          update.project_floorplan_Image = [...existingImages, ...newItems];
         }
 
         if (projectGallery) {
-          const GalleryId = projectData.projectGallery.map((item) => {
-            return item.public_id;
-          });
-
-          let galleryresult = await Promise.all(
-            projectGallery.map((item, index) =>
-              updateFile(item, GalleryId[index]),
-            ),
+          // Append new gallery images without touching existing ones
+          const existingGallery = projectData.projectGallery || [];
+          const uploadedGallery = await Promise.all(
+            projectGallery.map((file) => uploadFile(file))
           );
-
-          update.projectGallery = galleryresult.map((item) => ({
+          const galleryItems = uploadedGallery.map((item) => ({
             public_id: item.Key,
             url: item.Location,
             cdn_url: cloudfrontUrl + item.Key,
           }));
+          update.projectGallery = [...existingGallery, ...galleryItems];
         }
         const fieldsToUpdate = [
           "projectName",
@@ -606,11 +595,19 @@ class projectController {
         
         console.log("update", update);
 
-        const data = await ProjectModel.findByIdAndUpdate({ _id: id }, update);
-        await data.save();
-        //  fs.unlinkSync(req.files.path);
+        // Perform atomic update and return the updated document
+        const updatedProject = await ProjectModel.findByIdAndUpdate(
+          id,
+          update,
+          { new: true }
+        );
+
+        // Invalidate cached project lists so fresh data is served after update
+        try { cache.del("projectData"); } catch (_) {}
+
         return res.status(200).json({
           message: "Updated successfully !",
+          data: updatedProject,
         });
       }
     } catch (error) {
@@ -741,7 +738,13 @@ static projectSearch = async (req, res) => {
     if (scoplots === "1") query.type = "SCO Plots";
     if (residentiaProject === "1") query.type = "Residential Flats";
     if (allupcomingproject === "1") query.project_Status = "comingsoon";
-    if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
+    if (budgethomesgurugram === "1") {
+      // Get budget homes for Gurugram from query parameters or use default
+      const budgetHomesGurugram = req.query.budgetHomesGurugram ? 
+        req.query.budgetHomesGurugram.split(',') : 
+        ["M3M Soulitude", "M3M Antalya Hills", "Signature Global City 93", "Signature Global City 81"];
+      query.$or = budgetHomesGurugram.map(name => ({projectName: name}));
+    }
     
     // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
     if (builderName) query.builderName = builderName;
@@ -1177,18 +1180,54 @@ static projectSearch = async (req, res) => {
   };
   static project_budgetHomes = async (req, res) => {
     try {
-      const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
-      const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
-      //  console.log(data)
+      // Get budget projects from query parameters or use default
+      const budgetProjects = req.query.projects ? 
+        req.query.projects.split(',') : 
+        [
+          "M3M Antalya Hills",
+          "ROF Pravasa", 
+          "Signature Global City 81",
+          "M3M Soulitude"
+        ];
+      
+      const data = await ProjectModel.find({ projectName: {$in: budgetProjects}});
+      
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
         message: "Internal server error !",
+      });
+    }
+  };
+
+  // New method to get projects by category with dynamic ordering
+  static getProjectsByCategory = async (req, res) => {
+    try {
+      const { category, projects } = req.query;
+      
+      if (!category || !projects) {
+        return res.status(400).json({
+          message: "Category and projects parameters are required!",
+        });
+      }
+
+      const projectNames = projects.split(',');
+      const data = await ProjectModel.find({ projectName: {$in: projectNames}});
+      
+      return res.status(200).json({
+        message: `${category} projects retrieved successfully!`,
+        data,
+        category,
+        total: data.length
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error!",
       });
     }
   };
@@ -1741,7 +1780,94 @@ static projectSearch = async (req, res) => {
   };
   static floorImage = async (req, res) => {
     try {
-      return res.status(501).json({ message: "Not implemented" });
+      const { id, indexNumber } = req.params;
+      
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      const project = await ProjectModel.findById(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const index = parseInt(indexNumber);
+      if (isNaN(index) || index < 0 || index >= project.project_floorplan_Image.length) {
+        return res.status(400).json({ message: "Invalid image index" });
+      }
+
+      // Get the image to delete from S3
+      const imageToDelete = project.project_floorplan_Image[index];
+      
+      // Delete from S3 if it exists
+      if (imageToDelete && imageToDelete.key) {
+        try {
+          await deleteFile(imageToDelete.key);
+        } catch (s3Error) {
+          console.error("S3 deletion error:", s3Error);
+          // Continue with database update even if S3 deletion fails
+        }
+      }
+
+      // Remove from array
+      project.project_floorplan_Image.splice(index, 1);
+      await project.save();
+
+      // Invalidate cache to reflect deletion on listings
+      try { cache.del("projectData"); } catch (_) {}
+
+      return res.status(200).json({ 
+        message: "Floor plan image deleted successfully",
+        remainingImages: project.project_floorplan_Image.length
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error !" });
+    }
+  };
+
+  static galleryImage = async (req, res) => {
+    try {
+      const { id, indexNumber } = req.params;
+      
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      const project = await ProjectModel.findById(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const index = parseInt(indexNumber);
+      if (isNaN(index) || index < 0 || index >= project.projectGallery.length) {
+        return res.status(400).json({ message: "Invalid image index" });
+      }
+
+      // Get the image to delete from S3
+      const imageToDelete = project.projectGallery[index];
+      
+      // Delete from S3 if it exists
+      if (imageToDelete && imageToDelete.key) {
+        try {
+          await deleteFile(imageToDelete.key);
+        } catch (s3Error) {
+          console.error("S3 deletion error:", s3Error);
+          // Continue with database update even if S3 deletion fails
+        }
+      }
+
+      // Remove from array
+      project.projectGallery.splice(index, 1);
+      await project.save();
+
+      // Invalidate cache to reflect deletion on listings
+      try { cache.del("projectData"); } catch (_) {}
+
+      return res.status(200).json({ 
+        message: "Gallery image deleted successfully",
+        remainingImages: project.projectGallery.length
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Internal server error !" });

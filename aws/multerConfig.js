@@ -1,10 +1,20 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const uploadLimits = require("../config/uploadLimits");
+
+// Ensure uploads directory exists (helps in production where folder may be missing)
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+try {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch (e) {
+  // Log and proceed; multer will error if directory truly not writable
+  console.error("Failed to ensure uploads directory:", e?.message || e);
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
