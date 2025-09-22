@@ -125,6 +125,16 @@ class BannerController {
       const { id } = req.params;
       const { title, subtitle, slug, isActive, order } = req.body;
 
+      console.log('Banner update request:', {
+        id,
+        title,
+        subtitle,
+        slug,
+        isActive,
+        order,
+        hasFile: !!req.file
+      });
+
       const banner = await Banner.findById(id);
       if (!banner) {
         return res.status(404).json({
