@@ -266,6 +266,12 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
 
+// Price trends and city management routes
+const priceTrendsRoute = require("./admin.price-trends");
+const cityRoute = require("./admin.cities");
+router.use("/api/admin/price-trends", priceTrendsRoute);
+router.use("/api/admin/cities", cityRoute);
+
 // Project order management routes
 const adminProjectOrderRoute = require("./admin.project-orders");
 const publicProjectOrderRoute = require("./public.project-orders");
@@ -275,7 +281,11 @@ router.use("/api/project-orders", publicProjectOrderRoute);
 // Public banner routes (no authentication required)
 const publicBannerRoute = require("./public.banners");
 const publicSmallBannerRoute = require("./public.small-banners");
+const publicCitiesRoute = require("./public.cities");
+const publicPriceTrendsRoute = require("./public.price-trends");
 router.use("/api/banners", publicBannerRoute);
 router.use("/api/small-banners", publicSmallBannerRoute);
+router.use("/api/cities", publicCitiesRoute);
+router.use("/api/price-trends", publicPriceTrendsRoute);
 
 module.exports = router;
