@@ -278,4 +278,8 @@ const publicSmallBannerRoute = require("./public.small-banners");
 router.use("/api/banners", publicBannerRoute);
 router.use("/api/small-banners", publicSmallBannerRoute);
 
+// Image proxy routes for S3 CORS issues
+const imageProxyRoute = require("./image-proxy.route");
+router.use("/api", imageProxyRoute);
+
 module.exports = router;

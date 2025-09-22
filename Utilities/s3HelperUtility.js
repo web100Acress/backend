@@ -59,16 +59,24 @@ const uploadFile = async(file) => {
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
-      path: file.path
+      path: file.path,
+      hasBuffer: !!file.buffer
     });
 
-    // Check if file exists
-    if (!file.path || !fs.existsSync(file.path)) {
-      throw new Error('File not found on disk');
+    let fileContent;
+    
+    // Handle both disk storage and memory storage
+    if (file.buffer) {
+      // Memory storage (direct S3 upload)
+      fileContent = file.buffer;
+      console.log('📁 Using file buffer, size:', fileContent.length, 'bytes');
+    } else if (file.path && fs.existsSync(file.path)) {
+      // Disk storage (legacy)
+      fileContent = await fs.promises.readFile(file.path);
+      console.log('📁 File read from disk, size:', fileContent.length, 'bytes');
+    } else {
+      throw new Error('File not found - neither buffer nor disk path available');
     }
-
-    const fileContent = await fs.promises.readFile(file.path);
-    console.log('📁 File read successfully, size:', fileContent.length, 'bytes');
 
     const params = {
       Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
@@ -129,7 +137,18 @@ const uploadThumbnailImage = async(file) => {
     await fs.promises.mkdir(compressedDir, { recursive: true });
     await compressImage(originalPath, compressedPath, 25);
   */  
-  const fileContent = await fs.promises.readFile(file.path);
+  let fileContent;
+  
+  // Handle both disk storage and memory storage
+  if (file.buffer) {
+    // Memory storage (direct S3 upload)
+    fileContent = file.buffer;
+  } else if (file.path && fs.existsSync(file.path)) {
+    // Disk storage (legacy)
+    fileContent = await fs.promises.readFile(file.path);
+  } else {
+    throw new Error('File not found - neither buffer nor disk path available');
+  }
   
   const params = {
     Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
@@ -176,7 +195,18 @@ const deleteFile = async (fileKey) => {
 };
 
 const updateFile = async(file, objectKey) => {
-  const fileContent = await fs.promises.readFile(file.path);
+  let fileContent;
+  
+  // Handle both disk storage and memory storage
+  if (file.buffer) {
+    // Memory storage (direct S3 upload)
+    fileContent = file.buffer;
+  } else if (file.path && fs.existsSync(file.path)) {
+    // Disk storage (legacy)
+    fileContent = await fs.promises.readFile(file.path);
+  } else {
+    throw new Error('File not found - neither buffer nor disk path available');
+  }
   if (objectKey != null) {
     const params = {
       Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
