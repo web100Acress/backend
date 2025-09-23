@@ -76,14 +76,15 @@ class SmallBannerController {
       if (!req.files?.desktopBannerImage && !req.files?.mobileBannerImage && !desktopImage && !mobileImage) {
         return res.status(400).json({
           success: false,
-          message: 'At least one banner image (desktop or mobile) is required'
+          message: 'At least one image (desktop or mobile) is required'
         });
       }
 
+      // Handle image uploads
       let desktopImageData = null;
       let mobileImageData = null;
 
-      // Handle desktop image
+      // Upload desktop image if provided
       if (req.files?.desktopBannerImage) {
         desktopImageData = await uploadToS3(req.files.desktopBannerImage[0], 'small-banners');
       } else if (desktopImage) {
@@ -93,7 +94,7 @@ class SmallBannerController {
         };
       }
 
-      // Handle mobile image
+      // Upload mobile image if provided
       if (req.files?.mobileBannerImage) {
         mobileImageData = await uploadToS3(req.files.mobileBannerImage[0], 'small-banners');
       } else if (mobileImage) {
@@ -103,48 +104,45 @@ class SmallBannerController {
         };
       }
 
-      // Handle uploadedBy field - use user ID if available, otherwise use a default
-      let uploadedBy = req.user?.id || req.user?._id || req.user?.userId;
-      
-      // If no user ID is found, try to get the first admin user from the database
-      if (!uploadedBy) {
-        try {
-          const User = require('../../models/register/User');
-          const adminUser = await User.findOne({ role: 'Admin' }).select('_id');
-          uploadedBy = adminUser?._id || '64f8b8c9e4b0a123456789ab'; // Fallback to default
-        } catch (error) {
-          console.log('Error finding admin user:', error);
-          uploadedBy = '64f8b8c9e4b0a123456789ab'; // Fallback to default
-        }
-      }
-      
-      console.log('Using uploadedBy:', uploadedBy);
-      
-      // Ensure uploadedBy is a valid ObjectId
-      if (!uploadedBy || uploadedBy === 'undefined' || uploadedBy === 'null') {
-        uploadedBy = '64f8b8c9e4b0a123456789ab'; // Default admin user ID
+      // Generate slug if not provided
+      const generatedSlug = slug || title.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .trim();
+
+      // Check if slug already exists
+      const existingBanner = await SmallBanner.findOne({ slug: generatedSlug });
+      if (existingBanner) {
+        return res.status(400).json({
+          success: false,
+          message: 'A banner with this slug already exists'
+        });
       }
 
-      const smallBanner = new SmallBanner({
+      // Get the user ID from the token
+      const userId = req.user?.id || req.user?._id || req.user?.userId;
+
+      // Create new small banner
+      const newSmallBanner = new SmallBanner({
         title,
         subtitle: subtitle || '',
-        slug: slug || '',
-        link: link || '',
+        slug: generatedSlug,
         desktopImage: desktopImageData,
         mobileImage: mobileImageData,
-        isActive: isActive === 'true' || isActive === true,
+        link: link || '',
+        isActive: isActive !== undefined ? isActive : true,
         order: parseInt(order) || 0,
         position: position || 'bottom',
         size: size || 'small',
-        uploadedBy: uploadedBy
+        uploadedBy: userId
       });
 
-      await smallBanner.save();
+      await newSmallBanner.save();
 
       res.status(201).json({
         success: true,
-        message: 'Small banner uploaded successfully',
-        banner: smallBanner
+        message: 'Small banner uploaded successfully!',
+        banner: newSmallBanner
       });
     } catch (error) {
       console.error('Error uploading small banner:', error);
@@ -187,18 +185,13 @@ class SmallBannerController {
         });
         
         if (existingBanner) {
-          // Generate unique slug by appending timestamp
-          const timestamp = Date.now().toString().slice(-6);
-          smallBanner.slug = `${slug}-${timestamp}`;
-        } else {
-          smallBanner.slug = slug;
+          return res.status(400).json({
+            success: false,
+            message: 'A banner with this slug already exists'
+          });
         }
-      }
-
-      // Handle new image upload
-      if (req.file) {
-        const bannerImageData = await uploadToS3(req.file, 'small-banners');
-        smallBanner.image = bannerImageData;
+        
+        smallBanner.slug = slug;
       }
 
       await smallBanner.save();

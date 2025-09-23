@@ -4,25 +4,8 @@ const multer = require('multer');
 const jwtVerification = require('../middleware/adminVerify');
 const BannerController = require('../Controller/AdminController/BannerController');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Ensure the directory exists
-    const fs = require('fs');
-    const path = require('path');
-    const uploadDir = path.join(process.cwd(), 'temp', 'uploads');
-    try {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    } catch (e) {
-      console.error('Failed to create upload directory:', e);
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
-  }
-});
+// Configure multer for file uploads - use memory storage for direct S3 upload
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   // Accept only image files
@@ -91,4 +74,3 @@ router.patch('/:id/toggle', BannerController.toggleBannerStatus);
 router.delete('/:id', BannerController.deleteBanner);
 
 module.exports = router;
-

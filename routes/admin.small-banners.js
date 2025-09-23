@@ -6,22 +6,10 @@ const router = express.Router();
 const SmallBannerController = require('../Controller/AdminController/SmallBannerController');
 const adminVerify = require('../middleware/adminVerify');
 
-// Ensure temp/uploads directory exists
-const uploadDir = path.join(__dirname, '../temp/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// No need for local directory since we're using memory storage for direct S3 upload
 
-// Multer configuration for small banner uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'small-banner-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Multer configuration for small banner uploads - use memory storage for direct S3 upload
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
