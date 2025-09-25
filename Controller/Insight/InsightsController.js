@@ -253,6 +253,14 @@ class InsightsController {
   async getPriceTrendsByCity(req, res) {
     try {
       const { city } = req.params;
+
+      if (!city) {
+        return res.status(400).json({
+          success: false,
+          message: 'City parameter is required'
+        });
+      }
+
       const priceTrends = await PriceTrends.find({
         city: city,
         isActive: true
@@ -283,6 +291,14 @@ class InsightsController {
     try {
       const { area, price, rental, trend, city } = req.body;
       const uploadedBy = req.user.id;
+
+      // Validate required fields
+      if (!area || !city) {
+        return res.status(400).json({
+          success: false,
+          message: 'Area and city are required fields'
+        });
+      }
 
       // Check if price trend already exists for this area and city
       const existingTrend = await PriceTrends.findOne({
@@ -340,6 +356,20 @@ class InsightsController {
         return res.status(404).json({
           success: false,
           message: 'Price trend not found'
+        });
+      }
+
+      // Validate required fields if provided
+      if (area !== undefined && !area) {
+        return res.status(400).json({
+          success: false,
+          message: 'Area cannot be empty if provided'
+        });
+      }
+      if (city !== undefined && !city) {
+        return res.status(400).json({
+          success: false,
+          message: 'City cannot be empty if provided'
         });
       }
 
