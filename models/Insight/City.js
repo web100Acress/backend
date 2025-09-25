@@ -27,8 +27,34 @@ const citySchema = new mongoose.Schema({
     }
   },
   localities: [{
-    type: String,
-    trim: true
+    locality: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    zone: {
+      type: String,
+      required: true,
+      default: 'East',
+      enum: ['East', 'West', 'North', 'South', 'Central']
+    },
+    rate: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    change5y: {
+      type: Number,
+      required: true,
+      min: -1000,
+      max: 1000
+    },
+    yield: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 1000
+    }
   }],
   isActive: {
     type: Boolean,

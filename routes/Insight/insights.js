@@ -49,6 +49,10 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
+// Middleware to parse JSON data from FormData
+router.use(express.json({ limit: '10mb' }));
+router.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // Apply admin verification middleware to all routes
 router.use(jwtVerification);
 
@@ -69,13 +73,10 @@ router.put('/cities/:id', upload.single('bannerImage'), insightsController.updat
 // DELETE /api/admin/cities/:id - Delete city
 router.delete('/cities/:id', insightsController.deleteCity);
 
-// ===== PRICE TRENDS ROUTES =====
+// ===== PUBLIC PRICE TRENDS ROUTES (no authentication required) =====
 
-// GET /api/admin/price-trends - Get all price trends
-router.get('/price-trends', insightsController.getAllPriceTrends);
-
-// GET /api/admin/price-trends/city/:city - Get price trends by city
-router.get('/price-trends/city/:city', insightsController.getPriceTrendsByCity);
+// GET /api/price-trends/city/:city - Get public price trends by city
+router.get('/price-trends/city/:city', insightsController.getPriceTrendsByCityPublic);
 
 // POST /api/admin/price-trends - Create new price trend
 router.post('/price-trends', insightsController.createPriceTrend);
