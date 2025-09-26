@@ -54,6 +54,12 @@ const citySchema = new mongoose.Schema({
       required: true,
       min: 0,
       max: 1000
+    },
+    projectUrl: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ''
     }
   }],
   isActive: {

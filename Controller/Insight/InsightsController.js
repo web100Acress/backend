@@ -112,7 +112,8 @@ class InsightsController {
                 zone: loc.zone || 'East',
                 rate: parseFloat(loc.rate) || 0,
                 change5y: parseFloat(loc.change5y) || 0,
-                yield: parseFloat(loc.yield) || 0
+                yield: parseFloat(loc.yield) || 0,
+                projectUrl: loc.projectUrl || ''
               }));
             }
           } catch {
@@ -132,7 +133,8 @@ class InsightsController {
             zone: loc.zone || 'East',
             rate: parseFloat(loc.rate) || 0,
             change5y: parseFloat(loc.change5y) || 0,
-            yield: parseFloat(loc.yield) || 0
+            yield: parseFloat(loc.yield) || 0,
+            projectUrl: loc.projectUrl || ''
           }));
         }
       }
@@ -233,7 +235,8 @@ class InsightsController {
                 zone: loc.zone || 'East',
                 rate: parseFloat(loc.rate) || 0,
                 change5y: parseFloat(loc.change5y) || 0,
-                yield: parseFloat(loc.yield) || 0
+                yield: parseFloat(loc.yield) || 0,
+                projectUrl: loc.projectUrl || ''
               }));
             }
           } catch {
@@ -253,7 +256,8 @@ class InsightsController {
             zone: loc.zone || 'East',
             rate: parseFloat(loc.rate) || 0,
             change5y: parseFloat(loc.change5y) || 0,
-            yield: parseFloat(loc.yield) || 0
+            yield: parseFloat(loc.yield) || 0,
+            projectUrl: loc.projectUrl || ''
           }));
         } else {
           city.localities = [];
