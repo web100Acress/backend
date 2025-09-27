@@ -45,12 +45,6 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 
-// Increase request size limits
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
-
 // CORS - explicitly allow PATCH + Authorization and handle OPTIONS preflight
 const allowedOrigins = (process.env.CORS_ORIGIN || "*")
   .split(",")
@@ -59,38 +53,49 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "*")
 
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return cb(null, true);
+    
+    // Allow all origins in development
+    if (process.env.NODE_ENV !== 'production') {
       return cb(null, true);
     }
-    return cb(null, false);
+    
+    // In production, check against allowed origins
+    if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    
+    console.log('CORS blocked for origin:', origin);
+    return cb(new Error('Not allowed by CORS'));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // Allow common headers; if browser sends more, our manual OPTIONS handler will echo them
-  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "Accept", 
+    "X-Requested-With", 
+    "Origin",
+    "x-access-token"
+  ],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
   credentials: true,
-  optionsSuccessStatus: 204,
+  maxAge: 600, // Cache preflight request for 10 minutes
+  optionsSuccessStatus: 204
 };
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
-// Immediately answer preflight to avoid any interference (rate limits, auth, etc.)
+// Apply CORS middleware
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Enable preflight for all routes
+
+// Handle preflight requests
 app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    try {
-      const origin = req.headers.origin || "*";
-      res.header("Access-Control-Allow-Origin", origin);
-      res.header("Vary", "Origin");
-      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-      const reqHeaders = req.headers["access-control-request-headers"];
-      if (reqHeaders) {
-        res.header("Access-Control-Allow-Headers", reqHeaders);
-      } else {
-        res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With, Origin");
-      }
-      res.header("Access-Control-Allow-Credentials", "true");
-      res.header("Access-Control-Max-Age", "86400");
-    } catch {}
-    return res.sendStatus(204);
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.status(204).end();
   }
   next();
 });

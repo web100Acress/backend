@@ -55,7 +55,9 @@ const smallBannerSchema = new mongoose.Schema({
   },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
+
     ref: 'postProperty',
+
     required: false
   }
 }, {

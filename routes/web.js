@@ -266,6 +266,10 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
 
+// Insights management routes (for city and price trends)
+const insightsRoute = require("./Insight/insights");
+router.use("/api/admin", insightsRoute);
+
 // Project order management routes
 const adminProjectOrderRoute = require("./admin.project-orders");
 const publicProjectOrderRoute = require("./public.project-orders");
