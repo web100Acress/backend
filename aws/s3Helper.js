@@ -35,4 +35,51 @@ async function updateFile(file, objectKey) {
   return s3.upload(params).promise();
 }
 
-module.exports = { uploadFile, updateFile };
+// Upload function for memory storage (direct S3 upload without local storage)
+async function uploadToS3(file, folder = 'uploads') {
+  try {
+    console.log('📤 Starting S3 upload for file:', file.originalname);
+    console.log('File details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      hasBuffer: !!file.buffer
+    });
+
+    // Use file.buffer for memory storage instead of file.path
+    const fileContent = file.buffer;
+    console.log('📁 File buffer size:', fileContent.length, 'bytes');
+
+    const params = {
+      Bucket: BUCKET,
+      Body: fileContent,
+      Key: `${folder}/${Date.now()}-${file.originalname}`,
+      ContentType: file.mimetype,
+    };
+
+    console.log('🚀 Uploading to S3 with params:', {
+      Bucket: params.Bucket,
+      Key: params.Key,
+      ContentType: params.ContentType
+    });
+
+    const result = await s3.upload(params).promise();
+    
+    console.log('✅ S3 upload successful:', {
+      Location: result.Location,
+      Key: result.Key,
+      Bucket: result.Bucket
+    });
+
+    return {
+      url: result.Location,
+      cdn_url: result.Location,
+      key: result.Key
+    };
+  } catch (error) {
+    console.error('❌ S3 upload failed:', error);
+    throw error;
+  }
+}
+
+module.exports = { uploadFile, updateFile, uploadToS3 };
