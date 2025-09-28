@@ -280,6 +280,10 @@ router.use("/api/project-orders", publicProjectOrderRoute);
 const publicEnquiryRoute = require("./Insight/enquiryRoutes");
 router.use("/api", publicEnquiryRoute);
 
+// Public contact routes (no authentication required)
+const publicContactRoute = require("./Insight/contactRoutes");
+router.use("/api", publicContactRoute);
+
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);

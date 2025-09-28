@@ -5,6 +5,8 @@ const jwtVerification = require('../../middleware/adminVerify');
 const insightsController = require('../../Controller/Insight/InsightsController');
 const enquiryRoutes = require('./enquiryRoutes');
 const adminEnquiryRoutes = require('./adminEnquiryRoutes');
+const contactRoutes = require('./contactRoutes');
+const adminContactRoutes = require('./adminContactRoutes');
 
 // Configure multer for file uploads - use memory storage for direct S3 upload
 const storage = multer.memoryStorage();
@@ -89,8 +91,8 @@ router.put('/price-trends/:id', insightsController.updatePriceTrend);
 // DELETE /api/admin/price-trends/:id - Delete price trend
 router.delete('/price-trends/:id', insightsController.deletePriceTrend);
 
-// ===== ENQUIRY ROUTES =====
-// Include admin enquiry routes (these require authentication)
-router.use('/', adminEnquiryRoutes);
+// ===== CONTACT ROUTES =====
+// Include admin contact routes (these require authentication)
+router.use('/', adminContactRoutes);
 
 module.exports = router;
