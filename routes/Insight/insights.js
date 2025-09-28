@@ -91,6 +91,10 @@ router.put('/price-trends/:id', insightsController.updatePriceTrend);
 // DELETE /api/admin/price-trends/:id - Delete price trend
 router.delete('/price-trends/:id', insightsController.deletePriceTrend);
 
+// ===== ENQUIRY ROUTES =====
+// Include admin enquiry routes (these require authentication)
+router.use('/', adminEnquiryRoutes);
+
 // ===== CONTACT ROUTES =====
 // Include admin contact routes (these require authentication)
 router.use('/', adminContactRoutes);
