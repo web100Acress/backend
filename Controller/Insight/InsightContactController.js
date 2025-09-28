@@ -1,6 +1,5 @@
 const InsightContact = require('../../Models/InsightContact');
 const { sendEmail } = require('../../Utilities/s3HelperUtility');
-const transporter = require('../../Utilities/Nodemailer');
 
 class InsightContactController {
 
@@ -34,68 +33,74 @@ class InsightContactController {
       await contact.save();
       console.log('✅ Contact saved to database:', contact._id);
 
-      // Send email notification to admin
-      try {
-        const emailHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">New Contact Form Submission</h1>
-              <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Get In Touch Form - 100Acress</p>
+      // Create email HTML template
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">New Contact Form Submission</h1>
+            <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Get In Touch Form - 100Acress</p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="margin-bottom: 25px;">
+              <h2 style="color: #333; margin: 0 0 15px 0; font-size: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Contact Details</h2>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">Name:</td>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${firstName} ${lastName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Email:</td>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Phone:</td>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${phone}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Inquiry Type:</td>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${inquiryType}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; font-weight: bold;">Source:</td>
+                  <td style="padding: 10px 0;">Get In Touch Form</td>
+                </tr>
+              </table>
             </div>
 
-            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              <div style="margin-bottom: 25px;">
-                <h2 style="color: #333; margin: 0 0 15px 0; font-size: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Contact Details</h2>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">Name:</td>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${firstName} ${lastName}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Email:</td>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${email}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Phone:</td>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${phone}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Inquiry Type:</td>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
-                      <span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${inquiryType}</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 10px 0; font-weight: bold;">Source:</td>
-                    <td style="padding: 10px 0;">Get In Touch Form</td>
-                  </tr>
-                </table>
+            <div>
+              <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">Message:</h3>
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
+                <p style="margin: 0; line-height: 1.6; color: #555;">${message.replace(/\n/g, '<br>')}</p>
               </div>
+            </div>
 
-              <div>
-                <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">Message:</h3>
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
-                  <p style="margin: 0; line-height: 1.6; color: #555;">${message.replace(/\n/g, '<br>')}</p>
-                </div>
-              </div>
-
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 14px;">
-                <p>This enquiry was submitted on ${new Date().toLocaleString('en-IN')}</p>
-                <p>Please respond within 24 hours for best customer experience.</p>
-              </div>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 14px;">
+              <p>This enquiry was submitted on ${new Date().toLocaleString('en-IN')}</p>
+              <p>Please respond within 24 hours for best customer experience.</p>
             </div>
           </div>
-        `;
+        </div>
+      `;
 
-        const mailOptions = {
-          from: process.env.SMTP_USER || 'support@100acress.com',
-          to: 'support@100acress.com',
-          subject: `New Contact Form Enquiry - ${firstName} ${lastName}`,
-          html: emailHtml
-        };
+      // Send email notification to admin
+      try {
+        const emailSent = await sendEmail(
+          'support@100acress.com', // to
+          process.env.SMTP_USER || 'support@100acress.com', // from
+          [], // cc
+          `New Contact Form Enquiry - ${firstName} ${lastName}`, // subject
+          emailHtml, // html
+          true // attachments
+        );
 
-        await transporter.sendMail(mailOptions);
-        console.log('✅ Contact email sent successfully');
+        if (emailSent) {
+          console.log('✅ Contact email sent successfully');
+        } else {
+          console.log('❌ Failed to send contact email');
+        }
 
       } catch (emailError) {
         console.error('❌ Error sending contact email:', emailError);
