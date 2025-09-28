@@ -276,11 +276,9 @@ const publicProjectOrderRoute = require("./public.project-orders");
 router.use("/api/admin/project-orders", adminProjectOrderRoute);
 router.use("/api/project-orders", publicProjectOrderRoute);
 
-// Public banner routes (no authentication required)
-const publicBannerRoute = require("./public.banners");
-const publicSmallBannerRoute = require("./public.small-banners");
-router.use("/api/banners", publicBannerRoute);
-router.use("/api/small-banners", publicSmallBannerRoute);
+// Public enquiry routes (no authentication required)
+const publicEnquiryRoute = require("./Insight/enquiryRoutes");
+router.use("/api", publicEnquiryRoute);
 
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
