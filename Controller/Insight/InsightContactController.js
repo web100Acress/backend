@@ -1,4 +1,4 @@
-const InsightContact = require('../../models/contact');
+const InsightContact = require('../../Models/InsightContact');
 const { sendEmail } = require('../../Utilities/s3HelperUtility');
 
 class InsightContactController {
