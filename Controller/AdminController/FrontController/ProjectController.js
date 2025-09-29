@@ -1613,7 +1613,7 @@ static projectSearch = async (req, res) => {
     console.log("helo")
     // const data =new UserModel
     try {
-      const { name, email, mobile, projectName, address } = req.body;
+      const { name, email, mobile, projectName, address, source } = req.body;
       const ema = email;
       // const ema=email
       if (mobile && projectName && address) {
@@ -1631,37 +1631,41 @@ static projectSearch = async (req, res) => {
         const emaildata = data.email;
         const project = data.projectName;
 
-        //Send mail with AWS SES
-        let emailSuccess;
-        try {
+        //Send mail with AWS SES (skip for footer instant callback)
+        let emailSuccess = false;
+        if (source !== "footer_instant_call") {
+          try {
 
-          let html = `<!DOCTYPE html>
-                    <html lang:"en>
-                    <head>
-                    <meta charset:"UTF-8">
-                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                    <title>New Enquiry</title>
-                    </head>
-                    <body>
-                        <h3>Project Enquiry</h3>
-                        <p>Customer Name : ${custName}</p>
-                        <p>Customer Email Id : ${emaildata}</p>
-                        <p>Customer Mobile Number : ${number} </p>
-                        <p>ProjectName : ${project}</p>
-                        <p>Thank you!</p>
-                    </body>
-                    </html>`
-          const to = "query.aadharhomes@gmail.com";
-          const cc = ["officialhundredacress@gmail.com"]; 
-          const sourceEmail = "support@100acress.com";
-          const subject = "100acress.com Enquiry";
-          
-          emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
+            let html = `<!DOCTYPE html>
+                      <html lang:"en>
+                      <head>
+                      <meta charset:"UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Enquiry</title>
+                      </head>
+                      <body>
+                          <h3>Project Enquiry</h3>
+                          <p>Customer Name : ${custName}</p>
+                          <p>Customer Email Id : ${emaildata}</p>
+                          <p>Customer Mobile Number : ${number} </p>
+                          <p>ProjectName : ${project}</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>`
+            const to = "query.aadharhomes@gmail.com";
+            const cc = ["officialhundredacress@gmail.com"];
+            const sourceEmail = "support@100acress.com";
+            const subject = "100acress.com Enquiry";
 
-          console.log("Email sent successfully", emailSuccess);
-        } catch (error) {
-          console.log("Error in sending enquiry email",error);
+            emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
+
+            console.log("Email sent successfully", emailSuccess);
+          } catch (error) {
+            console.log("Error in sending enquiry email",error);
+          }
+        } else {
+          console.log("Skipping email for footer instant callback");
         }
 
         data.emailReceived = Boolean(emailSuccess);
