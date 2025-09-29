@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const jwtVerification = require('../../middleware/adminVerify');
+// const jwtVerification = require('../../middleware/adminVerify');
 const insightsController = require('../../Controller/Insight/InsightsController');
 const enquiryRoutes = require('./enquiryRoutes');
 const adminEnquiryRoutes = require('./adminEnquiryRoutes');
@@ -58,7 +58,7 @@ router.use(express.json({ limit: '10mb' }));
 router.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Apply admin verification middleware to all routes
-router.use(jwtVerification);
+// router.use(jwtVerification);
 
 // ===== CITY ROUTES =====
 
