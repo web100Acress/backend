@@ -266,6 +266,14 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
 
+// Public small banners routes (no authentication required)
+const publicSmallBannerRoute = require("./public.small-banners");
+router.use("/api/small-banners", publicSmallBannerRoute);
+
+// Public banners routes (no authentication required)
+const publicBannerRoute = require("./public.banners");
+router.use("/api/banners", publicBannerRoute);
+
 // Insights management routes (for city and price trends)
 const insightsRoute = require("./Insight/insights");
 router.use("/api/admin", insightsRoute);
@@ -276,11 +284,13 @@ const publicProjectOrderRoute = require("./public.project-orders");
 router.use("/api/admin/project-orders", adminProjectOrderRoute);
 router.use("/api/project-orders", publicProjectOrderRoute);
 
-// Public banner routes (no authentication required)
-const publicBannerRoute = require("./public.banners");
-const publicSmallBannerRoute = require("./public.small-banners");
-router.use("/api/banners", publicBannerRoute);
-router.use("/api/small-banners", publicSmallBannerRoute);
+// Public enquiry routes (no authentication required)
+const publicEnquiryRoute = require("./Insight/enquiryRoutes");
+router.use("/api", publicEnquiryRoute);
+
+// Public contact routes (no authentication required)
+const publicContactRoute = require("./Insight/contactRoutes");
+router.use("/api", publicContactRoute);
 
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
