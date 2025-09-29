@@ -1,4 +1,4 @@
-const InsightContact = require('../../models/contact');
+const InsightContact = require('../../models/Insight/InsightContact');
 const { sendEmail } = require('../../Utilities/s3HelperUtility');
 
 class InsightContactController {
@@ -18,21 +18,26 @@ class InsightContactController {
         });
       }
 
-      // Create new contact
-      const contact = new InsightContact({
+      // Create contact data with defaults
+      const contactData = {
         firstName,
         lastName,
         email,
         phone,
-        inquiryType,
+        inquiryType: inquiryType || 'General',
         message,
         source: 'GetInTouch Form',
         status: 'New'
-      });
+      };
+
+      // Create new contact
+      const contact = new InsightContact(contactData);
 
       await contact.save();
       console.log('✅ Contact saved to database:', contact._id);
 
+      // Email notification disabled as per user request
+      /*
       // Create email HTML template
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
@@ -106,6 +111,7 @@ class InsightContactController {
         console.error('❌ Error sending contact email:', emailError);
         // Don't fail the request if email fails, just log it
       }
+      */
 
       res.status(201).json({
         success: true,
@@ -119,7 +125,6 @@ class InsightContactController {
           createdAt: contact.createdAt
         }
       });
-
     } catch (error) {
       console.error('❌ Error in contact_Insert:', error);
 

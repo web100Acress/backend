@@ -26,6 +26,8 @@ class EnquiryController {
 
       await enquiryData.save();
 
+      // Email notification disabled as per user request
+      /*
       // Send email notification
       const custName = enquiryData.name;
       const custEmail = enquiryData.email;
@@ -62,6 +64,7 @@ class EnquiryController {
         console.log("Error sending email", error);
         // Don't fail the request if email fails, just log it
       }
+      */
 
       res.status(201).json({
         success: true,
