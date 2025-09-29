@@ -32,6 +32,8 @@ class contactController {
 
         //   await sendPostEmail(email,mobile)
 
+        // Email sending disabled as per user request
+        /*
         const custName = userData.name;
         const custEmail = userData.email;
         const custMobile = userData.mobile;
@@ -56,17 +58,18 @@ class contactController {
                           <p>Thank you!</p>
                       </body>
                       </html>`
+        let emailSuccess = false;
         try {
-          const emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,false);
+          emailSuccess = await sendEmail(to,sourceEmail,[],subject,html,false);
           console.log("Email sent successfully",emailSuccess);
         } catch (error) {
           console.log("Error sending email",error);
           emailSuccess = false;
         }
-
+        */
 
         res.status(200).json({
-          message: emailSuccess ? "your message send !" : "your message not send !",
+          message: "Form submitted successfully!",
           data: userData,
         });
       } else {
