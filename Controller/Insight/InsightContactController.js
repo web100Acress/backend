@@ -1,4 +1,4 @@
-const InsightContact = require('../../models/contact');
+const InsightContact = require('../../models/Insight/InsightContact');
 const { sendEmail } = require('../../Utilities/s3HelperUtility');
 
 class InsightContactController {
@@ -18,17 +18,20 @@ class InsightContactController {
         });
       }
 
-      // Create new contact
-      const contact = new InsightContact({
+      // Create contact data with defaults
+      const contactData = {
         firstName,
         lastName,
         email,
         phone,
-        inquiryType,
+        inquiryType: inquiryType || 'General',
         message,
         source: 'GetInTouch Form',
         status: 'New'
-      });
+      };
+
+      // Create new contact
+      const contact = new InsightContact(contactData);
 
       await contact.save();
       console.log('✅ Contact saved to database:', contact._id);
