@@ -37,50 +37,84 @@ const getMarketReports = async (req, res) => {
 // @route   POST /api/market-reports
 // @access  Private
 const createMarketReport = async (req, res) => {
+  console.log('=== Incoming Request ===');
+  console.log('Headers:', req.headers);
+  console.log('Files:', req.files);
+  console.log('Body:', req.body);
+  console.log('User:', req.user);
+  
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    console.error('Validation errors:', errors.array());
+    return res.status(400).json({ 
+      success: false,
+      message: 'Validation failed',
+      errors: errors.array() 
+    });
   }
 
   try {
     const { title, city, period, type, description } = req.body;
-    if (!req.files || !req.files.file) {
+    
+    if (!req.file) {
+      console.error('No file in request');
       return res.status(400).json({
         success: false,
-        message: 'Please upload a file'
+        message: 'No file uploaded or file validation failed',
+        details: req.fileValidationError || 'No file in request'
       });
     }
 
-    const file = req.file; // Using req.file from multer
+    const file = req.file;
+    console.log('Processing file:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+
     const fileType = file.mimetype;
     const fileSize = file.size;
     const fileName = generateUniqueFilename(file.originalname);
 
-    // Upload file to S3
-    const uploadResult = await uploadFile({
-      ...file,
-      originalname: `market-reports/${fileName}`
-    });
+    try {
+      // Upload file to S3
+      const uploadResult = await uploadFile({
+        ...file,
+        originalname: `market-reports/${fileName}`
+      });
+      console.log('File uploaded to S3:', uploadResult.Location);
 
-    const report = new MarketReport({
-      title,
-      city,
-      period,
-      type,
-      description,
-      fileUrl: uploadResult.Location,
-      fileName: file.name,
-      fileType,
-      fileSize,
-      createdBy: req.user.id
-    });
+      // Prepare report data
+      const reportData = {
+        title,
+        city,
+        period,
+        type,
+        description,
+        fileUrl: uploadResult.Location,
+        fileName: file.originalname,
+        fileType,
+        fileSize
+      };
+      
+      // Only add createdBy if we have a valid user ID
+      if (req.user?.id) {
+        reportData.createdBy = req.user.id;
+      }
+      
+      const report = new MarketReport(reportData);
 
-    await report.save();
+      await report.save();
+      console.log('Report saved successfully:', report._id);
 
-    res.status(201).json({
-      success: true,
-      data: report
-    });
+      res.status(201).json({
+        success: true,
+        data: report
+      });
+    } catch (uploadError) {
+      console.error('Error during file upload or save:', uploadError);
+      throw uploadError;
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({

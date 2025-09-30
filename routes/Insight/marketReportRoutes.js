@@ -4,36 +4,57 @@ const { getMarketReports, createMarketReport, deleteMarketReport } = require('..
 
 // File upload middleware
 const multer = require('multer');
+const path = require('path');
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max file size
-    files: 1
+    fileSize: 100 * 1024 * 1024, // Increased to 100MB
+    files: 1,
+    fields: 20, // Number of non-file fields
+    headerPairs: 2000 // Max header pairs
   },
   fileFilter: (req, file, cb) => {
-    console.log('Uploading file with MIME type:', file.mimetype, 'Original name:', file.originalname);
-    
-    // More permissive check that also looks at file extension
-    const fileExt = file.originalname.split('.').pop().toLowerCase();
-    const allowedTypes = [
-      'application/pdf',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/msword',
-      'application/vnd.ms-office',
-      'application/octet-stream', // Fallback for some Excel files
-      'image/jpeg',
-      'image/png',
-      'image/jpg'
-    ];
-    
-    const allowedExtensions = ['pdf', 'xls', 'xlsx', 'xlsm', 'csv', 'jpeg', 'jpg', 'png'];
-    
-    if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExt)) {
-      cb(null, true);
-    } else {
-      console.error('Rejected file upload - MIME:', file.mimetype, 'Extension:', fileExt);
-      cb(new Error(`Invalid file type (${file.mimetype}). Only PDF, Excel, and Image files are allowed.`), false);
+    try {
+      console.log('=== File Upload Details ===');
+      console.log('File fieldname:', file.fieldname);
+      console.log('Original name:', file.originalname);
+      console.log('MIME type:', file.mimetype);
+      console.log('File size:', file.size, 'bytes');
+      
+      // More permissive check that also looks at file extension
+      const fileExt = path.extname(file.originalname).toLowerCase().substring(1);
+      console.log('File extension:', fileExt);
+      
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/msword',
+        'application/vnd.ms-office',
+        'application/octet-stream',
+        'image/jpeg',
+        'image/png',
+        'image/jpg'
+      ];
+      
+      const allowedExtensions = ['pdf', 'xls', 'xlsx', 'xlsm', 'csv', 'jpeg', 'jpg', 'png'];
+      
+      const isAllowedType = allowedTypes.includes(file.mimetype);
+      const isAllowedExtension = allowedExtensions.includes(fileExt);
+      
+      if (isAllowedType || isAllowedExtension) {
+        console.log('File accepted');
+        cb(null, true);
+      } else {
+        const error = new Error(`Invalid file type. Only PDF, Excel, and Image files are allowed. Received: ${file.mimetype}, ${fileExt}`);
+        console.error('File rejected:', error.message);
+        req.fileValidationError = error.message;
+        cb(error, false);
+      }
+    } catch (error) {
+      console.error('Error in file filter:', error);
+      cb(error, false);
     }
   }
 });
