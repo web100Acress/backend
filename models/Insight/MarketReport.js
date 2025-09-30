@@ -14,7 +14,11 @@ const marketReportSchema = new mongoose.Schema({
   period: {
     type: String,
     required: [true, 'Period is required'],
-    enum: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023', 'Annual 2023']
+    enum: [
+      'Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023', 'Annual 2023',
+      'Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024', 'Annual 2024',
+      'Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Annual 2025'
+    ]
   },
   type: {
     type: String,

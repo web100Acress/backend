@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { getMarketReports, createMarketReport, deleteMarketReport } = require('../../Controller/Insight/marketReportController');
+const { 
+  getMarketReports, 
+  createMarketReport, 
+  updateMarketReport,
+  deleteMarketReport 
+} = require('../../Controller/Insight/marketReportController');
 
 // File upload middleware
 const multer = require('multer');
@@ -73,9 +78,18 @@ router.post(
   createMarketReport
 );
 
+// @route   PUT /api/market-reports/:id
+// @desc    Update a market report
+// @access  Private
+router.put(
+  '/:id',
+  upload.single('file'),
+  updateMarketReport
+);
+
 // @route   DELETE /api/market-reports/:id
 // @desc    Delete a market report
-// @access  Public
+// @access  Private
 router.delete('/:id', deleteMarketReport);
 
 module.exports = router;

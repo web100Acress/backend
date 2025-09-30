@@ -125,41 +125,118 @@ const createMarketReport = async (req, res) => {
   }
 };
 
+// @desc    Update a market report
+// @route   PUT /api/market-reports/:id
+// @access  Private
+const updateMarketReport = async (req, res) => {
+  console.log('=== Update Market Report Request ===');
+  console.log('Params:', req.params);
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
+  
+  try {
+    const { id } = req.params;
+    const { title, city, period, type, description } = req.body;
+    
+    // Find the existing report
+    let report = await MarketReport.findById(id);
+    
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Market report not found'
+      });
+    }
+    
+    // Update fields
+    report.title = title || report.title;
+    report.city = city || report.city;
+    report.period = period || report.period;
+    report.type = type || report.type;
+    report.description = description || report.description;
+    
+    // Handle file update if a new file is provided
+    if (req.file) {
+      // Delete old file from S3 if it exists
+      if (report.fileUrl) {
+        try {
+          await deleteFile(report.fileUrl);
+        } catch (error) {
+          console.error('Error deleting old file from S3:', error);
+          // Continue even if file deletion fails
+        }
+      }
+      
+      // Upload new file to S3
+      const fileName = generateUniqueFilename(req.file.originalname);
+      const uploadResult = await uploadFile({
+        ...req.file,
+        originalname: `market-reports/${fileName}`
+      });
+      
+      // Update file details
+      report.fileUrl = uploadResult.Location;
+      report.fileName = req.file.originalname;
+      report.fileType = req.file.mimetype;
+      report.fileSize = req.file.size;
+    }
+    
+    // Save the updated report
+    const updatedReport = await report.save();
+    
+    res.json({
+      success: true,
+      message: 'Market report updated successfully',
+      data: updatedReport
+    });
+    
+  } catch (error) {
+    console.error('Error updating market report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating market report',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Delete a market report
 // @route   DELETE /api/market-reports/:id
 // @access  Private
 const deleteMarketReport = async (req, res) => {
   try {
     const report = await MarketReport.findById(req.params.id);
-
+    
     if (!report) {
       return res.status(404).json({
         success: false,
-        message: 'Report not found'
+        message: 'Market report not found'
       });
     }
-
-    // Delete file from S3
-    try {
-      const key = new URL(report.fileUrl).pathname.substring(1); // Remove leading '/'
-      await deleteFile(key);
-    } catch (s3Error) {
-      console.error('Error deleting file from S3:', s3Error);
-      // Continue with report deletion even if S3 deletion fails
+    
+    // Delete file from S3 if it exists
+    if (report.fileUrl) {
+      try {
+        await deleteFile(report.fileUrl);
+      } catch (error) {
+        console.error('Error deleting file from S3:', error);
+        // Continue with deletion even if file deletion fails
+      }
     }
-
+    
     await report.remove();
-
+    
     res.json({
       success: true,
-      data: {}
+      message: 'Market report deleted successfully'
     });
-  } catch (err) {
-    console.error(err);
+    
+  } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: err.message
+      error: error.message
     });
   }
 };
@@ -167,5 +244,6 @@ const deleteMarketReport = async (req, res) => {
 module.exports = {
   getMarketReports,
   createMarketReport,
+  updateMarketReport,
   deleteMarketReport
 };
