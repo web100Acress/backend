@@ -270,6 +270,10 @@ router.use("/api/admin/small-banners", smallBannerRoute);
 const publicSmallBannerRoute = require("./public.small-banners");
 router.use("/api/small-banners", publicSmallBannerRoute);
 
+// Market Reports routes
+const marketReportRoutes = require("./insight/marketReportRoutes");
+router.use("/api/market-reports", marketReportRoutes);
+
 // Public banners routes (no authentication required)
 const publicBannerRoute = require("./public.banners");
 router.use("/api/banners", publicBannerRoute);
