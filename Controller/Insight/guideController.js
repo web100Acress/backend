@@ -1,5 +1,5 @@
 const Guide = require('../../models/insight/Guide');
-const { uploadToS3 } = require('../../utils/awsS3');
+const { uploadFile } = require('../../Utilities/s3HelperUtility');
 
 // @desc    Get all guides
 // @route   GET /api/guides
@@ -21,7 +21,8 @@ exports.getGuides = async (req, res) => {
       ];
     }
 
-    const guides = await Guide.find(query)
+    const guides = await Guide.find(query) 
+    
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -76,12 +77,13 @@ exports.createGuide = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please upload a file' });
     }
 
-    // Upload file to S3
-    const fileData = await uploadToS3(file, 'guides');
+    // Upload file to S3 using the helper utility
+    const uploadResult = await uploadFile(file);
 
     const guideData = {
       ...req.body,
-      fileUrl: fileData.url,
+      fileUrl: uploadResult.Location,
+      fileKey: uploadResult.Key,
       fileName: file.originalname,
       fileType: file.mimetype,
       fileSize: file.size,
@@ -110,11 +112,12 @@ exports.updateGuide = async (req, res) => {
     let updateData = { ...req.body };
     
     if (req.file) {
-      // Upload new file to S3
-      const fileData = await uploadToS3(req.file, 'guides');
+      // Upload new file to S3 using the helper utility
+      const uploadResult = await uploadFile(req.file);
       updateData = {
         ...updateData,
-        fileUrl: fileData.url,
+        fileUrl: uploadResult.Location,
+        fileKey: uploadResult.Key,
         fileName: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size
@@ -153,7 +156,16 @@ exports.deleteGuide = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Guide not found' });
     }
 
-    // TODO: Delete file from S3
+    // Delete file from S3 if it exists
+    if (guide.fileKey) {
+      try {
+        const { deleteFile } = require('../../Utilities/s3HelperUtility');
+        await deleteFile(guide.fileKey);
+      } catch (error) {
+        console.error('Error deleting file from S3:', error);
+        // Continue with guide deletion even if file deletion fails
+      }
+    }
 
     res.json({ success: true, data: {} });
   } catch (error) {
