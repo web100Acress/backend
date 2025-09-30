@@ -11,18 +11,29 @@ const upload = multer({
     files: 1
   },
   fileFilter: (req, file, cb) => {
+    console.log('Uploading file with MIME type:', file.mimetype, 'Original name:', file.originalname);
+    
+    // More permissive check that also looks at file extension
+    const fileExt = file.originalname.split('.').pop().toLowerCase();
     const allowedTypes = [
       'application/pdf',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/msword',
+      'application/vnd.ms-office',
+      'application/octet-stream', // Fallback for some Excel files
       'image/jpeg',
-      'image/png'
+      'image/png',
+      'image/jpg'
     ];
     
-    if (allowedTypes.includes(file.mimetype)) {
+    const allowedExtensions = ['pdf', 'xls', 'xlsx', 'xlsm', 'csv', 'jpeg', 'jpg', 'png'];
+    
+    if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExt)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF, Excel, and Image files are allowed.'), false);
+      console.error('Rejected file upload - MIME:', file.mimetype, 'Extension:', fileExt);
+      cb(new Error(`Invalid file type (${file.mimetype}). Only PDF, Excel, and Image files are allowed.`), false);
     }
   }
 });
