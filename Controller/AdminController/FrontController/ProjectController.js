@@ -80,6 +80,9 @@ class projectController {
         paymentPlan,
         minPrice,
         maxPrice,
+        youtubeVideoUrl,
+        youtubeVideoTitle,
+        youtubeVideoDescription,
       } = req.body;
       
       console.log("Extracted projectName:", projectName);
@@ -266,6 +269,9 @@ class projectController {
         minPrice: minPrice && !isNaN(parseInt(minPrice)) ? parseInt(minPrice) : undefined,
         meta_title: meta_title,
         meta_description: meta_description,
+        youtubeVideoUrl: youtubeVideoUrl || "",
+        youtubeVideoTitle: youtubeVideoTitle || "",
+        youtubeVideoDescription: youtubeVideoDescription || "",
       };
 
       console.log("Project data prepared:", Object.keys(projectData));
@@ -585,6 +591,9 @@ class projectController {
           "paymentPlan",
           "minPrice",
           "maxPrice",
+          "youtubeVideoUrl",
+          "youtubeVideoTitle",
+          "youtubeVideoDescription",
         ];
 
         fieldsToUpdate.forEach((field) => {
@@ -738,13 +747,7 @@ static projectSearch = async (req, res) => {
     if (scoplots === "1") query.type = "SCO Plots";
     if (residentiaProject === "1") query.type = "Residential Flats";
     if (allupcomingproject === "1") query.project_Status = "comingsoon";
-    if (budgethomesgurugram === "1") {
-      // Get budget homes for Gurugram from query parameters or use default
-      const budgetHomesGurugram = req.query.budgetHomesGurugram ? 
-        req.query.budgetHomesGurugram.split(',') : 
-        ["M3M Soulitude", "M3M Antalya Hills", "Signature Global City 93", "Signature Global City 81"];
-      query.$or = budgetHomesGurugram.map(name => ({projectName: name}));
-    }
+    if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
     
     // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
     if (builderName) query.builderName = builderName;
@@ -1180,54 +1183,18 @@ static projectSearch = async (req, res) => {
   };
   static project_budgetHomes = async (req, res) => {
     try {
-      // Get budget projects from query parameters or use default
-      const budgetProjects = req.query.projects ? 
-        req.query.projects.split(',') : 
-        [
-          "M3M Antalya Hills",
-          "ROF Pravasa", 
-          "Signature Global City 81",
-          "M3M Soulitude"
-        ];
-      
-      const data = await ProjectModel.find({ projectName: {$in: budgetProjects}});
-      
+      const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
+      const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
+      //  console.log(data)
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
+      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
         message: "Internal server error !",
-      });
-    }
-  };
-
-  // New method to get projects by category with dynamic ordering
-  static getProjectsByCategory = async (req, res) => {
-    try {
-      const { category, projects } = req.query;
-      
-      if (!category || !projects) {
-        return res.status(400).json({
-          message: "Category and projects parameters are required!",
-        });
-      }
-
-      const projectNames = projects.split(',');
-      const data = await ProjectModel.find({ projectName: {$in: projectNames}});
-      
-      return res.status(200).json({
-        message: `${category} projects retrieved successfully!`,
-        data,
-        category,
-        total: data.length
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "Internal server error!",
       });
     }
   };
@@ -1613,7 +1580,7 @@ static projectSearch = async (req, res) => {
     console.log("helo")
     // const data =new UserModel
     try {
-      const { name, email, mobile, projectName, address, source } = req.body;
+      const { name, email, mobile, projectName, address } = req.body;
       const ema = email;
       // const ema=email
       if (mobile && projectName && address) {
@@ -1631,41 +1598,37 @@ static projectSearch = async (req, res) => {
         const emaildata = data.email;
         const project = data.projectName;
 
-        //Send mail with AWS SES (skip for footer instant callback)
-        let emailSuccess = false;
-        if (source !== "footer_instant_call") {
-          try {
+        //Send mail with AWS SES
+        let emailSuccess;
+        try {
 
-            let html = `<!DOCTYPE html>
-                      <html lang:"en>
-                      <head>
-                      <meta charset:"UTF-8">
-                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                      <title>New Enquiry</title>
-                      </head>
-                      <body>
-                          <h3>Project Enquiry</h3>
-                          <p>Customer Name : ${custName}</p>
-                          <p>Customer Email Id : ${emaildata}</p>
-                          <p>Customer Mobile Number : ${number} </p>
-                          <p>ProjectName : ${project}</p>
-                          <p>Thank you!</p>
-                      </body>
-                      </html>`
-            const to = "query.aadharhomes@gmail.com";
-            const cc = ["officialhundredacress@gmail.com"];
-            const sourceEmail = "support@100acress.com";
-            const subject = "100acress.com Enquiry";
+          let html = `<!DOCTYPE html>
+                    <html lang:"en>
+                    <head>
+                    <meta charset:"UTF-8">
+                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                    <title>New Enquiry</title>
+                    </head>
+                    <body>
+                        <h3>Project Enquiry</h3>
+                        <p>Customer Name : ${custName}</p>
+                        <p>Customer Email Id : ${emaildata}</p>
+                        <p>Customer Mobile Number : ${number} </p>
+                        <p>ProjectName : ${project}</p>
+                        <p>Thank you!</p>
+                    </body>
+                    </html>`
+          const to = "query.aadharhomes@gmail.com";
+          const cc = ["officialhundredacress@gmail.com"]; 
+          const sourceEmail = "support@100acress.com";
+          const subject = "100acress.com Enquiry";
+          
+          emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
 
-            emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
-
-            console.log("Email sent successfully", emailSuccess);
-          } catch (error) {
-            console.log("Error in sending enquiry email",error);
-          }
-        } else {
-          console.log("Skipping email for footer instant callback");
+          console.log("Email sent successfully", emailSuccess);
+        } catch (error) {
+          console.log("Error in sending enquiry email",error);
         }
 
         data.emailReceived = Boolean(emailSuccess);

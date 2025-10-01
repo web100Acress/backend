@@ -226,6 +226,18 @@ const projectSchema = new mongoose.Schema(
     maxPrice: {
       type: Number,
     },
+    youtubeVideoUrl: {
+      type: String,
+      default: ""
+    },
+    youtubeVideoTitle: {
+      type: String,
+      default: ""
+    },
+    youtubeVideoDescription: {
+      type: String,
+      default: ""
+    }
   },
 
   {
