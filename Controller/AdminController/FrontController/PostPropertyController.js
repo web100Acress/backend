@@ -184,7 +184,7 @@ class PostPropertyController {
 
       const token = jwt.sign(
         { user_id: data._id, role: "user" },
-        process.env.JWT_SECRET || "amitchaudhary100",
+        process.env.JWT_SECRET || "aman123",
       );
       res.status(201).json({
         message: "Registration successfully done!",
@@ -223,7 +223,7 @@ class PostPropertyController {
             if (User.role === "Admin") {
               const token = jwt.sign(
                 { user_id: User._id, role: "Admin" },
-                process.env.JWT_SECRET || "amitchaudhary100",
+                process.env.JWT_SECRET || "aman123",
               );
               if (User.emailVerified == false) {
                 return res.status(403).json({
@@ -241,7 +241,7 @@ class PostPropertyController {
               if (User.emailVerified == false) {
                 const token = jwt.sign(
                   { user_id: User._id, role: "user" },
-                  process.env.JWT_SECRET || "amitchaudhary100",
+                  process.env.JWT_SECRET || "aman123",
                 );
                 return res.status(403).json({
                   message: "Please verify your email before sign in !",
@@ -251,7 +251,7 @@ class PostPropertyController {
               }
               const token = jwt.sign(
                 { user_id: User._id, role: User.role },
-                process.env.JWT_SECRET || "amitchaudhary100",
+                process.env.JWT_SECRET || "aman123",
               );
 
               return res.status(200).json({
