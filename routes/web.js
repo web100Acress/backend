@@ -259,13 +259,12 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 // Banner management routes
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
-
 // Public small banners routes (no authentication required)
 const publicSmallBannerRoute = require("./public.small-banners");
 router.use("/api/small-banners", publicSmallBannerRoute);
 
-// Market Reports routes
-const marketReportRoutes = require("./insight/marketReportRoutes");
+// Market Reports routes (admin access)
+const marketReportRoutes = require("./Insight/marketReportRoutes");
 router.use("/api/market-reports", marketReportRoutes);
 
 // Public banners routes (no authentication required)
@@ -290,12 +289,10 @@ router.use("/api", publicEnquiryRoute);
 const publicContactRoute = require("./Insight/contactRoutes");
 router.use("/api", publicContactRoute);
 
-// Market report routes (no authentication required)
-const marketReportRoutes = require("./Insight/marketReportRoutes");
-router.use("/api", marketReportRoutes);
+// Market report routes (public access - no authentication required)
+const publicMarketReportRoutes = require("./Insight/marketReportRoutes");
+router.use("/api", publicMarketReportRoutes);
 
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
-
-module.exports = router;
