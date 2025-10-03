@@ -2,12 +2,24 @@ const fs = require("fs");
 const AWS = require("aws-sdk");
 require("dotenv").config();
 
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+// Check for AWS credentials
+const awsAccessKey = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
+const awsSecretKey = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+const awsRegion = process.env.AWS_REGION || 'ap-south-1';
 
+if (!awsAccessKey || !awsSecretKey) {
+  console.warn('❌ AWS credentials missing! Set AWS_S3_ACCESS_KEY/AWS_ACCESS_KEY_ID and AWS_S3_SECRET_ACESS_KEY/AWS_SECRET_ACCESS_KEY');
+  console.warn('Failed to configure AWS: AWS credentials not configured');
+} else {
+  console.log('✅ AWS credentials found, configuring S3...');
+  AWS.config.update({
+    secretAccessKey: awsSecretKey,
+    accessKeyId: awsAccessKey,
+    region: awsRegion,
+  });
+}
+
+// Initialize S3 (will work with or without credentials for local development)
 const s3 = new AWS.S3();
 const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
 
