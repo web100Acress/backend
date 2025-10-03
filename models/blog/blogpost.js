@@ -96,7 +96,15 @@ const blogSchema = new mongoose.Schema({
       projectName: { type: String, trim: true },
       thumbnail: { type: String, trim: true }, // optional cached thumbnail URL
     }, { _id: false })
-  ]
+  ],
+  // Custom URL ID for direct linking
+  customUrlId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,  // This allows multiple null values
+    index: true,
+  }
   // Using the csdkccn subdocument schema as an array in the main schema
 },{timestamps: true});
 
