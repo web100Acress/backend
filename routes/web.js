@@ -296,3 +296,5 @@ router.use("/api", publicMarketReportRoutes);
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
+
+module.exports = router;
