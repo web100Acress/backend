@@ -1200,6 +1200,35 @@ static projectSearch = async (req, res) => {
   };
 
 
+  // Method to get projects by category with dynamic ordering
+  static getProjectsByCategory = async (req, res) => {
+    try {
+      const { category, projects } = req.query;
+      
+      if (!category || !projects) {
+        return res.status(400).json({
+          message: "Category and projects parameters are required!",
+        });
+      }
+
+      const projectNames = projects.split(',');
+      const data = await ProjectModel.find({ projectName: {$in: projectNames}});
+      
+      return res.status(200).json({
+        message: `${category} projects retrieved successfully!`,
+        data,
+        category,
+        total: data.length
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error!",
+      });
+    }
+  };
+
+
   ///highlight
   static highlightPoint = async (req, res) => {
     try {

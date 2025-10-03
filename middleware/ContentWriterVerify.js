@@ -27,7 +27,7 @@ const jwtVerification = async (req, res, next) => {
     // Verify using the same secret used when signing tokens
     const decoded = jwt.verify(
       token_without_quotes,
-      process.env.JWT_SECRET || "amitchaudhary100"
+      process.env.JWT_SECRET || "aman123"
     );
     const role = (decoded.role || "").toString();
     const roleLc = role.toLowerCase();

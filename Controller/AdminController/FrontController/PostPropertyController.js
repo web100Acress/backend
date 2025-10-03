@@ -184,7 +184,7 @@ class PostPropertyController {
 
       const token = jwt.sign(
         { user_id: data._id, role: "user" },
-        process.env.JWT_SECRET || "amitchaudhary100",
+        process.env.JWT_SECRET || "aman123",
       );
       res.status(201).json({
         message: "Registration successfully done!",
@@ -223,7 +223,7 @@ class PostPropertyController {
             if (User.role === "Admin") {
               const token = jwt.sign(
                 { user_id: User._id, role: "Admin" },
-                process.env.JWT_SECRET || "amitchaudhary100",
+                process.env.JWT_SECRET || "aman123",
               );
               if (User.emailVerified == false) {
                 return res.status(403).json({
@@ -241,7 +241,7 @@ class PostPropertyController {
               if (User.emailVerified == false) {
                 const token = jwt.sign(
                   { user_id: User._id, role: "user" },
-                  process.env.JWT_SECRET || "amitchaudhary100",
+                  process.env.JWT_SECRET || "aman123",
                 );
                 return res.status(403).json({
                   message: "Please verify your email before sign in !",
@@ -251,7 +251,7 @@ class PostPropertyController {
               }
               const token = jwt.sign(
                 { user_id: User._id, role: User.role },
-                process.env.JWT_SECRET || "amitchaudhary100",
+                process.env.JWT_SECRET || "aman123",
               );
 
               return res.status(200).json({
@@ -589,31 +589,74 @@ class PostPropertyController {
   };
   // update
   static postPerson_update = async (req, res) => {
-    // console.log("hello")
     try {
+      // Only extract the fields we want to update to avoid role validation issues
       const { name, email, address, mobile } = req.body;
-      if (req.body) {
-        const data = await postPropertyModel.findByIdAndUpdate(req.params.id, {
-          name: name,
-          email: email,
-          address: address,
-          mobile: mobile,
-        });
-        await data.save();
-        res.status(200).json({
-          message: "updated successfully ! ",
-          data,
-        });
-      } else {
-        res.status(403).json({
-          message: "check field ! ",
-          data,
+      
+      console.log('[postPerson_update] Request body keys:', Object.keys(req.body));
+      console.log('[postPerson_update] Updating user:', req.params.id);
+      
+      if (!req.params.id) {
+        return res.status(400).json({
+          message: "User ID is required",
         });
       }
+
+      // Build update object with only the fields we want to update
+      const updateData = {};
+      if (name !== undefined) updateData.name = name;
+      if (email !== undefined) updateData.email = email;
+      if (address !== undefined) updateData.address = address;
+      if (mobile !== undefined) updateData.mobile = mobile;
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({
+          message: "No valid fields to update",
+        });
+      }
+
+      // Use findByIdAndUpdate with new: true to get the updated document
+      // and runValidators: true to run validation on the update
+      const data = await postPropertyModel.findByIdAndUpdate(
+        req.params.id, 
+        updateData,
+        { 
+          new: true, 
+          runValidators: true 
+        }
+      );
+
+      if (!data) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      res.status(200).json({
+        message: "Updated successfully!",
+        data,
+      });
     } catch (error) {
-      console.log(error);
+      console.error('[postPerson_update] Error:', error);
+      
+      // Handle validation errors specifically
+      if (error.name === 'ValidationError') {
+        const validationErrors = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({
+          message: "Validation error",
+          errors: validationErrors,
+        });
+      }
+      
+      // Handle cast errors (invalid ObjectId)
+      if (error.name === 'CastError') {
+        return res.status(400).json({
+          message: "Invalid user ID format",
+        });
+      }
+
       res.status(500).json({
-        message: "Internal server error ! ",
+        message: "Internal server error",
       });
     }
   };

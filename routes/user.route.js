@@ -29,7 +29,7 @@ const authenticateToken = (req, res, next) => {
     });
   }
 
-  const trySecrets = [process.env.JWT_SECRET, 'amitchaudhary100', 'your_jwt_secret'].filter(Boolean);
+  const trySecrets = [process.env.JWT_SECRET, 'aman123', 'your_jwt_secret'].filter(Boolean);
   let verifiedUser = null;
   let lastErr = null;
   for (const secret of trySecrets) {
@@ -164,7 +164,7 @@ router.get('/users/:id/profile', async (req, res) => {
       const authHeader = req.headers['authorization'];
       const token = authHeader && authHeader.split(' ')[1];
       if (token) {
-        const trySecrets = [process.env.JWT_SECRET, 'amitchaudhary100', 'your_jwt_secret'].filter(Boolean);
+        const trySecrets = [process.env.JWT_SECRET, 'aman123', 'your_jwt_secret'].filter(Boolean);
         for (const secret of trySecrets) {
           try { tokenUser = jwt.verify(token, secret); break; } catch { /* try next */ }
         }
