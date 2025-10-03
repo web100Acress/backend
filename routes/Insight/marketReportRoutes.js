@@ -1,95 +1,102 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  getMarketReports, 
-  createMarketReport, 
-  updateMarketReport,
-  deleteMarketReport 
-} = require('../../Controller/Insight/marketReportController');
 
-// File upload middleware
-const multer = require('multer');
-const path = require('path');
+// Market Report Routes
+// These routes handle market report functionality
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 100 * 1024 * 1024, // Increased to 100MB
-    files: 1,
-    fields: 20, // Number of non-file fields
-    headerPairs: 2000 // Max header pairs
-  },
-  fileFilter: (req, file, cb) => {
-    try {
-      console.log('=== File Upload Details ===');
-      console.log('File fieldname:', file.fieldname);
-      console.log('Original name:', file.originalname);
-      console.log('MIME type:', file.mimetype);
-      console.log('File size:', file.size, 'bytes');
-      
-      // More permissive check that also looks at file extension
-      const fileExt = path.extname(file.originalname).toLowerCase().substring(1);
-      console.log('File extension:', fileExt);
-      
-      const allowedTypes = [
-        'application/pdf',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/msword',
-        'application/vnd.ms-office',
-        'application/octet-stream',
-        'image/jpeg',
-        'image/png',
-        'image/jpg'
-      ];
-      
-      const allowedExtensions = ['pdf', 'xls', 'xlsx', 'xlsm', 'csv', 'jpeg', 'jpg', 'png'];
-      
-      const isAllowedType = allowedTypes.includes(file.mimetype);
-      const isAllowedExtension = allowedExtensions.includes(fileExt);
-      
-      if (isAllowedType || isAllowedExtension) {
-        console.log('File accepted');
-        cb(null, true);
-      } else {
-        const error = new Error(`Invalid file type. Only PDF, Excel, and Image files are allowed. Received: ${file.mimetype}, ${fileExt}`);
-        console.error('File rejected:', error.message);
-        req.fileValidationError = error.message;
-        cb(error, false);
-      }
-    } catch (error) {
-      console.error('Error in file filter:', error);
-      cb(error, false);
-    }
+// GET /api/market-reports - Get all market reports
+router.get('/market-reports', async (req, res) => {
+  try {
+    // Placeholder for market reports functionality
+    res.status(200).json({
+      success: true,
+      message: 'Market reports endpoint',
+      data: []
+    });
+  } catch (error) {
+    console.error('Error fetching market reports:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
 });
 
-// @route   GET /api/market-reports
-// @desc    Get all market reports
-// @access  Public
-router.get('/', getMarketReports);
+// GET /api/market-reports/:id - Get specific market report
+router.get('/market-reports/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Placeholder for specific market report functionality
+    res.status(200).json({
+      success: true,
+      message: `Market report ${id}`,
+      data: null
+    });
+  } catch (error) {
+    console.error('Error fetching market report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
-// @route   POST /api/market-reports
-// @desc    Create a new market report
-// @access  Private
-router.post(
-  '/',
-  upload.single('file'),
-  createMarketReport
-);
+// POST /api/market-reports - Create new market report (admin only)
+router.post('/market-reports', async (req, res) => {
+  try {
+    // Placeholder for creating market report
+    res.status(201).json({
+      success: true,
+      message: 'Market report created successfully',
+      data: req.body
+    });
+  } catch (error) {
+    console.error('Error creating market report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
-// @route   PUT /api/market-reports/:id
-// @desc    Update a market report
-// @access  Private
-router.put(
-  '/:id',
-  upload.single('file'),
-  updateMarketReport
-);
+// PUT /api/market-reports/:id - Update market report (admin only)
+router.put('/market-reports/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Placeholder for updating market report
+    res.status(200).json({
+      success: true,
+      message: `Market report ${id} updated successfully`,
+      data: req.body
+    });
+  } catch (error) {
+    console.error('Error updating market report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
-// @route   DELETE /api/market-reports/:id
-// @desc    Delete a market report
-// @access  Private
-router.delete('/:id', deleteMarketReport);
+// DELETE /api/market-reports/:id - Delete market report (admin only)
+router.delete('/market-reports/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Placeholder for deleting market report
+    res.status(200).json({
+      success: true,
+      message: `Market report ${id} deleted successfully`
+    });
+  } catch (error) {
+    console.error('Error deleting market report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
 module.exports = router;

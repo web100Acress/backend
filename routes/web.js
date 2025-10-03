@@ -290,6 +290,10 @@ router.use("/api", publicEnquiryRoute);
 const publicContactRoute = require("./Insight/contactRoutes");
 router.use("/api", publicContactRoute);
 
+// Market report routes (no authentication required)
+const marketReportRoutes = require("./Insight/marketReportRoutes");
+router.use("/api", marketReportRoutes);
+
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
