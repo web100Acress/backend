@@ -165,7 +165,11 @@ router.use("/blog", blogRoute);
 router.use("/projectOrder", projectOrderRoute);
 
 // Property Order
-router.use("/propertyOrder", propertyOrderRoute);
+// searching rent and buy
+router.get("/property/search/:key", homeController.search);
+//searching buy
+router.get("/buyproperty/search/:key", homeController.search_buy);
+router.get("/data/filter", homeController.filter_data);
 
 //Builder
 router.use("/builder", builderRoute);
@@ -173,28 +177,18 @@ router.use("/builder", builderRoute);
 // Mount user admin routes (role update, deletions, etc.)
 router.use("/", usersRoute);
 
-//Searching routing
-// searching rent and buy
-router.get("/property/search/:key", homeController.search);
-//searching buy
-router.get("/buyproperty/search/:key", homeController.search_buy);
-router.get("/data/filter", homeController.filter_data);
-router.get("/rentproperty/search/:key", homeController.search_rent);
+// Test endpoint for API connectivity checks
+router.get('/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  });
+});
 
 //career
 router.post(
   "/career/page/Insert",
-  upload.fields([
-    { name: "bannerImage", maxCount: 1 },
-    { name: "activityImage", maxCount: 10 },
-    { name: "highlightImage", maxCount: 10 },
-  ]),
-  CareerController.careerInsert,
-);
-router.get("/career/page/View", CareerController.careerView);
-router.get("/career/page/edit/:id", CareerController.careerEdit);
-router.post(
-  "/career/page/update/:id",
   upload.fields([
     { name: "bannerImage", maxCount: 1 },
     { name: "activityImage", maxCount: 10 },
