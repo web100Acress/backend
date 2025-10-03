@@ -1199,6 +1199,7 @@ static projectSearch = async (req, res) => {
     }
   };
 
+
   // Method to get projects by category with dynamic ordering
   static getProjectsByCategory = async (req, res) => {
     try {
