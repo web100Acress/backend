@@ -1587,10 +1587,6 @@ static projectSearch = async (req, res) => {
         if (data.matchedCount === 0) {
           return res.status(404).json({ message: "BHK entry not found!" });
         }
-        return res.status(200).json({
-          message: "Delete successful!",
-          data,
-        });
       } else {
         return res.status(400).json({
           message: "Invalid ID!",
@@ -1604,14 +1600,12 @@ static projectSearch = async (req, res) => {
     }
   };
 
-  //Enquiry for the project page
   static userInsert = async (req, res) => {
     console.log("helo")
-    // const data =new UserModel
     try {
-      const { name, email, mobile, projectName, address } = req.body;
-      const ema = email;
-      // const ema=email
+      const { name, email, mobile, projectName, address, source } = req.body;
+      const ema = email || "";
+      
       if (mobile && projectName && address) {
         const data = new UserModel({
           name: name,
@@ -1620,49 +1614,51 @@ static projectSearch = async (req, res) => {
           projectName: projectName,
           address: address,
           emailReceived: false,
+          source: source || ""
         });
 
-        const custName = data.name;
-        const number = data.mobile;
-        const emaildata = data.email;
-        const project = data.projectName;
+        let emailSuccess = false;
+        
+        // Skip sending email for footer instant call
+        if (source !== "footer_instant_call") {
+          const custName = data.name;
+          const number = data.mobile;
+          const emaildata = data.email;
+          const project = data.projectName;
 
-        //Send mail with AWS SES
-        let emailSuccess;
-        try {
-
-          let html = `<!DOCTYPE html>
-                    <html lang:"en>
-                    <head>
-                    <meta charset:"UTF-8">
-                    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                    <title>New Enquiry</title>
-                    </head>
-                    <body>
-                        <h3>Project Enquiry</h3>
-                        <p>Customer Name : ${custName}</p>
-                        <p>Customer Email Id : ${emaildata}</p>
-                        <p>Customer Mobile Number : ${number} </p>
-                        <p>ProjectName : ${project}</p>
-                        <p>Thank you!</p>
-                    </body>
-                    </html>`
-          const to = "query.aadharhomes@gmail.com";
-          const cc = ["officialhundredacress@gmail.com"]; 
-          const sourceEmail = "support@100acress.com";
-          const subject = "100acress.com Enquiry";
-          
-          emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
-
-          console.log("Email sent successfully", emailSuccess);
-        } catch (error) {
-          console.log("Error in sending enquiry email",error);
+          //Send mail with AWS SES
+          try {
+            let html = `<!DOCTYPE html>
+                      <html lang="en">
+                      <head>
+                      <meta charset="UTF-8">
+                      <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+                      <meta name="viewport"  content="width=device-width, initial-scale=1.0">
+                      <title>New Enquiry</title>
+                      </head>
+                      <body>
+                          <h3>Project Enquiry</h3>
+                          <p>Customer Name : ${custName}</p>
+                          <p>Customer Email Id : ${emaildata}</p>
+                          <p>Customer Mobile Number : ${number} </p>
+                          <p>ProjectName : ${project}</p>
+                          <p>Source: ${source || 'Not specified'}</p>
+                          <p>Thank you!</p>
+                      </body>
+                      </html>`
+            const to = "query.aadharhomes@gmail.com";
+            const cc = ["officialhundredacress@gmail.com"]; 
+            const sourceEmail = "support@100acress.com";
+            const subject = "100acress.com Enquiry";
+            
+            emailSuccess = await sendEmail(to,sourceEmail,cc,subject,html,false);
+            console.log("Email sent successfully", emailSuccess);
+          } catch (error) {
+            console.log("Error in sending enquiry email", error);
+          }
+        } else {
+          console.log("Skipping email for footer instant call");
         }
-
-        data.emailReceived = Boolean(emailSuccess);
-
-        await data.save();
         return res.status(201).json({
           message: emailSuccess
             ? "User data submitted successfully , and the data has been sent via email"
