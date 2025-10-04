@@ -9,8 +9,8 @@ const {
   getGuidesByCategory,
   getFeaturedGuides
 } = require('../../Controller/Insight/guideController');
-const { protect, authorize } = require('../../middleware/auth');
-const upload = require('../../middleware/upload');
+const adminVerify = require('../../middleware/adminVerify');
+const upload = require('../../aws/multerConfig');
 
 // Public routes
 router.get('/', getGuides);
@@ -19,8 +19,8 @@ router.get('/category/:category', getGuidesByCategory);
 router.get('/:id', getGuide);
 
 // Protected routes (Admin only)
-router.post('/', protect, authorize('admin'), upload.single('file'), createGuide);
-router.put('/:id', protect, authorize('admin'), upload.single('file'), updateGuide);
-router.delete('/:id', protect, authorize('admin'), deleteGuide);
+router.post('/', adminVerify, upload.single('file'), createGuide);
+router.put('/:id', adminVerify, upload.single('file'), updateGuide);
+router.delete('/:id', adminVerify, deleteGuide);
 
 module.exports = router;

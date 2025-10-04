@@ -293,6 +293,10 @@ router.use("/api", publicContactRoute);
 const publicMarketReportRoutes = require("./Insight/marketReportRoutes");
 router.use("/api", publicMarketReportRoutes);
 
+// Guide routes (public access for viewing, admin for modifications)
+const guideRoutes = require("./Insight/guideRoutes");
+router.use("/api/guides", guideRoutes);
+
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
