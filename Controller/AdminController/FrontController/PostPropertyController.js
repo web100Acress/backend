@@ -76,39 +76,117 @@ const sendResetEmail = async (email, token) => {
 };
 
 
-const sendPostEmail = async (email) => {
-
+const sendPostEmail = async (email, propertyDetails = {}) => {
   let emailSuccess = true;
   let emailSuccess1;
   let emailSuccess2;
   
+  // Default property details if not provided
+  const {
+    title = 'N/A',
+    propertyType = 'N/A',
+    location = 'N/A',
+    price = 'N/A',
+    propertyId = 'N/A',
+    description = 'No description provided'
+  } = propertyDetails;
+  
   try {
     let from = "support@100acress.com";
-    let to = "web.100acress@gmail.com";
-    let subject = "New Project Submission";
-    let html = `<!DOCTYPE html>
-                  <html lang:"en>
-                  <head>
-                  <meta charset:"UTF-8">
-                  <meta http-equiv="X-UA-Compatible"  content="IE=edge">
-                  <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-                  <title>New Project Submission</title>
-                  </head>
-                  <body>
-                      <h1>New Project Submission</h1>
-                      <p>Hello,</p>
-                      <p>A new project has been submitted on your website by : ${email}</p>
-                      <p>Please review the details and take necessary actions.</p>
-                      <p>Thank you!</p>
-                  </body>
-                  </html>`
-    emailSuccess1 = await sendEmail(to,from,[],subject,html,false);
+    let to = "officialhundredacress@gmail.com";
+    let subject = "New Property Submission";
+    
+    // Admin email template with property details and verify button
+    let adminHtml = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Property Submission</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 5px; }
+        .property-details { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .detail-row { margin-bottom: 10px; }
+        .detail-label { font-weight: bold; color: #555; }
+        .verify-btn {
+          display: inline-block;
+          background-color: #4CAF50;
+          color: white;
+          padding: 10px 20px;
+          text-decoration: none;
+          border-radius: 5px;
+          margin: 15px 0;
+          font-weight: bold;
+        }
+        .verify-btn:hover { background-color: #45a049; }
+        .footer { margin-top: 20px; font-size: 0.9em; color: #666; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>New Property Submission</h1>
+      </div>
+      
+      <p>Hello,</p>
+      <p>A new property has been submitted by: <strong>${email}</strong></p>
+      
+      <div class="property-details">
+        <h3>Property Details:</h3>
+        <div class="detail-row">
+          <span class="detail-label">Title:</span> ${title}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Type:</span> ${propertyType}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location:</span> ${location}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Price:</span> ${price}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Description:</span> ${description}
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${process.env.FRONTEND_URL || 'https://100acress.com'}/admin/verify-property/${propertyId}" class="verify-btn">
+          Verify Property
+        </a>
+        <p style="font-size: 0.9em; color: #666;">
+          (Only visible to admin users. Regular users will see an access denied message.)
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>© ${new Date().getFullYear()} 100Acress. All rights reserved.</p>
+      </div>
+    </body>
+    </html>`;
+    // Send email to admin with verification link
+    emailSuccess1 = await sendEmail(to, from, [], subject, adminHtml, false);
   
+    // Prepare user confirmation email
     const propertySubmissionHtmlPath = path.join(__dirname, "../../../Templates/Email/propertyList.html");
     const propertySubmissionData = await fs.promises.readFile(propertySubmissionHtmlPath, "utf8");
-    const propertySubmissionHtmlContent = propertySubmissionData;
+    
+    // Enhance user email with verification status and property link
+    let userHtml = propertySubmissionData
+      .replace('{{propertyId}}', propertyId)
+      .replace(
+        '<!-- Verification Status -->',
+        '<div style="background-color: #e6f7ff; padding: 15px; border-left: 4px solid #1890ff; margin: 15px 0;">' +
+        '<h3 style="margin-top: 0; color: #1890ff;">Verification Status</h3>' +
+        '<p>Your property submission is under review by our admin team.</p>' +
+        '<p>You will be notified once it has been verified and published.</p>' +
+        '<p>Thank you for your patience!</p>' +
+        '</div>'
+      );
 
-    emailSuccess2 = await sendEmail(email, from, [], subject, propertySubmissionHtmlContent, true);
+    emailSuccess2 = await sendEmail(email, from, [], 'Property Submission Received', userHtml, true);
 
     emailSuccess = emailSuccess1 && emailSuccess2;
   
@@ -804,7 +882,14 @@ class PostPropertyController {
           );
 
           const email = dataPushed.email;
-          const emailSuccess = await sendPostEmail(email);
+          const emailSuccess = await sendPostEmail(email, {
+            title: dataPushed.title || 'N/A',
+            propertyType: dataPushed.propertyType || 'N/A',
+            location: dataPushed.location || 'N/A',
+            price: dataPushed.price || 'N/A',
+            propertyId: dataPushed._id || 'N/A',
+            description: dataPushed.description || 'No description provided'
+          });
           return res.status(200).json({
             message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",
 
@@ -861,7 +946,14 @@ class PostPropertyController {
 
           const email = dataPushed.email;
 
-          const emailSuccess = await sendPostEmail(email);
+          const emailSuccess = await sendPostEmail(email, {
+            title: dataPushed.title || 'N/A',
+            propertyType: dataPushed.propertyType || 'N/A',
+            location: dataPushed.location || 'N/A',
+            price: dataPushed.price || 'N/A',
+            propertyId: dataPushed._id || 'N/A',
+            description: dataPushed.description || 'No description provided'
+          });
           //Clear all the cache if new property posted
           cache.clear();
 
@@ -916,9 +1008,16 @@ class PostPropertyController {
             { new: true },
           );
 
-          const email = dataPushed.email;
+const email = dataPushed.email;
 
-          const emailSuccess = await sendPostEmail(email);
+          const emailSuccess = await sendPostEmail(email, {
+            title: dataPushed.title || 'N/A',
+            propertyType: dataPushed.propertyType || 'N/A',
+            location: dataPushed.location || 'N/A',
+            price: dataPushed.price || 'N/A',
+            propertyId: dataPushed._id || 'N/A',
+            description: dataPushed.description || 'No description provided'
+          });
 
           return res.status(200).json({
             message: emailSuccess ? "Data pushed successfully ! " : "Data pushed successfully but there was an issue sending confirmation emails",

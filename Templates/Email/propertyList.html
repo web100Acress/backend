@@ -4,33 +4,43 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Property Listing Submitted Successfully</title>
-    <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css"
-    rel="stylesheet"
-/>
+    <title>Property Listing Submitted Successfully | 100Acress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Base Styles */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
+            color: #333333;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .container {
+            max-width: 1000px;
+            margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
         .header {
+            background-color: #ffffff;
+            padding: 30px 0 20px;
             text-align: center;
             border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 20px;
+        }
+        
+        .logo-container {
+            text-align: center;
             margin-bottom: 20px;
+        }
+        
+        .logo {
+            max-width: 180px;
+            height: auto;
         }
         .logo {
             margin: 0 auto 15px;
@@ -53,22 +63,27 @@
         }
         .status-badge {
             display: inline-block;
-            background-color:  #C13B44;
+            background-color: #C13B44;
             color: #ffffff;
-            padding: 4px 12px;
+            padding: 6px 16px;
             border-radius: 50px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            margin: 15px auto;
+            margin: 15px auto 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .content {
-            padding: 10px 0;
+            padding: 30px;
+            color: #4a4a4a;
         }
         .steps {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid #e2e8f0;
         }
         .step {
             display: flex;
@@ -76,47 +91,61 @@
             align-items: center;
         }
         .step-number {
-            background-color:  #C13B44;
+            background-color: #C13B44;
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
-            margin-right: 10px;
+            margin-right: 15px;
             flex-shrink: 0;
-            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .step-text {
             flex-grow: 1;
         }
         .footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-            color: #888;
-            font-size: 14px;
+            padding: 25px 30px;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
         }
         .social {
             margin: 15px 0;
         }
+        .social {
+            margin: 20px 0 15px;
+        }
+        
         .social a {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            font-size: 20px;
-            background-color: #f0f0f0;
-            color: #555;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: #e2e8f0;
             border-radius: 50%;
-            text-align: center;
-            line-height: 32px;
-            margin: 0 5px;
+            margin: 0 6px;
+            transition: all 0.3s ease;
             text-decoration: none;
-            position: relative;
+        }
+        
+        .social a:hover {
+            background-color: #C13B44;
+            transform: translateY(-2px);
+        }
+        
+        .social img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
         }
         .social img{
             position: absolute;
@@ -129,23 +158,27 @@
         }
     </style>
 </head>
-<body>
+<body style="margin: 0; padding: 0; background-color: #f5f7fa;">
     <div class="container">
-        
-        <div class="icon-container">
-            <h1>Property Listing Submitted</h1>
+        <div class="header">
+            <div class="logo-container">
+                <a href="https://100acress.com" style="display: inline-block;">
+                    <img src="https://100acress-media-bucket.s3.ap-south-1.amazonaws.com/100acre/logo/logo.webp" alt="100Acress Logo" class="logo" style="border: 0; outline: none;">
+                </a>
+            </div>
+            <h1 style="color: #1e293b; font-size: 24px; font-weight: 600; margin: 10px 0 15px;">Property Listing Submitted</h1>
             <div style="text-align: center;">
                 <span class="status-badge">Under Review</span>
             </div>
         </div>
         
         <div class="content">
-            <p>Dear User,</p>
+            <p style="margin: 0 0 20px 0; color: #1e293b; font-weight: 500;">Dear User,</p>
             
-            <p>Thank you for submitting your property listing on 100acress. We're excited to inform you that we've received your submission and it's currently under review by our team.</p>
+            <p style="margin: 0 0 20px 0; line-height: 1.7;">Thank you for submitting your property listing on <a href="https://100acress.com" style="color: #C13B44; text-decoration: none; font-weight: 600;">100Acress</a>. We're excited to inform you that we've received your submission and it's currently under review by our team.</p>
             
             <div class="steps">
-                <p><strong>Next steps:</strong></p>
+                <p style="margin: 0 0 15px 0; color: #1e293b; font-weight: 600; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Next Steps</p>
                 <div class="step">
                     <div class="step-number">1.</div>
                     <div class="step-text">Our team will review your property details</div>
@@ -161,27 +194,108 @@
                 <div class="step">
                     <div class="step-number">4.</div>
                     <div class="step-text">You'll receive a confirmation email when published</div>
+            </div>
+            
+            <p style="margin: 0 0 20px 0; line-height: 1.7;">The review process typically takes 24-48 hours. You can check the status of your listing by logging into your account.</p>
+            
+            <p style="margin: 0 0 30px 0; line-height: 1.7;">Thank you for choosing to associate with us. We wish you the very best in your endeavors.</p>
+            
+            <div style="text-align: center; margin: 40px 0 30px; position: relative;">
+                <a href="#" 
+                   onclick="event.preventDefault(); checkPropertyStatus('{{propertyId}}');"
+                   style="display: inline-block; padding: 14px 32px; background-color: #C13B44; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: all 0.3s ease; cursor: pointer;">
+                    View Property
+                </a>
+                <div id="toast" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 12px 24px; border-radius: 4px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    Please wait for admin verification
                 </div>
             </div>
             
-            <p>The review process typically takes 24-48 hours. You can check the status of your listing by logging into your account.</p>
+            <script>
+                function checkPropertyStatus(propertyId) {
+                    // In a real implementation, you would make an API call to check the property status
+                    // For now, we'll show the toast and then redirect after a delay
+                    const toast = document.getElementById('toast');
+                    toast.style.display = 'block';
+                    
+                    // Hide the toast after 3 seconds
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                        // In a real implementation, you would check the status and then redirect
+                        // window.location.href = `/property-details/${propertyId}`;
+                    }, 3000);
+                }
+            </script>
             
+            <p style="margin: 0 0 5px 0; color: #1e293b; font-weight: 500;">Kind regards,<br><a href="https://100acress.com" style="color: #C13B44; font-weight: 600; text-decoration: none;">100Acress Team</a></p>
             
-            <p>Thank you for choosing to associate with us. We wish you the very best in your endeavors.</p>
+            <!-- Featured Properties Section -->
+            <div style="margin: 40px 0 30px; padding: 25px; background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 20px 0; text-align: center;">Discover More Properties on <a href="https://100acress.com" style="color: #C13B44; text-decoration: none;">100Acress.com</a></h3>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://100acress.com/rental-properties/best-rental-property-in-gurugram/" style="display: inline-block; padding: 12px 28px; background-color: #C13B44; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; letter-spacing: 0.3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        Explore All Properties
+                    </a>
+                </div>
+            </div>
             
-            <p>Kind regards,<br>100acress Team</p>
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 10px; border: 1px solid #e2e8f0;">
+                <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 15px 0;">Looking to Buy or Rent?</h3>
+                <p style="color: #475569; margin: 0 0 20px 0; line-height: 1.6; font-size: 14px;">
+                    Discover thousands of properties across India. Whether you're looking to buy, rent, or invest, 100Acress has the perfect property for you.
+                </p>
+                <a href="https://100acress.com" style="color: #C13B44; font-weight: 600; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center;">
+                    Visit 100Acress.com <span style="margin-left: 5px; font-size: 16px;">→</span>
+                </a>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0; padding: 25px; background-color: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 15px 0;">Know About Market Trends</h3>
+                <p style="color: #475569; margin: 0 0 20px 0; line-height: 1.6; font-size: 14px;">
+                    Stay ahead of the curve with the latest property market insights and trends. Make informed decisions with our comprehensive market analysis.
+                </p>
+                <a href="https://www.100acress.com/property-market-trends/" style="display: inline-block; padding: 12px 28px; background-color: #1e293b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; letter-spacing: 0.3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    Explore Market Trends
+                </a>
+            </div>
         </div>
         
         <div class="footer">
             <div class="social">
-                <a href="https://www.facebook.com/100Acress" target="_blank"><img src="cid:fblogo" alt="Facebook logo" ></a>
-                <a href="https://www.linkedIn.com/company/100acress/" target="_blank"><img src="cid:lnkdlogo" alt="Linkedin logo" ></a>
-                <a href="https://www.instagram.com/official100acress" target="_blank"><img src="cid:instalogo" alt="Instagra logom" ></a>
-                <a href="https://www.twitter.com/100acressdotcom" target="_blank"><img src="cid:twlogo" alt="Twitter logo" ></a>
+                <a href="https://www.facebook.com/100Acress/" target="_blank" style="background-color: #3b5998; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin: 0 5px; text-decoration: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.563V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+                    </svg>
+                </a>
+                <a href="https://www.linkedin.com/company/100acress/" target="_blank" style="background-color: #0077b5; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin: 0 5px; text-decoration: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3v9zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.4.9 3.4 4.2V19z"/>
+                    </svg>
+                </a>
+                <a href="https://www.instagram.com/official100acress/" target="_blank" style="background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin: 0 5px; text-decoration: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                    </svg>
+                </a>
+                <a href="https://x.com/100acressdotcom" target="_blank" style="background-color: #000000; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin: 0 5px; text-decoration: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/@100acress" target="_blank" style="background-color: #ff0000; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin: 0 5px; text-decoration: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
             </div>
-            <p>&copy; 2025 100acress. All rights reserved.</p>
-            <p>
-                <small>If you have any questions, please <a href="#" style="color:  #C13B44; text-decoration: none;">contact us</a>.</small>
+            <p style="margin: 0 0 10px 0; color: #64748b; font-size: 12px;">© 2025 100Acress. All rights reserved.</p>
+            <p style="margin: 0; font-size: 12px;">
+                If you have any questions, please <a href="https://www.100acress.com/contact-us/" style="color: #C13B44; text-decoration: none; font-weight: 500;">contact us</a>
             </p>
         </div>
     </div>

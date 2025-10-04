@@ -14,7 +14,7 @@ const tarnsporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "web.100acress@gmail.com",
+    user: "officialhundredacress@gmail.com",
     pass: "txww gexw wwpy vvda",
   },
   tls: {
