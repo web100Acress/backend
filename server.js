@@ -32,8 +32,8 @@ const limiter = rateLimit({
       const p = (req.originalUrl || req.url || '').toLowerCase();
       const m = (req.method || '').toUpperCase();
       
-      // Skip rate limiting for all GET requests
-      if (m === 'GET') return true;
+      // Skip rate limiting for all GET and OPTIONS requests
+      if (m === 'GET' || m === 'OPTIONS') return true;
       
       // Skip rate limiting for specific POST endpoints
       if (m === 'POST' && (
@@ -79,14 +79,26 @@ if (!allowedOrigins.includes(apiDomain) && !allowedOrigins.includes(apiUrl)) {
   console.log('Added API domain to allowed origins:', apiUrl);
 }
 
+// Cache for allowed origins to improve performance
+const allowedOriginsCache = new Map();
+
 const corsOptions = {
   origin: (origin, cb) => {
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return cb(null, true);
     
+    // Check cache first
+    if (allowedOriginsCache.has(origin)) {
+      return cb(null, allowedOriginsCache.get(origin));
+    }
+    
     // Allow all origins in development
     if (process.env.NODE_ENV !== 'production') {
-      console.log('Allowing CORS for development origin:', origin);
+      // Only log the first occurrence of each origin to reduce noise
+      if (!allowedOriginsCache.has(origin)) {
+        console.log('Allowing CORS for development origin:', origin);
+        allowedOriginsCache.set(origin, true);
+      }
       return cb(null, true);
     }
     
@@ -113,7 +125,8 @@ const corsOptions = {
     });
     
     if (isAllowed || allowedOrigins.includes('*')) {
-      console.log('CORS allowed for origin:', origin);
+      // Cache the allowed origin
+      allowedOriginsCache.set(origin, true);
       return cb(null, true);
     }
     
