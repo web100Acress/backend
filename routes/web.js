@@ -21,6 +21,7 @@ const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
 const postPropertyRoute = require("./postProperty.route");
+const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
 const aboutRoute = require("./about.route");
 const blogRoute = require("./blog.route");
