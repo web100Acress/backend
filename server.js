@@ -11,7 +11,6 @@ const uploadLimits = require("./config/uploadLimits");
 const app = express();
 // Load environment variables BEFORE using them
 require("dotenv").config();
-// Resolve port: in non-production, always bind to 3500 to match frontend
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
@@ -20,15 +19,28 @@ const { Server } = require("socket.io");
 // Create a rate limit rule
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 250, // Limit each IP to 250 requests per windowMs
+  max: 1000, // Increased limit to 1000 requests per minute
   message: "Too many requests, please try again after sometime.",
   standardHeaders: true,
   legacyHeaders: false,
-  // Do not rate limit heavy, authenticated admin uploads to avoid blocking legitimate actions
+  // Do not rate limit heavy, authenticated admin uploads and frequently accessed endpoints
   skip: (req) => {
     try {
       const p = (req.originalUrl || req.url || '').toLowerCase();
       const m = (req.method || '').toUpperCase();
+      
+      // Skip frequently accessed GET endpoints
+      if (m === 'GET' && (
+        p.includes('/settings/shorts-video-id') ||
+        p.includes('/project/projectsearch') ||
+        p.includes('/api/banners') ||
+        p.includes('/api/small-banners') ||
+        p.includes('/snapShot') ||
+        p.includes('/test')
+      )) {
+        return true;
+      }
+      
       // Skip project insert/update and builder insert
       if (
         (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert') || p.startsWith('/api/project/insert') || p.startsWith('/api/builder/insert')))
@@ -44,8 +56,6 @@ const limiter = rateLimit({
 
 // compress the response
 app.use(compression());
-
-// CORS - explicitly allow PATCH + Authorization and handle OPTIONS preflight
 const allowedOrigins = (process.env.CORS_ORIGIN || "*")
   .split(",")
   .map((s) => s.trim())
