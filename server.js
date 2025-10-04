@@ -64,10 +64,16 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 // Parse allowed origins from environment variable or use defaults
-const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000")
+const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000,https://api.100acress.com")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+// Add API domain to allowed origins if not already present
+const apiDomain = 'api.100acress.com';
+if (!allowedOrigins.includes(apiDomain) && !allowedOrigins.includes(`https://${apiDomain}`)) {
+  allowedOrigins.push(`https://${apiDomain}`);
+}
 
 const corsOptions = {
   origin: (origin, cb) => {
@@ -87,17 +93,20 @@ const corsOptions = {
       .replace('www.', '');
     
     // Check if the origin is allowed
-    const isAllowed = allowedOrigins
-      .split(',')
-      .map(o => o.trim())
-      .some(allowed => {
-        const normalizedAllowed = allowed
-          .replace('http://', '')
-          .replace('https://', '')
-          .replace('www.', '');
-        return normalizedOrigin === normalizedAllowed || 
-               normalizedOrigin.endsWith(normalizedAllowed);
-      });
+    const isAllowed = allowedOrigins.some(allowed => {
+      const normalizedAllowed = allowed
+        .replace('http://', '')
+        .replace('https://', '')
+        .replace('www.', '');
+      
+      // Allow subdomains of the main domain
+      if (normalizedOrigin.endsWith('100acress.com')) {
+        return true;
+      }
+      
+      return normalizedOrigin === normalizedAllowed || 
+             normalizedOrigin.endsWith(normalizedAllowed);
+    });
     
     if (isAllowed || allowedOrigins.includes('*')) {
       return cb(null, true);
