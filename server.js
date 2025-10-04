@@ -32,14 +32,18 @@ const limiter = rateLimit({
       const p = (req.originalUrl || req.url || '').toLowerCase();
       const m = (req.method || '').toUpperCase();
       
-      // Skip frequently accessed GET endpoints
-      if (m === 'GET' && (
-        p.includes('/settings/shorts-video-id') ||
-        p.includes('/project/projectsearch') ||
-        p.includes('/api/banners') ||
-        p.includes('/api/small-banners') ||
-        p.includes('/snapShot') ||
-        p.includes('/test')
+      // Skip rate limiting for all GET requests
+      if (m === 'GET') return true;
+      
+      // Skip rate limiting for specific POST endpoints
+      if (m === 'POST' && (
+        p.includes('/project/insert') || 
+        p.includes('/builder/insert') || 
+        p.includes('/api/project/insert') || 
+        p.includes('/api/builder/insert') ||
+        p.includes('/project/update') || 
+        p.includes('/api/project/update') ||
+        p.includes('/career/page/insert')
       )) {
         return true;
       }
@@ -59,7 +63,8 @@ const limiter = rateLimit({
 
 // compress the response
 app.use(compression());
-const allowedOrigins = (process.env.CORS_ORIGIN || "*")
+// Parse allowed origins from environment variable or use defaults
+const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -75,11 +80,26 @@ const corsOptions = {
       return cb(null, true);
     }
     
-    // In production, check against allowed origins
-    if (allowedOrigins.includes("*") || allowedOrigins.some(allowedOrigin => 
-      origin === allowedOrigin || 
-      origin.endsWith(process.env.DOMAIN || '.100acress.com')
-    )) {
+    // Normalize the origin to handle www and non-www versions
+    const normalizedOrigin = origin
+      .replace('http://', '')
+      .replace('https://', '')
+      .replace('www.', '');
+    
+    // Check if the origin is allowed
+    const isAllowed = allowedOrigins
+      .split(',')
+      .map(o => o.trim())
+      .some(allowed => {
+        const normalizedAllowed = allowed
+          .replace('http://', '')
+          .replace('https://', '')
+          .replace('www.', '');
+        return normalizedOrigin === normalizedAllowed || 
+               normalizedOrigin.endsWith(normalizedAllowed);
+      });
+    
+    if (isAllowed || allowedOrigins.includes('*')) {
       return cb(null, true);
     }
     
@@ -107,6 +127,25 @@ const corsOptions = {
   maxAge: 3600, // Cache preflight for 1 hour
   optionsSuccessStatus: 204
 };
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    
+    // Log rate limit headers if present
+    const limit = res.getHeader('X-RateLimit-Limit');
+    const remaining = res.getHeader('X-RateLimit-Remaining');
+    if (limit && remaining) {
+      console.log(`  Rate Limit: ${remaining}/${limit} remaining`);
+    }
+  });
+  
+  next();
+});
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
