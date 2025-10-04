@@ -21,14 +21,15 @@ const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
 const postPropertyRoute = require("./postProperty.route");
-const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
-
 const aboutRoute = require("./about.route");
 const blogRoute = require("./blog.route");
 const projectOrderRoute = require("./projectOrder.route");
 const propertyOrderRoute = require("./propertyOrder.route");
 const builderRoute = require("./builder.route");
+
+// Mount property order routes
+router.use("/propertyOrder", propertyOrderRoute);
 const AuthController = require("../Controller/AdminController/FrontController/Auth.controller");
 const RegisterController = require("../Controller/AdminController/FrontController/RegisterController");
 const usersRoute = require("./user.route");

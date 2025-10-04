@@ -70,14 +70,32 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https:
   .map((s) => s.trim())
   .filter(Boolean);
 
-// Add API domain to allowed origins if not already present
-const apiDomain = 'api.100acress.com';
-const apiUrl = `https://${apiDomain}`;
-if (!allowedOrigins.includes(apiDomain) && !allowedOrigins.includes(apiUrl)) {
-  allowedOrigins.push(apiUrl);
-  allowedOrigins.push(apiDomain);
-  console.log('Added API domain to allowed origins:', apiUrl);
-}
+// Add API domain and project domains to allowed origins
+const domains = [
+  '100acress.com',
+  'www.100acress.com',
+  'api.100acress.com',
+  '100acress.in',
+  'www.100acress.in',
+  '100acress.org',
+  'www.100acress.org'
+];
+
+// Add all variations (http, https, with/without www)
+domains.forEach(domain => {
+  const variants = [
+    `http://${domain}`,
+    `https://${domain}`,
+    domain
+  ];
+  
+  variants.forEach(variant => {
+    if (!allowedOrigins.includes(variant)) {
+      allowedOrigins.push(variant);
+      console.log('Added domain to allowed origins:', variant);
+    }
+  });
+});
 
 // Cache for allowed origins to improve performance
 const allowedOriginsCache = new Map();
@@ -115,8 +133,11 @@ const corsOptions = {
         .replace('https://', '')
         .replace('www.', '');
       
-      // Allow subdomains of the main domain
-      if (normalizedOrigin.endsWith('100acress.com')) {
+      // Allow all subdomains of the main domain
+      if (normalizedOrigin.endsWith('100acress.com') || 
+          normalizedOrigin.endsWith('100acress.in') ||
+          normalizedOrigin.endsWith('100acress.org')) {
+        console.log('Allowing subdomain origin:', origin);
         return true;
       }
       
