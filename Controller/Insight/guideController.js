@@ -1,4 +1,5 @@
-const Guide = require('../../models/Insight/Guide');
+const path = require('path');
+const Guide = require(path.join(__dirname, '../../models/Insight/Guide'));
 const { uploadFile } = require('../../Utilities/s3HelperUtility');
 
 // @desc    Get all guides

@@ -53,6 +53,7 @@ const limiter = rateLimit({
         (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert') || p.startsWith('/api/project/insert') || p.startsWith('/api/builder/insert')))
         || (m === 'POST' && (p.startsWith('/project/update') || p.startsWith('/api/project/update')))
         || (m === 'POST' && p.includes('/career/page/insert'))
+        || p.startsWith('/api/guide')
       ) {
         return true;
       }
@@ -71,8 +72,11 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https:
 
 // Add API domain to allowed origins if not already present
 const apiDomain = 'api.100acress.com';
-if (!allowedOrigins.includes(apiDomain) && !allowedOrigins.includes(`https://${apiDomain}`)) {
-  allowedOrigins.push(`https://${apiDomain}`);
+const apiUrl = `https://${apiDomain}`;
+if (!allowedOrigins.includes(apiDomain) && !allowedOrigins.includes(apiUrl)) {
+  allowedOrigins.push(apiUrl);
+  allowedOrigins.push(apiDomain);
+  console.log('Added API domain to allowed origins:', apiUrl);
 }
 
 const corsOptions = {
@@ -109,6 +113,7 @@ const corsOptions = {
     });
     
     if (isAllowed || allowedOrigins.includes('*')) {
+      console.log('CORS allowed for origin:', origin);
       return cb(null, true);
     }
     
