@@ -19,8 +19,11 @@ const { Server } = require("socket.io");
 // Create a rate limit rule
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // Increased limit to 1000 requests per minute
-  message: "Too many requests, please try again after sometime.",
+  max: 2000, // Increased limit to 2000 requests per minute
+  message: { 
+    success: false, 
+    message: "Too many requests, please try again after some time." 
+  },
   standardHeaders: true,
   legacyHeaders: false,
   // Do not rate limit heavy, authenticated admin uploads and frequently accessed endpoints
@@ -68,15 +71,19 @@ const corsOptions = {
     
     // Allow all origins in development
     if (process.env.NODE_ENV !== 'production') {
+      console.log('Allowing CORS for development origin:', origin);
       return cb(null, true);
     }
     
     // In production, check against allowed origins
-    if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes("*") || allowedOrigins.some(allowedOrigin => 
+      origin === allowedOrigin || 
+      origin.endsWith(process.env.DOMAIN || '.100acress.com')
+    )) {
       return cb(null, true);
     }
     
-    console.log('CORS blocked for origin:', origin);
+    console.warn('CORS blocked for origin:', origin, 'Allowed origins:', allowedOrigins);
     return cb(new Error('Not allowed by CORS'));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -86,11 +93,18 @@ const corsOptions = {
     "Accept", 
     "X-Requested-With", 
     "Origin",
-    "x-access-token"
+    "x-access-token",
+    "X-Forwarded-For"
   ],
-  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  exposedHeaders: [
+    "Content-Range", 
+    "X-Content-Range",
+    "X-RateLimit-Limit",
+    "X-RateLimit-Remaining",
+    "X-RateLimit-Reset"
+  ],
   credentials: true,
-  maxAge: 600, // Cache preflight request for 10 minutes
+  maxAge: 3600, // Cache preflight for 1 hour
   optionsSuccessStatus: 204
 };
 
@@ -140,21 +154,43 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // Error handling middleware - should be after all other middleware and routes
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  
+  // Handle CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      success: false,
+      message: 'Not allowed by CORS',
+      allowedOrigins: allowedOrigins
+    });
+  }
+
+  // Handle rate limit errors
+  if (err.status === 429) {
+    return res.status(429).json({
+      success: false,
+      message: 'Too many requests, please try again later.',
+      retryAfter: err.retryAfter || 60 // seconds
+    });
+  }
+
+  // Handle other errors
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
 });
 
 // Create HTTP server and bind Socket.IO with timeout configuration
 const server = http.createServer(app);
-
-// Set server timeout for large file uploads
 server.timeout = uploadLimits.timeout;
 const io = new Server(server, {
   cors: {
