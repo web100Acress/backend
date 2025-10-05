@@ -171,6 +171,8 @@ router.use("/projectOrder", projectOrderRoute);
 router.get("/property/search/:key", homeController.search);
 //searching buy
 router.get("/buyproperty/search/:key", homeController.search_buy);
+//searching rent
+router.get("/rentproperty/search/:key", homeController.search_rent);
 router.get("/data/filter", homeController.filter_data);
 
 //Builder
