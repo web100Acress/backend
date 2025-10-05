@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "set PORT=3500&& nodemon server.js"
+    "dev": "set PORT=3500&& nodemon server.js",
+    "build": "echo 'No build step required for Node.js'",
+    "prod": "NODE_ENV=production node server.js",
+    "test": "echo 'No tests specified'"
   },
   "author": "",
   "license": "ISC",
