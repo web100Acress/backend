@@ -1659,6 +1659,10 @@ static projectSearch = async (req, res) => {
         } else {
           console.log("Skipping email for footer instant call");
         }
+        
+        // Save the data to database
+        await data.save();
+        
         return res.status(201).json({
           message: emailSuccess
             ? "User data submitted successfully , and the data has been sent via email"
