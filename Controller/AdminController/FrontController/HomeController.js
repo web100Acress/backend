@@ -92,182 +92,214 @@ class homeController {
     }
   };
 
-  //search for otherproperty
-  static search_other = async (req, res) => {
-    const { query } = req.query;
-    console.log(query);
-    //   console.log(query)
-    if (query.length) {
-      const words = query.split(" ");
-      const searchData = [];
-      try {
-        // Split the query into an array of words
-        for (let i = 0; i < words.length; i++) {
-          let data = await otherPropertyModel.find({
-            $or: [
-              { propertyName: { $regex: words[i], $options: "i" } },
-              { propertyType: { $regex: words[i], $options: "i" } },
-              { address: { $regex: words[i], $options: "i" } },
-            ],
-          });
-          if (data.length > 0) {
-            searchData.push(...data);
-          }
-        }
-        if (searchData.length > 0) {
-          res.status(200).json({
-            message: "Data found!",
-            data: searchData,
-          });
-        } else {
-          res.status(200).json({
-            message: "Data not found!",
-          });
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(500).json({
-          message: "internal server error ! ",
-        });
-      }
-    }
-  };
-  //search in rental property
-  //search in buy property
-  static search_buy = async (req, res) => {
+  // Search suggestions for autocomplete
+  static searchSuggestions = async (req, res) => {
     try {
-      const key = req.params.key;
-      const data = await postPropertyModel.aggregate([
+      const query = req.params.query;
+      if (!query || query.length < 1) {
+        return res.status(200).json({ suggestions: [] });
+      }
+
+      const suggestions = [];
+      const limit = 15; // Increased limit for more suggestions
+
+      // Get suggestions from projects (main search)
+      const projectSuggestions = await ProjectModel.find({
+        $or: [
+          { projectName: { $regex: query, $options: "i" } },
+          { projectAddress: { $regex: query, $options: "i" } },
+          { city: { $regex: query, $options: "i" } },
+          { builderName: { $regex: query, $options: "i" } },
+          { state: { $regex: query, $options: "i" } },
+          { project_discripation: { $regex: query, $options: "i" } }
+        ]
+      })
+      .limit(limit)
+      .select('projectName projectAddress city builderName state project_url project_discripation')
+      .lean();
+
+      // Get suggestions from buy properties with enhanced search
+      const buySuggestions = await postPropertyModel.aggregate([
         {
           $match: {
-            $text: { $search: key },
             "postProperty.verify": "verified",
-            "postProperty.propertyLooking": "Sell",
-          },
-        },
-        {
-          $addFields: {
-            metaScore: { $meta: "textScore" },
-          },
-        },
-        {
-          $sort: {
-            metaScore: -1,
-          },
-        },
-        {
-          $unwind: "$postProperty",
-        },
-        {
-          $match: {
-            "postProperty.verify": "verified", // verified after unwinding
-            "postProperty.propertyLooking": "Sell", //  "rent"
-          },
+            "postProperty.propertyLooking": "Sell"
+          }
         },
         {
           $project: {
-            postProperty: 1,
-            metaScore: 1,
-          },
+            postProperty: {
+              $filter: {
+                input: "$postProperty",
+                as: "property",
+                cond: {
+                  $and: [
+                    { $eq: ["$$property.propertyLooking", "Sell"] },
+                    { $eq: ["$$property.verify", "verified"] },
+                    {
+                      $or: [
+                        { $regexMatch: { input: "$$property.propertyName", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.address", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.city", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.state", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.area", regex: new RegExp(query, "i") } }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
         },
+        {
+          $limit: limit
+        },
+        {
+          $project: {
+            "postProperty.propertyName": 1,
+            "postProperty.address": 1,
+            "postProperty.city": 1,
+            "postProperty.state": 1,
+            "postProperty.area": 1,
+            "postProperty.price": 1
+          }
+        }
       ]);
 
-      if (data.length > 0) {
-        res.status(200).send({
-          success: true,
-          message: "Data retrieved successfully",
-          data: data,
-        });
-      } else {
-        const data1 = await postPropertyModel.aggregate([
-          {
-            $match: {
-              "postProperty.verify": "verified",
-              "postProperty.propertyLooking": "Sell",
-            },
-          },
-          {
-            $project: {
-              name: 1,
-              postProperty: {
-                $filter: {
-                  input: "$postProperty",
-                  as: "property",
-                  cond: {
-                    $and: [
-                      { $eq: ["$$property.propertyLooking", "Sell"] },
-                      { $eq: ["$$property.verify", "verified"] },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        ]);
-        res.status(200).send({
-          success: true,
-          message: "data get successfully !",
-          data: data1,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        message: "Internal server error!",
+      // Get suggestions from rent properties with enhanced search
+      const rentSuggestions = await postPropertyModel.aggregate([
+        {
+          $match: {
+            "postProperty.verify": "verified",
+            "postProperty.propertyLooking": "rent"
+          }
+        },
+        {
+          $project: {
+            postProperty: {
+              $filter: {
+                input: "$postProperty",
+                as: "property",
+                cond: {
+                  $and: [
+                    { $eq: ["$$property.propertyLooking", "rent"] },
+                    { $eq: ["$$property.verify", "verified"] },
+                    {
+                      $or: [
+                        { $regexMatch: { input: "$$property.propertyName", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.address", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.city", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.state", regex: new RegExp(query, "i") } },
+                        { $regexMatch: { input: "$$property.area", regex: new RegExp(query, "i") } }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          $limit: limit
+        },
+        {
+          $project: {
+            "postProperty.propertyName": 1,
+            "postProperty.address": 1,
+            "postProperty.city": 1,
+            "postProperty.state": 1,
+            "postProperty.area": 1,
+            "postProperty.price": 1
+          }
+        }
+      ]);
+
+      // Process project suggestions with enhanced details
+      projectSuggestions.forEach(project => {
+        if (project.projectName) {
+          let subtitle = '';
+          if (project.city) subtitle += project.city;
+          if (project.state && project.city) subtitle += `, ${project.state}`;
+          if (!subtitle && project.projectAddress) subtitle = project.projectAddress;
+
+          suggestions.push({
+            text: project.projectName,
+            type: 'project',
+            url: `/${project.project_url}/`,
+            subtitle: subtitle || 'Project',
+            description: project.project_discripation ? project.project_discripation.substring(0, 100) + '...' : undefined
+          });
+        }
       });
-    }
-  };
-  //search in buy property
 
-  // Search in rental property
-  static search_rent = async (req, res) => {
-    const word = req.params.key;
-    try {
-      if (word.length !== null) {
-        const data = await postPropertyModel.aggregate([
-          {
-            $match: {
-              $text: { $search: word },
-              "postProperty.verify": "verified",
-              "postProperty.propertyLooking": "rent",
-            },
-          },
-          {
-            $addFields: {
-              metaScore: { $meta: "textScore" },
-            },
-          },
-          {
-            $sort: {
-              metaScore: -1,
-            },
-          },
-          {
-            $unwind: "$postProperty",
-          },
-          {
-            $match: {
-              "postProperty.verify": "verified", // verified after unwinding
-              "postProperty.propertyLooking": "rent", //  "rent"
-            },
-          },
-          {
-            $project: {
-              postProperty: 1,
-              metaScore: 1,
-            },
-          },
-        ]);
+      // Process buy suggestions with enhanced details
+      buySuggestions.forEach(item => {
+        if (item.postProperty && item.postProperty.propertyName) {
+          let subtitle = '';
+          if (item.postProperty.city) subtitle += item.postProperty.city;
+          if (item.postProperty.state && item.postProperty.city) subtitle += `, ${item.postProperty.state}`;
+          if (item.postProperty.area) subtitle += ` • ${item.postProperty.area}`;
+          if (item.postProperty.price) subtitle += ` • ₹${item.postProperty.price}`;
 
-        res.status(200).json({
-          message: "fetch Matched data !",
-          data,
-        });
-      }
+          suggestions.push({
+            text: item.postProperty.propertyName,
+            type: 'buy',
+            url: `/buy-properties/${item.postProperty.propertyName.toLowerCase().replace(/\s+/g, '-')}/`,
+            subtitle: subtitle || 'For Sale',
+            price: item.postProperty.price
+          });
+        }
+      });
+
+      // Process rent suggestions with enhanced details
+      rentSuggestions.forEach(item => {
+        if (item.postProperty && item.postProperty.propertyName) {
+          let subtitle = '';
+          if (item.postProperty.city) subtitle += item.postProperty.city;
+          if (item.postProperty.state && item.postProperty.city) subtitle += `, ${item.postProperty.state}`;
+          if (item.postProperty.area) subtitle += ` • ${item.postProperty.area}`;
+          if (item.postProperty.price) subtitle += ` • ₹${item.postProperty.price}`;
+
+          suggestions.push({
+            text: item.postProperty.propertyName,
+            type: 'rent',
+            url: `/rental-properties/${item.postProperty.propertyName.toLowerCase().replace(/\s+/g, '-')}/`,
+            subtitle: subtitle || 'For Rent',
+            price: item.postProperty.price
+          });
+        }
+      });
+
+      // Remove duplicates based on text
+      const uniqueSuggestions = suggestions.filter((suggestion, index, self) =>
+        index === self.findIndex(s => s.text === suggestion.text)
+      );
+
+      // Sort by relevance and limit to 12 suggestions max
+      const finalSuggestions = uniqueSuggestions
+        .sort((a, b) => {
+          // Prioritize exact matches
+          const aExact = a.text.toLowerCase().includes(query.toLowerCase());
+          const bExact = b.text.toLowerCase().includes(query.toLowerCase());
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+
+          // Then prioritize by length (shorter matches are more relevant)
+          return a.text.length - b.text.length;
+        })
+        .slice(0, 12);
+
+      res.status(200).json({
+        suggestions: finalSuggestions,
+        query: query,
+        total: finalSuggestions.length
+      });
+
     } catch (error) {
-      console.error(error);
+      console.error("Search suggestions error:", error);
       res.status(500).json({
-        message: "Internal server error !",
+        suggestions: [],
+        error: "Internal server error"
       });
     }
   };

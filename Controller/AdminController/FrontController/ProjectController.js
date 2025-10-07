@@ -1920,30 +1920,42 @@ static projectSearch = async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 2000;
       const skip = (page - 1) * limit;
+
       // Include deleted toggle
       const includeDeleted = String(req.query.includeDeleted || '0') === '1';
       const filter = includeDeleted ? {} : { deletedAt: { $in: [null, undefined] } };
+
+      // Check if selectedIds parameter is provided
+      const selectedIds = req.query.selectedIds;
+      let idsArray = [];
+      if (selectedIds && selectedIds.trim()) {
+        idsArray = selectedIds.split(',').map(id => id.trim()).filter(id => id);
+        if (idsArray.length > 0) {
+          filter._id = { $in: idsArray };
+          console.log(`Filtering for ${idsArray.length} selected enquiry IDs`);
+        }
+      }
+
       // Create a unique cache key for each page
-      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}_includeDeleted_${includeDeleted}`;
+      const cacheKey = `projectEnquiry_page_${page}_limit_${limit}_includeDeleted_${includeDeleted}_selectedIds_${selectedIds || 'none'}`;
       console.log("CacheKey", cacheKey);
+
       // Check if data is in cache
       const cacheData = cache.get(cacheKey);
 
       if (cacheData) {
         console.log("Serving data from cache");
-        const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
-        const filePath = path.join("./temp", fileName); // Save file in a temporary directory
+        const fileName = `Enquiryfile_Selected_${idsArray?.length || 'All'}_${Date.now()}.xlsx`;
+        const filePath = path.join("./temp", fileName);
 
         await ConvertJSONtoExcel(
           JSON.parse(JSON.stringify(cacheData)),
           filePath,
         );
 
-        //TO get the file deatils
         const stat = fs.statSync(filePath);
         const fileSize = stat.size;
 
-        // Set headers for file download
         res.setHeader(
           "Content-Type",
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1958,33 +1970,28 @@ static projectSearch = async (req, res) => {
           "Content-Disposition, Content-Length",
         );
 
-        // Stream the file to the client
         const fileStream = fs.createReadStream(filePath);
         fileStream.pipe(res);
 
-        // Clean up the temporary file after sending
         fileStream.on("close", () => {
           fs.unlink(filePath, (err) => {
             if (err) console.error("Failed to delete temporary file:", err);
           });
         });
       } else {
-        // If data is not in cache, fetch from the database
         console.log("Fetching data from database");
         const data = await UserModel.find(filter).lean().skip(skip).limit(limit).sort({ createdAt: -1 });
-        // Cache the fetched data for 5 minutes
+
         const expirationTime = 5 * 60 * 1000;
         cache.put(cacheKey, data, expirationTime);
 
-        // Convert JSON data to Excel
-        const fileName = `Enquiryfile_Page_${page}_${Date.now()}.xlsx`;
-        const filePath = path.join("./temp", fileName); // Save file in a temporary directory
+        const fileName = `Enquiryfile_Selected_${idsArray?.length || 'All'}_${Date.now()}.xlsx`;
+        const filePath = path.join("./temp", fileName);
+
         await ConvertJSONtoExcel(data, filePath);
 
-        //TO get the file deatils
         const fileSize = fs.statSync(filePath).size;
 
-        // Set headers for file download
         res.setHeader(
           "Content-Type",
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1999,11 +2006,9 @@ static projectSearch = async (req, res) => {
           "Content-Disposition, Content-Length",
         );
 
-        // Stream the file to the client
         const fileStream = fs.createReadStream(filePath);
         fileStream.pipe(res);
 
-        // Clean up the temporary file after sending
         fileStream.on("close", () => {
           fs.unlink(filePath, (err) => {
             if (err) console.error("Failed to delete temporary file:", err);
