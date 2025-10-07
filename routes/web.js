@@ -160,7 +160,6 @@ router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 router.delete("/postEnq_delete/:id", PostPropertyController.postEnquiry_delete);
 
 //Blog
-
 router.use("/blog", blogRoute);
 
 //Project Order
@@ -170,15 +169,17 @@ router.use("/projectOrder", projectOrderRoute);
 // searching rent and buy
 router.get("/property/search/:key", homeController.search);
 //searching buy
-router.get("/buyproperty/search/:key", homeController.search_buy);
+// router.get("/buyproperty/search/:key", homeController.search_buy);
 //searching rent
-router.get("/rentproperty/search/:key", homeController.search_rent);
+// router.get("/rentproperty/search/:key", homeController.search_rent);
+// Search suggestions for autocomplete
+router.get("/search/suggestions/:query", homeController.searchSuggestions);
 router.get("/data/filter", homeController.filter_data);
 
 //Builder
 router.use("/builder", builderRoute);
 
-// Mount user admin routes (role update, deletions, etc.)
+
 router.use("/", usersRoute);
 
 // Test endpoint for API connectivity checks
