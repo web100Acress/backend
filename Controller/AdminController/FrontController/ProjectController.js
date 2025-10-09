@@ -728,12 +728,17 @@ static projectSearch = async (req, res) => {
       dlfsco,
       sort,
       page = 1,
-      limit = 10
+      limit = 10,
+      farmhouse,
+      industrialplots,
+      industrialprojects
     } = req.query;
 
     let query = {};
 
-
+    if (farmhouse === "1") query.type = "Farm House";
+    if (industrialplots === "1") query.type = "Industrial Plots";
+    if (industrialprojects === "1") query.type = "Industrial Projects";
     // Handle boolean fields (convert string 'True' to boolean true)
     if (spotlight === "1") query.spotlight = "True";
     if (luxury === "1") query.luxury = "True";
