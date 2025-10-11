@@ -23,10 +23,10 @@ router.post(
   projectController.projectInsert,
 );
 router.get("/View/:project_url", projectController.projectView);
-router.get(
-  "/view/homepage/data",
-  projectController.projectShowHomepageLazyLoading,
-);
+// router.get(
+//   "/view/homepage/data",
+//   projectController.projectShowHomepageLazyLoading,
+// );
 router.get("/viewAll/data", projectController.projectviewAll);
 router.get("/Edit/:id", projectController.projectEdit);
 router.post(
