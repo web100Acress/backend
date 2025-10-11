@@ -589,9 +589,9 @@ router.delete('/users/:id/favorites/:projectId', authenticateToken, async (req, 
 });
 
 // --- Role update endpoint ---
-// PATCH /postPerson/users/:id/role
+// PATCH /users/:id/role
 // Updates a user's role in the RegisterData collection
-router.patch('/postPerson/users/:id/role', adminVerify, async (req, res) => {
+router.patch('/users/:id/role', adminVerify, async (req, res) => {
 
   try {
     const userId = req.params.id;
@@ -603,7 +603,7 @@ router.patch('/postPerson/users/:id/role', adminVerify, async (req, res) => {
     }
 
     // Validate role (case-insensitive)
-    const allowedRolesLower = new Set(['user', 'blog', 'admin', 'agent', 'owner', 'builder']);
+    const allowedRolesLower = new Set(['user', 'blog', 'admin', 'agent', 'owner', 'builder', 'hr']);
     const roleNormalized = typeof role === 'string' ? role.trim() : '';
     if (!roleNormalized || !allowedRolesLower.has(roleNormalized.toLowerCase())) {
       return res.status(400).json({ success: false, message: 'Invalid role value' });
