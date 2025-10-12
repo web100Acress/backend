@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require("../aws/multerConfig");
 const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
+const { hrAdminVerify } = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
@@ -220,24 +221,24 @@ router.post(
 );
 router.get(
   "/career/opening/:id/applications",
-  adminVerify,
+  hrAdminVerify,
   CareerController.listApplicationsByOpening,
 );
 router.put(
   "/career/application/:appId/approve",
-  adminVerify,
+  hrAdminVerify,
   CareerController.approveApplication,
 );
 router.put(
   "/career/application/:appId/reject",
-  adminVerify,
+  hrAdminVerify,
   CareerController.rejectApplication,
 );
 
 // Career: Applications aggregate counts
 router.get(
   "/career/application/count",
-  adminVerify,
+  hrAdminVerify,
   CareerController.applicationsCount,
 );
 
