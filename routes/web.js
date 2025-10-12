@@ -254,6 +254,9 @@ router.post("/submit", homeController.leadSumbit);
 //This route is for HR access to verify HR whether it is HR or not
 router.get("/auth/isHr", AuthController.isHrVerify);
 
+//This route is for Admin access to verify Admin whether it is Admin or not
+router.get("/auth/isAdmin", AuthController.isAdminVerify);
+
 // User delete route (admin only)
 router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperties);
 
