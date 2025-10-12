@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require("../aws/multerConfig");
 const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
+const { hrAdminVerify } = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
@@ -180,7 +181,7 @@ router.get("/data/filter", homeController.filter_data);
 router.use("/builder", builderRoute);
 
 
-router.use("/", usersRoute);
+router.use("/postPerson", usersRoute);
 
 // Test endpoint for API connectivity checks
 router.get('/test', (req, res) => {
@@ -220,24 +221,24 @@ router.post(
 );
 router.get(
   "/career/opening/:id/applications",
-  adminVerify,
+  hrAdminVerify,
   CareerController.listApplicationsByOpening,
 );
 router.put(
   "/career/application/:appId/approve",
-  adminVerify,
+  hrAdminVerify,
   CareerController.approveApplication,
 );
 router.put(
   "/career/application/:appId/reject",
-  adminVerify,
+  hrAdminVerify,
   CareerController.rejectApplication,
 );
 
 // Career: Applications aggregate counts
 router.get(
   "/career/application/count",
-  adminVerify,
+  hrAdminVerify,
   CareerController.applicationsCount,
 );
 
@@ -250,9 +251,8 @@ router.get("/projectCount", projectController.projectCount_city);
 // This routes used for the navigate leads from other domains
 router.post("/submit", homeController.leadSumbit);
 
-//This route is for admin access to verify admin whether it is admin or not
-router.get("/auth/isAdmin",adminVerify,AuthController.isAdminVerify);
-router.get("/auth/isContentWriter",ContentWriterVerify,AuthController.isContentWriterVerify);
+//This route is for HR access to verify HR whether it is HR or not
+router.get("/auth/isHr", AuthController.isHrVerify);
 
 // User delete route (admin only)
 router.delete("/user/:id", adminVerify, RegisterController.deleteUserAndProperties);

@@ -728,12 +728,17 @@ static projectSearch = async (req, res) => {
       dlfsco,
       sort,
       page = 1,
-      limit = 10
+      limit = 10,
+      farmhouse,
+      industrialplots,
+      industrialprojects
     } = req.query;
 
     let query = {};
 
-
+    if (farmhouse === "1") query.type = "Farm House";
+    if (industrialplots === "1") query.type = "Industrial Plots";
+    if (industrialprojects === "1") query.type = "Industrial Projects";
     // Handle boolean fields (convert string 'True' to boolean true)
     if (spotlight === "1") query.spotlight = "True";
     if (luxury === "1") query.luxury = "True";
@@ -2053,15 +2058,36 @@ static projectSearch = async (req, res) => {
     }
   };
 
-  static projectShowHomepageLazyLoading = async (req, res) => {
+  // Get trending projects
+  static project_trending = async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const skip = (page - 1) * limit;
-      const data = await ProjectModel.find().skip(skip).limit(limit);
-      const count = await ProjectModel.countDocuments();
+      // Check if data is available in cache
+      let data = cache.get("trendingProjects");
+
+      // If not available in cache, fetch from the database and cache it
+      if (!data) {
+        data = await ProjectModel.find({ projectOverview: "trending" }).lean();
+        const expirationTime = 10 * 60 * 1000; // 10 minutes
+        cache.put("trendingProjects", data, expirationTime);
+      }
+
+      if (data && data.length > 0) {
+        return res.status(200).json({
+          message: "Trending projects retrieved successfully!",
+          data,
+        });
+      } else {
+        return res.status(200).json({
+          message: "No trending projects found!",
+          data: [],
+        });
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching trending projects:", error);
+      return res.status(500).json({
+        message: "Internal server error!",
+        error: error.message,
+      });
     }
   };
 
