@@ -63,8 +63,9 @@ const hrAdminVerify = async (req, res, next) => {
       process.env.JWT_SECRET || "aman123"
     );
 
-    // Allow both Admin and HR roles
-    if (decoded.role !== "Admin" && decoded.role !== "hr") {
+    // Allow both Admin and HR roles (case-insensitive)
+    const userRole = decoded.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "hr") {
       return res
         .status(403)
         .json({success:false, message: "You are not authorized to perform this action" });
@@ -104,14 +105,15 @@ const hrVerify = async (req, res, next) => {
       process.env.JWT_SECRET || "aman123"
     );
 
-    // HR gets full access to HR section
-    if (decoded.role === "hr") {
+    // HR gets full access to HR section (case-insensitive)
+    const userRole = decoded.role?.toLowerCase();
+    if (userRole === "hr") {
       req.user = decoded;
       return next();
     }
 
     // Admin also gets access
-    if (decoded.role === "Admin") {
+    if (userRole === "admin") {
       req.user = decoded;
       return next();
     }
