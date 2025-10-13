@@ -20,7 +20,7 @@ const jwtVerification = async (req, res, next) => {
       process.env.JWT_SECRET || "aman123"
     );
 
-    if (decoded.role !== "Admin") {
+    if (decoded.role?.toLowerCase() !== "admin") {
       return res
         .status(403)
         .json({success:false, message: "You are not authorized to perform this action" });
