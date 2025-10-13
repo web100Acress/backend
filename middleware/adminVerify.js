@@ -10,9 +10,7 @@ const jwtVerification = async (req, res, next) => {
     // Extract token - handle both "Bearer token" and raw token formats
     const token = req.headers.authorization.split(" ")[1];
     const token_without_quotes = token.replace(/"/g, "");
-    // console.log(token_without_quotes);
     if (!token_without_quotes) {
-      // console.log("No token after extraction");
       return res.status(401).json({success:false, message: "No token provided" });
     }
 
@@ -21,9 +19,8 @@ const jwtVerification = async (req, res, next) => {
       token_without_quotes,
       process.env.JWT_SECRET || "aman123"
     );
-    // console.log("Decoded: ",decoded);
 
-    if (decoded.role !== "Admin") {
+    if (decoded.role?.toLowerCase() !== "admin") {
       return res
         .status(403)
         .json({success:false, message: "You are not authorized to perform this action" });
@@ -66,8 +63,9 @@ const hrAdminVerify = async (req, res, next) => {
       process.env.JWT_SECRET || "aman123"
     );
 
-    // Allow both Admin and HR roles
-    if (decoded.role !== "Admin" && decoded.role !== "hr") {
+    // Allow both Admin and HR roles (case-insensitive)
+    const userRole = decoded.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "hr") {
       return res
         .status(403)
         .json({success:false, message: "You are not authorized to perform this action" });
@@ -89,5 +87,52 @@ const hrAdminVerify = async (req, res, next) => {
   }
 };
 
+// HR-Only middleware for complete HR access
+const hrVerify = async (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({success:false, message: "No token provided" });
+    }
+
+    const token = req.headers.authorization.split(" ")[1];
+    const token_without_quotes = token.replace(/"/g, "");
+    if (!token_without_quotes) {
+      return res.status(401).json({success:false, message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(
+      token_without_quotes,
+      process.env.JWT_SECRET || "aman123"
+    );
+
+    // HR gets full access to HR section (case-insensitive)
+    const userRole = decoded.role?.toLowerCase();
+    if (userRole === "hr") {
+      req.user = decoded;
+      return next();
+    }
+
+    // Admin also gets access
+    if (userRole === "admin") {
+      req.user = decoded;
+      return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to perform this action"
+    });
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({success:false, message: "Invalid token" });
+    }
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({success:false, message: "Token expired" });
+    }
+    return res.status(500).json({success:false, message: "Internal server error" });
+  }
+};
+
 module.exports = jwtVerification;
 module.exports.hrAdminVerify = hrAdminVerify;
+module.exports.hrVerify = hrVerify;
