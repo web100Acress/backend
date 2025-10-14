@@ -9,6 +9,7 @@ const applicationSchema = new mongoose.Schema(
     resumeUrl: { type: String },
     coverLetter: { type: String },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    matchScore: { type: Number, min: 0, max: 1, required: false },
   },
   { timestamps: true }
 );

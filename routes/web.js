@@ -235,6 +235,13 @@ router.put(
   CareerController.rejectApplication,
 );
 
+// AI Scoring for applications
+router.post(
+  "/career/opening/:id/score-applications",
+  hrAdminVerify,
+  CareerController.scoreApplications,
+);
+
 // Career: Applications aggregate counts
 router.get(
   "/career/application/count",
