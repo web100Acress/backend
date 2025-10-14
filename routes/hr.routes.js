@@ -1,10 +1,48 @@
 const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
+const Application = require('../models/career/application');
 
-// List onboarding candidates
+// Helper: ensure onboarding exists for all approved applications
+async function syncApprovedApplications() {
+  const approved = await Application.find({ status: 'approved' });
+  const byAppId = new Map(approved.map(a => [String(a._id), a]));
+  const existing = await Onboarding.find({ applicationId: { $in: approved.map(a => a._id) } }).select('applicationId');
+  const existingSet = new Set(existing.map(e => String(e.applicationId)));
+
+  const toCreate = [];
+  for (const app of approved) {
+    if (!existingSet.has(String(app._id))) {
+      toCreate.push({
+        applicationId: app._id,
+        openingId: app.openingId,
+        candidateName: app.name,
+        candidateEmail: app.email,
+        currentStageIndex: 0,
+        history: [{ stage: 'interview1', note: 'Auto-synced from approved application' }],
+      });
+    }
+  }
+  if (toCreate.length) {
+    await Onboarding.insertMany(toCreate);
+  }
+  return { created: toCreate.length, totalApproved: approved.length };
+}
+
+// Manual sync endpoint
+router.post('/onboarding/sync', async (req, res) => {
+  try {
+    const result = await syncApprovedApplications();
+    res.json({ message: 'Sync complete', ...result });
+  } catch (e) {
+    res.status(500).json({ message: 'Sync failed' });
+  }
+});
+
+// List onboarding candidates (auto-sync before listing)
 router.get('/onboarding', async (req, res) => {
   try {
+    await syncApprovedApplications();
     const list = await Onboarding.find({}).sort({ createdAt: -1 });
     res.json({ data: list });
   } catch (e) {
