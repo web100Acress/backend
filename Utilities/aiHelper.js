@@ -1,47 +1,47 @@
-const OpenAI = require("openai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const axios = require("axios");
 const pdf = require("pdf-parse");
 const mammoth = require("mammoth");
 
-let openai;
+let genAI;
 try {
-  if (process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  if (process.env.GOOGLE_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   } else {
-    console.warn("OPENAI_API_KEY not found. AI scoring will be disabled.");
+    console.warn("GOOGLE_API_KEY not found. AI scoring will be disabled.");
   }
 } catch (e) {
-  console.error("Failed to initialize OpenAI client", e);
-  openai = null;
+  console.error("Failed to initialize Google AI client", e);
+  genAI = null;
 }
 
 // Simple in-memory cache for embeddings to reduce API calls for the same text.
 const embeddingCache = new Map();
 
 /**
- * Generates an embedding vector for a given text.
+ * Generates an embedding vector for a given text using Google's Gemini.
  * @param {string} text The text to embed.
  * @returns {Promise<number[]|null>} The embedding vector or null if failed.
  */
 const getEmbedding = async (text) => {
-  if (!openai) return null;
+  if (!genAI) return null;
   if (!text || text.trim().length < 50) return null; // Avoid embedding empty or tiny strings
 
+  const cleanedText = text.replace(/\n/g, " ").substring(0, 8000); // Clean and truncate
+
   // Return from cache if possible
-  if (embeddingCache.has(text)) {
-    return embeddingCache.get(text);
+  if (embeddingCache.has(cleanedText)) {
+    return embeddingCache.get(cleanedText);
   }
 
   try {
-    const response = await openai.embeddings.create({
-      input: text.replace(/\n/g, " ").substring(0, 8000), // Clean and truncate
-      model: "text-embedding-3-small",
-    });
-    const vector = response.data[0].embedding;
-    embeddingCache.set(text, vector); // Cache the result
+    const model = genAI.getGenerativeModel({ model: "embedding-001" });
+    const result = await model.embedContent(cleanedText);
+    const vector = result.embedding.values;
+    embeddingCache.set(cleanedText, vector); // Cache the result
     return vector;
   } catch (error) {
-    console.error("Error getting embedding from OpenAI:", error);
+    console.error("Error getting embedding from Google AI:", error);
     return null;
   }
 };
