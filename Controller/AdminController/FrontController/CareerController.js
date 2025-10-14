@@ -3,6 +3,11 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
+const {
+  getEmbedding,
+  cosineSimilarity,
+  getTextFromUrl,
+} = require("../../../Utilities/aiHelper");
 // Use AWS SES-based mail helper instead of raw SMTP transporter
 const fs = require("fs");
 const {
@@ -783,6 +788,68 @@ class CareerController {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static scoreApplications = async (req, res) => {
+    try {
+      const openingId = req.params.id;
+      if (!openingId || !isValidObjectId(openingId)) {
+        return res.status(400).json({ message: "Invalid opening id" });
+      }
+
+      const opening = await openModal.findById(openingId);
+      if (!opening) {
+        return res.status(404).json({ message: "Opening not found" });
+      }
+
+      // Combine job details into a single text for a comprehensive embedding
+      const jobDescriptionText = `
+        Job Title: ${opening.jobTitle || ""}
+        Location: ${opening.jobLocation || ""}
+        Experience: ${opening.experience || ""}
+        Skills: ${opening.skill || ""}
+        Profile: ${opening.jobProfile || ""}
+        Responsibilities: ${opening.responsibility || ""}
+      `;
+
+      const jobEmbedding = await getEmbedding(jobDescriptionText);
+      if (!jobEmbedding) {
+        return res.status(500).json({ message: "Failed to create embedding for job description. Check AI service." });
+      }
+
+      // Find applications that haven't been scored yet
+      const unscoredApps = await Application.find({ openingId, matchScore: { $exists: false } });
+
+      if (unscoredApps.length === 0) {
+        return res.status(200).json({ message: "All applications for this job have already been scored." });
+      }
+
+      let scoredCount = 0;
+      for (const app of unscoredApps) {
+        if (!app.resumeUrl) continue;
+
+        const resumeText = await getTextFromUrl(app.resumeUrl);
+        if (!resumeText) continue;
+
+        const resumeEmbedding = await getEmbedding(resumeText);
+        if (!resumeEmbedding) continue;
+
+        const score = cosineSimilarity(jobEmbedding, resumeEmbedding);
+
+        // Update the application with the score
+        app.matchScore = score;
+        await app.save();
+        scoredCount++;
+      }
+
+      return res.status(200).json({
+        message: `Scoring complete. ${scoredCount} of ${unscoredApps.length} applications were scored.`,
+        scoredCount,
+      });
+    } catch (error) {
+      console.error("Error during application scoring:", error);
+      return res.status(500).json({ message: "Internal server error during scoring." });
     }
   };
 }
