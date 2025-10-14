@@ -180,6 +180,76 @@ router.post('/onboarding/:id/docs', async (req, res) => {
   }
 });
 
+// Record a batch of documents submitted and email under verification notice
+router.post('/onboarding/:id/docs-submit', async (req, res) => {
+  try {
+    const { documents = [] } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (Array.isArray(documents)) {
+      it.documents = it.documents || [];
+      for (const d of documents) {
+        if (!d || !d.docType) continue;
+        it.documents.push({
+          docType: d.docType,
+          url: d.url,
+          status: d.url ? 'uploaded' : 'pending',
+          uploadedAt: d.url ? new Date() : undefined,
+          notes: d.notes,
+        });
+      }
+    }
+    // Set stage invited if not yet
+    it.stageData = it.stageData || {};
+    it.stageData.documentation = it.stageData.documentation || {};
+    if (!it.stageData.documentation.status || it.stageData.documentation.status === 'pending') {
+      it.stageData.documentation.status = 'invited';
+    }
+    await it.save();
+
+    const html = `<div><p>Hi ${it.candidateName},</p><p>Your documents have been received and are <strong>under verification</strong>. We will reach out if anything else is required.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Documents Under Verification - 100acress', html, false);
+
+    res.json({ message: 'Documents submitted and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to submit documents' });
+  }
+});
+
+// Mark documentation verification done and (optionally) send joining mail
+router.post('/onboarding/:id/docs-complete', async (req, res) => {
+  try {
+    const { joiningDate } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.stageData = it.stageData || {};
+    it.stageData.documentation = it.stageData.documentation || {};
+    it.stageData.documentation.status = 'completed';
+    it.stageData.documentation.completedAt = new Date();
+
+    // Move to success stage
+    it.currentStageIndex = it.stages.length - 1;
+    it.status = 'completed';
+
+    if (joiningDate) it.joiningDate = new Date(joiningDate);
+    await it.save();
+
+    const jd = it.joiningDate ? new Date(it.joiningDate).toLocaleDateString() : null;
+    const html = jd
+      ? `<div><p>Hi ${it.candidateName},</p><p>Your document verification is successful.</p><p>Your joining date is <strong>${jd}</strong>. Welcome to 100acress!</p></div>`
+      : `<div><p>Hi ${it.candidateName},</p><p>Your document verification is successful. We will communicate your joining date shortly.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], jd ? 'Joining Details - 100acress' : 'Document Verification Successful - 100acress', html, false);
+
+    res.json({ message: 'Documentation completed', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to complete documentation' });
+  }
+});
+
 // Advance to next stage (existing)
 router.post('/onboarding/:id/advance', async (req, res) => {
   try {
@@ -226,6 +296,34 @@ router.post('/onboarding/:id/joining', async (req, res) => {
     res.json({ message: 'Joining date set', data: it });
   } catch (e) {
     res.status(500).json({ message: 'Failed to set joining date' });
+  }
+});
+
+// Reject at a specific stage with reason and email notification
+router.post('/onboarding/:id/reject-stage', async (req, res) => {
+  try {
+    const { stage, reason } = req.body || {};
+    if (!stage || !['interview1','hrDiscussion','documentation'].includes(stage)) return res.status(400).json({ message: 'Invalid stage' });
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.stageData = it.stageData || {};
+    it.stageData[stage] = it.stageData[stage] || {};
+    it.stageData[stage].status = 'completed';
+    it.stageData[stage].completedAt = new Date();
+    it.stageData[stage].feedback = `Rejected: ${reason || 'No reason provided'}`;
+
+    // Stop progression, mark completed to remove from active list
+    it.status = 'completed';
+    await it.save();
+
+    const html = `<div><p>Hi ${it.candidateName},</p><p>Thank you for your time. After careful consideration, we will not be moving forward at this stage (${stage}).</p><p>Reason: ${reason || '—'}</p><p>We appreciate your interest and wish you all the best.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Application Update - 100acress', html, false);
+
+    res.json({ message: 'Stage rejected and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to reject stage' });
   }
 });
 
