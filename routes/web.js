@@ -308,6 +308,10 @@ router.use("/api", publicContactRoute);
 const publicMarketReportRoutes = require("./Insight/marketReportRoutes");
 router.use("/api", publicMarketReportRoutes);
 
+// HR Module routes (scaffold)
+const hrRoutes = require('./hr.routes');
+router.use('/api/hr', hrAdminVerify, hrRoutes);
+
 // Guide routes (public access for viewing, admin for modifications)
 const guideRoutes = require("./Insight/guideRoutes");
 router.use("/api/guides", guideRoutes);

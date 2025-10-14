@@ -3,6 +3,7 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
+const Onboarding = require("../../../models/hr/onboarding");
 const {
   getEmbedding,
   cosineSimilarity,
@@ -676,6 +677,23 @@ class CareerController {
       app.status = 'approved';
       await app.save();
 
+      // Create onboarding record if not exists
+      try {
+        const exists = await Onboarding.findOne({ applicationId: app._id });
+        if (!exists) {
+          await Onboarding.create({
+            applicationId: app._id,
+            openingId: app.openingId,
+            candidateName: app.name,
+            candidateEmail: app.email,
+            currentStageIndex: 0,
+            history: [{ stage: 'interview1', note: 'Auto-created on approval' }]
+          });
+        }
+      } catch (e) {
+        console.error('Failed to create onboarding entry:', e);
+      }
+
       return res.status(200).json({ message: "Application approved and email sent", data: app });
     } catch (error) {
       console.error(error);
@@ -811,11 +829,16 @@ class CareerController {
         Skills: ${opening.skill || ""}
         Profile: ${opening.jobProfile || ""}
         Responsibilities: ${opening.responsibility || ""}
-      `;
+      `.trim();
+
+      // Add a check for minimum content length
+      if (jobDescriptionText.length < 50) {
+        return res.status(400).json({ message: "Job description is too short to be scored. Please add more details to the job opening (like skills, profile, and responsibilities)." });
+      }
 
       const jobEmbedding = await getEmbedding(jobDescriptionText);
       if (!jobEmbedding) {
-        return res.status(500).json({ message: "Failed to create embedding for job description. Check AI service." });
+        return res.status(500).json({ message: "Failed to create embedding for job description. Check AI service logs for details." });
       }
 
       // Find applications that haven't been scored yet
