@@ -62,7 +62,7 @@ require("dotenv").config();
 // Helper: resolve a verified sender address. Prefer SES_FROM, then SMTP_FROM, then SMTP_USER.
 // If nothing is configured, return an empty string so callers can fail fast with a clear message.
 const getFromAddr = () => {
-  const v = (process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+  const v = (process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "hr@100acress.com").trim();
   // prevent accidental localhost fallback
   if (!v || v.toLowerCase().endsWith("@localhost")) return "";
   return v;
