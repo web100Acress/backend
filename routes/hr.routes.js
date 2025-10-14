@@ -327,6 +327,77 @@ router.post('/onboarding/:id/reject-stage', async (req, res) => {
   }
 });
 
+// HR: list documents for an onboarding record
+router.get('/onboarding/:id/documents', async (req, res) => {
+  try {
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+    res.json({ data: it.documents || [] });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to fetch documents' });
+  }
+});
+
+// HR: update a document status/notes
+router.patch('/onboarding/:id/documents/:docId', async (req, res) => {
+  try {
+    const { status, notes } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+    const doc = (it.documents || []).find(d => String(d._id) === String(req.params.docId));
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    if (status) {
+      doc.status = status; // 'verified' | 'rejected' | 'uploaded' | 'pending'
+      if (status === 'verified') doc.verifiedAt = new Date();
+    }
+    if (typeof notes === 'string') doc.notes = notes;
+    await it.save();
+    res.json({ message: 'Updated', data: doc });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to update document' });
+  }
+});
+
+// HR: reset onboarding to a specific stage (interview1|hrDiscussion|documentation)
+router.post('/onboarding/:id/reset', async (req, res) => {
+  try {
+    const { stage, reason } = req.body || {};
+    if (!['interview1','hrDiscussion','documentation'].includes(stage)) {
+      return res.status(400).json({ message: 'Invalid stage' });
+    }
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    const targetIndex = it.stages.indexOf(stage);
+    if (targetIndex < 0) return res.status(400).json({ message: 'Stage not in workflow' });
+
+    // Reset progress
+    it.currentStageIndex = targetIndex;
+    it.status = 'in_progress';
+    // Optionally clear documentation stage data and downstream
+    if (stage === 'documentation') {
+      // keep existing docs but set not verified
+      (it.documents || []).forEach(d => { if (d.status === 'verified') d.status = 'uploaded'; });
+    }
+    if (!it.history) it.history = [];
+    it.history.push({ stage, note: `Reset by HR${reason ? ' - ' + reason : ''}`, movedAt: new Date() });
+    await it.save();
+
+    // Notify candidate
+    const siteUrl = process.env.SITE_URL || 'https://100acress.com';
+    const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
+    const { sendEmail } = require('../Utilities/s3HelperUtility');
+    const labelMap = { interview1: 'Interview 1', hrDiscussion: 'HR Discussion', documentation: 'Documentation' };
+    const html = `<div style="font-family:Arial;color:#111;padding:16px"><h3>Onboarding Update</h3><p>Hi ${it.candidateName},</p><p>Your onboarding has been reset to <strong>${labelMap[stage]}</strong>${reason ? ' due to: ' + reason : ''}. Our team will reach out with next steps.</p><p><a href="${siteUrl}" style="background:#2563eb;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none">Visit 100acress</a></p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Onboarding Reset - 100acress', html, false);
+
+    res.json({ message: 'Onboarding reset', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to reset onboarding' });
+  }
+});
+
 // Stubs for HR Management module
 router.get('/onboarding/candidates', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/onboarding/:candidateId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
