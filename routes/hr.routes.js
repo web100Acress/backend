@@ -2,11 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
+const { sendEmail } = require('../Utilities/s3HelperUtility');
+
+// Helper: simple sender
+const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
 
 // Helper: ensure onboarding exists for all approved applications
 async function syncApprovedApplications() {
   const approved = await Application.find({ status: 'approved' });
-  const byAppId = new Map(approved.map(a => [String(a._id), a]));
   const existing = await Onboarding.find({ applicationId: { $in: approved.map(a => a._id) } }).select('applicationId');
   const existingSet = new Set(existing.map(e => String(e.applicationId)));
 
@@ -23,45 +26,231 @@ async function syncApprovedApplications() {
       });
     }
   }
-  if (toCreate.length) {
-    await Onboarding.insertMany(toCreate);
-  }
+  if (toCreate.length) await Onboarding.insertMany(toCreate);
   return { created: toCreate.length, totalApproved: approved.length };
 }
 
 // Manual sync endpoint
 router.post('/onboarding/sync', async (req, res) => {
-  try {
-    const result = await syncApprovedApplications();
-    res.json({ message: 'Sync complete', ...result });
-  } catch (e) {
-    res.status(500).json({ message: 'Sync failed' });
-  }
+  try { const result = await syncApprovedApplications(); res.json({ message: 'Sync complete', ...result }); }
+  catch { res.status(500).json({ message: 'Sync failed' }); }
 });
 
 // List onboarding candidates (auto-sync before listing)
 router.get('/onboarding', async (req, res) => {
-  try {
-    await syncApprovedApplications();
-    const list = await Onboarding.find({}).sort({ createdAt: -1 });
-    res.json({ data: list });
-  } catch (e) {
-    res.status(500).json({ message: 'Failed to fetch onboarding list' });
-  }
+  try { await syncApprovedApplications(); const list = await Onboarding.find({}).sort({ createdAt: -1 }); res.json({ data: list }); }
+  catch { res.status(500).json({ message: 'Failed to fetch onboarding list' }); }
 });
 
 // Get onboarding by id
 router.get('/onboarding/:id', async (req, res) => {
+  try { const it = await Onboarding.findById(req.params.id); if (!it) return res.status(404).json({ message: 'Not found' }); res.json({ data: it }); }
+  catch { res.status(500).json({ message: 'Failed to fetch onboarding' }); }
+});
+
+// Invite for a stage (interview1 or hrDiscussion)
+router.post('/onboarding/:id/invite', async (req, res) => {
   try {
+    const { stage, type, tasks = [], scheduledAt, endsAt, meetingLink, location, content } = req.body || {};
+    if (!stage || !['interview1','hrDiscussion'].includes(stage)) return res.status(400).json({ message: 'Invalid stage' });
+    if (!type || !['online','offline'].includes(type)) return res.status(400).json({ message: 'Invalid invite type' });
+
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
-    res.json({ data: it });
+
+    it.stageData = it.stageData || {};
+    const payload = { type, tasks, scheduledAt, endsAt, meetingLink, location, content, sentAt: new Date() };
+    it.stageData[stage] = it.stageData[stage] || {};
+    it.stageData[stage].invite = payload;
+    it.stageData[stage].status = 'invited';
+    await it.save();
+
+    const taskList = tasks?.length ? (`<ul>${tasks.map(t => `<li><strong>${t.title || ''}</strong> - due: ${t.dueAt ? new Date(t.dueAt).toLocaleString() : 'N/A'}<br/>${t.description || ''}</li>`).join('')}</ul>`) : '';
+    const scheduleLine = scheduledAt ? `<p><strong>Schedule:</strong> ${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}</p>` : '';
+    const linkLine = type === 'online' && meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>` : '';
+    const locLine = type === 'offline' && location ? `<p><strong>Location:</strong> ${location}</p>` : '';
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Interview Invitation - ${stage === 'interview1' ? 'First Interview' : 'HR Discussion'}</h2>
+        <p>Dear ${it.candidateName},</p>
+        <p>${content || 'You are invited for the next step in our hiring process.'}</p>
+        ${scheduleLine}
+        ${linkLine}
+        ${locLine}
+        ${taskList}
+        <p>Regards,<br/>100acress HR Team</p>
+      </div>`;
+
+    await sendEmail(it.candidateEmail, fromAddr, [], `Invitation: ${stage === 'interview1' ? 'First Interview' : 'HR Discussion'}`, html, false);
+
+    res.json({ message: 'Invite sent', data: it });
   } catch (e) {
-    res.status(500).json({ message: 'Failed to fetch onboarding' });
+    console.error(e);
+    res.status(500).json({ message: 'Failed to send invite' });
   }
 });
 
-// Advance to next stage
+// Complete a stage with feedback
+router.post('/onboarding/:id/complete-stage', async (req, res) => {
+  try {
+    const { stage, feedback } = req.body || {};
+    if (!stage || !['interview1','hrDiscussion'].includes(stage)) return res.status(400).json({ message: 'Invalid stage' });
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.stageData = it.stageData || {};
+    it.stageData[stage] = it.stageData[stage] || {};
+    it.stageData[stage].feedback = feedback || '';
+    it.stageData[stage].completedAt = new Date();
+    it.stageData[stage].status = 'completed';
+
+    // Auto-advance if appropriate
+    const stageIndex = it.stages.indexOf(stage);
+    if (stageIndex >= 0 && it.currentStageIndex === stageIndex && stageIndex < it.stages.length - 1) {
+      it.currentStageIndex = stageIndex + 1;
+      it.history.push({ stage: it.stages[it.currentStageIndex], note: 'Auto-advanced after completion' });
+    }
+
+    await it.save();
+
+    // Send next-step email
+    const next = it.stages[it.currentStageIndex];
+    let subject = 'Next Step';
+    let html = `<p>Hi ${it.candidateName}, next step is ${next}.</p>`;
+    if (stage === 'interview1') {
+      subject = 'Feedback & Next Step: HR Discussion';
+      html = `<div><p>Hi ${it.candidateName},</p><p>Interview 1 feedback: ${feedback || '—'}.</p><p>Next step is HR Discussion. We will send you the invite shortly.</p></div>`;
+    } else if (stage === 'hrDiscussion') {
+      subject = 'Next Step: Documentation';
+      html = `<div><p>Hi ${it.candidateName},</p><p>HR Discussion feedback: ${feedback || '—'}.</p><p>Next step is Documentation. You will receive a document upload link.</p></div>`;
+    }
+    await sendEmail(it.candidateEmail, fromAddr, [], subject, html, false);
+
+    res.json({ message: 'Stage marked complete', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to complete stage' });
+  }
+});
+
+// Send documentation invite
+router.post('/onboarding/:id/docs-invite', async (req, res) => {
+  try {
+    const { content, uploadLink } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Documentation Required</h2>
+        <p>Dear ${it.candidateName},</p>
+        <p>${content || 'Please upload your documents for verification.'}</p>
+        <p><a href="${uploadLink || '#'}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">Upload Documents</a></p>
+      </div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Document Verification - 100acress', html, false);
+
+    it.stageData = it.stageData || {};
+    it.stageData.documentation = it.stageData.documentation || {};
+    it.stageData.documentation.status = 'invited';
+    await it.save();
+
+    res.json({ message: 'Documentation invite sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to send documentation invite' });
+  }
+});
+
+// Record a document uploaded (server-side record; actual upload handled elsewhere)
+router.post('/onboarding/:id/docs', async (req, res) => {
+  try {
+    const { docType, url } = req.body || {};
+    if (!docType || !url) return res.status(400).json({ message: 'docType and url required' });
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.documents = it.documents || [];
+    it.documents.push({ docType, url, status: 'uploaded', uploadedAt: new Date() });
+    await it.save();
+    res.json({ message: 'Document recorded', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to record document' });
+  }
+});
+
+// Record a batch of documents submitted and email under verification notice
+router.post('/onboarding/:id/docs-submit', async (req, res) => {
+  try {
+    const { documents = [] } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (Array.isArray(documents)) {
+      it.documents = it.documents || [];
+      for (const d of documents) {
+        if (!d || !d.docType) continue;
+        it.documents.push({
+          docType: d.docType,
+          url: d.url,
+          status: d.url ? 'uploaded' : 'pending',
+          uploadedAt: d.url ? new Date() : undefined,
+          notes: d.notes,
+        });
+      }
+    }
+    // Set stage invited if not yet
+    it.stageData = it.stageData || {};
+    it.stageData.documentation = it.stageData.documentation || {};
+    if (!it.stageData.documentation.status || it.stageData.documentation.status === 'pending') {
+      it.stageData.documentation.status = 'invited';
+    }
+    await it.save();
+
+    const html = `<div><p>Hi ${it.candidateName},</p><p>Your documents have been received and are <strong>under verification</strong>. We will reach out if anything else is required.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Documents Under Verification - 100acress', html, false);
+
+    res.json({ message: 'Documents submitted and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to submit documents' });
+  }
+});
+
+// Mark documentation verification done and (optionally) send joining mail
+router.post('/onboarding/:id/docs-complete', async (req, res) => {
+  try {
+    const { joiningDate } = req.body || {};
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.stageData = it.stageData || {};
+    it.stageData.documentation = it.stageData.documentation || {};
+    it.stageData.documentation.status = 'completed';
+    it.stageData.documentation.completedAt = new Date();
+
+    // Move to success stage
+    it.currentStageIndex = it.stages.length - 1;
+    it.status = 'completed';
+
+    if (joiningDate) it.joiningDate = new Date(joiningDate);
+    await it.save();
+
+    const jd = it.joiningDate ? new Date(it.joiningDate).toLocaleDateString() : null;
+    const html = jd
+      ? `<div><p>Hi ${it.candidateName},</p><p>Your document verification is successful.</p><p>Your joining date is <strong>${jd}</strong>. Welcome to 100acress!</p></div>`
+      : `<div><p>Hi ${it.candidateName},</p><p>Your document verification is successful. We will communicate your joining date shortly.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], jd ? 'Joining Details - 100acress' : 'Document Verification Successful - 100acress', html, false);
+
+    res.json({ message: 'Documentation completed', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to complete documentation' });
+  }
+});
+
+// Advance to next stage (existing)
 router.post('/onboarding/:id/advance', async (req, res) => {
   try {
     const it = await Onboarding.findById(req.params.id);
@@ -85,7 +274,7 @@ router.post('/onboarding/:id/advance', async (req, res) => {
   }
 });
 
-// Set joining date
+// Set joining date (existing) + send mail
 router.post('/onboarding/:id/joining', async (req, res) => {
   try {
     const { joiningDate } = req.body || {};
@@ -93,10 +282,48 @@ router.post('/onboarding/:id/joining', async (req, res) => {
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
     it.joiningDate = new Date(joiningDate);
+
+    // If already on success stage, ensure completed
+    if (it.currentStageIndex < it.stages.length - 1) {
+      it.currentStageIndex = it.stages.length - 1;
+    }
+    it.status = 'completed';
     await it.save();
+
+    const html = `<div><p>Hi ${it.candidateName},</p><p>Your joining date is set to <strong>${new Date(it.joiningDate).toLocaleDateString()}</strong>. Welcome to 100acress!</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Joining Date - 100acress', html, false);
+
     res.json({ message: 'Joining date set', data: it });
   } catch (e) {
     res.status(500).json({ message: 'Failed to set joining date' });
+  }
+});
+
+// Reject at a specific stage with reason and email notification
+router.post('/onboarding/:id/reject-stage', async (req, res) => {
+  try {
+    const { stage, reason } = req.body || {};
+    if (!stage || !['interview1','hrDiscussion','documentation'].includes(stage)) return res.status(400).json({ message: 'Invalid stage' });
+    const it = await Onboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.stageData = it.stageData || {};
+    it.stageData[stage] = it.stageData[stage] || {};
+    it.stageData[stage].status = 'completed';
+    it.stageData[stage].completedAt = new Date();
+    it.stageData[stage].feedback = `Rejected: ${reason || 'No reason provided'}`;
+
+    // Stop progression, mark completed to remove from active list
+    it.status = 'completed';
+    await it.save();
+
+    const html = `<div><p>Hi ${it.candidateName},</p><p>Thank you for your time. After careful consideration, we will not be moving forward at this stage (${stage}).</p><p>Reason: ${reason || '—'}</p><p>We appreciate your interest and wish you all the best.</p></div>`;
+    await sendEmail(it.candidateEmail, fromAddr, [], 'Application Update - 100acress', html, false);
+
+    res.json({ message: 'Stage rejected and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to reject stage' });
   }
 });
 
