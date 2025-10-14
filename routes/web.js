@@ -312,6 +312,13 @@ router.use("/api", publicMarketReportRoutes);
 const hrRoutes = require('./hr.routes');
 router.use('/api/hr', hrAdminVerify, hrRoutes);
 
+// Public Onboarding Upload routes
+const publicOnboardingRoutes = require('./hr.public.onboarding');
+// Internal generate-link should be HR protected
+router.use('/api/hr-onboarding', hrAdminVerify, publicOnboardingRoutes);
+// Public endpoints (validate/upload) will be accessible without auth under /api/public/onboarding
+router.use('/api/public/onboarding', publicOnboardingRoutes);
+
 // Guide routes (public access for viewing, admin for modifications)
 const guideRoutes = require("./Insight/guideRoutes");
 router.use("/api/guides", guideRoutes);
