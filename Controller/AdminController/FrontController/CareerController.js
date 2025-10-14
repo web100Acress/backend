@@ -3,6 +3,12 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
+const Onboarding = require("../../../models/hr/onboarding");
+const {
+  getEmbedding,
+  cosineSimilarity,
+  getTextFromUrl,
+} = require("../../../Utilities/aiHelper");
 // Use AWS SES-based mail helper instead of raw SMTP transporter
 const fs = require("fs");
 const {
@@ -62,7 +68,7 @@ require("dotenv").config();
 // Helper: resolve a verified sender address. Prefer SES_FROM, then SMTP_FROM, then SMTP_USER.
 // If nothing is configured, return an empty string so callers can fail fast with a clear message.
 const getFromAddr = () => {
-  const v = (process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+  const v = (process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "hr@100acress.com").trim();
   // prevent accidental localhost fallback
   if (!v || v.toLowerCase().endsWith("@localhost")) return "";
   return v;
@@ -637,9 +643,56 @@ class CareerController {
         return res.status(502).json({ message: 'Mail send failed, approval not saved' });
       }
 
+      // Send notification to HR
+      try {
+        const fromAddr = getFromAddr();
+        const hrEmail = "hr@100acress.com";
+        if (fromAddr && hrEmail) {
+          const opening = await openModal.findById(app.openingId);
+          const jobTitle = opening ? opening.jobTitle : "N/A";
+
+          const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+          const htmlHr = `
+            <p>Hi HR Team,</p>
+            <p>The following application has been <strong>approved</strong>:</p>
+            <ul>
+              <li><strong>Job Title:</strong> ${jobTitle}</li>
+              <li><strong>Applicant Name:</strong> ${app.name}</li>
+              <li><strong>Email:</strong> ${app.email}</li>
+              <li><strong>Phone:</strong> ${app.phone || 'N/A'}</li>
+              <li><strong>Resume:</strong> ${app.resumeUrl ? `<a href="${app.resumeUrl}">View Resume</a>` : 'N/A'}</li>
+              <li><strong>Cover Letter:</strong> ${app.coverLetter || 'N/A'}</li>
+            </ul>
+            <p>You can view all applications for this job <a href="${siteUrl}/admin/jobposting/applications/${app.openingId}">here</a>.</p>
+            <p>Regards,<br/>100acress Website</p>
+          `;
+          await sendEmail(hrEmail, fromAddr, [], `Application Approved: ${app.name} for ${jobTitle}`, htmlHr, false);
+        }
+      } catch (hrMailErr) {
+        console.error('HR notification mail error:', hrMailErr);
+        // Do not block for HR mail failure
+      }
+
       // Only if mail succeeded, persist approved status
       app.status = 'approved';
       await app.save();
+
+      // Create onboarding record if not exists
+      try {
+        const exists = await Onboarding.findOne({ applicationId: app._id });
+        if (!exists) {
+          await Onboarding.create({
+            applicationId: app._id,
+            openingId: app.openingId,
+            candidateName: app.name,
+            candidateEmail: app.email,
+            currentStageIndex: 0,
+            history: [{ stage: 'interview1', note: 'Auto-created on approval' }]
+          });
+        }
+      } catch (e) {
+        console.error('Failed to create onboarding entry:', e);
+      }
 
       return res.status(200).json({ message: "Application approved and email sent", data: app });
     } catch (error) {
@@ -706,6 +759,33 @@ class CareerController {
         return res.status(502).json({ message: 'Mail send failed, rejection not saved' });
       }
 
+      // Send notification to HR
+      try {
+        const fromAddr = getFromAddr();
+        const hrEmail = "hr@100acress.com";
+        if (fromAddr && hrEmail) {
+          const opening = await openModal.findById(app.openingId);
+          const jobTitle = opening ? opening.jobTitle : "N/A";
+          const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+          const htmlHr = `
+            <p>Hi HR Team,</p>
+            <p>The following application has been <strong>rejected</strong>:</p>
+            <ul>
+              <li><strong>Job Title:</strong> ${jobTitle}</li>
+              <li><strong>Applicant Name:</strong> ${app.name}</li>
+              <li><strong>Email:</strong> ${app.email}</li>
+              <li><strong>Phone:</strong> ${app.phone || 'N/A'}</li>
+            </ul>
+            <p>You can view all applications for this job <a href="${siteUrl}/admin/jobposting/applications/${app.openingId}">here</a>.</p>
+            <p>Regards,<br/>100acress Website</p>
+          `;
+          await sendEmail(hrEmail, fromAddr, [], `Application Rejected: ${app.name} for ${jobTitle}`, htmlHr, false);
+        }
+      } catch (hrMailErr) {
+        console.error('HR notification mail error:', hrMailErr);
+        // Do not block for HR mail failure
+      }
+
       // Persist rejected status after successful mail
       app.status = 'rejected';
       await app.save();
@@ -726,6 +806,73 @@ class CareerController {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  static scoreApplications = async (req, res) => {
+    try {
+      const openingId = req.params.id;
+      if (!openingId || !isValidObjectId(openingId)) {
+        return res.status(400).json({ message: "Invalid opening id" });
+      }
+
+      const opening = await openModal.findById(openingId);
+      if (!opening) {
+        return res.status(404).json({ message: "Opening not found" });
+      }
+
+      // Combine job details into a single text for a comprehensive embedding
+      const jobDescriptionText = `
+        Job Title: ${opening.jobTitle || ""}
+        Location: ${opening.jobLocation || ""}
+        Experience: ${opening.experience || ""}
+        Skills: ${opening.skill || ""}
+        Profile: ${opening.jobProfile || ""}
+        Responsibilities: ${opening.responsibility || ""}
+      `.trim();
+
+      // Add a check for minimum content length
+      if (jobDescriptionText.length < 50) {
+        return res.status(400).json({ message: "Job description is too short to be scored. Please add more details to the job opening (like skills, profile, and responsibilities)." });
+      }
+
+      const jobEmbedding = await getEmbedding(jobDescriptionText);
+      if (!jobEmbedding) {
+        return res.status(500).json({ message: "Failed to create embedding for job description. Check AI service logs for details." });
+      }
+
+      // Find applications that haven't been scored yet
+      const unscoredApps = await Application.find({ openingId, matchScore: { $exists: false } });
+
+      if (unscoredApps.length === 0) {
+        return res.status(200).json({ message: "All applications for this job have already been scored." });
+      }
+
+      let scoredCount = 0;
+      for (const app of unscoredApps) {
+        if (!app.resumeUrl) continue;
+
+        const resumeText = await getTextFromUrl(app.resumeUrl);
+        if (!resumeText) continue;
+
+        const resumeEmbedding = await getEmbedding(resumeText);
+        if (!resumeEmbedding) continue;
+
+        const score = cosineSimilarity(jobEmbedding, resumeEmbedding);
+
+        // Update the application with the score
+        app.matchScore = score;
+        await app.save();
+        scoredCount++;
+      }
+
+      return res.status(200).json({
+        message: `Scoring complete. ${scoredCount} of ${unscoredApps.length} applications were scored.`,
+        scoredCount,
+      });
+    } catch (error) {
+      console.error("Error during application scoring:", error);
+      return res.status(500).json({ message: "Internal server error during scoring." });
     }
   };
 }

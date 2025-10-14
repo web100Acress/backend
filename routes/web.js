@@ -235,6 +235,13 @@ router.put(
   CareerController.rejectApplication,
 );
 
+// AI Scoring for applications
+router.post(
+  "/career/opening/:id/score-applications",
+  hrAdminVerify,
+  CareerController.scoreApplications,
+);
+
 // Career: Applications aggregate counts
 router.get(
   "/career/application/count",
@@ -300,6 +307,10 @@ router.use("/api", publicContactRoute);
 // Market report routes (public access - no authentication required)
 const publicMarketReportRoutes = require("./Insight/marketReportRoutes");
 router.use("/api", publicMarketReportRoutes);
+
+// HR Module routes (scaffold)
+const hrRoutes = require('./hr.routes');
+router.use('/api/hr', hrAdminVerify, hrRoutes);
 
 // Guide routes (public access for viewing, admin for modifications)
 const guideRoutes = require("./Insight/guideRoutes");
