@@ -37,8 +37,7 @@ router.post('/internal/generate-link/:onboardingId', async (req, res) => {
         </div>
       </div>`;
     await sendEmail(it.candidateEmail, fromAddr, [], '100acress Onboarding - Upload Documents', html, false);
-
-    res.json({ message: 'Link generated and email sent' });
+    res.json({ message: 'Link generated and email sent', link });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Failed to generate link' });
