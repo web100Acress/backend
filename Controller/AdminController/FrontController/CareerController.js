@@ -637,6 +637,36 @@ class CareerController {
         return res.status(502).json({ message: 'Mail send failed, approval not saved' });
       }
 
+      // Send notification to HR
+      try {
+        const fromAddr = getFromAddr();
+        const hrEmail = "hr@100acress.com";
+        if (fromAddr && hrEmail) {
+          const opening = await openModal.findById(app.openingId);
+          const jobTitle = opening ? opening.jobTitle : "N/A";
+
+          const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+          const htmlHr = `
+            <p>Hi HR Team,</p>
+            <p>The following application has been <strong>approved</strong>:</p>
+            <ul>
+              <li><strong>Job Title:</strong> ${jobTitle}</li>
+              <li><strong>Applicant Name:</strong> ${app.name}</li>
+              <li><strong>Email:</strong> ${app.email}</li>
+              <li><strong>Phone:</strong> ${app.phone || 'N/A'}</li>
+              <li><strong>Resume:</strong> ${app.resumeUrl ? `<a href="${app.resumeUrl}">View Resume</a>` : 'N/A'}</li>
+              <li><strong>Cover Letter:</strong> ${app.coverLetter || 'N/A'}</li>
+            </ul>
+            <p>You can view all applications for this job <a href="${siteUrl}/admin/jobposting/applications/${app.openingId}">here</a>.</p>
+            <p>Regards,<br/>100acress Website</p>
+          `;
+          await sendEmail(hrEmail, fromAddr, [], `Application Approved: ${app.name} for ${jobTitle}`, htmlHr, false);
+        }
+      } catch (hrMailErr) {
+        console.error('HR notification mail error:', hrMailErr);
+        // Do not block for HR mail failure
+      }
+
       // Only if mail succeeded, persist approved status
       app.status = 'approved';
       await app.save();
@@ -704,6 +734,33 @@ class CareerController {
       } catch (mailErr) {
         console.error('Mail error:', mailErr);
         return res.status(502).json({ message: 'Mail send failed, rejection not saved' });
+      }
+
+      // Send notification to HR
+      try {
+        const fromAddr = getFromAddr();
+        const hrEmail = "hr@100acress.com";
+        if (fromAddr && hrEmail) {
+          const opening = await openModal.findById(app.openingId);
+          const jobTitle = opening ? opening.jobTitle : "N/A";
+          const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+          const htmlHr = `
+            <p>Hi HR Team,</p>
+            <p>The following application has been <strong>rejected</strong>:</p>
+            <ul>
+              <li><strong>Job Title:</strong> ${jobTitle}</li>
+              <li><strong>Applicant Name:</strong> ${app.name}</li>
+              <li><strong>Email:</strong> ${app.email}</li>
+              <li><strong>Phone:</strong> ${app.phone || 'N/A'}</li>
+            </ul>
+            <p>You can view all applications for this job <a href="${siteUrl}/admin/jobposting/applications/${app.openingId}">here</a>.</p>
+            <p>Regards,<br/>100acress Website</p>
+          `;
+          await sendEmail(hrEmail, fromAddr, [], `Application Rejected: ${app.name} for ${jobTitle}`, htmlHr, false);
+        }
+      } catch (hrMailErr) {
+        console.error('HR notification mail error:', hrMailErr);
+        // Do not block for HR mail failure
       }
 
       // Persist rejected status after successful mail
