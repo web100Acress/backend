@@ -1477,6 +1477,7 @@ static projectSearch = async (req, res) => {
         const data = await ProjectModel.findOne(
           { "BhK_Details._id": id },
           {
+            _id: 1,
             BhK_Details: {
               $elemMatch: {
                 _id: id,
