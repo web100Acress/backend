@@ -554,6 +554,38 @@ router.post('/offboarding/:id/record-document', async (req, res) => {
   }
 });
 
+router.post('/offboarding/:id/complete-offboarding', async (req, res) => {
+  try {
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (it.status === 'completed') return res.status(400).json({ message: 'Already completed' });
+
+    it.currentStageIndex = it.stages.length - 1;
+    it.status = 'completed';
+    await it.save();
+
+    // Send completion email with document URLs
+    const docUrls = it.documents.map(doc => `${doc.docType}: ${doc.url}`).join('\n');
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Offboarding Completed</h2>
+        <p>Dear ${it.employeeName},</p>
+        <p>Your offboarding process has been completed successfully.</p>
+        <p><strong>Resignation Date:</strong> ${it.lastWorkingDate ? new Date(it.lastWorkingDate).toLocaleDateString() : 'N/A'}</p>
+        <p><strong>Documents:</strong></p>
+        <pre>${docUrls}</pre>
+        <p>Regards,<br/>100acress HR Team</p>
+      </div>`;
+    await sendEmail(it.employeeEmail, fromAddr, [], 'Offboarding Completed - 100acress', html, false);
+
+    res.json({ message: 'Offboarding completed and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to complete offboarding' });
+  }
+});
+
 // Stubs for HR Management module
 router.get('/onboarding/candidates', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/onboarding/:candidateId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
