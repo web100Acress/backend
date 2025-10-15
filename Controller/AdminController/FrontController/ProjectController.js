@@ -1449,7 +1449,7 @@ static projectSearch = async (req, res) => {
         if (data) {
           return res.status(200).json({
             message: "data get successfully",
-            data: data.BhK_Details,
+            data: data.BhK_Details || [],
           });
         } else {
           return res.status(200).json({
