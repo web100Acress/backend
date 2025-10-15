@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
-const { sendEmail } = require('../Utilities/s3HelperUtility');
+const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -214,8 +214,9 @@ router.post('/onboarding/:id/docs-submit', upload.fields([
     for (const [fieldName, docType] of Object.entries(fileMappings)) {
       if (files[fieldName] && files[fieldName][0]) {
         const file = files[fieldName][0];
-        // Assuming file is uploaded to S3 or local storage, get the URL
-        const fileUrl = file.location || `/uploads/${file.filename}`; // Adjust based on your upload setup
+        // Upload file to S3 and get the URL
+        const uploadResult = await uploadFile(file);
+        const fileUrl = uploadResult.Location;
 
         it.documents.push({
           docType,
