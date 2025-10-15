@@ -398,6 +398,162 @@ router.post('/onboarding/:id/reset', async (req, res) => {
   }
 });
 
+// Get employees who have completed onboarding
+router.get('/employees', async (req, res) => {
+  try {
+    const completedOnboardings = await Onboarding.find({ status: 'completed' }).populate('applicationId', 'name email');
+    const employees = completedOnboardings.map(onb => ({
+      id: onb._id,
+      name: onb.candidateName,
+      email: onb.candidateEmail,
+      joiningDate: onb.joiningDate,
+      onboardingCompleted: true
+    }));
+    res.json({ data: employees });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to fetch employees' });
+  }
+});
+
+// Offboarding routes
+const Offboarding = require('../models/hr/offboarding'); // Assume we create this model
+
+router.get('/offboarding', async (req, res) => {
+  try {
+    const list = await Offboarding.find({}).sort({ createdAt: -1 });
+    res.json({ data: list });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to fetch offboarding list' });
+  }
+});
+
+router.post('/offboarding/start', async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    if (!employeeId) return res.status(400).json({ message: 'employeeId required' });
+
+    // Find the completed onboarding to get employee details
+    const onboarding = await Onboarding.findById(employeeId).populate('applicationId', 'name email');
+    if (!onboarding || onboarding.status !== 'completed') {
+      return res.status(404).json({ message: 'Employee not found or onboarding not completed' });
+    }
+
+    // Check if offboarding already exists
+    const existing = await Offboarding.findOne({ employeeId });
+    if (existing) return res.status(400).json({ message: 'Offboarding already started' });
+
+    const offboardingStages = ["exitInterview", "assetReturn", "documentation", "finalSettlement", "success"];
+
+    const newOffboarding = new Offboarding({
+      employeeId,
+      employeeName: onboarding.candidateName,
+      employeeEmail: onboarding.candidateEmail,
+      stages: offboardingStages,
+      currentStageIndex: 0,
+      status: 'pending'
+    });
+
+    await newOffboarding.save();
+    res.json({ message: 'Offboarding started', data: newOffboarding });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to start offboarding' });
+  }
+});
+
+router.post('/offboarding/:id/advance', async (req, res) => {
+  try {
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (it.status === 'completed') return res.status(400).json({ message: 'Already completed' });
+
+    const nextIndex = it.currentStageIndex + 1;
+    if (nextIndex >= it.stages.length - 1) {
+      it.currentStageIndex = it.stages.length - 1;
+      it.status = 'completed';
+    } else {
+      it.currentStageIndex = nextIndex;
+    }
+    await it.save();
+    res.json({ message: 'Advanced', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to advance' });
+  }
+});
+
+router.post('/offboarding/:id/last-working', async (req, res) => {
+  try {
+    const { lastWorkingDate } = req.body;
+    if (!lastWorkingDate) return res.status(400).json({ message: 'lastWorkingDate required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+    it.lastWorkingDate = new Date(lastWorkingDate);
+    await it.save();
+    res.json({ message: 'Last working date set', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to set last working date' });
+  }
+});
+
+router.post('/offboarding/:id/invite', async (req, res) => {
+  try {
+    const { stage, type, scheduledAt, endsAt, meetingLink, location, content } = req.body;
+    if (!stage || !type) return res.status(400).json({ message: 'stage and type required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    // Simple email send (similar to onboarding)
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Offboarding Invitation - ${stage}</h2>
+        <p>Dear ${it.employeeName},</p>
+        <p>${content || 'You are invited for the next step in offboarding.'}</p>
+        ${scheduledAt ? `<p><strong>Schedule:</strong> ${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}</p>` : ''}
+        ${type === 'online' && meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>` : ''}
+        ${type === 'offline' && location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+      </div>`;
+    await sendEmail(it.employeeEmail, fromAddr, [], `Invitation: ${stage}`, html, false);
+
+    res.json({ message: 'Invite sent' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to send invite' });
+  }
+});
+
+router.post('/offboarding/:id/complete-stage', async (req, res) => {
+  try {
+    const { stage, feedback } = req.body;
+    if (!stage) return res.status(400).json({ message: 'stage required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    // Mark stage as completed (simple implementation)
+    await it.save();
+    res.json({ message: 'Stage completed', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to complete stage' });
+  }
+});
+
+router.post('/offboarding/:id/record-document', async (req, res) => {
+  try {
+    const { docType, url } = req.body;
+    if (!docType || !url) return res.status(400).json({ message: 'docType and url required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.documents = it.documents || [];
+    it.documents.push({ docType, url, recordedAt: new Date() });
+    await it.save();
+    res.json({ message: 'Document recorded', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to record document' });
+  }
+});
+
 // Stubs for HR Management module
 router.get('/onboarding/candidates', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/onboarding/:candidateId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
@@ -406,7 +562,6 @@ router.get('/onboarding/instances/:id/tasks', (req, res) => res.status(501).json
 router.patch('/onboarding/tasks/:taskId', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
 router.get('/offboarding/queue', (req, res) => res.status(501).json({ message: 'Not implemented' }));
-router.post('/offboarding/:employeeId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.get('/offboarding/instances/:id', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.patch('/offboarding/tasks/:taskId', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
