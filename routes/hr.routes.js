@@ -443,7 +443,7 @@ router.post('/offboarding/start', async (req, res) => {
     const existing = await Offboarding.findOne({ employeeId });
     if (existing) return res.status(400).json({ message: 'Offboarding already started' });
 
-    const offboardingStages = ["exitInterview", "assetReturn", "documentation", "finalSettlement", "success"];
+    const offboardingStages = ["exitDiscussion", "assetReturn", "documentation", "finalSettlement", "success"];
 
     const newOffboarding = new Offboarding({
       employeeId,
