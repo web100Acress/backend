@@ -3,6 +3,8 @@ const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
 const { sendEmail } = require('../Utilities/s3HelperUtility');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Helper: simple sender
 const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
@@ -181,40 +183,73 @@ router.post('/onboarding/:id/docs', async (req, res) => {
 });
 
 // Record a batch of documents submitted and email under verification notice
-router.post('/onboarding/:id/docs-submit', async (req, res) => {
+router.post('/onboarding/:id/docs-submit', upload.fields([
+  { name: 'pan', maxCount: 1 },
+  { name: 'aadhaar', maxCount: 1 },
+  { name: 'photo', maxCount: 1 },
+  { name: 'marksheet', maxCount: 1 },
+  { name: 'other1', maxCount: 1 },
+  { name: 'other2', maxCount: 1 }
+]), async (req, res) => {
   try {
-    const { documents = [] } = req.body || {};
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
 
-    if (Array.isArray(documents)) {
-      it.documents = it.documents || [];
-      for (const d of documents) {
-        if (!d || !d.docType) continue;
+    // Handle file uploads via multer (assuming files are uploaded)
+    const files = req.files || {};
+    const { joiningDate } = req.body || {};
+
+    it.documents = it.documents || [];
+
+    // Process uploaded files
+    const fileMappings = {
+      pan: 'pan',
+      aadhaar: 'aadhaar',
+      photo: 'photo',
+      marksheet: 'marksheet',
+      other1: 'other',
+      other2: 'other'
+    };
+
+    for (const [fieldName, docType] of Object.entries(fileMappings)) {
+      if (files[fieldName] && files[fieldName][0]) {
+        const file = files[fieldName][0];
+        // Assuming file is uploaded to S3 or local storage, get the URL
+        const fileUrl = file.location || `/uploads/${file.filename}`; // Adjust based on your upload setup
+
         it.documents.push({
-          docType: d.docType,
-          url: d.url,
-          status: d.url ? 'uploaded' : 'pending',
-          uploadedAt: d.url ? new Date() : undefined,
-          notes: d.notes,
+          docType,
+          url: fileUrl,
+          status: 'uploaded',
+          uploadedAt: new Date(),
+          originalName: file.originalname,
+          size: file.size,
+          mimetype: file.mimetype
         });
       }
     }
+
     // Set stage invited if not yet
     it.stageData = it.stageData || {};
     it.stageData.documentation = it.stageData.documentation || {};
     if (!it.stageData.documentation.status || it.stageData.documentation.status === 'pending') {
       it.stageData.documentation.status = 'invited';
     }
+
+    // Set joining date if provided
+    if (joiningDate) {
+      it.joiningDate = new Date(joiningDate);
+    }
+
     await it.save();
 
     const html = `<div><p>Hi ${it.candidateName},</p><p>Your documents have been received and are <strong>under verification</strong>. We will reach out if anything else is required.</p></div>`;
     await sendEmail(it.candidateEmail, fromAddr, [], 'Documents Under Verification - 100acress', html, false);
 
-    res.json({ message: 'Documents submitted and email sent', data: it });
+    res.json({ message: 'Documents uploaded and email sent', data: it });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: 'Failed to submit documents' });
+    res.status(500).json({ message: 'Failed to upload documents' });
   }
 });
 
