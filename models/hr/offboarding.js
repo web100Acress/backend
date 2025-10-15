@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const OFFBOARDING_STAGES = [
-  "exitInterview",
+  "exitDiscussion",
   "assetReturn",
   "documentation",
   "finalSettlement",
