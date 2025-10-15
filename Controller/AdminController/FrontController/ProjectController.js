@@ -1443,7 +1443,7 @@ static projectSearch = async (req, res) => {
       //console.log("chcoSJ")
       const id = req.params.id;
       // console.log(id)
-      if (id) {
+      if (id && isValidObjectId(id)) {
         const data = await ProjectModel.findById({ _id: id });
         // console.log(data)
         if (data) {
@@ -1457,8 +1457,8 @@ static projectSearch = async (req, res) => {
           });
         }
       } else {
-        return res.status(404).json({
-          message: "check url id ",
+        return res.status(400).json({
+          message: "Invalid or missing project ID",
         });
       }
     } catch (error) {
