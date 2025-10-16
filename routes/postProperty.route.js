@@ -144,6 +144,7 @@ router.delete(
 );
 router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
+router.get("/welcome", PostPropertyController.welcome);
 
 
 
