@@ -1443,13 +1443,13 @@ static projectSearch = async (req, res) => {
       //console.log("chcoSJ")
       const id = req.params.id;
       // console.log(id)
-      if (id) {
+      if (id && isValidObjectId(id)) {
         const data = await ProjectModel.findById({ _id: id });
         // console.log(data)
         if (data) {
           return res.status(200).json({
             message: "data get successfully",
-            data: data.BhK_Details,
+            data: data.BhK_Details || [],
           });
         } else {
           return res.status(200).json({
@@ -1457,8 +1457,8 @@ static projectSearch = async (req, res) => {
           });
         }
       } else {
-        return res.status(404).json({
-          message: "check url id ",
+        return res.status(400).json({
+          message: "Invalid or missing project ID",
         });
       }
     } catch (error) {
@@ -1477,6 +1477,7 @@ static projectSearch = async (req, res) => {
         const data = await ProjectModel.findOne(
           { "BhK_Details._id": id },
           {
+            _id: 1,
             BhK_Details: {
               $elemMatch: {
                 _id: id,

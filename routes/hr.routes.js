@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
-const { sendEmail } = require('../Utilities/s3HelperUtility');
+const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Helper: simple sender
 const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
@@ -181,40 +183,74 @@ router.post('/onboarding/:id/docs', async (req, res) => {
 });
 
 // Record a batch of documents submitted and email under verification notice
-router.post('/onboarding/:id/docs-submit', async (req, res) => {
+router.post('/onboarding/:id/docs-submit', upload.fields([
+  { name: 'pan', maxCount: 1 },
+  { name: 'aadhaar', maxCount: 1 },
+  { name: 'photo', maxCount: 1 },
+  { name: 'marksheet', maxCount: 1 },
+  { name: 'other1', maxCount: 1 },
+  { name: 'other2', maxCount: 1 }
+]), async (req, res) => {
   try {
-    const { documents = [] } = req.body || {};
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
 
-    if (Array.isArray(documents)) {
-      it.documents = it.documents || [];
-      for (const d of documents) {
-        if (!d || !d.docType) continue;
+    // Handle file uploads via multer (assuming files are uploaded)
+    const files = req.files || {};
+    const { joiningDate } = req.body || {};
+
+    it.documents = it.documents || [];
+
+    // Process uploaded files
+    const fileMappings = {
+      pan: 'pan',
+      aadhaar: 'aadhaar',
+      photo: 'photo',
+      marksheet: 'marksheet',
+      other1: 'other',
+      other2: 'other'
+    };
+
+    for (const [fieldName, docType] of Object.entries(fileMappings)) {
+      if (files[fieldName] && files[fieldName][0]) {
+        const file = files[fieldName][0];
+        // Upload file to S3 and get the URL
+        const uploadResult = await uploadFile(file);
+        const fileUrl = uploadResult.Location;
+
         it.documents.push({
-          docType: d.docType,
-          url: d.url,
-          status: d.url ? 'uploaded' : 'pending',
-          uploadedAt: d.url ? new Date() : undefined,
-          notes: d.notes,
+          docType,
+          url: fileUrl,
+          status: 'uploaded',
+          uploadedAt: new Date(),
+          originalName: file.originalname,
+          size: file.size,
+          mimetype: file.mimetype
         });
       }
     }
+
     // Set stage invited if not yet
     it.stageData = it.stageData || {};
     it.stageData.documentation = it.stageData.documentation || {};
     if (!it.stageData.documentation.status || it.stageData.documentation.status === 'pending') {
       it.stageData.documentation.status = 'invited';
     }
+
+    // Set joining date if provided
+    if (joiningDate) {
+      it.joiningDate = new Date(joiningDate);
+    }
+
     await it.save();
 
     const html = `<div><p>Hi ${it.candidateName},</p><p>Your documents have been received and are <strong>under verification</strong>. We will reach out if anything else is required.</p></div>`;
     await sendEmail(it.candidateEmail, fromAddr, [], 'Documents Under Verification - 100acress', html, false);
 
-    res.json({ message: 'Documents submitted and email sent', data: it });
+    res.json({ message: 'Documents uploaded and email sent', data: it });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: 'Failed to submit documents' });
+    res.status(500).json({ message: 'Failed to upload documents' });
   }
 });
 
@@ -398,6 +434,194 @@ router.post('/onboarding/:id/reset', async (req, res) => {
   }
 });
 
+// Get employees who have completed onboarding
+router.get('/employees', async (req, res) => {
+  try {
+    const completedOnboardings = await Onboarding.find({ status: 'completed' }).populate('applicationId', 'name email');
+    const employees = completedOnboardings.map(onb => ({
+      id: onb._id,
+      name: onb.candidateName,
+      email: onb.candidateEmail,
+      joiningDate: onb.joiningDate,
+      onboardingCompleted: true
+    }));
+    res.json({ data: employees });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to fetch employees' });
+  }
+});
+
+// Offboarding routes
+const Offboarding = require('../models/hr/offboarding'); // Assume we create this model
+
+router.get('/offboarding', async (req, res) => {
+  try {
+    const list = await Offboarding.find({}).sort({ createdAt: -1 });
+    res.json({ data: list });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to fetch offboarding list' });
+  }
+});
+
+router.post('/offboarding/start', async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    if (!employeeId) return res.status(400).json({ message: 'employeeId required' });
+
+    // Find the completed onboarding to get employee details
+    const onboarding = await Onboarding.findById(employeeId).populate('applicationId', 'name email');
+    if (!onboarding || onboarding.status !== 'completed') {
+      return res.status(404).json({ message: 'Employee not found or onboarding not completed' });
+    }
+
+    // Check if offboarding already exists
+    const existing = await Offboarding.findOne({ employeeId });
+    if (existing) return res.status(400).json({ message: 'Offboarding already started' });
+
+    const offboardingStages = ["exitDiscussion", "assetReturn", "documentation", "finalSettlement", "success"];
+
+    const newOffboarding = new Offboarding({
+      employeeId,
+      employeeName: onboarding.candidateName,
+      employeeEmail: onboarding.candidateEmail,
+      stages: offboardingStages,
+      currentStageIndex: 0,
+      status: 'pending'
+    });
+
+    await newOffboarding.save();
+    res.json({ message: 'Offboarding started', data: newOffboarding });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to start offboarding' });
+  }
+});
+
+router.post('/offboarding/:id/advance', async (req, res) => {
+  try {
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (it.status === 'completed') return res.status(400).json({ message: 'Already completed' });
+
+    const nextIndex = it.currentStageIndex + 1;
+    if (nextIndex >= it.stages.length - 1) {
+      it.currentStageIndex = it.stages.length - 1;
+      it.status = 'completed';
+    } else {
+      it.currentStageIndex = nextIndex;
+    }
+    await it.save();
+    res.json({ message: 'Advanced', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to advance' });
+  }
+});
+
+router.post('/offboarding/:id/last-working', async (req, res) => {
+  try {
+    const { lastWorkingDate } = req.body;
+    if (!lastWorkingDate) return res.status(400).json({ message: 'lastWorkingDate required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+    it.lastWorkingDate = new Date(lastWorkingDate);
+    await it.save();
+    res.json({ message: 'Last working date set', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to set last working date' });
+  }
+});
+
+router.post('/offboarding/:id/invite', async (req, res) => {
+  try {
+    const { stage, type, scheduledAt, endsAt, meetingLink, location, content } = req.body;
+    if (!stage || !type) return res.status(400).json({ message: 'stage and type required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    // Simple email send (similar to onboarding)
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Offboarding Invitation - ${stage}</h2>
+        <p>Dear ${it.employeeName},</p>
+        <p>${content || 'You are invited for the next step in offboarding.'}</p>
+        ${scheduledAt ? `<p><strong>Schedule:</strong> ${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}</p>` : ''}
+        ${type === 'online' && meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>` : ''}
+        ${type === 'offline' && location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+      </div>`;
+    await sendEmail(it.employeeEmail, fromAddr, [], `Invitation: ${stage}`, html, false);
+
+    res.json({ message: 'Invite sent' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to send invite' });
+  }
+});
+
+router.post('/offboarding/:id/complete-stage', async (req, res) => {
+  try {
+    const { stage, feedback } = req.body;
+    if (!stage) return res.status(400).json({ message: 'stage required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    // Mark stage as completed (simple implementation)
+    await it.save();
+    res.json({ message: 'Stage completed', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to complete stage' });
+  }
+});
+
+router.post('/offboarding/:id/record-document', async (req, res) => {
+  try {
+    const { docType, url } = req.body;
+    if (!docType || !url) return res.status(400).json({ message: 'docType and url required' });
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    it.documents = it.documents || [];
+    it.documents.push({ docType, url, recordedAt: new Date() });
+    await it.save();
+    res.json({ message: 'Document recorded', data: it });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to record document' });
+  }
+});
+
+router.post('/offboarding/:id/complete-offboarding', async (req, res) => {
+  try {
+    const it = await Offboarding.findById(req.params.id);
+    if (!it) return res.status(404).json({ message: 'Not found' });
+
+    if (it.status === 'completed') return res.status(400).json({ message: 'Already completed' });
+
+    it.currentStageIndex = it.stages.length - 1;
+    it.status = 'completed';
+    await it.save();
+
+    // Send completion email with document URLs
+    const docUrls = it.documents.map(doc => `${doc.docType}: ${doc.url}`).join('\n');
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>Offboarding Completed</h2>
+        <p>Dear ${it.employeeName},</p>
+        <p>Your offboarding process has been completed successfully.</p>
+        <p><strong>Resignation Date:</strong> ${it.lastWorkingDate ? new Date(it.lastWorkingDate).toLocaleDateString() : 'N/A'}</p>
+        <p><strong>Documents:</strong></p>
+        <pre>${docUrls}</pre>
+        <p>Regards,<br/>100acress HR Team</p>
+      </div>`;
+    await sendEmail(it.employeeEmail, fromAddr, [], 'Offboarding Completed - 100acress', html, false);
+
+    res.json({ message: 'Offboarding completed and email sent', data: it });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to complete offboarding' });
+  }
+});
+
 // Stubs for HR Management module
 router.get('/onboarding/candidates', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/onboarding/:candidateId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
@@ -406,7 +630,6 @@ router.get('/onboarding/instances/:id/tasks', (req, res) => res.status(501).json
 router.patch('/onboarding/tasks/:taskId', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
 router.get('/offboarding/queue', (req, res) => res.status(501).json({ message: 'Not implemented' }));
-router.post('/offboarding/:employeeId/start', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.get('/offboarding/instances/:id', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.patch('/offboarding/tasks/:taskId', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
