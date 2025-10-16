@@ -705,7 +705,7 @@ router.get('/leave', async (req, res) => {
 });
 
 // Approve or reject leave request (HR only)
-router.post('/leave/:id/review', async (req, res) => {
+router.patch('/leave/:id/review', async (req, res) => {
   try {
     const { status, hrComments } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
