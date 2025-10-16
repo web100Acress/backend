@@ -44,7 +44,7 @@ router.post('/internal/generate-link/:onboardingId', async (req, res) => {
   }
 });
 
-// Public: validate token
+// Public: validate tttoken
 router.get('/validate', async (req, res) => {
   try {
     const { token } = req.query || {};
