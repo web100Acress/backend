@@ -6,6 +6,7 @@ const LeaveRequest = require('../models/hr/leaveRequest');
 const RegisterUser = require('../models/register/registerModel');
 const HrController = require('../Controller/AdminController/FrontController/HrController');
 const adminVerify = require('../middleware/adminVerify');
+const hrAdminVerify = adminVerify.hrAdminVerify;
 const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -754,7 +755,7 @@ router.post('/leave/:id/status', adminVerify, HrController.updateLeaveStatus);
 router.get('/leave/stats', adminVerify, HrController.getLeaveStats);
 
 // Update user authorization status
-router.post('/user/:id/status', adminVerify, HrController.updateUserStatus);
+router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
 
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
