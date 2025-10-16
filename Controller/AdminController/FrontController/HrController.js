@@ -120,6 +120,43 @@ class HrController {
       });
     }
   };
+
+  // Update user authorization status
+  static updateUserStatus = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!['authorized', 'unauthorized'].includes(status)) {
+        return res.status(400).json({
+          message: "Invalid status. Must be 'authorized' or 'unauthorized'"
+        });
+      }
+
+      const user = await registerModel.findByIdAndUpdate(
+        id,
+        { status: status },
+        { new: true }
+      );
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found"
+        });
+      }
+
+      return res.status(200).json({
+        message: `User status updated to ${status}`,
+        data: user
+      });
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      return res.status(500).json({
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  };
 }
 
 module.exports = HrController;
