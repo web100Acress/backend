@@ -753,6 +753,9 @@ router.get('/leave-requests', adminVerify, HrController.getAllLeaveRequests);
 router.post('/leave/:id/status', adminVerify, HrController.updateLeaveStatus);
 router.get('/leave/stats', adminVerify, HrController.getLeaveStats);
 
+// Update user authorization status
+router.post('/user/:id/status', adminVerify, HrController.updateUserStatus);
+
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
 module.exports = router;
