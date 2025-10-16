@@ -4,6 +4,8 @@ const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
 const LeaveRequest = require('../models/hr/leaveRequest');
 const RegisterUser = require('../models/register/registerModel');
+const HrController = require('../Controller/AdminController/FrontController/HrController');
+const adminVerify = require('../middleware/adminVerify');
 const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -742,6 +744,14 @@ router.post('/leave/:id/review', async (req, res) => {
     res.status(500).json({ message: 'Failed to review leave request' });
   }
 });
+
+// HR Management routes - Get all users
+router.get('/users', adminVerify, HrController.getAllUsers);
+
+// HR Management routes - Leave requests
+router.get('/leave-requests', adminVerify, HrController.getAllLeaveRequests);
+router.post('/leave/:id/status', adminVerify, HrController.updateLeaveStatus);
+router.get('/leave/stats', adminVerify, HrController.getLeaveStats);
 
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
