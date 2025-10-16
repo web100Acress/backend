@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
+const LeaveRequest = require('../models/hr/leaveRequest');
+const RegisterUser = require('../models/register/registerModel');
 const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -638,6 +640,109 @@ router.post('/it/access/:employeeId/revoke', (req, res) => res.status(501).json(
 
 router.post('/accounts/fnf/:instanceId/calc', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/accounts/fnf/:instanceId/approve', (req, res) => res.status(501).json({ message: 'Not implemented' }));
+// Leave Request routes
+// Apply for leave (employee)
+router.post('/leave/apply', async (req, res) => {
+  try {
+    const { leaveType, startDate, endDate, reason } = req.body;
+    if (!leaveType || !startDate || !endDate || !reason) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Get employee from JWT
+    const employee = await RegisterUser.findById(req.user.id);
+    if (!employee || !employee.authorized) {
+      return res.status(403).json({ message: 'Not authorized to apply for leave' });
+    }
+
+    const leaveRequest = new LeaveRequest({
+      employeeId: employee._id,
+      employeeName: employee.name,
+      employeeEmail: employee.email,
+      leaveType,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      reason,
+    });
+
+    await leaveRequest.save();
+
+    // Send email to HR
+    const hrEmails = await RegisterUser.find({ role: { $in: ['hr', 'admin'] } }).select('email');
+    const hrEmailList = hrEmails.map(hr => hr.email);
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>New Leave Request</h2>
+        <p><strong>Employee:</strong> ${employee.name} (${employee.email})</p>
+        <p><strong>Leave Type:</strong> ${leaveType}</p>
+        <p><strong>Duration:</strong> ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}</p>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <p>Please review this request in the HR dashboard.</p>
+      </div>`;
+
+    await sendEmail(hrEmailList, fromAddr, [], 'New Leave Request - 100acress', html, false);
+
+    res.json({ message: 'Leave request submitted successfully', data: leaveRequest });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to submit leave request' });
+  }
+});
+
+// Get all leave requests (HR only)
+router.get('/leave', async (req, res) => {
+  try {
+    const leaveRequests = await LeaveRequest.find({}).sort({ appliedAt: -1 });
+    res.json({ data: leaveRequests });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to fetch leave requests' });
+  }
+});
+
+// Approve or reject leave request (HR only)
+router.post('/leave/:id/review', async (req, res) => {
+  try {
+    const { status, hrComments } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const leaveRequest = await LeaveRequest.findById(req.params.id);
+    if (!leaveRequest) {
+      return res.status(404).json({ message: 'Leave request not found' });
+    }
+
+    leaveRequest.status = status;
+    leaveRequest.hrComments = hrComments || '';
+    leaveRequest.reviewedAt = new Date();
+    leaveRequest.reviewedBy = req.user.id;
+
+    await leaveRequest.save();
+
+    // Send email to employee
+    const subject = status === 'approved' ? 'Leave Request Approved' : 'Leave Request Rejected';
+    const html = `
+      <div style="font-family:Arial,sans-serif;color:#111">
+        <h2>${subject}</h2>
+        <p>Dear ${leaveRequest.employeeName},</p>
+        <p>Your leave request has been <strong>${status}</strong>.</p>
+        <p><strong>Leave Type:</strong> ${leaveRequest.leaveType}</p>
+        <p><strong>Duration:</strong> ${new Date(leaveRequest.startDate).toLocaleDateString()} - ${new Date(leaveRequest.endDate).toLocaleDateString()}</p>
+        ${hrComments ? `<p><strong>HR Comments:</strong> ${hrComments}</p>` : ''}
+        <p>Regards,<br/>100acress HR Team</p>
+      </div>`;
+
+    await sendEmail(leaveRequest.employeeEmail, fromAddr, [], `${subject} - 100acress`, html, false);
+
+    res.json({ message: `Leave request ${status}`, data: leaveRequest });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to review leave request' });
+  }
+});
+
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
 module.exports = router;
