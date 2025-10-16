@@ -17,6 +17,10 @@ const {
 } = require("../../../Utilities/s3HelperUtility");
 const { createDecipheriv } = require("crypto");
 
+// Simple logger setup
+const logger = {
+  info: (msg) => console.log(`[INFO] ${new Date().toISOString()} - ${msg}`)
+};
 
 // Function to get all project data and cache it
 const getAllProjects = async () => {
@@ -1605,6 +1609,20 @@ const email = dataPushed.email;
         }
       }
     } catch (error) {
+      res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+
+  static welcome = async (req, res) => {
+    try {
+      logger.info(`Request received: ${req.method} ${req.path}`);
+      return res.status(200).json({
+        message: "Welcome to the PostProperty API Service!"
+      });
+    } catch (error) {
+      logger.info(`Error in welcome endpoint: ${req.method} ${req.path}`);
       res.status(500).json({
         message: "Internal server error !",
       });
