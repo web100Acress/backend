@@ -688,20 +688,7 @@ router.post('/leave/apply/test', async (req, res) => {
 
     await leaveRequest.save();
 
-    // Send email to HR (mock)
-    const hrEmails = ['hr@100acress.com']; // Mock HR email
-
-    const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>New Leave Request (TEST)</h2>
-        <p><strong>Employee:</strong> ${employee.name} (${employee.email})</p>
-        <p><strong>Leave Type:</strong> ${leaveType}</p>
-        <p><strong>Duration:</strong> ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}</p>
-        <p><strong>Reason:</strong> ${reason}</p>
-        <p>This is a test leave request.</p>
-      </div>`;
-
-    await sendEmail(hrEmails, fromAddr, [], 'New Leave Request (TEST) - 100acress', html, false);
+    // Email sending removed - will be sent only on approval/rejection
 
     res.json({ message: 'Test leave request submitted successfully', data: leaveRequest });
   } catch (e) {
@@ -767,14 +754,67 @@ router.patch('/leave/:id/review', async (req, res) => {
     // Send email to employee
     const subject = status === 'approved' ? 'Leave Request Approved' : 'Leave Request Rejected';
     const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>${subject}</h2>
-        <p>Dear ${leaveRequest.employeeName},</p>
-        <p>Your leave request has been <strong>${status}</strong>.</p>
-        <p><strong>Leave Type:</strong> ${leaveRequest.leaveType}</p>
-        <p><strong>Duration:</strong> ${new Date(leaveRequest.startDate).toLocaleDateString()} - ${new Date(leaveRequest.endDate).toLocaleDateString()}</p>
-        ${hrComments ? `<p><strong>HR Comments:</strong> ${hrComments}</p>` : ''}
-        <p>Regards,<br/>100acress HR Team</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #111; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+            ${status === 'approved' ? '✅ Leave Approved!' : '❌ Leave Rejected'}
+          </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px;">
+          <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+            Dear <strong>${leaveRequest.employeeName}</strong>,
+          </p>
+
+          <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 25px;">
+            Your leave request has been <strong>${status}</strong> by the HR team.
+          </p>
+
+          <!-- Leave Details -->
+          <div style="background-color: #f8f9fa; border-left: 4px solid ${status === 'approved' ? '#28a745' : '#dc3545'}; padding: 20px; margin-bottom: 25px; border-radius: 6px;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Leave Details:</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">Leave Type:</td>
+                <td style="padding: 8px 0; color: #333;">${leaveRequest.leaveType}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">Duration:</td>
+                <td style="padding: 8px 0; color: #333;">${new Date(leaveRequest.startDate).toLocaleDateString()} - ${new Date(leaveRequest.endDate).toLocaleDateString()}</td>
+              </tr>
+              ${hrComments ? `
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">HR Comments:</td>
+                <td style="padding: 8px 0; color: #333;">${hrComments}</td>
+              </tr>` : ''}
+            </table>
+          </div>
+
+          <!-- Website Link -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://www.100acress.com" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 15px 30px; border-radius: 25px; font-weight: 600; font-size: 16px; transition: transform 0.2s;">
+              Visit 100acress.com
+            </a>
+          </div>
+
+          <p style="font-size: 16px; color: #555; line-height: 1.6;">
+            For any questions or concerns, please don't hesitate to contact the HR team.
+          </p>
+
+          <p style="font-size: 16px; color: #555;">
+            Best regards,<br>
+            <strong>100acress HR Team</strong>
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0; color: #666; font-size: 14px;">
+            © 2025 100acress. All rights reserved.
+          </p>
+        </div>
       </div>`;
 
     await sendEmail(leaveRequest.employeeEmail, fromAddr, [], `${subject} - 100acress`, html, false);
