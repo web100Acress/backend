@@ -731,7 +731,7 @@ router.get('/leave', async (req, res) => {
   }
 });
 
-// Approve or reject leave request (HR only)
+// Approve or reject leave request (HR only) - temporarily no auth for testing
 router.patch('/leave/:id/review', async (req, res) => {
   try {
     const { status, hrComments } = req.body;
@@ -747,7 +747,8 @@ router.patch('/leave/:id/review', async (req, res) => {
     leaveRequest.status = status;
     leaveRequest.hrComments = hrComments || '';
     leaveRequest.reviewedAt = new Date();
-    leaveRequest.reviewedBy = req.user?.id; // Add back reviewedBy with proper authentication
+    // Temporarily remove reviewedBy for testing
+    // leaveRequest.reviewedBy = req.user?.id;
 
     await leaveRequest.save();
 
