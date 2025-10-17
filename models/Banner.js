@@ -28,6 +28,17 @@ const bannerSchema = new mongoose.Schema({
       type: String
     }
   },
+  mobileImage: {
+    public_id: {
+      type: String
+    },
+    url: {
+      type: String
+    },
+    cdn_url: {
+      type: String
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
