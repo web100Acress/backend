@@ -643,25 +643,27 @@ router.post('/it/access/:employeeId/revoke', (req, res) => res.status(501).json(
 
 router.post('/accounts/fnf/:instanceId/calc', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/accounts/fnf/:instanceId/approve', (req, res) => res.status(501).json({ message: 'Not implemented' }));
-// Leave Request routes
-// Apply for leave (employee)
-router.post('/leave/apply', async (req, res) => {
+// Leave Request routes (TEST - no auth required for testing)
+// Apply for leave (employee) - TEST ENDPOINT
+router.post('/leave/apply/test', async (req, res) => {
   try {
     const { leaveType, startDate, endDate, reason } = req.body;
     if (!leaveType || !startDate || !endDate || !reason) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Get employee from JWT
-    const employee = await RegisterUser.findById(req.user.id);
-    if (!employee || !employee.authorized) {
-      return res.status(403).json({ message: 'Not authorized to apply for leave' });
-    }
+    // For testing, create a mock employee
+    const testEmployee = {
+      _id: 'test-user-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      authorized: true
+    };
 
     const leaveRequest = new LeaveRequest({
-      employeeId: employee._id,
-      employeeName: employee.name,
-      employeeEmail: employee.email,
+      employeeId: testEmployee._id,
+      employeeName: testEmployee.name,
+      employeeEmail: testEmployee.email,
       leaveType,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
@@ -670,26 +672,25 @@ router.post('/leave/apply', async (req, res) => {
 
     await leaveRequest.save();
 
-    // Send email to HR
-    const hrEmails = await RegisterUser.find({ role: { $in: ['hr', 'admin'] } }).select('email');
-    const hrEmailList = hrEmails.map(hr => hr.email);
+    // Send email to HR (mock)
+    const hrEmails = ['hr@100acress.com']; // Mock HR email
 
     const html = `
       <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>New Leave Request</h2>
-        <p><strong>Employee:</strong> ${employee.name} (${employee.email})</p>
+        <h2>New Leave Request (TEST)</h2>
+        <p><strong>Employee:</strong> ${testEmployee.name} (${testEmployee.email})</p>
         <p><strong>Leave Type:</strong> ${leaveType}</p>
         <p><strong>Duration:</strong> ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}</p>
         <p><strong>Reason:</strong> ${reason}</p>
-        <p>Please review this request in the HR dashboard.</p>
+        <p>This is a test leave request.</p>
       </div>`;
 
-    await sendEmail(hrEmailList, fromAddr, [], 'New Leave Request - 100acress', html, false);
+    await sendEmail(hrEmails, fromAddr, [], 'New Leave Request (TEST) - 100acress', html, false);
 
-    res.json({ message: 'Leave request submitted successfully', data: leaveRequest });
+    res.json({ message: 'Test leave request submitted successfully', data: leaveRequest });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: 'Failed to submit leave request' });
+    res.status(500).json({ message: 'Failed to submit test leave request' });
   }
 });
 
@@ -749,13 +750,16 @@ router.patch('/leave/:id/review', async (req, res) => {
 // HR Management routes - Get all users
 router.get('/users', adminVerify, HrController.getAllUsers);
 
+// HR Management routes - Update user authorization status
+router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
+
+// Test endpoint to verify user exists
+router.get('/user/:id/test', hrAdminVerify, HrController.testUserExists);
+
 // HR Management routes - Leave requests
 router.get('/leave-requests', adminVerify, HrController.getAllLeaveRequests);
 router.post('/leave/:id/status', adminVerify, HrController.updateLeaveStatus);
 router.get('/leave/stats', adminVerify, HrController.getLeaveStats);
-
-// Update user authorization status
-router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
 
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
