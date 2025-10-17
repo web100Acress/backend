@@ -652,19 +652,34 @@ router.post('/leave/apply/test', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // For testing, create a mock employee with valid ObjectId
-    const mongoose = require('mongoose');
-    const testEmployee = {
-      _id: new mongoose.Types.ObjectId(),
-      name: 'Test User',
-      email: 'test@example.com',
-      authorized: true
-    };
+    // Get the logged-in user from the token (if provided)
+    let employee = null;
+    if (req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(" ")[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "aman123");
+        employee = await require('../models/register/registerModel').findById(decoded.user_id);
+      } catch (error) {
+        console.log('Token verification failed, using mock data for testing');
+      }
+    }
+
+    // If no valid token, create a mock employee for testing
+    if (!employee) {
+      const mongoose = require('mongoose');
+      employee = {
+        _id: new mongoose.Types.ObjectId(),
+        name: 'Test User (No Auth)',
+        email: 'test@example.com',
+        authorized: true
+      };
+    }
 
     const leaveRequest = new LeaveRequest({
-      employeeId: testEmployee._id,
-      employeeName: testEmployee.name,
-      employeeEmail: testEmployee.email,
+      employeeId: employee._id,
+      employeeName: employee.name,
+      employeeEmail: employee.email,
       leaveType,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
@@ -679,7 +694,7 @@ router.post('/leave/apply/test', async (req, res) => {
     const html = `
       <div style="font-family:Arial,sans-serif;color:#111">
         <h2>New Leave Request (TEST)</h2>
-        <p><strong>Employee:</strong> ${testEmployee.name} (${testEmployee.email})</p>
+        <p><strong>Employee:</strong> ${employee.name} (${employee.email})</p>
         <p><strong>Leave Type:</strong> ${leaveType}</p>
         <p><strong>Duration:</strong> ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}</p>
         <p><strong>Reason:</strong> ${reason}</p>
@@ -698,21 +713,34 @@ router.post('/leave/apply/test', async (req, res) => {
 // Get all leave requests (HR only) - with employee data populated
 router.get('/leave', async (req, res) => {
   try {
+    console.log('Fetching leave requests for HR user:', req.user?.id);
+
     const leaveRequests = await LeaveRequest.find({})
-      .populate('employeeId', 'name email') // Populate employee name and email
+      .populate({
+        path: 'employeeId',
+        select: 'name email',
+        model: 'postproperties' // Correct model name
+      })
       .sort({ appliedAt: -1 });
 
-    // Transform the data to include employee name and email in the main object
-    const transformedRequests = leaveRequests.map(request => ({
-      ...request.toObject(),
-      employeeName: request.employeeId?.name || request.employeeName || 'Unknown Employee',
-      employeeEmail: request.employeeId?.email || request.employeeEmail || 'unknown@example.com'
-    }));
+    console.log('Found leave requests:', leaveRequests.length);
 
+    // Transform the data to include employee name and email in the main object
+    const transformedRequests = leaveRequests.map(request => {
+      const employeeData = request.employeeId;
+      return {
+        ...request.toObject(),
+        employeeName: employeeData?.name || request.employeeName || 'Unknown Employee',
+        employeeEmail: employeeData?.email || request.employeeEmail || 'unknown@example.com',
+        employeeId: request.employeeId?._id || request.employeeId // Keep the original employeeId
+      };
+    });
+
+    console.log('Transformed requests:', transformedRequests.length);
     res.json({ data: transformedRequests });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Failed to fetch leave requests' });
+    console.error('Error in GET /api/hr/leave:', e);
+    res.status(500).json({ message: 'Failed to fetch leave requests', error: e.message });
   }
 });
 
@@ -732,7 +760,7 @@ router.patch('/leave/:id/review', async (req, res) => {
     leaveRequest.status = status;
     leaveRequest.hrComments = hrComments || '';
     leaveRequest.reviewedAt = new Date();
-    leaveRequest.reviewedBy = req.user.id;
+    leaveRequest.reviewedBy = req.user?.id; // Add back reviewedBy with proper authentication
 
     await leaveRequest.save();
 
@@ -753,8 +781,8 @@ router.patch('/leave/:id/review', async (req, res) => {
 
     res.json({ message: `Leave request ${status}`, data: leaveRequest });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Failed to review leave request' });
+    console.error('Error in PATCH /api/hr/leave/:id/review:', e);
+    res.status(500).json({ message: 'Failed to review leave request', error: e.message });
   }
 });
 
