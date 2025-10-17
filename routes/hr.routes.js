@@ -695,11 +695,21 @@ router.post('/leave/apply/test', async (req, res) => {
   }
 });
 
-// Get all leave requests (HR only)
+// Get all leave requests (HR only) - with employee data populated
 router.get('/leave', async (req, res) => {
   try {
-    const leaveRequests = await LeaveRequest.find({}).sort({ appliedAt: -1 });
-    res.json({ data: leaveRequests });
+    const leaveRequests = await LeaveRequest.find({})
+      .populate('employeeId', 'name email') // Populate employee name and email
+      .sort({ appliedAt: -1 });
+
+    // Transform the data to include employee name and email in the main object
+    const transformedRequests = leaveRequests.map(request => ({
+      ...request.toObject(),
+      employeeName: request.employeeId?.name || request.employeeName || 'Unknown Employee',
+      employeeEmail: request.employeeId?.email || request.employeeEmail || 'unknown@example.com'
+    }));
+
+    res.json({ data: transformedRequests });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Failed to fetch leave requests' });
