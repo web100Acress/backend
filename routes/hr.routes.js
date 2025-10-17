@@ -652,9 +652,10 @@ router.post('/leave/apply/test', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // For testing, create a mock employee
+    // For testing, create a mock employee with valid ObjectId
+    const mongoose = require('mongoose');
     const testEmployee = {
-      _id: 'test-user-id',
+      _id: new mongoose.Types.ObjectId(),
       name: 'Test User',
       email: 'test@example.com',
       authorized: true
