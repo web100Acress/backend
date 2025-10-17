@@ -121,18 +121,69 @@ class HrController {
     }
   };
 
+  // Test endpoint to verify user exists
+  static testUserExists = async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('Testing user existence for ID:', id);
+
+      const user = await registerModel.findById(id);
+      console.log('User found:', user ? 'YES' : 'NO');
+
+      if (!user) {
+        console.log('Available users in database:');
+        const allUsers = await registerModel.find({}).limit(5).select('_id name email');
+        console.log('Sample users:', allUsers);
+
+        return res.status(404).json({
+          message: "User not found",
+          providedId: id,
+          availableUsers: allUsers.map(u => ({ id: u._id, name: u.name, email: u.email }))
+        });
+      }
+
+      return res.status(200).json({
+        message: "User found",
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          status: user.status,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error("Error testing user:", error);
+      return res.status(500).json({
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  };
+
   // Update user authorization status
   static updateUserStatus = async (req, res) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
 
+      console.log('=== FULL REQUEST DEBUG ===');
+      console.log('req.params:', req.params);
+      console.log('req.body:', req.body);
+      console.log('req.headers:', req.headers);
+      console.log('req.method:', req.method);
+      console.log('req.url:', req.url);
+      console.log('Received status update request:', { id, status, type: typeof status });
+
       if (!['authorized', 'unauthorized'].includes(status)) {
+        console.log('Invalid status received:', status, 'Type:', typeof status);
+        console.log('Expected values: authorized, unauthorized');
         return res.status(400).json({
           message: "Invalid status. Must be 'authorized' or 'unauthorized'"
         });
       }
 
+      console.log('Looking for user with ID:', id, 'Type:', typeof id);
       const user = await registerModel.findByIdAndUpdate(
         id,
         { status: status },
@@ -140,11 +191,13 @@ class HrController {
       );
 
       if (!user) {
+        console.log('User not found with ID:', id);
         return res.status(404).json({
           message: "User not found"
         });
       }
 
+      console.log('User found and updated:', user._id, user.status);
       return res.status(200).json({
         message: `User status updated to ${status}`,
         data: user

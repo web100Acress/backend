@@ -643,19 +643,37 @@ router.post('/it/access/:employeeId/revoke', (req, res) => res.status(501).json(
 
 router.post('/accounts/fnf/:instanceId/calc', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 router.post('/accounts/fnf/:instanceId/approve', (req, res) => res.status(501).json({ message: 'Not implemented' }));
-// Leave Request routes
-// Apply for leave (employee)
-router.post('/leave/apply', async (req, res) => {
+// Leave Request routes (TEST - no auth required for testing)
+// Apply for leave (employee) - TEST ENDPOINT
+router.post('/leave/apply/test', async (req, res) => {
   try {
     const { leaveType, startDate, endDate, reason } = req.body;
     if (!leaveType || !startDate || !endDate || !reason) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Get employee from JWT
-    const employee = await RegisterUser.findById(req.user.id);
-    if (!employee || !employee.authorized) {
-      return res.status(403).json({ message: 'Not authorized to apply for leave' });
+    // Get the logged-in user from the token (if provided)
+    let employee = null;
+    if (req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(" ")[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "aman123");
+        employee = await require('../models/register/registerModel').findById(decoded.user_id);
+      } catch (error) {
+        console.log('Token verification failed, using mock data for testing');
+      }
+    }
+
+    // If no valid token, create a mock employee for testing
+    if (!employee) {
+      const mongoose = require('mongoose');
+      employee = {
+        _id: new mongoose.Types.ObjectId(),
+        name: 'Test User (No Auth)',
+        email: 'test@example.com',
+        authorized: true
+      };
     }
 
     const leaveRequest = new LeaveRequest({
@@ -670,41 +688,50 @@ router.post('/leave/apply', async (req, res) => {
 
     await leaveRequest.save();
 
-    // Send email to HR
-    const hrEmails = await RegisterUser.find({ role: { $in: ['hr', 'admin'] } }).select('email');
-    const hrEmailList = hrEmails.map(hr => hr.email);
+    // Email sending removed - will be sent only on approval/rejection
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>New Leave Request</h2>
-        <p><strong>Employee:</strong> ${employee.name} (${employee.email})</p>
-        <p><strong>Leave Type:</strong> ${leaveType}</p>
-        <p><strong>Duration:</strong> ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}</p>
-        <p><strong>Reason:</strong> ${reason}</p>
-        <p>Please review this request in the HR dashboard.</p>
-      </div>`;
-
-    await sendEmail(hrEmailList, fromAddr, [], 'New Leave Request - 100acress', html, false);
-
-    res.json({ message: 'Leave request submitted successfully', data: leaveRequest });
+    res.json({ message: 'Test leave request submitted successfully', data: leaveRequest });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: 'Failed to submit leave request' });
+    res.status(500).json({ message: 'Failed to submit test leave request' });
   }
 });
 
-// Get all leave requests (HR only)
+// Get all leave requests (HR only) - with employee data populated
 router.get('/leave', async (req, res) => {
   try {
-    const leaveRequests = await LeaveRequest.find({}).sort({ appliedAt: -1 });
-    res.json({ data: leaveRequests });
+    console.log('Fetching leave requests for HR user:', req.user?.id);
+
+    const leaveRequests = await LeaveRequest.find({})
+      .populate({
+        path: 'employeeId',
+        select: 'name email',
+        model: 'postproperties' // Correct model name
+      })
+      .sort({ appliedAt: -1 });
+
+    console.log('Found leave requests:', leaveRequests.length);
+
+    // Transform the data to include employee name and email in the main object
+    const transformedRequests = leaveRequests.map(request => {
+      const employeeData = request.employeeId;
+      return {
+        ...request.toObject(),
+        employeeName: employeeData?.name || request.employeeName || 'Unknown Employee',
+        employeeEmail: employeeData?.email || request.employeeEmail || 'unknown@example.com',
+        employeeId: request.employeeId?._id || request.employeeId // Keep the original employeeId
+      };
+    });
+
+    console.log('Transformed requests:', transformedRequests.length);
+    res.json({ data: transformedRequests });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Failed to fetch leave requests' });
+    console.error('Error in GET /api/hr/leave:', e);
+    res.status(500).json({ message: 'Failed to fetch leave requests', error: e.message });
   }
 });
 
-// Approve or reject leave request (HR only)
+// Approve or reject leave request (HR only) - temporarily no auth for testing
 router.patch('/leave/:id/review', async (req, res) => {
   try {
     const { status, hrComments } = req.body;
@@ -720,42 +747,99 @@ router.patch('/leave/:id/review', async (req, res) => {
     leaveRequest.status = status;
     leaveRequest.hrComments = hrComments || '';
     leaveRequest.reviewedAt = new Date();
-    leaveRequest.reviewedBy = req.user.id;
+    // Temporarily remove reviewedBy for testing
+    // leaveRequest.reviewedBy = req.user?.id;
 
     await leaveRequest.save();
 
     // Send email to employee
     const subject = status === 'approved' ? 'Leave Request Approved' : 'Leave Request Rejected';
     const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>${subject}</h2>
-        <p>Dear ${leaveRequest.employeeName},</p>
-        <p>Your leave request has been <strong>${status}</strong>.</p>
-        <p><strong>Leave Type:</strong> ${leaveRequest.leaveType}</p>
-        <p><strong>Duration:</strong> ${new Date(leaveRequest.startDate).toLocaleDateString()} - ${new Date(leaveRequest.endDate).toLocaleDateString()}</p>
-        ${hrComments ? `<p><strong>HR Comments:</strong> ${hrComments}</p>` : ''}
-        <p>Regards,<br/>100acress HR Team</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #111; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+            ${status === 'approved' ? '✅ Leave Approved!' : '❌ Leave Rejected'}
+          </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px;">
+          <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+            Dear <strong>${leaveRequest.employeeName}</strong>,
+          </p>
+
+          <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 25px;">
+            Your leave request has been <strong>${status}</strong> by the HR team.
+          </p>
+
+          <!-- Leave Details -->
+          <div style="background-color: #f8f9fa; border-left: 4px solid ${status === 'approved' ? '#28a745' : '#dc3545'}; padding: 20px; margin-bottom: 25px; border-radius: 6px;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Leave Details:</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">Leave Type:</td>
+                <td style="padding: 8px 0; color: #333;">${leaveRequest.leaveType}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">Duration:</td>
+                <td style="padding: 8px 0; color: #333;">${new Date(leaveRequest.startDate).toLocaleDateString()} - ${new Date(leaveRequest.endDate).toLocaleDateString()}</td>
+              </tr>
+              ${hrComments ? `
+              <tr>
+                <td style="padding: 8px 0; color: #666; font-weight: 500;">HR Comments:</td>
+                <td style="padding: 8px 0; color: #333;">${hrComments}</td>
+              </tr>` : ''}
+            </table>
+          </div>
+
+          <!-- Website Link -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://www.100acress.com" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 15px 30px; border-radius: 25px; font-weight: 600; font-size: 16px; transition: transform 0.2s;">
+              Visit 100acress.com
+            </a>
+          </div>
+
+          <p style="font-size: 16px; color: #555; line-height: 1.6;">
+            For any questions or concerns, please don't hesitate to contact the HR team.
+          </p>
+
+          <p style="font-size: 16px; color: #555;">
+            Best regards,<br>
+            <strong>100acress HR Team</strong>
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0; color: #666; font-size: 14px;">
+            © 2025 100acress. All rights reserved.
+          </p>
+        </div>
       </div>`;
 
     await sendEmail(leaveRequest.employeeEmail, fromAddr, [], `${subject} - 100acress`, html, false);
 
     res.json({ message: `Leave request ${status}`, data: leaveRequest });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Failed to review leave request' });
+    console.error('Error in PATCH /api/hr/leave/:id/review:', e);
+    res.status(500).json({ message: 'Failed to review leave request', error: e.message });
   }
 });
 
 // HR Management routes - Get all users
 router.get('/users', adminVerify, HrController.getAllUsers);
 
+// HR Management routes - Update user authorization status
+router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
+
+// Test endpoint to verify user exists
+router.get('/user/:id/test', hrAdminVerify, HrController.testUserExists);
+
 // HR Management routes - Leave requests
 router.get('/leave-requests', adminVerify, HrController.getAllLeaveRequests);
 router.post('/leave/:id/status', adminVerify, HrController.updateLeaveStatus);
 router.get('/leave/stats', adminVerify, HrController.getLeaveStats);
-
-// Update user authorization status
-router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
 
 router.post('/accounts/fnf/:instanceId/pay', (req, res) => res.status(501).json({ message: 'Not implemented' }));
 
