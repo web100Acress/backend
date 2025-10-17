@@ -63,23 +63,51 @@ class BannerController {
         });
       }
 
-      if (!req.file) {
+      const desktopFile = req.file || (req.files && req.files.bannerImage && req.files.bannerImage[0]);
+      const mobileFile = req.files && req.files.mobileBannerImage && req.files.mobileBannerImage[0];
+
+      if (!desktopFile) {
         return res.status(400).json({
           success: false,
           message: 'Banner image is required'
         });
       }
 
-      // Upload image to S3
+      // Upload images to S3
       let imageData;
+      let mobileImageData;
+      
       try {
-        imageData = await uploadFile(req.file);
+        // Upload desktop image
+        imageData = await uploadFile(desktopFile);
         console.log('✅ Banner image uploaded to S3:', imageData);
+        
+        // Upload mobile image if provided
+        if (mobileFile) {
+          // Ensure the mobile file object has all required properties
+          const mobileFileToUpload = {
+            ...mobileFile,
+            originalname: mobileFile.originalname || `mobile-${Date.now()}.jpg`,
+            mimetype: mobileFile.mimetype || 'image/jpeg',
+            buffer: mobileFile.buffer || Buffer.from(mobileFile.buffer || '')
+          };
+          
+          console.log('Uploading mobile banner file:', {
+            originalname: mobileFileToUpload.originalname,
+            mimetype: mobileFileToUpload.mimetype,
+            hasBuffer: !!mobileFileToUpload.buffer,
+            size: mobileFileToUpload.buffer ? mobileFileToUpload.buffer.length : 0
+          });
+          
+          mobileImageData = await uploadFile(mobileFileToUpload);
+          console.log('✅ Mobile banner image uploaded to S3:', mobileImageData);
+        }
       } catch (s3Error) {
         console.error('❌ S3 upload failed:', s3Error);
         return res.status(500).json({
           success: false,
-          message: 'Failed to upload image to S3: ' + (s3Error.message || 'Unknown error')
+          message: 'Failed to upload image to S3: ' + (s3Error.message || 'Unknown error'),
+          error: process.env.NODE_ENV === 'development' ? s3Error.message : undefined
         });
       }
 
@@ -90,6 +118,13 @@ class BannerController {
         url: imageData.Location,
         cdn_url: cloudfrontUrl + imageData.Key
       };
+      const mobileBannerImageData = mobileImageData
+        ? {
+            public_id: mobileImageData.Key,
+            url: mobileImageData.Location,
+            cdn_url: cloudfrontUrl + mobileImageData.Key
+          }
+        : undefined;
 
       // Create banner record
       const banner = new Banner({
@@ -97,6 +132,7 @@ class BannerController {
         subtitle: subtitle || '',
         slug: slug || '',
         image: bannerImageData,
+        mobileImage: mobileBannerImageData,
         isActive: isActive === 'true' || isActive === true,
         order: parseInt(order) || 0,
         uploadedBy: req.user.id
@@ -150,10 +186,14 @@ class BannerController {
       if (isActive !== undefined) banner.isActive = isActive === 'true' || isActive === true;
       if (order !== undefined) banner.order = parseInt(order) || 0;
 
+      // Determine if files exist (multer single or fields)
+      const desktopFile = req.file || (req.files && req.files.bannerImage && req.files.bannerImage[0]);
+      const mobileFile = req.files && req.files.mobileBannerImage && req.files.mobileBannerImage[0];
+
       // Handle new image upload if provided
-      if (req.file) {
+      if (desktopFile) {
         try {
-          const imageData = await uploadFile(req.file);
+          const imageData = await uploadFile(desktopFile);
           const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
           
           banner.image = {
@@ -166,6 +206,44 @@ class BannerController {
           return res.status(500).json({
             success: false,
             message: 'Failed to upload new image to S3'
+          });
+        }
+      }
+
+      // Handle new mobile image upload if provided
+      if (mobileFile) {
+        try {
+          // Ensure the file object has all required properties
+          const mobileFileToUpload = {
+            ...mobileFile,
+            originalname: mobileFile.originalname || `mobile-${Date.now()}.jpg`,
+            mimetype: mobileFile.mimetype || 'image/jpeg',
+            buffer: mobileFile.buffer || Buffer.from(mobileFile.buffer || '')
+          };
+          
+          console.log('Uploading mobile file:', {
+            originalname: mobileFileToUpload.originalname,
+            mimetype: mobileFileToUpload.mimetype,
+            hasBuffer: !!mobileFileToUpload.buffer,
+            size: mobileFileToUpload.buffer ? mobileFileToUpload.buffer.length : 0
+          });
+          
+          const mobileImageData = await uploadFile(mobileFileToUpload);
+          const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
+          
+          banner.mobileImage = {
+            public_id: mobileImageData.Key,
+            url: mobileImageData.Location,
+            cdn_url: cloudfrontUrl + mobileImageData.Key
+          };
+          
+          console.log('Mobile image uploaded successfully:', banner.mobileImage);
+        } catch (s3Error) {
+          console.error('❌ S3 mobile upload failed:', s3Error);
+          return res.status(500).json({
+            success: false,
+            message: `Failed to upload new mobile image to S3: ${s3Error.message}`,
+            error: process.env.NODE_ENV === 'development' ? s3Error.message : undefined
           });
         }
       }

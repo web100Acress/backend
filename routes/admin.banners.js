@@ -19,8 +19,11 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
+  fileSize: 20 * 1024 * 1024, // 20MB limit per file
+  files: 2, // For desktop + mobile images
+  fields: 10, // For other form fields
+  fieldSize: 10 * 1024 * 1024 // 10MB for other fields
+},
   fileFilter: fileFilter
 });
 
@@ -61,11 +64,25 @@ router.get('/active', BannerController.getActiveBanners);
 // GET /api/admin/banners/:id - Get single banner by ID
 router.get('/:id', BannerController.getBannerById);
 
-// POST /api/admin/banners/upload - Upload new banner
-router.post('/upload', upload.single('bannerImage'), BannerController.uploadBanner);
+// POST /api/admin/banners/upload - Upload new banner (supports desktop and mobile images)
+router.post(
+  '/upload',
+  upload.fields([
+    { name: 'bannerImage', maxCount: 1 },
+    { name: 'mobileBannerImage', maxCount: 1 }
+  ]),
+  BannerController.uploadBanner
+);
 
-// PATCH /api/admin/banners/:id - Update banner
-router.patch('/:id', upload.single('bannerImage'), BannerController.updateBanner);
+// PATCH /api/admin/banners/:id - Update banner (supports desktop and mobile images)
+router.patch(
+  '/:id',
+  upload.fields([
+    { name: 'bannerImage', maxCount: 1 },
+    { name: 'mobileBannerImage', maxCount: 1 }
+  ]),
+  BannerController.updateBanner
+);
 
 // PATCH /api/admin/banners/:id/toggle - Toggle banner active status
 router.patch('/:id/toggle', BannerController.toggleBannerStatus);
@@ -74,3 +91,4 @@ router.patch('/:id/toggle', BannerController.toggleBannerStatus);
 router.delete('/:id', BannerController.deleteBanner);
 
 module.exports = router;
+
