@@ -4,7 +4,7 @@ const leaveRequestSchema = new mongoose.Schema(
   {
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RegisterData",
+      ref: "postproperties",
       required: true,
     },
     employeeName: {
@@ -50,7 +50,7 @@ const leaveRequestSchema = new mongoose.Schema(
     },
     reviewedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RegisterData",
+      ref: "postproperties",
     },
   },
   { timestamps: true }

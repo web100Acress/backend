@@ -48,5 +48,5 @@ const register_Schema = new mongoose.Schema({
     default: "",
   },
 });
-const registerModel = mongoose.model("RegisterData", register_Schema);
+const registerModel = mongoose.model("postproperties", register_Schema);
 module.exports = registerModel;
