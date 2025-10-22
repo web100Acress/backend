@@ -746,7 +746,20 @@ static projectSearch = async (req, res) => {
     if (trending === "1") query.projectOverview = "trending";
     if (upcoming === "1") query.$or = [{projectOverview: "upcoming"}, {projectReraNo: "upcoming"}];
     if (affordable === "1") query.type = "Affordable Homes";
-    if (commercial === "1") query.projectOverview = "commercial";
+    if (commercial === "1") {
+      // More comprehensive commercial query - check multiple fields
+      query.$or = [
+        { projectOverview: "commercial" },
+        { projectOverview: { $regex: "commercial", $options: "i" } },
+        { type: "Commercial Property" },
+        { type: { $regex: "commercial", $options: "i" } },
+        { projectType: { $regex: "commercial", $options: "i" } },
+        { category: { $regex: "commercial", $options: "i" } },
+        { propertyType: { $regex: "commercial", $options: "i" } },
+        { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
+        { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
+      ];
+    }
     if (budgetHomes === "1") query.budgetHomes = true;
     if (comingSoon === "1") query.comingSoon = true;
     if (scoplots === "1") query.type = "SCO Plots";
@@ -757,7 +770,20 @@ static projectSearch = async (req, res) => {
     // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
     if (builderName) query.builderName = builderName;
 
-    if (allcommercialprojects === "1") query.type = "Commercial Property";
+    if (allcommercialprojects === "1") {
+      // More comprehensive commercial query - check multiple fields
+      query.$or = [
+        { type: "Commercial Property" },
+        { type: { $regex: "commercial", $options: "i" } },
+        { projectOverview: "commercial" },
+        { projectOverview: { $regex: "commercial", $options: "i" } },
+        { projectType: { $regex: "commercial", $options: "i" } },
+        { category: { $regex: "commercial", $options: "i" } },
+        { propertyType: { $regex: "commercial", $options: "i" } },
+        { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
+        { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
+      ];
+    }
     if (typescoplots === "1") query.projectOverview = "sco";
     if (typeaffordable === "1") query.projectOverview = "affordable";
     if (builderindepedentfloor === "1") query.$or = [{type:"Independent Floors"},{type:"Builder Floors"}];
@@ -791,58 +817,9 @@ static projectSearch = async (req, res) => {
     if(possesionafter2026 === "1") query.possessionDate = { $gte: new Date("2026-01-01") };
     // Handle price range if both min and max are provided
     if (minPrice && maxPrice) {
-      console.log("Price filtering - minPrice:", minPrice, "maxPrice:", maxPrice);
-      console.log("Price filtering - minPrice type:", typeof minPrice, "maxPrice type:", typeof maxPrice);
-      
       // Convert to numbers for comparison
       const minPriceNum = parseFloat(minPrice);
       const maxPriceNum = parseFloat(maxPrice);
-      
-      console.log("Converted - minPriceNum:", minPriceNum, "maxPriceNum:", maxPriceNum);
-      
-      // SIMPLER ALTERNATIVE: Just check if minPrice is within range
-      // This is more straightforward and should work for most cases
-      const simplePriceFilter = {
-        minPrice: { $gte: minPriceNum, $lte: maxPriceNum }
-      };
-      
-      // Create price filter with more precise logic
-      const priceFilter = {
-        $or: [
-          // Projects that start within the range
-          { minPrice: { $gte: minPriceNum, $lte: maxPriceNum } },
-          // Projects that end within the range
-          { maxPrice: { $gte: minPriceNum, $lte: maxPriceNum } },
-          // Projects that span the entire range
-          { $and: [{ minPrice: { $lte: minPriceNum } }, { maxPrice: { $gte: maxPriceNum } }] },
-          // Projects that start before range but end within range
-          { $and: [{ minPrice: { $lt: minPriceNum } }, { maxPrice: { $gte: minPriceNum, $lte: maxPriceNum } }] },
-          // Projects that start within range but end after range
-          { $and: [{ minPrice: { $gte: minPriceNum, $lte: maxPriceNum } }, { maxPrice: { $gt: maxPriceNum } }] }
-        ]
-      };
-      
-      // Combine with existing query using $and
-      if (Object.keys(query).length > 0) {
-        console.log("Combining with existing query:", JSON.stringify(query, null, 2));
-        query = { $and: [query, priceFilter] };
-      } else {
-        console.log("No existing query, using price filter only");
-        query = priceFilter;
-      }
-      
-      console.log("Final price query:", JSON.stringify(query, null, 2));
-    } else if (minPrice) {
-      console.log("Price filtering - minPrice only:", minPrice);
-      query.minPrice = { $gte: parseFloat(minPrice) };
-    } else if (maxPrice) {
-      console.log("Price filtering - maxPrice only:", maxPrice);
-      query.maxPrice = { $lte: parseFloat(maxPrice) };
-    }
-    //Handle DLF Project Unable to find the project with the parameteres for the dlf projects
-    // if (dlfproject === "1") query.$or = [{projectOverview:"luxuryProject"}, {projectReraNo:"luxuryProject"}];
-    
-    if(alldlfproject === "1") query.builderName = "DLF Homes";
     
     // for projects such as goaProject, bptp, orris, jms, rof
     if(projectOverview) query.projectOverview = projectOverview;
