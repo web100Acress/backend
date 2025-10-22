@@ -820,7 +820,8 @@ static projectSearch = async (req, res) => {
       // Convert to numbers for comparison
       const minPriceNum = parseFloat(minPrice);
       const maxPriceNum = parseFloat(maxPrice);
-    
+    }
+
     // for projects such as goaProject, bptp, orris, jms, rof
     if(projectOverview) query.projectOverview = projectOverview;
 
