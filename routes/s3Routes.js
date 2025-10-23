@@ -47,41 +47,55 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
-// Get all folders from S3 bucket
+// Get all folders from S3 bucket (with nested folder support)
 router.get('/folders', verifyAdmin, async (req, res) => {
   try {
+    const { parent = '' } = req.query; // Get parent folder from query
+    
     const params = {
       Bucket: BUCKET_NAME,
+      Prefix: parent ? `${parent}/` : '',
       Delimiter: '/',
     };
 
     const data = await s3.listObjectsV2(params).promise();
     
     // Extract folder names from CommonPrefixes
-    const folders = data.CommonPrefixes.map(prefix => 
-      prefix.Prefix.replace('/', '')
-    );
+    const folders = data.CommonPrefixes.map(prefix => {
+      const folderPath = prefix.Prefix.replace(/\/$/, ''); // Remove trailing slash
+      return {
+        name: folderPath.split('/').pop(), // Get folder name only
+        path: folderPath, // Full path for API calls
+        hasSubfolders: true // We'll assume folders might have subfolders
+      };
+    });
 
-    // Add predefined folders if they don't exist
-    const predefinedFolders = [
-      '100acre',
-      'festival-images',
-      'insight-banners',
-      'insights',
-      'placeholder',
-      'projectdata',
-      'small-banners',
-      'spaces',
-      'test-uploads',
-      'thumbnails',
-      'uploads'
-    ];
+    // If no parent, add predefined root folders
+    if (!parent) {
+      const predefinedFolders = [
+        { name: '100acre', path: '100acre', hasSubfolders: true },
+        { name: 'festival-images', path: 'festival-images', hasSubfolders: false },
+        { name: 'insight-banners', path: 'insight-banners', hasSubfolders: false },
+        { name: 'insights', path: 'insights', hasSubfolders: false },
+        { name: 'placeholder', path: 'placeholder', hasSubfolders: false },
+        { name: 'projectdata', path: 'projectdata', hasSubfolders: false },
+        { name: 'small-banners', path: 'small-banners', hasSubfolders: false },
+        { name: 'spaces', path: 'spaces', hasSubfolders: false },
+        { name: 'test-uploads', path: 'test-uploads', hasSubfolders: false },
+        { name: 'thumbnails', path: 'thumbnails', hasSubfolders: false },
+        { name: 'uploads', path: 'uploads', hasSubfolders: false }
+      ];
 
-    const allFolders = [...new Set([...folders, ...predefinedFolders])];
+      // Merge with existing folders, avoid duplicates
+      const existingPaths = folders.map(f => f.path);
+      const newFolders = predefinedFolders.filter(pf => !existingPaths.includes(pf.path));
+      folders.push(...newFolders);
+    }
 
     res.json({
       success: true,
-      folders: allFolders
+      folders: folders,
+      parent: parent || null
     });
   } catch (error) {
     console.error('Error fetching folders:', error);
@@ -173,7 +187,7 @@ router.post('/upload', verifyAdmin, upload.array('files', 20), async (req, res) 
         Key: key,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: 'public-read', // Make images publicly accessible
+        // ACL removed - bucket doesn't support ACLs
         Metadata: {
           'original-name': file.originalname,
           'upload-date': new Date().toISOString(),
@@ -340,8 +354,8 @@ router.post('/presigned-url', verifyAdmin, async (req, res) => {
       Bucket: BUCKET_NAME,
       Key: key,
       ContentType: fileType,
-      Expires: 300, // 5 minutes
-      ACL: 'public-read'
+      Expires: 300 // 5 minutes
+      // ACL removed - bucket doesn't support ACLs
     });
 
     res.json({
