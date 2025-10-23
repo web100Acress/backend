@@ -5,6 +5,8 @@ const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
 const { hrAdminVerify } = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
+// Import S3 Routes
+const s3Routes = require("./s3Routes");
 // Require Controller Front
 const homeController = require("../Controller/AdminController/FrontController/HomeController");
 const contactController = require("../Controller/AdminController/FrontController/ContactController");
@@ -322,6 +324,9 @@ router.use('/api/public/onboarding', publicOnboardingRoutes);
 // Guide routes (public access for viewing, admin for modifications)
 const guideRoutes = require("./Insight/guideRoutes");
 router.use("/api/guides", guideRoutes);
+
+// S3 Manager routes
+router.use("/api/s3", s3Routes);
 
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
