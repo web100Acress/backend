@@ -1,8 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const crypto = require('crypto');
 const router = express.Router();
 
 // Configure AWS S3
@@ -165,7 +165,7 @@ router.post('/upload', verifyAdmin, upload.array('files', 20), async (req, res) 
 
     const uploadPromises = files.map(async (file) => {
       const fileExtension = path.extname(file.originalname);
-      const fileName = `${uuidv4()}${fileExtension}`;
+      const fileName = `${crypto.randomUUID()}${fileExtension}`;
       const key = `${folder}/${fileName}`;
 
       const uploadParams = {
@@ -334,7 +334,7 @@ router.post('/presigned-url', verifyAdmin, async (req, res) => {
       });
     }
 
-    const key = `${folder}/${uuidv4()}-${fileName}`;
+    const key = `${folder}/${crypto.randomUUID()}-${fileName}`;
     
     const presignedUrl = s3.getSignedUrl('putObject', {
       Bucket: BUCKET_NAME,
