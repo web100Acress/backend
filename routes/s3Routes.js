@@ -1,18 +1,21 @@
 const express = require('express');
 const multer = require('multer');
-const AWS = require('aws-sdk');
 const path = require('path');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Configure AWS S3
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'ap-south-1'
-});
+// Import S3 configuration and utilities
+const {
+  uploadToS3,
+  deleteFromS3,
+  getFromS3,
+  isAWSConfigured,
+  getAWSStatus,
+  s3,
+  BUCKET
+} = require('../aws/s3Config');
 
-const BUCKET_NAME = '100acress-media-bucket';
+const BUCKET_NAME = BUCKET;
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -47,11 +50,86 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
+// Test endpoint to check S3 configuration
+router.get('/test', verifyAdmin, async (req, res) => {
+  try {
+    console.log('Testing S3 configuration...');
+
+    const awsStatus = getAWSStatus();
+
+    if (!awsStatus.configured) {
+      return res.status(200).json({
+        success: false,
+        message: 'AWS credentials not configured - running in local development mode',
+        ...awsStatus,
+        bucket: BUCKET_NAME
+      });
+    }
+
+    // Try to list objects in the bucket
+    const params = {
+      Bucket: BUCKET_NAME,
+      MaxKeys: 1
+    };
+
+    const data = await s3.listObjectsV2(params).promise();
+
+    res.json({
+      success: true,
+      message: 'S3 configuration is working',
+      bucket: BUCKET_NAME,
+      region: awsStatus.region,
+      objectsCount: data.KeyCount || 0,
+      hasCredentials: true,
+      ...awsStatus
+    });
+  } catch (error) {
+    console.error('S3 test failed:', error);
+
+    const awsStatus = getAWSStatus();
+
+    res.status(500).json({
+      success: false,
+      error: 'S3 configuration test failed',
+      message: error.message,
+      code: error.code,
+      bucket: BUCKET_NAME,
+      ...awsStatus
+    });
+  }
+});
+
 // Get all folders from S3 bucket (with nested folder support)
 router.get('/folders', verifyAdmin, async (req, res) => {
   try {
     const { parent = '' } = req.query; // Get parent folder from query
-    
+
+    // Check if AWS is configured
+    if (!isAWSConfigured()) {
+      console.warn('AWS not configured, returning predefined folders for local development');
+
+      const predefinedFolders = [
+        { name: '100acre', path: '100acre', hasSubfolders: true },
+        { name: 'festival-images', path: 'festival-images', hasSubfolders: false },
+        { name: 'insight-banners', path: 'insight-banners', hasSubfolders: false },
+        { name: 'insights', path: 'insights', hasSubfolders: false },
+        { name: 'placeholder', path: 'placeholder', hasSubfolders: false },
+        { name: 'projectdata', path: 'projectdata', hasSubfolders: false },
+        { name: 'small-banners', path: 'small-banners', hasSubfolders: false },
+        { name: 'spaces', path: 'spaces', hasSubfolders: false },
+        { name: 'test-uploads', path: 'test-uploads', hasSubfolders: false },
+        { name: 'thumbnails', path: 'thumbnails', hasSubfolders: false },
+        { name: 'uploads', path: 'uploads', hasSubfolders: false }
+      ];
+
+      return res.json({
+        success: true,
+        folders: predefinedFolders,
+        parent: parent || null,
+        localMode: true
+      });
+    }
+
     const params = {
       Bucket: BUCKET_NAME,
       Prefix: parent ? `${parent}/` : '',
@@ -59,7 +137,7 @@ router.get('/folders', verifyAdmin, async (req, res) => {
     };
 
     const data = await s3.listObjectsV2(params).promise();
-    
+
     // Extract folder names from CommonPrefixes
     const folders = data.CommonPrefixes.map(prefix => {
       const folderPath = prefix.Prefix.replace(/\/$/, ''); // Remove trailing slash
@@ -113,6 +191,43 @@ router.get('/images/:folder', verifyAdmin, async (req, res) => {
     const { folder } = req.params;
     const { page = 1, limit = 20 } = req.query;
 
+    // Check if AWS is configured
+    if (!isAWSConfigured()) {
+      console.warn('AWS not configured, returning mock images for local development');
+
+      // Generate mock images for local development
+      const mockImages = [];
+      const imageCount = Math.floor(Math.random() * 12) + 3; // 3-15 images
+
+      for (let i = 0; i < imageCount; i++) {
+        const id = `${folder}-img-${i + 1}`;
+        const types = ['jpg', 'png', 'webp'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const sizes = ['2.1 MB', '1.8 MB', '3.2 MB', '950 KB', '1.5 MB'];
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+
+        mockImages.push({
+          id,
+          key: `${folder}/sample-image-${i + 1}.${type}`,
+          name: `sample-image-${i + 1}.${type}`,
+          url: `https://picsum.photos/400/300?random=${i + folder.charCodeAt(0)}`,
+          type,
+          size,
+          lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          folder: folder
+        });
+      }
+
+      return res.json({
+        success: true,
+        images: mockImages,
+        total: mockImages.length,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        localMode: true
+      });
+    }
+
     const params = {
       Bucket: BUCKET_NAME,
       Prefix: `${folder}/`,
@@ -121,7 +236,7 @@ router.get('/images/:folder', verifyAdmin, async (req, res) => {
     };
 
     const data = await s3.listObjectsV2(params).promise();
-    
+
     // Filter only image files
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     const images = data.Contents
