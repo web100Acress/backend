@@ -238,7 +238,7 @@ router.get('/images/:folder', verifyAdmin, async (req, res) => {
     const data = await s3.listObjectsV2(params).promise();
 
     // Filter only image files
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.jfif'];
     const images = data.Contents
       .filter(item => {
         const ext = path.extname(item.Key).toLowerCase();
