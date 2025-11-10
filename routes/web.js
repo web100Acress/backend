@@ -328,6 +328,10 @@ router.use("/api/guides", guideRoutes);
 // S3 Manager routes
 router.use("/api/s3", s3Routes);
 
+// Contact Card routes
+const contactCardRoute = require("./contactCard.route");
+router.use("/api/contact-cards", contactCardRoute);
+
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
