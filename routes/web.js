@@ -213,6 +213,8 @@ router.post(
   upload.single('jdFile'),
   CareerController.openingInsert
 );
+
+// remove all just chnage s code
 router.get("/career/opening/ViewAll", CareerController.openingView_all);
 router.get("/career/opening/View/:id", CareerController.openingView_id);
 router.get("/career/opening/edit/:id", CareerController.openingEdit);
