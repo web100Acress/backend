@@ -317,21 +317,50 @@ class CareerController {
         skill &&
         jobProfile
       ) {
-        const data = new openModal({
+        const jobData = {
           jobLocation: jobLocation,
           jobTitle: jobTitle,
           responsibility: responsibility,
           experience: experience,
           skill: skill,
           jobProfile: jobProfile,
-        });
-        // console.log(data,"lkwehdqxNZL")
+        };
+
+        // Handle file upload if present
+        if (req.file) {
+          try {
+            const uploadedFile = await uploadFile(req.file);
+            jobData.jdFile = {
+              public_id: uploadedFile.Key,
+              url: uploadedFile.Location
+            };
+          } catch (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            return res.status(500).json({ message: 'Error uploading file' });
+          }
+        }
+
+        const data = new openModal(jobData);
         await data.save();
+        
+        // Clean up the temp file if it exists
+        if (req.file && req.file.path) {
+          try {
+            fs.unlinkSync(req.file.path);
+          } catch (unlinkError) {
+            console.error('Error cleaning up temp file:', unlinkError);
+          }
+        }
+        
         res.status(200).json({
           message: "Data Sent successfully ! ",
+          data: {
+            id: data._id,
+            jdFile: data.jdFile?.url || null
+          }
         });
       } else {
-        res.status(200).json({
+        res.status(400).json({
           message: "Check field !",
         });
       }
@@ -470,33 +499,99 @@ class CareerController {
         jobProfile,
       } = req.body;
       const id = req.params.id;
+      
+      // Debug logging
+      console.log('Update request received:', {
+        id,
+        jobLocation,
+        jobTitle,
+        responsibility,
+        experience,
+        skill,
+        jobProfile,
+        hasFile: !!req.file
+      });
+      
       if (isValidObjectId(id)) {
         if (
-          jobLocation &&
-          jobTitle &&
-          responsibility &&
-          experience &&
-          skill &&
-          jobProfile
+          jobLocation?.trim() &&
+          jobTitle?.trim() &&
+          responsibility?.trim() &&
+          experience?.trim() &&
+          skill?.trim() &&
+          jobProfile?.trim()
         ) {
+          const updateData = {
+            jobLocation: jobLocation,
+            jobTitle: jobTitle,
+            responsibility: responsibility,
+            experience: experience,
+            skill: skill,
+            jobProfile: jobProfile,
+          };
+
+          // Handle file upload if present
+          if (req.file) {
+            try {
+              // Get existing job to delete old file if it exists
+              const existingJob = await openModal.findById(id);
+              
+              // Upload new file
+              const uploadedFile = await uploadFile(req.file);
+              updateData.jdFile = {
+                public_id: uploadedFile.Key,
+                url: uploadedFile.Location
+              };
+
+              // Delete old file if it exists
+              if (existingJob?.jdFile?.public_id) {
+                try {
+                  await deleteFile(existingJob.jdFile.public_id);
+                } catch (deleteError) {
+                  console.error('Error deleting old file:', deleteError);
+                  // Continue with update even if delete fails
+                }
+              }
+            } catch (uploadError) {
+              console.error('Error uploading file:', uploadError);
+              return res.status(500).json({ message: 'Error uploading file' });
+            }
+          }
+
           const data = await openModal.findByIdAndUpdate(
             { _id: id },
-            {
-              jobLocation: jobLocation,
-              jobTitle: jobTitle,
-              responsibility: responsibility,
-              experience: experience,
-              skill: skill,
-              jobProfile: jobProfile,
-            },
+            updateData,
+            { new: true }
           );
-          await data.save();
+          
+          // Clean up the temp file if it exists
+          if (req.file && req.file.path) {
+            try {
+              fs.unlinkSync(req.file.path);
+            } catch (unlinkError) {
+              console.error('Error cleaning up temp file:', unlinkError);
+            }
+          }
+          
           res.status(200).json({
             message: "Data updated successfully !",
+            data: {
+              id: data._id,
+              jdFile: data.jdFile?.url || null
+            }
           });
         } else {
+          console.log('Validation failed - missing fields');
           res.status(400).json({
             message: "data missing!",
+            receivedData: {
+              jobLocation: !!jobLocation?.trim(),
+              jobTitle: !!jobTitle?.trim(),
+              responsibility: !!responsibility?.trim(),
+              experience: !!experience?.trim(),
+              skill: !!skill?.trim(),
+              jobProfile: !!jobProfile?.trim(),
+            }
           });
         }
       } else {

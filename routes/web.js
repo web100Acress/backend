@@ -208,11 +208,21 @@ router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 // router.post("/mail",rentController.email)
 
 //Job Opening
-router.post("/career/opening/Insert", CareerController.openingInsert);
+router.post(
+  "/career/opening/Insert",
+  upload.single('jdFile'),
+  CareerController.openingInsert
+);
+
+// remove all just chnage s code
 router.get("/career/opening/ViewAll", CareerController.openingView_all);
 router.get("/career/opening/View/:id", CareerController.openingView_id);
 router.get("/career/opening/edit/:id", CareerController.openingEdit);
-router.put("/career/opening/update/:id", CareerController.openingUpdate);
+router.put(
+  "/career/opening/update/:id",
+  upload.single('jdFile'),
+  CareerController.openingUpdate
+);
 router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 
 // Applications for job openings
