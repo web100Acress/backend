@@ -418,9 +418,9 @@ class ContactCardController {
     try {
       const { slug } = req.params;
 
-      const contactCard = await ContactCard.findOne({ 
-        slug, 
-        isActive: true 
+      const contactCard = await ContactCard.findOne({
+        slug,
+        isActive: true
       });
 
       if (!contactCard) {
@@ -430,7 +430,10 @@ class ContactCardController {
         });
       }
 
-      const qrCodeDataURL = await QRCode.toDataURL(contactCard.fullUrl, {
+      // Always use production URL for QR codes to ensure they work in production
+      const productionUrl = `https://100acress.com/hi/${slug}`;
+
+      const qrCodeDataURL = await QRCode.toDataURL(productionUrl, {
         width: 300,
         margin: 2,
         color: {
@@ -443,7 +446,7 @@ class ContactCardController {
         success: true,
         data: {
           qrCode: qrCodeDataURL,
-          url: contactCard.fullUrl,
+          url: productionUrl,
         },
       });
     } catch (error) {
