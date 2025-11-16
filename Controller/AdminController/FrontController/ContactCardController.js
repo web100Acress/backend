@@ -539,8 +539,8 @@ class ContactCardController {
       res.status(200).json({
         success: true,
         available: !existingCard,
-        message: existingCard 
-          ? "Slug is already taken" 
+        message: existingCard
+          ? "Slug is already taken"
           : "Slug is available",
       });
     } catch (error) {
@@ -548,6 +548,25 @@ class ContactCardController {
       res.status(500).json({
         success: false,
         message: "Failed to check slug availability",
+        error: error.message,
+      });
+    }
+  }
+
+  // Get contact cards count for admin dashboard
+  static async getContactCardsCount(req, res) {
+    try {
+      const count = await ContactCard.countDocuments({ isActive: true });
+
+      res.status(200).json({
+        success: true,
+        count: count,
+      });
+    } catch (error) {
+      console.error("Error fetching contact cards count:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch contact cards count",
         error: error.message,
       });
     }
