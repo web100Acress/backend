@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { getContactCardUrl, getQRCodeUrl } = require("../../utils/urlUtils");
 
 const contactCardSchema = new mongoose.Schema(
   {
@@ -162,33 +163,16 @@ const contactCardSchema = new mongoose.Schema(
   }
 );
 
-// Helper function to get base URL based on environment
-const getBaseUrl = () => {
-  // Check for environment variable first (support both Vite and Next.js naming)
-  if (process.env.VITE_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.VITE_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL;
-  }
-  
-  // Check if we're in production environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  if (isProduction) {
-    return 'https://100acress.com';
-  } else {
-    // Development environment - use localhost
-    const port = process.env.FRONTEND_PORT || '3000';
-    return `http://localhost:${port}`;
-  }
-};
+
 
 // Virtual for full URL
 contactCardSchema.virtual("fullUrl").get(function () {
-  return `${getBaseUrl()}/hi/${this.slug}`;
+  return getContactCardUrl(this.slug);
 });
 
-// Virtual for QR code URL
+// Virtual for QR code URL (always uses production URL)
 contactCardSchema.virtual("qrCodeUrl").get(function () {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(this.fullUrl)}`;
+  return getQRCodeUrl(this.slug);
 });
 
 // Index for better search performance
