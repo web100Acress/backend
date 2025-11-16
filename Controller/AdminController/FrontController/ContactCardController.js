@@ -430,10 +430,11 @@ class ContactCardController {
         });
       }
 
-      // Always use production URL for QR codes to ensure they work in production
-      const productionUrl = `https://100acress.com/hi/${slug}`;
+      // Use environment-based URL for QR codes (consistent with fullUrl)
+      const { getContactCardUrl } = require('../../../utils/urlUtils');
+      const cardUrl = getContactCardUrl(slug);
 
-      const qrCodeDataURL = await QRCode.toDataURL(productionUrl, {
+      const qrCodeDataURL = await QRCode.toDataURL(cardUrl, {
         width: 300,
         margin: 2,
         color: {
@@ -446,7 +447,7 @@ class ContactCardController {
         success: true,
         data: {
           qrCode: qrCodeDataURL,
-          url: productionUrl,
+          url: cardUrl,
         },
       });
     } catch (error) {
