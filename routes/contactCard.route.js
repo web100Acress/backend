@@ -113,4 +113,7 @@ router.delete("/:id", adminVerify, ContactCardController.deleteCard);
 // Get analytics for a contact card
 router.get("/:id/analytics", adminVerify, ContactCardController.getCardAnalytics);
 
+// Get contact cards count for admin dashboard
+router.get("/count", ContactCardController.getContactCardsCount);
+
 module.exports = router;

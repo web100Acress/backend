@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { getContactCardUrl, getQRCodeUrl } = require("../../utils/urlUtils");
 
 const contactCardSchema = new mongoose.Schema(
   {
@@ -60,6 +61,7 @@ const contactCardSchema = new mongoose.Schema(
     company_logo_url: {
       type: String, // S3 URL for company logo
       trim: true,
+      default: 'https://100acress-media-bucket.s3.ap-south-1.amazonaws.com/100acre/logo/logowhite.webp.webp',
     },
     brandColor: {
       type: String,
@@ -87,7 +89,7 @@ const contactCardSchema = new mongoose.Schema(
       twitter: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?twitter\.com\/.*/, "Please enter a valid Twitter URL"],
+        match: [/^https:\/\/(www\.)?(twitter\.com|x\.com)\/.*/, "Please enter a valid Twitter/X URL"],
       },
       instagram: {
         type: String,
@@ -98,6 +100,16 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         match: [/^https:\/\/(www\.)?facebook\.com\/.*/, "Please enter a valid Facebook URL"],
+      },
+      github: {
+        type: String,
+        trim: true,
+        match: [/^https:\/\/(www\.)?github\.com\/.*/, "Please enter a valid GitHub URL"],
+      },
+      website: {
+        type: String,
+        trim: true,
+        match: [/^https?:\/\/.+/, "Please enter a valid website URL"],
       },
     },
     
@@ -151,28 +163,16 @@ const contactCardSchema = new mongoose.Schema(
   }
 );
 
-// Helper function to get base URL based on environment
-const getBaseUrl = () => {
-  // Check if we're in production environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  if (isProduction) {
-    return 'https://100acress.com';
-  } else {
-    // Development environment - use localhost
-    const port = process.env.FRONTEND_PORT || '3000';
-    return `http://localhost:${port}`;
-  }
-};
+
 
 // Virtual for full URL
 contactCardSchema.virtual("fullUrl").get(function () {
-  return `${getBaseUrl()}/hi/${this.slug}`;
+  return getContactCardUrl(this.slug);
 });
 
-// Virtual for QR code URL
+// Virtual for QR code URL (always uses production URL)
 contactCardSchema.virtual("qrCodeUrl").get(function () {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(this.fullUrl)}`;
+  return getQRCodeUrl(this.slug);
 });
 
 // Index for better search performance
