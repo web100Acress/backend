@@ -40,6 +40,7 @@ const usersRoute = require("./user.route");
 const SettingsController = require("../Controller/AdminController/SettingsController");
 const bannerRoute = require("./admin.banners");
 const smallBannerRoute = require("./admin.small-banners");
+const sitemapRoute = require("./sitemap.route");
 
 //Router for front home page  controller
 // router.get('/', homeController.home)
@@ -334,6 +335,9 @@ router.use('/api/public/onboarding', publicOnboardingRoutes);
 // Guide routes (public access for viewing, admin for modifications)
 const guideRoutes = require("./Insight/guideRoutes");
 router.use("/api/guides", guideRoutes);
+
+// Sitemap management routes
+router.use("/api/sitemap", sitemapRoute);
 
 // S3 Manager routes
 router.use("/api/s3", s3Routes);
