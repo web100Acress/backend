@@ -11,8 +11,11 @@ const getAllUrls = async (req, res) => {
     console.log('Attempting to read sitemap from:', SITEMAP_PATH);
     
     let xmlData;
+    let fileFound = false;
+    
     try {
       xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+      fileFound = true;
     } catch (fileError) {
       console.error('Primary path failed:', SITEMAP_PATH, fileError.message);
       
@@ -24,34 +27,41 @@ const getAllUrls = async (req, res) => {
         path.join(process.cwd(), '100acressFront', 'public', 'sitemap.xml'),
       ];
       
-      let found = false;
       for (const altPath of alternativePaths) {
         try {
           console.log('Trying alternative path:', altPath);
           xmlData = await fs.readFile(altPath, 'utf-8');
           console.log('Successfully read from:', altPath);
-          found = true;
+          fileFound = true;
           break;
         } catch (e) {
           console.log('Alternative path failed:', altPath);
         }
       }
-      
-      if (!found) {
-        throw new Error(`Sitemap file not found. Tried paths: ${[SITEMAP_PATH, ...alternativePaths].join(', ')}`);
-      }
+    }
+    
+    // If file not found, return empty array with success
+    if (!fileFound) {
+      console.warn('Sitemap file not found on any path. Returning empty array.');
+      return res.status(200).json({
+        success: true,
+        data: [],
+        total: 0,
+        message: 'No sitemap file found. Please create one or add URLs.'
+      });
     }
     
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
-    const urls = result.urlset.url.map((url, index) => ({
+    // Handle case where urlset.url might not exist
+    const urls = (result.urlset && result.urlset.url) ? result.urlset.url.map((url, index) => ({
       id: index,
       loc: url.loc[0],
       lastmod: url.lastmod ? url.lastmod[0] : null,
       changefreq: url.changefreq ? url.changefreq[0] : null,
       priority: url.priority ? url.priority[0] : null
-    }));
+    })) : [];
     
     res.status(200).json({
       success: true,
@@ -60,9 +70,12 @@ const getAllUrls = async (req, res) => {
     });
   } catch (error) {
     console.error('Error reading sitemap:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error reading sitemap file',
+    // Return success with empty array instead of 500 error
+    res.status(200).json({
+      success: true,
+      data: [],
+      total: 0,
+      message: 'Error reading sitemap file, returning empty array',
       error: error.message
     });
   }
