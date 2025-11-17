@@ -2,15 +2,20 @@ const jwt = require("jsonwebtoken");
 
 const jwtVerification = async (req, res, next) => {
   try {
-    if (!req.headers.authorization) {
-      console.log("No token provided");
-      return res.status(401).json({success:false, message: "No token provided" });
+    let token_without_quotes = null;
+    
+    // Check for x-access-token header first (used by admin panel)
+    if (req.headers['x-access-token']) {
+      token_without_quotes = req.headers['x-access-token'].replace(/"/g, "");
     }
-
-    // Extract token - handle both "Bearer token" and raw token formats
-    const token = req.headers.authorization.split(" ")[1];
-    const token_without_quotes = token.replace(/"/g, "");
+    // Fallback to authorization header
+    else if (req.headers.authorization) {
+      const token = req.headers.authorization.split(" ")[1];
+      token_without_quotes = token.replace(/"/g, "");
+    }
+    
     if (!token_without_quotes) {
+      console.log("No token provided");
       return res.status(401).json({success:false, message: "No token provided" });
     }
 
@@ -45,15 +50,20 @@ const jwtVerification = async (req, res, next) => {
 // New middleware for HR/Admin access
 const hrAdminVerify = async (req, res, next) => {
   try {
-    if (!req.headers.authorization) {
-      console.log("No token provided");
-      return res.status(401).json({success:false, message: "No token provided" });
+    let token_without_quotes = null;
+    
+    // Check for x-access-token header first (used by admin panel)
+    if (req.headers['x-access-token']) {
+      token_without_quotes = req.headers['x-access-token'].replace(/"/g, "");
     }
-
-    // Extract token - handle both "Bearer token" and raw token formats
-    const token = req.headers.authorization.split(" ")[1];
-    const token_without_quotes = token.replace(/"/g, "");
+    // Fallback to authorization header
+    else if (req.headers.authorization) {
+      const token = req.headers.authorization.split(" ")[1];
+      token_without_quotes = token.replace(/"/g, "");
+    }
+    
     if (!token_without_quotes) {
+      console.log("No token provided");
       return res.status(401).json({success:false, message: "No token provided" });
     }
 

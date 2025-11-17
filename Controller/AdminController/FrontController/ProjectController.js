@@ -1645,7 +1645,10 @@ static projectSearch = async (req, res) => {
         }
         
         // Save the data to database
+        // Mark emailReceived based on actual send result
+        data.emailReceived = Boolean(emailSuccess);
         await data.save();
+        console.log("Enquiry saved with emailReceived:", data.emailReceived, "id:", data._id?.toString?.());
         
         return res.status(201).json({
           message: emailSuccess

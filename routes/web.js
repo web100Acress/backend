@@ -209,11 +209,21 @@ router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 // router.post("/mail",rentController.email)
 
 //Job Opening
-router.post("/career/opening/Insert", CareerController.openingInsert);
+router.post(
+  "/career/opening/Insert",
+  upload.single('jdFile'),
+  CareerController.openingInsert
+);
+
+// remove all just chnage s code
 router.get("/career/opening/ViewAll", CareerController.openingView_all);
 router.get("/career/opening/View/:id", CareerController.openingView_id);
 router.get("/career/opening/edit/:id", CareerController.openingEdit);
-router.put("/career/opening/update/:id", CareerController.openingUpdate);
+router.put(
+  "/career/opening/update/:id",
+  upload.single('jdFile'),
+  CareerController.openingUpdate
+);
 router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 
 // Applications for job openings
@@ -331,6 +341,10 @@ router.use("/api/sitemap", sitemapRoute);
 
 // S3 Manager routes
 router.use("/api/s3", s3Routes);
+
+// Contact Card routes
+const contactCardRoute = require("./contactCard.route");
+router.use("/api/contact-cards", contactCardRoute);
 
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
