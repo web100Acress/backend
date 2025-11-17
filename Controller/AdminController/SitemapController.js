@@ -10,16 +10,34 @@ const LIVE_SITEMAP_PATH = '/home/ubuntu/actions-runner-frontend/_work/100acressF
 
 // Get the correct sitemap path based on environment
 const getSitemapPath = async () => {
-  // Try live server path first
-  try {
-    await fs.access(LIVE_SITEMAP_PATH);
-    console.log('Using live server sitemap path:', LIVE_SITEMAP_PATH);
-    return LIVE_SITEMAP_PATH;
-  } catch (e) {
-    // Fall back to primary path
-    console.log('Live server path not found, using primary path:', SITEMAP_PATH);
-    return SITEMAP_PATH;
+  // List of paths to try in order
+  const pathsToTry = [
+    LIVE_SITEMAP_PATH,
+    SITEMAP_PATH,
+    path.join(__dirname, '../../../100acressFront/public/sitemap.xml'),
+    path.join(__dirname, '../../../../100acressFront/public/sitemap.xml'),
+    path.join(process.cwd(), '../100acressFront/public/sitemap.xml'),
+    path.join(process.cwd(), '../../100acressFront/public/sitemap.xml'),
+    path.join(process.cwd(), '../../../100acressFront/public/sitemap.xml'),
+    '/home/ubuntu/actions-runner-frontend/_work/100acressFront/100acressFront/public/sitemap.xml',
+  ];
+  
+  for (const tryPath of pathsToTry) {
+    try {
+      await fs.access(tryPath);
+      console.log('✓ Found sitemap at:', tryPath);
+      return tryPath;
+    } catch (e) {
+      console.log('✗ Path not found:', tryPath);
+    }
   }
+  
+  // If no path found, log the current working directory for debugging
+  console.log('No sitemap found. Current working directory:', process.cwd());
+  console.log('__dirname:', __dirname);
+  
+  // Return the primary path as fallback
+  return SITEMAP_PATH;
 };
 
 // Create default sitemap.xml if it doesn't exist
