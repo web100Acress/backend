@@ -1,13 +1,48 @@
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
 
 // Path to sitemap.xml file
 const SITEMAP_PATH = path.join(__dirname, '../../..', '100acressFront', 'public', 'sitemap.xml');
 
+// Create default sitemap.xml if it doesn't exist
+const ensureSitemapExists = async (filePath) => {
+  try {
+    // Check if file exists
+    await fs.access(filePath);
+  } catch (error) {
+    // File doesn't exist, create it with default structure
+    console.log('Creating default sitemap.xml at:', filePath);
+    const defaultSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.100acress.com/</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+    
+    try {
+      // Ensure directory exists
+      const dir = path.dirname(filePath);
+      await fs.mkdir(dir, { recursive: true });
+      // Write default sitemap
+      await fs.writeFile(filePath, defaultSitemap, 'utf-8');
+      console.log('Default sitemap.xml created successfully');
+    } catch (writeError) {
+      console.error('Failed to create default sitemap:', writeError.message);
+    }
+  }
+};
+
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
+    // Ensure sitemap file exists before trying to read
+    await ensureSitemapExists(SITEMAP_PATH);
+    
     console.log('Attempting to read sitemap from:', SITEMAP_PATH);
     
     let xmlData;
@@ -94,6 +129,9 @@ const addUrl = async (req, res) => {
       });
     }
     
+    // Ensure sitemap file exists before trying to read
+    await ensureSitemapExists(SITEMAP_PATH);
+    
     // Read existing sitemap
     const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
     const parser = new xml2js.Parser();
@@ -148,6 +186,9 @@ const updateUrl = async (req, res) => {
         message: 'URL (loc) is required'
       });
     }
+    
+    // Ensure sitemap file exists before trying to read
+    await ensureSitemapExists(SITEMAP_PATH);
     
     // Read existing sitemap
     const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
