@@ -47,7 +47,8 @@
     "validator": "^13.12.0",
     "vcards-js": "^2.10.0",
     "winston": "^3.17.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
