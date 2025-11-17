@@ -3,7 +3,7 @@ const path = require('path');
 const xml2js = require('xml2js');
 
 // Path to sitemap.xml file
-const SITEMAP_PATH = path.join(__dirname, '../../../frontend', '100acressFront', 'public', 'sitemap.xml');
+const SITEMAP_PATH = path.join(__dirname, '../../..', '100acressFront', 'public', 'sitemap.xml');
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
