@@ -8,7 +8,40 @@ const SITEMAP_PATH = path.join(__dirname, '../../..', '100acressFront', 'public'
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    console.log('Attempting to read sitemap from:', SITEMAP_PATH);
+    
+    let xmlData;
+    try {
+      xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    } catch (fileError) {
+      console.error('Primary path failed:', SITEMAP_PATH, fileError.message);
+      
+      // Try alternative paths for live server
+      const alternativePaths = [
+        path.join(__dirname, '../../../public', 'sitemap.xml'),
+        path.join(__dirname, '../../public', 'sitemap.xml'),
+        path.join(process.cwd(), 'public', 'sitemap.xml'),
+        path.join(process.cwd(), '100acressFront', 'public', 'sitemap.xml'),
+      ];
+      
+      let found = false;
+      for (const altPath of alternativePaths) {
+        try {
+          console.log('Trying alternative path:', altPath);
+          xmlData = await fs.readFile(altPath, 'utf-8');
+          console.log('Successfully read from:', altPath);
+          found = true;
+          break;
+        } catch (e) {
+          console.log('Alternative path failed:', altPath);
+        }
+      }
+      
+      if (!found) {
+        throw new Error(`Sitemap file not found. Tried paths: ${[SITEMAP_PATH, ...alternativePaths].join(', ')}`);
+      }
+    }
+    
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
