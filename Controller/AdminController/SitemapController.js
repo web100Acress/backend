@@ -3,8 +3,10 @@ const fsSync = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
 
-// Path to sitemap.xml file
+// Path to sitemap.xml file - works for both local and live server
 const SITEMAP_PATH = path.join(__dirname, '../../..', '100acressFront', 'public', 'sitemap.xml');
+// Alternative path for live server structure
+const LIVE_SITEMAP_PATH = '/home/ubuntu/actions-runner-frontend/_work/100acressFront/100acressFront/public/sitemap.xml';
 
 // Create default sitemap.xml if it doesn't exist
 const ensureSitemapExists = async (filePath) => {
@@ -56,6 +58,7 @@ const getAllUrls = async (req, res) => {
       
       // Try alternative paths for live server
       const alternativePaths = [
+        LIVE_SITEMAP_PATH,
         path.join(__dirname, '../../../public', 'sitemap.xml'),
         path.join(__dirname, '../../public', 'sitemap.xml'),
         path.join(process.cwd(), 'public', 'sitemap.xml'),
