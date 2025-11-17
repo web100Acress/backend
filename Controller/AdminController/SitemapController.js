@@ -8,6 +8,20 @@ const SITEMAP_PATH = path.join(__dirname, '../../..', '100acressFront', 'public'
 // Alternative path for live server structure
 const LIVE_SITEMAP_PATH = '/home/ubuntu/actions-runner-frontend/_work/100acressFront/100acressFront/public/sitemap.xml';
 
+// Get the correct sitemap path based on environment
+const getSitemapPath = async () => {
+  // Try live server path first
+  try {
+    await fs.access(LIVE_SITEMAP_PATH);
+    console.log('Using live server sitemap path:', LIVE_SITEMAP_PATH);
+    return LIVE_SITEMAP_PATH;
+  } catch (e) {
+    // Fall back to primary path
+    console.log('Live server path not found, using primary path:', SITEMAP_PATH);
+    return SITEMAP_PATH;
+  }
+};
+
 // Create default sitemap.xml if it doesn't exist
 const ensureSitemapExists = async (filePath) => {
   try {
@@ -42,23 +56,27 @@ const ensureSitemapExists = async (filePath) => {
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
-    // Ensure sitemap file exists before trying to read
-    await ensureSitemapExists(SITEMAP_PATH);
+    // Get the correct sitemap path
+    const correctPath = await getSitemapPath();
     
-    console.log('Attempting to read sitemap from:', SITEMAP_PATH);
+    // Ensure sitemap file exists before trying to read
+    await ensureSitemapExists(correctPath);
+    
+    console.log('Attempting to read sitemap from:', correctPath);
     
     let xmlData;
     let fileFound = false;
     
     try {
-      xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+      xmlData = await fs.readFile(correctPath, 'utf-8');
       fileFound = true;
     } catch (fileError) {
-      console.error('Primary path failed:', SITEMAP_PATH, fileError.message);
+      console.error('Primary path failed:', correctPath, fileError.message);
       
       // Try alternative paths for live server
       const alternativePaths = [
         LIVE_SITEMAP_PATH,
+        SITEMAP_PATH,
         path.join(__dirname, '../../../public', 'sitemap.xml'),
         path.join(__dirname, '../../public', 'sitemap.xml'),
         path.join(process.cwd(), 'public', 'sitemap.xml'),
@@ -132,11 +150,14 @@ const addUrl = async (req, res) => {
       });
     }
     
+    // Get the correct sitemap path
+    const correctPath = await getSitemapPath();
+    
     // Ensure sitemap file exists before trying to read
-    await ensureSitemapExists(SITEMAP_PATH);
+    await ensureSitemapExists(correctPath);
     
     // Read existing sitemap
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    const xmlData = await fs.readFile(correctPath, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
@@ -190,11 +211,14 @@ const updateUrl = async (req, res) => {
       });
     }
     
+    // Get the correct sitemap path
+    const correctPath = await getSitemapPath();
+    
     // Ensure sitemap file exists before trying to read
-    await ensureSitemapExists(SITEMAP_PATH);
+    await ensureSitemapExists(correctPath);
     
     // Read existing sitemap
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    const xmlData = await fs.readFile(correctPath, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
@@ -247,8 +271,11 @@ const deleteUrl = async (req, res) => {
   try {
     const { id } = req.params;
     
+    // Get the correct sitemap path
+    const correctPath = await getSitemapPath();
+    
     // Read existing sitemap
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    const xmlData = await fs.readFile(correctPath, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
