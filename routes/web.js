@@ -255,7 +255,32 @@ router.post(
   CareerController.scoreApplications,
 );
 
-// Career: Applications aggregate counts
+// Follow-up endpoints (must come before /career/application/count)
+router.post(
+  "/career/application/:applicationId/followup",
+  hrAdminVerify,
+  CareerController.addFollowup,
+);
+
+router.get(
+  "/career/application/:applicationId/followup",
+  hrAdminVerify,
+  CareerController.getFollowups,
+);
+
+router.get(
+  "/career/followup/:followupId",
+  hrAdminVerify,
+  CareerController.getFollowupById,
+);
+
+router.delete(
+  "/career/followup/:followupId",
+  hrAdminVerify,
+  CareerController.deleteFollowup,
+);
+
+// Career: Applications aggregate counts (must come after specific routes)
 router.get(
   "/career/application/count",
   hrAdminVerify,
