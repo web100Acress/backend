@@ -2,8 +2,10 @@ const fs = require('fs').promises;
 const path = require('path');
 const xml2js = require('xml2js');
 
-// Live server sitemap path
-const SITEMAP_PATH = '/home/ubuntu/actions-runner-frontend/_work/100acressFront/100acressFront/public/sitemap.xml';
+
+// Path to sitemap.xml file
+const SITEMAP_PATH = path.join(__dirname, '../../../frontend', '100acressFront', 'public', 'sitemap.xml');
+
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
