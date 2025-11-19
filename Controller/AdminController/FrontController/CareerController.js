@@ -3,6 +3,7 @@ const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
+const Followup = require("../../../models/career/followup");
 const Onboarding = require("../../../models/hr/onboarding");
 const {
   getEmbedding,
@@ -970,5 +971,73 @@ class CareerController {
       return res.status(500).json({ message: "Internal server error during scoring." });
     }
   };
+
+  // Add a follow-up to an application
+  static addFollowup = async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      const { notes, date } = req.body;
+      const userId = req.user?._id; // Assuming you have user authentication middleware
+
+      if (!isValidObjectId(applicationId)) {
+        return res.status(400).json({ error: 'Invalid application ID' });
+      }
+
+      const application = await Application.findById(applicationId);
+      if (!application) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+
+      const followup = new Followup({
+        applicationId,
+        notes,
+        date: date || new Date(),
+        createdBy: userId
+      });
+
+      await followup.save();
+
+      // Populate the createdBy field with user details if needed
+      await followup.populate('createdBy', 'name email');
+
+      res.status(201).json({
+        success: true,
+        message: 'Follow-up added successfully',
+        data: followup
+      });
+    } catch (error) {
+      console.error('Error adding follow-up:', error);
+      res.status(500).json({ error: 'Failed to add follow-up' });
+    }
+  };
+
+  // Get all follow-ups for an application
+  static getFollowups = async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+
+      if (!isValidObjectId(applicationId)) {
+        return res.status(400).json({ error: 'Invalid application ID' });
+      }
+
+      const application = await Application.findById(applicationId);
+      if (!application) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+
+      const followups = await Followup.find({ applicationId })
+        .sort({ createdAt: -1 })
+        .populate('createdBy', 'name email');
+
+      res.status(200).json({
+        success: true,
+        data: followups
+      });
+    } catch (error) {
+      console.error('Error fetching follow-ups:', error);
+      res.status(500).json({ error: 'Failed to fetch follow-ups' });
+    }
+  };
 }
+
 module.exports = CareerController;
