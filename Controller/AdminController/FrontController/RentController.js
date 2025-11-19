@@ -1,7 +1,6 @@
 const postPropertyModel = require("../../../models/postProperty/post");
 const rent_Model = require("../../../models/property/rent");
 const NodeCache = require("node-cache");
-const AWS = require("aws-sdk");
 const { isValidObjectId } = require("mongoose");
 const {
   uploadFile,
@@ -11,12 +10,6 @@ const {
 } = require("../../../Utilities/s3HelperUtility");
 // const { url } = require("inspector");
 require("dotenv").config();
-
-AWS.config.update({
-  secretAccessKey: process.env.AWS_S3_SECRET_ACESS_KEY,
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
 
 
 class rentController {
