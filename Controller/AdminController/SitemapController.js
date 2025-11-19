@@ -2,8 +2,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const xml2js = require('xml2js');
 
-// Live server sitemap path
-const SITEMAP_PATH = '/home/ubuntu/actions-runner-frontend/_work/100acressFront/100acressFront/public/sitemap.xml';
+// Configurable sitemap path (set SITEMAP_FILE in environment). Fallback to /app/public/sitemap.xml inside container.
+const SITEMAP_PATH = process.env.SITEMAP_FILE || path.join(process.cwd(), 'public', 'sitemap.xml');
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
@@ -29,6 +29,11 @@ const getAllUrls = async (req, res) => {
       total: urls.length
     });
   } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      // File missing -> return empty list so UI doesn't break
+      console.warn('Sitemap file not found at:', SITEMAP_PATH);
+      return res.status(200).json({ success: true, data: [], total: 0, message: 'Sitemap file not found', path: SITEMAP_PATH });
+    }
     console.error('Error reading sitemap:', error);
     res.status(500).json({
       success: false,
