@@ -976,8 +976,22 @@ class CareerController {
   static addFollowup = async (req, res) => {
     try {
       const { applicationId } = req.params;
-      const { notes, date } = req.body;
-      const userId = req.user?._id; // Assuming you have user authentication middleware
+      const { message, notes, date } = req.body;
+      
+      // Get user ID from various possible sources
+      let userId = req.user?._id || req.user?.id || req.userId;
+      
+      // If still no user ID, try to extract from JWT token
+      if (!userId && req.headers.authorization) {
+        try {
+          const token = req.headers.authorization.split(" ")[1];
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || "aman123");
+          userId = decoded.user_id || decoded.id || decoded._id;
+        } catch (e) {
+          console.log('Token decode failed:', e.message);
+        }
+      }
 
       if (!isValidObjectId(applicationId)) {
         return res.status(400).json({ error: 'Invalid application ID' });
@@ -988,17 +1002,35 @@ class CareerController {
         return res.status(404).json({ error: 'Application not found' });
       }
 
-      const followup = new Followup({
-        applicationId,
-        notes,
-        date: date || new Date(),
-        createdBy: userId
-      });
+      // Accept both 'message' and 'notes' for flexibility
+      const followupText = message || notes;
+      if (!followupText || !followupText.trim()) {
+        return res.status(400).json({ error: 'Follow-up message is required' });
+      }
 
+      const followupData = {
+        applicationId,
+        notes: followupText,
+        date: date || new Date()
+      };
+
+      // Only add createdBy if we have a valid user ID
+      if (userId && isValidObjectId(userId)) {
+        followupData.createdBy = userId;
+      }
+
+      const followup = new Followup(followupData);
       await followup.save();
 
-      // Populate the createdBy field with user details if needed
-      await followup.populate('createdBy', 'name email');
+      // Populate the createdBy field with user details if available
+      if (followup.createdBy) {
+        try {
+          await followup.populate('createdBy', 'name email');
+        } catch (populateError) {
+          console.log('Could not populate createdBy:', populateError.message);
+          // Continue without population if it fails
+        }
+      }
 
       res.status(201).json({
         success: true,
@@ -1026,8 +1058,15 @@ class CareerController {
       }
 
       const followups = await Followup.find({ applicationId })
-        .sort({ createdAt: -1 })
-        .populate('createdBy', 'name email');
+        .sort({ createdAt: -1 });
+
+      // Try to populate createdBy if User model is available
+      try {
+        await Followup.populate(followups, { path: 'createdBy', select: 'name email' });
+      } catch (populateError) {
+        console.log('Could not populate createdBy:', populateError.message);
+        // Continue without population
+      }
 
       res.status(200).json({
         success: true,
@@ -1036,6 +1075,60 @@ class CareerController {
     } catch (error) {
       console.error('Error fetching follow-ups:', error);
       res.status(500).json({ error: 'Failed to fetch follow-ups' });
+    }
+  };
+
+  // Get a single follow-up by ID
+  static getFollowupById = async (req, res) => {
+    try {
+      const { followupId } = req.params;
+
+      if (!isValidObjectId(followupId)) {
+        return res.status(400).json({ error: 'Invalid follow-up ID' });
+      }
+
+      const followup = await Followup.findById(followupId)
+        .populate('applicationId', 'name email')
+        .populate('createdBy', 'name email');
+
+      if (!followup) {
+        return res.status(404).json({ error: 'Follow-up not found' });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: followup
+      });
+    } catch (error) {
+      console.error('Error fetching follow-up:', error);
+      res.status(500).json({ error: 'Failed to fetch follow-up' });
+    }
+  };
+
+  // Delete a follow-up
+  static deleteFollowup = async (req, res) => {
+    try {
+      const { followupId } = req.params;
+
+      if (!isValidObjectId(followupId)) {
+        return res.status(400).json({ error: 'Invalid follow-up ID' });
+      }
+
+      const followup = await Followup.findById(followupId);
+      if (!followup) {
+        return res.status(404).json({ error: 'Follow-up not found' });
+      }
+
+      await Followup.findByIdAndDelete(followupId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Follow-up deleted successfully',
+        data: followup
+      });
+    } catch (error) {
+      console.error('Error deleting follow-up:', error);
+      res.status(500).json({ error: 'Failed to delete follow-up' });
     }
   };
 }
