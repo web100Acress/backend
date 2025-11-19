@@ -4,19 +4,16 @@ const path = require('path');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Import S3 configuration and utilities (AWS SDK v3)
+// Import S3 configuration and utilities
 const {
   uploadToS3,
   deleteFromS3,
   getFromS3,
   isAWSConfigured,
   getAWSStatus,
-  s3Client,
-  BUCKET,
-  ListObjectsV2Command,
+  s3,
+  BUCKET
 } = require('../aws/s3Config');
-const { PutObjectCommand, DeleteObjectCommand, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const BUCKET_NAME = BUCKET;
 
@@ -75,7 +72,7 @@ router.get('/test', verifyAdmin, async (req, res) => {
       MaxKeys: 1
     };
 
-    const data = await s3Client.send(new ListObjectsV2Command(params));
+    const data = await s3.listObjectsV2(params).promise();
 
     res.json({
       success: true,
@@ -139,11 +136,10 @@ router.get('/folders', verifyAdmin, async (req, res) => {
       Delimiter: '/',
     };
 
-    const command = new ListObjectsV2Command(params);
-    const { $metadata, CommonPrefixes } = await s3Client.send(command);
+    const data = await s3.listObjectsV2(params).promise();
 
     // Extract folder names from CommonPrefixes
-    const folders = CommonPrefixes.map(prefix => {
+    const folders = data.CommonPrefixes.map(prefix => {
       const folderPath = prefix.Prefix.replace(/\/$/, ''); // Remove trailing slash
       return {
         name: folderPath.split('/').pop(), // Get folder name only
@@ -239,7 +235,7 @@ router.get('/images/:folder', verifyAdmin, async (req, res) => {
       MaxKeys: parseInt(limit),
     };
 
-    const data = await s3Client.send(new ListObjectsV2Command(params));
+    const data = await s3.listObjectsV2(params).promise();
 
     // Filter only image files
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.jfif'];
@@ -314,11 +310,7 @@ router.post('/upload', verifyAdmin, upload.array('files', 20), async (req, res) 
         }
       };
 
-      await s3Client.send(new PutObjectCommand(uploadParams));
-      const result = {
-        ETag: 'etag',
-        Location: `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`
-      };
+      const result = await s3.upload(uploadParams).promise();
       
       return {
         id: result.ETag.replace(/"/g, ''),
@@ -359,7 +351,7 @@ router.delete('/images/:key(*)', verifyAdmin, async (req, res) => {
       Key: key
     };
 
-    await s3Client.send(new DeleteObjectCommand(deleteParams));
+    await s3.deleteObject(deleteParams).promise();
 
     res.json({
       success: true,
@@ -395,7 +387,7 @@ router.delete('/images/batch', verifyAdmin, async (req, res) => {
       }
     };
 
-    const result = await s3Client.send(new DeleteObjectsCommand(deleteParams));
+    const result = await s3.deleteObjects(deleteParams).promise();
 
     res.json({
       success: true,
@@ -442,7 +434,7 @@ router.post('/folders', verifyAdmin, async (req, res) => {
       }
     };
 
-    await s3Client.send(new PutObjectCommand(uploadParams));
+    await s3.upload(uploadParams).promise();
 
     res.json({
       success: true,
@@ -473,8 +465,13 @@ router.post('/presigned-url', verifyAdmin, async (req, res) => {
 
     const key = `${folder}/${crypto.randomUUID()}-${fileName}`;
     
-    const cmd = new PutObjectCommand({ Bucket: BUCKET_NAME, Key: key, ContentType: fileType });
-    const presignedUrl = await getSignedUrl(s3Client, cmd, { expiresIn: 300 });
+    const presignedUrl = s3.getSignedUrl('putObject', {
+      Bucket: BUCKET_NAME,
+      Key: key,
+      ContentType: fileType,
+      Expires: 300 // 5 minutes
+      // ACL removed - bucket doesn't support ACLs
+    });
 
     res.json({
       success: true,
