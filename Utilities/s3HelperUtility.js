@@ -1,58 +1,33 @@
 const fs = require("fs");
-const AWS = require("aws-sdk");
-const {Stream} = require("stream");
 const path = require("path");
-const {compressImage} = require("./ImageResizer");
+const { compressImage } = require("./ImageResizer");
 const nodemailer = require("nodemailer");
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { SESClient, SendRawEmailCommand } = require("@aws-sdk/client-ses");
 
-// Enhanced AWS configuration with better error handling
-const configureAWS = () => {
-  console.log('Configuring AWS S3...');
+// Env configuration
+const ACCESS_KEY = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
+const SECRET_KEY = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY; // legacy env name supported
+const REGION = process.env.AWS_REGION || 'ap-south-1';
+const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
 
-  // Support both custom and standard env var names, and handle the misspelling
-  const ACCESS_KEY = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
-  const SECRET_KEY = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY; // note: ACESS (legacy) or ACCESS (standard)
-  const REGION = process.env.AWS_REGION;
-  const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
-
-  console.log('Environment variables check:', {
-    hasAccessKey: !!ACCESS_KEY,
-    hasSecretKey: !!SECRET_KEY,
-    hasRegion: !!REGION,
-    region: REGION,
-    bucket: BUCKET
-  });
-
-  if (!ACCESS_KEY || !SECRET_KEY) {
-    console.error('❌ AWS credentials missing! Set AWS_S3_ACCESS_KEY/AWS_ACCESS_KEY_ID and AWS_S3_SECRET_ACESS_KEY/AWS_SECRET_ACCESS_KEY');
-    throw new Error('AWS credentials not configured');
-  }
-
-  if (!REGION) {
-    console.error('❌ AWS region missing! Please set AWS_REGION');
-    throw new Error('AWS region not configured');
-  }
-
-  AWS.config.update({
+const s3Client = new S3Client({
+  region: REGION,
+  credentials: (ACCESS_KEY && SECRET_KEY) ? {
     accessKeyId: ACCESS_KEY,
     secretAccessKey: SECRET_KEY,
-    region: REGION,
-  });
+  } : undefined,
+});
 
-  console.log('✅ AWS S3 configured successfully');
-};
+const sesClient = new SESClient({
+  region: REGION,
+  credentials: (ACCESS_KEY && SECRET_KEY) ? {
+    accessKeyId: ACCESS_KEY,
+    secretAccessKey: SECRET_KEY,
+  } : undefined,
+});
 
-// Initialize AWS configuration
-try {
-  configureAWS();
-} catch (error) {
-  console.error('Failed to configure AWS:', error.message);
-}
-
-const s3 = new AWS.S3();
-const SES = new AWS.SES();
-
-const uploadFile = async(file) => {
+const uploadFile = async (file) => {
   try {
     console.log('📤 Starting S3 upload for file:', file.originalname);
     console.log('File details:', {
@@ -78,28 +53,16 @@ const uploadFile = async(file) => {
       throw new Error('File not found - neither buffer nor disk path available');
     }
 
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-      Body: fileContent,
-      Key: `uploads/${Date.now()}-${file.originalname}`,
-      ContentType: file.mimetype,
-    };
+    const Key = `uploads/${Date.now()}-${file.originalname}`;
+    const putParams = { Bucket: BUCKET, Key, Body: fileContent, ContentType: file.mimetype };
 
-    console.log('🚀 Uploading to S3 with params:', {
-      Bucket: params.Bucket,
-      Key: params.Key,
-      ContentType: params.ContentType
-    });
+    console.log('🚀 Uploading to S3 (v3) with params:', { Bucket: BUCKET, Key, ContentType: file.mimetype });
+    await s3Client.send(new PutObjectCommand(putParams));
 
-    const result = await s3.upload(params).promise();
-    
-    console.log('✅ S3 upload successful:', {
-      Location: result.Location,
-      Key: result.Key,
-      Bucket: result.Bucket
-    });
+    const Location = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${Key}`;
+    console.log('✅ S3 upload successful:', { Location, Key, Bucket: BUCKET });
 
-    return result;
+    return { Location, Key, Bucket: BUCKET };
   } catch (error) {
     console.error('❌ S3 upload failed:', error);
     console.error('Error details:', {
@@ -125,7 +88,7 @@ const uploadFile = async(file) => {
   }
 };
 
-const uploadThumbnailImage = async(file) => {
+const uploadThumbnailImage = async (file) => {
   try {
 
   /*Image Compression before uploading to AWS on hold for temp*/
@@ -150,13 +113,9 @@ const uploadThumbnailImage = async(file) => {
     throw new Error('File not found - neither buffer nor disk path available');
   }
   
-  const params = {
-    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-    Body: fileContent,
-    Key: `thumbnails/${Date.now()}-${file.originalname}`,
-    ContentType: file.mimetype,
-  };
-  const uploadResult = await s3.upload(params).promise();
+  const Key = `thumbnails/${Date.now()}-${file.originalname}`;
+  await s3Client.send(new PutObjectCommand({ Bucket: BUCKET, Key, Body: fileContent, ContentType: file.mimetype }));
+  const uploadResult = { Location: `https://${BUCKET}.s3.${REGION}.amazonaws.com/${Key}`, Key, Bucket: BUCKET };
 
   /*Deleting temp file after upload S3*/
   /*
@@ -179,13 +138,10 @@ const uploadThumbnailImage = async(file) => {
 };
 
 const deleteFile = async (fileKey) => {
-  const params = {
-    Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-    Key: fileKey,
-  };
+  const params = { Bucket: BUCKET, Key: fileKey };
 
   try {
-    await s3.deleteObject(params).promise();
+    await s3Client.send(new DeleteObjectCommand(params));
     console.log(`File deleted successfully: ${fileKey}`);
     return true;
   } catch (error) {
@@ -194,7 +150,7 @@ const deleteFile = async (fileKey) => {
   }
 };
 
-const updateFile = async(file, objectKey) => {
+const updateFile = async (file, objectKey) => {
   let fileContent;
   
   // Handle both disk storage and memory storage
@@ -207,35 +163,17 @@ const updateFile = async(file, objectKey) => {
   } else {
     throw new Error('File not found - neither buffer nor disk path available');
   }
-  if (objectKey != null) {
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-      Key: objectKey,
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-    return s3.upload(params).promise();
-  } else {
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket", // You can use environment variables for sensitive data like bucket name
-      Key: `uploads/${Date.now()}-${file.originalname}`, // Store the file with a unique name in the 'uploads/' folder
-      Body: fileContent,
-      ContentType: file.mimetype,
-    };
-
-    // Return the promise from s3.upload
-    return s3.upload(params).promise();
-  }
+  const Key = objectKey != null ? objectKey : `uploads/${Date.now()}-${file.originalname}`;
+  const params = { Bucket: BUCKET, Key, Body: fileContent, ContentType: file.mimetype };
+  await s3Client.send(new PutObjectCommand(params));
+  return { Location: `https://${BUCKET}.s3.${REGION}.amazonaws.com/${Key}`, Key, Bucket: BUCKET };
 };
 
-const getS3File = async(objectKey) => {
+const getS3File = async (objectKey) => {
   try {
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET || "100acress-media-bucket",
-      Key: objectKey
-    }
+    const params = { Bucket: BUCKET, Key: objectKey };
 
-    const response = await s3.getObject(params).promise();
+    const response = await s3Client.send(new GetObjectCommand(params));
 
     // console.log("S3 Response headers:", response.ContentType);
 
@@ -278,9 +216,9 @@ const sendEmail = async (to, sourceEmail , cc = [], subject, html, attachments =
   ]
 
   const transporter = nodemailer.createTransport({
-    SES:{
-      ses:SES,
-      aws:AWS
+    SES: {
+      ses: sesClient,
+      aws: { SendRawEmailCommand }
     }
   });
 
