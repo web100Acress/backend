@@ -5,6 +5,7 @@ const xml2js = require('xml2js');
 // Configurable sitemap path (set SITEMAP_FILE in environment). Fallback to /app/public/sitemap.xml inside container.
 const SITEMAP_PATH = process.env.SITEMAP_FILE || path.join(process.cwd(), 'public', 'sitemap.xml');
 
+
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
