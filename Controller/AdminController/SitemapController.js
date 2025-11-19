@@ -2,56 +2,28 @@ const fs = require('fs').promises;
 const path = require('path');
 const xml2js = require('xml2js');
 
+
 // Path to sitemap.xml file
 const SITEMAP_PATH = path.join(__dirname, '../../../frontend', '100acressFront', 'public', 'sitemap.xml');
+
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
-    console.log('Attempting to read sitemap from:', SITEMAP_PATH);
+    console.log('Reading sitemap from:', SITEMAP_PATH);
     
-    let xmlData;
-    try {
-      xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
-    } catch (fileError) {
-      console.error('Primary path failed:', SITEMAP_PATH, fileError.message);
-      
-      // Try alternative paths for live server
-      const alternativePaths = [
-        path.join(__dirname, '../../../public', 'sitemap.xml'),
-        path.join(__dirname, '../../public', 'sitemap.xml'),
-        path.join(process.cwd(), 'public', 'sitemap.xml'),
-        path.join(process.cwd(), '100acressFront', 'public', 'sitemap.xml'),
-      ];
-      
-      let found = false;
-      for (const altPath of alternativePaths) {
-        try {
-          console.log('Trying alternative path:', altPath);
-          xmlData = await fs.readFile(altPath, 'utf-8');
-          console.log('Successfully read from:', altPath);
-          found = true;
-          break;
-        } catch (e) {
-          console.log('Alternative path failed:', altPath);
-        }
-      }
-      
-      if (!found) {
-        throw new Error(`Sitemap file not found. Tried paths: ${[SITEMAP_PATH, ...alternativePaths].join(', ')}`);
-      }
-    }
-    
+    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
-    const urls = result.urlset.url.map((url, index) => ({
+    // Handle case where urlset.url might not exist
+    const urls = (result.urlset && result.urlset.url) ? result.urlset.url.map((url, index) => ({
       id: index,
       loc: url.loc[0],
       lastmod: url.lastmod ? url.lastmod[0] : null,
       changefreq: url.changefreq ? url.changefreq[0] : null,
       priority: url.priority ? url.priority[0] : null
-    }));
+    })) : [];
     
     res.status(200).json({
       success: true,
