@@ -248,6 +248,13 @@ router.put(
   CareerController.rejectApplication,
 );
 
+// AI Scoring for applications
+router.post(
+  "/career/opening/:id/score-applications",
+  hrAdminVerify,
+  CareerController.scoreApplications,
+);
+
 // Follow-up endpoints (must come before /career/application/count)
 router.post(
   "/career/application/:applicationId/followup",
