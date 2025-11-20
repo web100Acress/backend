@@ -20,6 +20,7 @@ class ContactCardController {
         name,
         email,
         phone,
+        whatsapp,
         company,
         designation,
         website,
@@ -45,6 +46,7 @@ class ContactCardController {
         name,
         email,
         phone,
+        whatsapp: whatsapp && whatsapp.trim() !== '' ? whatsapp : undefined,
         company: company || undefined,
         designation: designation || undefined,
         website: website && website.trim() !== '' ? website : undefined,
@@ -176,7 +178,7 @@ class ContactCardController {
       }
       
       // Handle empty optional fields
-      ['company', 'designation', 'bio', 'profile_image_url', 'company_logo_url'].forEach(field => {
+      ['company', 'designation', 'bio', 'profile_image_url', 'company_logo_url', 'whatsapp'].forEach(field => {
         if (updateData[field] === '') {
           updateData[field] = undefined;
         }

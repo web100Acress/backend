@@ -23,6 +23,11 @@ const contactCardSchema = new mongoose.Schema(
       trim: true,
       match: [/^[\+]?[\d\s\-\(\)\.]{8,20}$/, "Please enter a valid phone number"],
     },
+    whatsapp: {
+      type: String,
+      trim: true,
+      match: [/^[\+]?[\d\s\-\(\)\.]{8,20}$/, "Please enter a valid WhatsApp number"],
+    },
     company: {
       type: String,
       trim: true,
