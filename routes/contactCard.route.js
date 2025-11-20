@@ -87,7 +87,11 @@ router.get("/public/check-slug/:slug", ContactCardController.checkSlugAvailabili
 router.post(
   "/",
   adminVerify,
-  upload.single("logo"),
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "profile_image", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ]),
   validateContactCard,
   ContactCardController.createCard
 );
@@ -102,7 +106,11 @@ router.get("/:id", adminVerify, ContactCardController.getCardById);
 router.put(
   "/:id",
   adminVerify,
-  upload.single("logo"),
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "profile_image", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ]),
   validateContactCard,
   ContactCardController.updateCard
 );

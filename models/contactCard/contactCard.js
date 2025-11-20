@@ -23,6 +23,11 @@ const contactCardSchema = new mongoose.Schema(
       trim: true,
       match: [/^[\+]?[\d\s\-\(\)\.]{8,20}$/, "Please enter a valid phone number"],
     },
+    whatsapp: {
+      type: String,
+      trim: true,
+      match: [/^[\+]?[\d\s\-\(\)\.]{8,20}$/, "Please enter a valid WhatsApp number"],
+    },
     company: {
       type: String,
       trim: true,
@@ -56,6 +61,10 @@ const contactCardSchema = new mongoose.Schema(
     },
     profile_image_url: {
       type: String, // S3 URL for profile picture
+      trim: true,
+    },
+    banner_image_url: {
+      type: String, // Header/banner background image URL
       trim: true,
     },
     company_logo_url: {
