@@ -31,7 +31,8 @@ const getBaseUrl = () => {
  * @returns {string} Full contact card URL
  */
 const getContactCardUrl = (slug) => {
-  return `${getBaseUrl()}/hi/${slug}`;
+  // Always use production URL for contact cards (for QR codes and sharing)
+  return `https://100acress.com/hi/${slug}`;
 };
 
 /**
