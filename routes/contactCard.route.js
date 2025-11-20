@@ -29,8 +29,15 @@ const validateContactCard = [
     .withMessage("Designation cannot exceed 100 characters"),
   body("website")
     .optional({ checkFalsy: true })
-    .isURL()
-    .withMessage("Please enter a valid website URL"),
+    .custom((value) => {
+      if (!value || value.trim() === '') return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        throw new Error("Please enter a valid website URL (must include http:// or https://)");
+      }
+    }),
   body("brandColor")
     .optional()
     .matches(/^#[0-9A-Fa-f]{6}$/)
@@ -43,6 +50,10 @@ const validateContactCard = [
     .optional()
     .isIn(["light", "dark", "gradient"])
     .withMessage("Invalid theme"),
+  body("template")
+    .optional()
+    .isIn(["modern", "executive", "minimalist", "creative", "premium", "glassmorphism"])
+    .withMessage("Invalid template"),
   body("bio")
     .optional({ checkFalsy: true })
     .isLength({ max: 500 })
@@ -56,12 +67,37 @@ const validateContactCard = [
     .withMessage("Slug must be between 3 and 50 characters"),
   body("profile_image_url")
     .optional({ checkFalsy: true })
-    .isURL()
-    .withMessage("Please enter a valid profile image URL"),
+    .custom((value) => {
+      if (!value || value.trim() === '') return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        throw new Error("Please enter a valid profile image URL");
+      }
+    }),
+  body("banner_image_url")
+    .optional({ checkFalsy: true })
+    .custom((value) => {
+      if (!value || value.trim() === '') return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        throw new Error("Please enter a valid banner image URL");
+      }
+    }),
   body("company_logo_url")
     .optional({ checkFalsy: true })
-    .isURL()
-    .withMessage("Please enter a valid company logo URL"),
+    .custom((value) => {
+      if (!value || value.trim() === '') return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        throw new Error("Please enter a valid company logo URL");
+      }
+    }),
 ];
 
 // Public Routes (no authentication required)
@@ -87,7 +123,11 @@ router.get("/public/check-slug/:slug", ContactCardController.checkSlugAvailabili
 router.post(
   "/",
   adminVerify,
-  upload.single("logo"),
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "profile_image", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ]),
   validateContactCard,
   ContactCardController.createCard
 );
@@ -102,7 +142,11 @@ router.get("/:id", adminVerify, ContactCardController.getCardById);
 router.put(
   "/:id",
   adminVerify,
-  upload.single("logo"),
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "profile_image", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ]),
   validateContactCard,
   ContactCardController.updateCard
 );
