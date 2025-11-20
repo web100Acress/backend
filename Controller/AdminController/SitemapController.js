@@ -2,40 +2,10 @@ const fs = require('fs').promises;
 const path = require('path');
 const xml2js = require('xml2js');
 
-// Configurable sitemap path with better defaults
-const DEFAULT_SITEMAP_PATH = path.join(process.cwd(), 'public', 'sitemap.xml');
-const SITEMAP_PATH = process.env.SITEMAP_FILE || DEFAULT_SITEMAP_PATH;
 
-// Create public directory if it doesn't exist
-const ensurePublicDir = async () => {
-  const publicDir = path.dirname(SITEMAP_PATH);
-  try {
-    await fs.mkdir(publicDir, { recursive: true });
-  } catch (err) {
-    if (err.code !== 'EEXIST') {
-      console.error('Error creating public directory:', err);
-    }
-  }
-};
+// Path to sitemap.xml file
+const SITEMAP_PATH = path.join(__dirname, '../../../frontend', '100acressFront', 'public', 'sitemap.xml');
 
-// Initialize the sitemap file if it doesn't exist
-const initializeSitemap = async () => {
-  try {
-    await fs.access(SITEMAP_PATH);
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      console.log('Sitemap not found, creating a new one at:', SITEMAP_PATH);
-      const initialSitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-</urlset>`;
-      await ensurePublicDir();
-      await fs.writeFile(SITEMAP_PATH, initialSitemap, 'utf8');
-    }
-  }
-};
-
-// Initialize sitemap when the server starts
-initializeSitemap().catch(console.error);
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
@@ -58,15 +28,6 @@ const getAllUrls = async (req, res) => {
       total: urls.length
     });
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      // If file doesn't exist, return empty array instead of error
-      return res.status(200).json({
-        success: true,
-        data: [],
-        total: 0,
-        message: 'Sitemap not found, returning empty list'
-      });
-    }
     console.error('Error reading sitemap:', error);
     return res.status(500).json({
       success: false,
