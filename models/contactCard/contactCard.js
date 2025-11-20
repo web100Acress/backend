@@ -63,6 +63,10 @@ const contactCardSchema = new mongoose.Schema(
       type: String, // S3 URL for profile picture
       trim: true,
     },
+    banner_image_url: {
+      type: String, // Header/banner background image URL
+      trim: true,
+    },
     company_logo_url: {
       type: String, // S3 URL for company logo
       trim: true,
