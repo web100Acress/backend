@@ -2,6 +2,25 @@ const ContactCard = require("../../../models/contactCard/contactCard");
 const { validationResult } = require("express-validator");
 const QRCode = require("qrcode");
 const vCard = require("vcards-js");
+const path = require("path");
+
+// Helper to extract a browser-accessible URL from an uploaded file object
+const getFileUrl = (file) => {
+  if (!file) return undefined;
+
+  // If using S3/multer-s3, location will already be a full URL
+  if (file.location) {
+    return file.location;
+  }
+
+  // For local disk storage, map filesystem path to /uploads/<filename>
+  if (file.path) {
+    const filename = path.basename(file.path);
+    return `/uploads/${filename}`;
+  }
+
+  return undefined;
+};
 
 class ContactCardController {
   // Create a new contact card
@@ -20,6 +39,7 @@ class ContactCardController {
         name,
         email,
         phone,
+        whatsapp,
         company,
         designation,
         website,
@@ -31,20 +51,24 @@ class ContactCardController {
         address,
         slug,
         profile_image_url,
+        banner_image_url,
         company_logo_url,
       } = req.body;
 
-      // Handle logo upload if provided
-      let logoUrl = null;
-      if (req.file && req.file.location) {
-        logoUrl = req.file.location; // S3 URL
-      }
+      // Handle uploads if provided
+      const files = req.files || {};
+      const logoFile = files.logo && files.logo[0];
+      const profileImageFile = files.profile_image && files.profile_image[0];
+      const bannerImageFile = files.banner_image && files.banner_image[0];
+
+      const logoUrl = getFileUrl(logoFile);
 
       // Create new contact card
       const contactCard = new ContactCard({
         name,
         email,
         phone,
+        whatsapp: whatsapp && whatsapp.trim() !== '' ? whatsapp : undefined,
         company: company || undefined,
         designation: designation || undefined,
         website: website && website.trim() !== '' ? website : undefined,
@@ -56,7 +80,8 @@ class ContactCardController {
         bio: bio || undefined,
         address: address ? (typeof address === 'string' ? JSON.parse(address) : address) : {},
         slug,
-        profile_image_url: profile_image_url || undefined,
+        profile_image_url: profileImageFile ? getFileUrl(profileImageFile) : (profile_image_url || undefined),
+        banner_image_url: bannerImageFile ? getFileUrl(bannerImageFile) : (banner_image_url || undefined),
         company_logo_url: company_logo_url || undefined,
         createdBy: req.user?.id, // From auth middleware
       });
@@ -157,9 +182,20 @@ class ContactCardController {
 
       const updateData = { ...req.body };
 
-      // Handle logo upload if provided
-      if (req.file && req.file.location) {
-        updateData.logo = req.file.location;
+      // Handle uploaded files if provided
+      const files = req.files || {};
+      const logoFile = files.logo && files.logo[0];
+      const profileImageFile = files.profile_image && files.profile_image[0];
+      const bannerImageFile = files.banner_image && files.banner_image[0];
+
+      if (logoFile) {
+        updateData.logo = getFileUrl(logoFile);
+      }
+      if (profileImageFile) {
+        updateData.profile_image_url = getFileUrl(profileImageFile);
+      }
+      if (bannerImageFile) {
+        updateData.banner_image_url = getFileUrl(bannerImageFile);
       }
 
       // Parse JSON fields if they exist and handle empty fields
@@ -176,7 +212,7 @@ class ContactCardController {
       }
       
       // Handle empty optional fields
-      ['company', 'designation', 'bio', 'profile_image_url', 'company_logo_url'].forEach(field => {
+      ['company', 'designation', 'bio', 'profile_image_url', 'banner_image_url', 'company_logo_url', 'whatsapp'].forEach(field => {
         if (updateData[field] === '') {
           updateData[field] = undefined;
         }
