@@ -28,9 +28,10 @@ class ContactCardController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('❌ Validation failed:', errors.array());
         return res.status(400).json({
           success: false,
-          message: "Validation errors",
+          message: "Validation failed",
           errors: errors.array(),
         });
       }
@@ -46,6 +47,7 @@ class ContactCardController {
         brandColor,
         fontStyle,
         theme,
+        template,
         socialLinks,
         bio,
         address,
@@ -76,6 +78,7 @@ class ContactCardController {
         brandColor,
         fontStyle,
         theme,
+        template: template || 'modern', // Default to 'modern' if not provided
         socialLinks: socialLinks ? (typeof socialLinks === 'string' ? JSON.parse(socialLinks) : socialLinks) : {},
         bio: bio || undefined,
         address: address ? (typeof address === 'string' ? JSON.parse(address) : address) : {},
@@ -217,6 +220,11 @@ class ContactCardController {
           updateData[field] = undefined;
         }
       });
+      
+      // Set default template if not provided (for backward compatibility with old cards)
+      if (!updateData.template) {
+        updateData.template = 'modern';
+      }
 
       const contactCard = await ContactCard.findByIdAndUpdate(
         id,
