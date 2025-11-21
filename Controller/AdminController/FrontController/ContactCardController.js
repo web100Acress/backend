@@ -13,6 +13,13 @@ const getFileUrl = (file) => {
     return file.location;
   }
 
+  // If using S3/multer-s3, key contains the S3 path and we can construct the URL
+  if (file.key) {
+    const { BUCKET } = require("../../../aws/s3Config");
+    const awsRegion = process.env.AWS_REGION || 'ap-south-1';
+    return `https://${BUCKET}.s3.${awsRegion}.amazonaws.com/${file.key}`;
+  }
+
   // For local disk storage, map filesystem path to /uploads/<filename>
   if (file.path) {
     const filename = path.basename(file.path);
@@ -52,8 +59,6 @@ class ContactCardController {
         bio,
         address,
         slug,
-        profile_image_url,
-        banner_image_url,
         company_logo_url,
       } = req.body;
 
@@ -83,8 +88,8 @@ class ContactCardController {
         bio: bio || undefined,
         address: address ? (typeof address === 'string' ? JSON.parse(address) : address) : {},
         slug,
-        profile_image_url: profileImageFile ? getFileUrl(profileImageFile) : (profile_image_url || undefined),
-        banner_image_url: bannerImageFile ? getFileUrl(bannerImageFile) : (banner_image_url || undefined),
+        profile_image_url: profileImageFile ? getFileUrl(profileImageFile) : undefined,
+        banner_image_url: bannerImageFile ? getFileUrl(bannerImageFile) : undefined,
         company_logo_url: company_logo_url || undefined,
         createdBy: req.user?.id, // From auth middleware
       });
