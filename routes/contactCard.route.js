@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
-const upload = require("../aws/multerConfig");
+const upload = require("../aws/multerS3Config");
 const adminVerify = require("../middleware/adminVerify");
 const ContactCardController = require("../Controller/AdminController/FrontController/ContactCardController");
 
@@ -65,28 +65,6 @@ const validateContactCard = [
     .withMessage("Slug can only contain lowercase letters, numbers, and hyphens")
     .isLength({ min: 3, max: 50 })
     .withMessage("Slug must be between 3 and 50 characters"),
-  body("profile_image_url")
-    .optional({ checkFalsy: true })
-    .custom((value) => {
-      if (!value || value.trim() === '') return true;
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        throw new Error("Please enter a valid profile image URL");
-      }
-    }),
-  body("banner_image_url")
-    .optional({ checkFalsy: true })
-    .custom((value) => {
-      if (!value || value.trim() === '') return true;
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        throw new Error("Please enter a valid banner image URL");
-      }
-    }),
   body("company_logo_url")
     .optional({ checkFalsy: true })
     .custom((value) => {
