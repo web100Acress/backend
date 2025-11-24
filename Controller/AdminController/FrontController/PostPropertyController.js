@@ -1065,8 +1065,24 @@ const email = dataPushed.email;
   // postproperty data  view // here we use postproperty id
   static postPropertyOne_View = async (req, res) => {
     try {
-      // console.log("one view")
       const id = req.params.id;
+      
+      // Handle 'all' case
+      if (id === 'all') {
+        const allProperties = await postPropertyModel.find({}).limit(1000);
+        return res.status(200).json({
+          message: "All properties retrieved successfully",
+          data: allProperties,
+        });
+      }
+
+      // Validate if id is a valid ObjectId
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({
+          message: "Invalid property ID format",
+        });
+      }
+
       const data = await postPropertyModel.findOne(
         { "postProperty._id": id },
         {
@@ -1077,14 +1093,15 @@ const email = dataPushed.email;
           },
         },
       );
+      
       if (data) {
         return res.status(200).json({
-          message: "data retrieved successfully ! ",
+          message: "Data retrieved successfully!",
           data,
         });
       } else {
-        return res.status(200).json({
-          message: "data not found !",
+        return res.status(404).json({
+          message: "Property not found!",
         });
       }
     } catch (error) {
