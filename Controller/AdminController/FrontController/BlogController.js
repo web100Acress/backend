@@ -851,22 +851,34 @@ class blogController {
   };
 
   // Check slug availability (normalized)
+  // Uses the same slugify logic as the model pre-save hook for consistency
   static slug_check = async (req, res) => {
     try {
       const raw = (req.params?.slug || '').toString();
+      // Use the same normalization as the model's slugify function
       const normalized = raw
         .toLowerCase()
         .trim()
-        .replace(/['"]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')  // Remove special chars except spaces and hyphens
+        .replace(/\s+/g, '-')           // Replace spaces with hyphens
+        .replace(/-+/g, '-')            // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, '')        // Trim leading/trailing hyphens
         .slice(0, 100);
 
       if (!normalized) {
         return res.status(400).json({ message: 'Invalid slug' });
       }
 
-      const existing = await blogModel.findOne({ slug: normalized }).select('_id slug blog_Title');
+      // First try exact match
+      let existing = await blogModel.findOne({ slug: normalized }).select('_id slug blog_Title');
+      
+      // If no exact match, try case-insensitive regex match to handle edge cases
+      if (!existing) {
+        existing = await blogModel.findOne({ 
+          slug: { $regex: new RegExp(`^${normalized.replace(/[-]/g, '[-]?')}$`, 'i') }
+        }).select('_id slug blog_Title');
+      }
+      
       if (existing) {
         return res.status(200).json({ message: 'Slug taken', data: { exists: true, id: existing._id, slug: existing.slug, title: existing.blog_Title } });
       }
