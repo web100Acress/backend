@@ -13,6 +13,13 @@ const getFileUrl = (file) => {
     return file.location;
   }
 
+  // If using S3/multer-s3, key contains the S3 path and we can construct the URL
+  if (file.key) {
+    const { BUCKET } = require("../../../aws/s3Config");
+    const awsRegion = process.env.AWS_REGION || 'ap-south-1';
+    return `https://${BUCKET}.s3.${awsRegion}.amazonaws.com/${file.key}`;
+  }
+
   // For local disk storage, map filesystem path to /uploads/<filename>
   if (file.path) {
     const filename = path.basename(file.path);
@@ -28,9 +35,10 @@ class ContactCardController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('❌ Validation failed:', errors.array());
         return res.status(400).json({
           success: false,
-          message: "Validation errors",
+          message: "Validation failed",
           errors: errors.array(),
         });
       }
@@ -46,12 +54,11 @@ class ContactCardController {
         brandColor,
         fontStyle,
         theme,
+        template,
         socialLinks,
         bio,
         address,
         slug,
-        profile_image_url,
-        banner_image_url,
         company_logo_url,
       } = req.body;
 
@@ -76,12 +83,13 @@ class ContactCardController {
         brandColor,
         fontStyle,
         theme,
+        template: template || 'modern', // Default to 'modern' if not provided
         socialLinks: socialLinks ? (typeof socialLinks === 'string' ? JSON.parse(socialLinks) : socialLinks) : {},
         bio: bio || undefined,
         address: address ? (typeof address === 'string' ? JSON.parse(address) : address) : {},
         slug,
-        profile_image_url: profileImageFile ? getFileUrl(profileImageFile) : (profile_image_url || undefined),
-        banner_image_url: bannerImageFile ? getFileUrl(bannerImageFile) : (banner_image_url || undefined),
+        profile_image_url: profileImageFile ? getFileUrl(profileImageFile) : undefined,
+        banner_image_url: bannerImageFile ? getFileUrl(bannerImageFile) : undefined,
         company_logo_url: company_logo_url || undefined,
         createdBy: req.user?.id, // From auth middleware
       });
@@ -217,6 +225,11 @@ class ContactCardController {
           updateData[field] = undefined;
         }
       });
+      
+      // Set default template if not provided (for backward compatibility with old cards)
+      if (!updateData.template) {
+        updateData.template = 'modern';
+      }
 
       const contactCard = await ContactCard.findByIdAndUpdate(
         id,

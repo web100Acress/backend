@@ -87,38 +87,79 @@ const contactCardSchema = new mongoose.Schema(
       enum: ["light", "dark", "gradient"],
       default: "light",
     },
+    template: {
+      type: String,
+      enum: ["modern", "executive", "minimalist", "creative", "premium", "glassmorphism"],
+      default: "modern",
+    },
     
     // Social Links (optional)
     socialLinks: {
       linkedin: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?linkedin\.com\/.*/, "Please enter a valid LinkedIn URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https:\/\/(www\.)?linkedin\.com\/.*/.test(v);
+          },
+          message: "Please enter a valid LinkedIn URL"
+        }
       },
       twitter: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?(twitter\.com|x\.com)\/.*/, "Please enter a valid Twitter/X URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https:\/\/(www\.)?(twitter\.com|x\.com)\/.*/.test(v);
+          },
+          message: "Please enter a valid Twitter/X URL"
+        }
       },
       instagram: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?instagram\.com\/.*/, "Please enter a valid Instagram URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https:\/\/(www\.)?instagram\.com\/.*/.test(v);
+          },
+          message: "Please enter a valid Instagram URL"
+        }
       },
       facebook: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?facebook\.com\/.*/, "Please enter a valid Facebook URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https:\/\/(www\.)?facebook\.com\/.*/.test(v);
+          },
+          message: "Please enter a valid Facebook URL"
+        }
       },
       github: {
         type: String,
         trim: true,
-        match: [/^https:\/\/(www\.)?github\.com\/.*/, "Please enter a valid GitHub URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https:\/\/(www\.)?github\.com\/.*/.test(v);
+          },
+          message: "Please enter a valid GitHub URL"
+        }
       },
       website: {
         type: String,
         trim: true,
-        match: [/^https?:\/\/.+/, "Please enter a valid website URL"],
+        validate: {
+          validator: function(v) {
+            if (!v || v === '') return true;
+            return /^https?:\/\/.+/.test(v);
+          },
+          message: "Please enter a valid website URL"
+        }
       },
     },
     
