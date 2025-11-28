@@ -19,6 +19,8 @@ router.post(
     blogController.blog_insert,
   );
   
+  // Fetch blog by slug
+  router.get("/by-slug/:slug", blogController.blog_by_slug);
   // Slug availability check
   router.get("/slug/:slug", blogController.slug_check);
   // Categories
