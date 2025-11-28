@@ -854,14 +854,14 @@ class blogController {
   static blog_by_slug = async (req, res) => {
     try {
       const raw = (req.params?.slug || '').toString();
-      const normalized = raw
+      // Use EXACT same slugify logic as the model (NO trailing hyphen trim)
+      const normalized = (raw || '')
+        .toString()
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 100);
+        .replace(/-+/g, '-');
 
       if (!normalized) {
         return res.status(404).json({ message: 'Invalid slug' });
