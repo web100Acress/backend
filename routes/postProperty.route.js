@@ -2,6 +2,7 @@ const express = require("express");
 const PostPropertyController = require("../Controller/AdminController/FrontController/PostPropertyController");
 const authAdmin = require("../middleware/registerAuth");
 const adminVerify = require("../middleware/adminVerify");
+const { adminSalesHeadVerify } = require("../middleware/adminVerify");
 const upload = require("../aws/multerConfig");
 const mongoose = require("mongoose");
 
@@ -20,6 +21,7 @@ router.get("/logout", PostPropertyController.postPerson_logout);
 router.post("/postProperty_forget", PostPropertyController.postPerson_forget);
 router.post("/reset/:token", PostPropertyController.postPerson_reset);
 router.get("/view/allusers",require("../middleware/adminVerify").hrAdminVerify, PostPropertyController.postPerson_View);
+router.get("/view/allusers/saleshead", adminSalesHeadVerify, PostPropertyController.postPerson_View);
 router.get("/view/allListedProperty",require("../middleware/adminVerify").hrAdminVerify, PostPropertyController.postPerson_View_AllListedProperty);
 router.get("/edit/:id", PostPropertyController.postPerson_Edit);
 router.post("/update/:id", PostPropertyController.postPerson_update);

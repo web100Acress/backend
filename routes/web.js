@@ -3,7 +3,7 @@ const router = express.Router();
 const upload = require("../aws/multerConfig");
 const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
-const { hrAdminVerify } = require("../middleware/adminVerify");
+const { hrAdminVerify, adminSalesHeadVerify } = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Import S3 Routes
 const s3Routes = require("./s3Routes");
@@ -75,8 +75,8 @@ router.delete(
 
 //from
 router.post("/userInsert", projectController.userInsert);
-router.get("/userViewAll",adminVerify, projectController.userViewAll);
-router.get("/userViewAll/dowloadData",adminVerify, projectController.enquiryDownload);
+router.get("/userViewAll", adminSalesHeadVerify, projectController.userViewAll);
+router.get("/userViewAll/dowloadData", adminSalesHeadVerify, projectController.enquiryDownload);
 router.get("/userviewDetail/:id", projectController.userViewDetail);
 router.post("/userUpdate/:id", projectController.userUpdate);
 router.delete("/userdataDelete/delete/:id", projectController.userdataDelete);
