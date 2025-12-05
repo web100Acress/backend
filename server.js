@@ -65,7 +65,7 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 // Parse allowed origins from environment variable or use defaults
-const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000,https://api.100acress.com")
+const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000,http://localhost:5000,https://api.100acress.com")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -78,7 +78,8 @@ const domains = [
   '100acress.in',
   'www.100acress.in',
   '100acress.org',
-  'www.100acress.org'
+  'www.100acress.org',
+  'localhost:5000'
 ];
 
 // Add all variations (http, https, with/without www)
