@@ -1,4 +1,5 @@
 const ProjectOrderModel = require("../../../models/projectDetail/projectOrder");
+const ProjectOrder = require("../../../models/ProjectOrder");
 const ApiResponse = require("../../../Utilities/ApiResponse");
 const ApiError = require("../../../Utilities/ApiError");
 const AsyncHandler = require("../../../Utilities/AsyncHandler");
@@ -119,6 +120,7 @@ class ProjectOrderController {
   // Get all project orders for sync (used by frontend)
   static getAllProjectOrdersForSync = AsyncHandler(async (req, res) => {
     try {
+      // Get builder-based orders
       const projectOrders = await ProjectOrderModel.find({});
       
       // Transform data to match Redux structure
@@ -133,6 +135,25 @@ class ProjectOrderController {
           randomSeeds[order.builderName] = order.randomSeed;
         }
       });
+
+      // Get status-based orders from admin panel
+      let statusOrders = {};
+      try {
+        const adminProjectOrder = await ProjectOrder.findOne();
+        if (adminProjectOrder && adminProjectOrder.data) {
+          // Transform admin panel data to match frontend structure
+          Object.keys(adminProjectOrder.data).forEach(statusKey => {
+            const statusData = adminProjectOrder.data[statusKey];
+            if (Array.isArray(statusData)) {
+              // Keep the full structure with isActive and name properties
+              customOrders[statusKey] = statusData;
+              buildersWithCustomOrder[statusKey] = true;
+            }
+          });
+        }
+      } catch (error) {
+        console.log('No admin project orders found, using builder orders only');
+      }
 
       const syncData = {
         customOrders,
@@ -149,4 +170,4 @@ class ProjectOrderController {
   });
 }
 
-module.exports = ProjectOrderController; 
+module.exports = ProjectOrderController;

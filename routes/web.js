@@ -16,13 +16,12 @@ const aboutController = require("../Controller/AdminController/FrontController/A
 const projectController = require("../Controller/AdminController/FrontController/ProjectController");
 const BuyController = require("../Controller/AdminController/FrontController/BuyController");
 const rentController = require("../Controller/AdminController/FrontController/RentController");
-
-// const authAdmin = require('../middleware/registerAuth')
 const PostPropertyController = require("../Controller/AdminController/FrontController/PostPropertyController");
 const newlaunchController = require("../Controller/AdminController/FrontController/NewlauchController");
 const buyCommercial_Model = require("../models/property/buyCommercial");
 const authAdmin = require("../middleware/registerAuth");
 const CareerController = require("../Controller/AdminController/FrontController/CareerController");
+const ProjectOrderController = require("../Controller/AdminController/FrontController/ProjectOrderController");
 const postPropertyRoute = require("./postProperty.route");
 const projectRoute = require("./Project.route");
 const propertyRoute = require("./property.route");
@@ -168,6 +167,9 @@ router.use("/blog", blogRoute);
 
 //Project Order
 router.use("/projectOrder", projectOrderRoute);
+
+// API Project Orders (for frontend compatibility)
+router.get("/api/project-orders", ProjectOrderController.getAllProjectOrdersForSync);
 
 // Property Order
 // searching rent and buy
