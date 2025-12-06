@@ -7,7 +7,7 @@ const adminVerify = require('../middleware/adminVerify');
 router.get('/', adminVerify, ProjectOrderController.getProjectOrders);
 
 // Update project orders
-router.put('/', adminVerify, ProjectOrderController.updateProjectOrders);
+router.post('/', adminVerify, ProjectOrderController.updateProjectOrders);
 
 // Get project order by category
 router.get('/:category', adminVerify, ProjectOrderController.getProjectOrderByCategory);
