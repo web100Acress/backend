@@ -47,7 +47,13 @@ class ProjectOrderController {
           budgetPlots: [
             { id: 20, name: "Budget Plot 1", order: 1, isActive: true },
             { id: 21, name: "Budget Plot 2", order: 2, isActive: true }
-          ]
+          ],
+          // Status-based orders
+          newlaunch: [],
+          upcoming: [],
+          comingsoon: [],
+          underconstruction: [],
+          readytomove: []
         };
         
         return res.status(200).json({
