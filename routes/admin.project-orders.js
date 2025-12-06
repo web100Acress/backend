@@ -8,6 +8,7 @@ router.get('/', adminVerify, ProjectOrderController.getProjectOrders);
 
 // Update project orders
 router.post('/', adminVerify, ProjectOrderController.updateProjectOrders);
+router.put('/', adminVerify, ProjectOrderController.updateProjectOrders);
 
 // Get project order by category
 router.get('/:category', adminVerify, ProjectOrderController.getProjectOrderByCategory);
