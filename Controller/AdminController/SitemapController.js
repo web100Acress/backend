@@ -3,14 +3,45 @@ const path = require('path');
 const xml2js = require('xml2js');
 
 
-// Path to sitemap.xml file
-const SITEMAP_PATH = path.join(__dirname, '../../../100acressFront', 'public', 'sitemap.xml');
+// Path to sitemap.xml file - check multiple possible locations
+const getPossibleSitemapPaths = () => {
+  const paths = [
+    path.join(__dirname, '../../../100acressFront', 'public', 'sitemap.xml'), // Development
+    path.join(__dirname, '..', '..', 'public', 'sitemap.xml'), // Production
+    path.join(__dirname, '..', '..', '..', 'public', 'sitemap.xml'), // Alternative production
+    path.join(process.cwd(), 'public', 'sitemap.xml'), // Current working directory
+    '/var/www/html/public/sitemap.xml', // Common production path
+    '/home/site/wwwroot/public/sitemap.xml', // Azure path
+  ];
+  return paths;
+};
+
+const SITEMAP_PATH = getPossibleSitemapPaths()[0]; // Default to first path
+
+// Helper function to find the actual sitemap file
+const findSitemapPath = async () => {
+  const paths = getPossibleSitemapPaths();
+  
+  for (const path of paths) {
+    try {
+      await fs.access(path);
+      return path;
+    } catch (error) {
+      // File doesn't exist, try next path
+      continue;
+    }
+  }
+  
+  throw new Error(`Sitemap file not found in any of these locations: ${paths.join(', ')}`);
+};
 
 
 // Get all sitemap URLs
 const getAllUrls = async (req, res) => {
   try {
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    const sitemapPath = await findSitemapPath();
+    console.log('Found sitemap at:', sitemapPath);
+    const xmlData = await fs.readFile(sitemapPath, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
@@ -40,6 +71,11 @@ const getAllUrls = async (req, res) => {
 // Add new URL to sitemap
 const addUrl = async (req, res) => {
   try {
+    console.log('Add URL request received:', req.body);
+    
+    const sitemapPath = await findSitemapPath();
+    console.log('Found sitemap at:', sitemapPath);
+    
     const { loc, lastmod, changefreq, priority } = req.body;
     
     // Validate required field
@@ -51,7 +87,7 @@ const addUrl = async (req, res) => {
     }
     
     // Read existing sitemap
-    const xmlData = await fs.readFile(SITEMAP_PATH, 'utf-8');
+    const xmlData = await fs.readFile(sitemapPath, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xmlData);
     
@@ -74,7 +110,7 @@ const addUrl = async (req, res) => {
     const xml = builder.buildObject(result);
     
     // Write back to file
-    await fs.writeFile(SITEMAP_PATH, xml, 'utf-8');
+    await fs.writeFile(sitemapPath, xml, 'utf-8');
     
     res.status(201).json({
       success: true,
