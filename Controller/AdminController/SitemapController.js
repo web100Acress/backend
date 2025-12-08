@@ -25,6 +25,7 @@ const findSitemapPath = async () => {
   for (const path of paths) {
     try {
       await fs.access(path);
+      console.log('Found sitemap at:', path);
       return path;
     } catch (error) {
       // File doesn't exist, try next path
@@ -32,7 +33,25 @@ const findSitemapPath = async () => {
     }
   }
   
-  throw new Error(`Sitemap file not found in any of these locations: ${paths.join(', ')}`);
+  // If no sitemap found, create a default one in the current working directory
+  const defaultPath = path.join(process.cwd(), 'public', 'sitemap.xml');
+  console.log('No sitemap found, creating default at:', defaultPath);
+  
+  try {
+    await fs.mkdir(path.dirname(defaultPath), { recursive: true });
+    const defaultSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.100acress.com/</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+    await fs.writeFile(defaultPath, defaultSitemap, 'utf-8');
+    return defaultPath;
+  } catch (error) {
+    throw new Error(`Sitemap file not found and could not create default. Searched in: ${paths.join(', ')}. Error: ${error.message}`);
+  }
 };
 
 
@@ -282,5 +301,6 @@ module.exports = {
   addUrl,
   updateUrl,
   deleteUrl,
-  getUrlById
+  getUrlById,
+  findSitemapPath
 };
