@@ -10,9 +10,15 @@ const getPossibleSitemapPaths = () => {
     path.join(__dirname, '..', '..', 'public', 'sitemap.xml'), // Production
     path.join(__dirname, '..', '..', '..', 'public', 'sitemap.xml'), // Alternative production
     path.join(process.cwd(), 'public', 'sitemap.xml'), // Current working directory
+    path.join(process.cwd(), '100acressFront', 'public', 'sitemap.xml'), // Production with frontend folder
+    path.join(process.cwd(), 'frontend', '100acressFront', 'public', 'sitemap.xml'), // Alternative structure
+    path.join(process.cwd(), 'client', 'public', 'sitemap.xml'), // Another common structure
     '/var/www/html/public/sitemap.xml', // Common production path
     '/home/site/wwwroot/public/sitemap.xml', // Azure path
+    '/var/www/vhosts/100acress.com/httpdocs/public/sitemap.xml', // Plesk path
+    path.join('/usr', 'local', 'etc', 'nginx', 'html', 'public', 'sitemap.xml'), // Nginx path
   ];
+  console.log('Checking sitemap paths:', paths);
   return paths;
 };
 
@@ -22,20 +28,25 @@ const SITEMAP_PATH = getPossibleSitemapPaths()[0]; // Default to first path
 const findSitemapPath = async () => {
   const paths = getPossibleSitemapPaths();
   
-  for (const path of paths) {
+  console.log('Searching for sitemap in', paths.length, 'locations...');
+  
+  for (let i = 0; i < paths.length; i++) {
+    const currentPath = paths[i];
     try {
-      await fs.access(path);
-      console.log('Found sitemap at:', path);
-      return path;
+      await fs.access(currentPath);
+      const stats = await fs.stat(currentPath);
+      console.log(`✓ Found sitemap at path ${i + 1}:`, currentPath);
+      console.log(`  File size: ${stats.size} bytes, Modified: ${stats.mtime}`);
+      return currentPath;
     } catch (error) {
-      // File doesn't exist, try next path
+      console.log(`✗ Path ${i + 1} not accessible:`, currentPath, '-', error.message);
       continue;
     }
   }
   
   // If no sitemap found, create a default one in the current working directory
   const defaultPath = path.join(process.cwd(), 'public', 'sitemap.xml');
-  console.log('No sitemap found, creating default at:', defaultPath);
+  console.log('⚠️ No existing sitemap found, creating default at:', defaultPath);
   
   try {
     await fs.mkdir(path.dirname(defaultPath), { recursive: true });
@@ -48,6 +59,7 @@ const findSitemapPath = async () => {
   </url>
 </urlset>`;
     await fs.writeFile(defaultPath, defaultSitemap, 'utf-8');
+    console.log('✓ Created default sitemap with 1 URL');
     return defaultPath;
   } catch (error) {
     throw new Error(`Sitemap file not found and could not create default. Searched in: ${paths.join(', ')}. Error: ${error.message}`);
