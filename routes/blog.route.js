@@ -18,6 +18,12 @@ router.post(
     upload.single("blog_Image"),
     blogController.blog_insert,
   );
+// AI auto-generation
+router.post(
+  "/auto-generate",
+  ContentWriterVerify,
+  blogController.generate_and_insert,
+);
   
   // Fetch blog by slug
   router.get("/by-slug/:slug", blogController.blog_by_slug);
