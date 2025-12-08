@@ -17,6 +17,8 @@ const getPossibleSitemapPaths = () => {
     '/home/site/wwwroot/public/sitemap.xml', // Azure path
     '/var/www/vhosts/100acress.com/httpdocs/public/sitemap.xml', // Plesk path
     path.join('/usr', 'local', 'etc', 'nginx', 'html', 'public', 'sitemap.xml'), // Nginx path
+    '/app/public/sitemap.xml', // Docker container path
+    '/app/100acressFront/public/sitemap.xml', // Docker with frontend folder
   ];
   console.log('Checking sitemap paths:', paths);
   return paths;
