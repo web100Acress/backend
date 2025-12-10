@@ -5,8 +5,8 @@ const mammoth = require("mammoth");
 
 let genAI;
 try {
-  if (process.env.GOOGLE_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+  if (process.env.GEMINI_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   } else {
     console.warn("GOOGLE_API_KEY not found. AI scoring will be disabled.");
   }
