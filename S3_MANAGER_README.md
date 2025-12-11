@@ -13,7 +13,7 @@ Complete backend API for managing AWS S3 bucket `100acress-media-bucket` with fu
 
 ## 📁 S3 Bucket Structure
 
-Your `100acress-media-bucket` contains these folders:
+Your `100acress-media-bucket` contains these folders:,
 ```
 100acress-media-bucket/
 ├── 100acre/
