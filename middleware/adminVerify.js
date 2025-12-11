@@ -75,7 +75,7 @@ const hrAdminVerify = async (req, res, next) => {
 
     // Allow Admin, HR, IT, and Super Admin roles (case-insensitive)
     const userRole = decoded.role?.toLowerCase();
-    const allowedRoles = ["admin", "hr", "it", "superadmin", "super_admin"];
+    const allowedRoles = ["admin", "hr", "hr_manager", "it", "superadmin", "super_admin"];
     
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({
