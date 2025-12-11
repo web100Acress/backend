@@ -9,6 +9,87 @@ const {
   deleteFile,
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
+const { generateBlog } = require("../../../Utilities/geminiClient");
+
+// Helpers for loose JSON parsing in case model wraps content strangely
+function tryParse(str) {
+  if (!str) return null;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeCandidate(c) {
+  return (c || "")
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```+$/g, "")
+    .replace(/^json\s*/i, "")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .replace(/,\s*}/g, "}")
+    .replace(/,\s*]/g, "]");
+}
+
+function parseLooseJson(text) {
+  if (!text) return null;
+  const candidates = [];
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence && fence[1]) candidates.push(fence[1]);
+  const brace = text.match(/\{[\s\S]*\}/);
+  if (brace) candidates.push(brace[0]);
+  const first = text.indexOf("{");
+  const last = text.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    candidates.push(text.slice(first, last + 1));
+  }
+  candidates.push(text);
+  for (const c of candidates) {
+    const cleaned = normalizeCandidate(c);
+    const parsed = tryParse(cleaned);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function extractShallowFields(text) {
+  if (!text) return {};
+  const getField = (key) => {
+    const m = text.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`, "i"));
+    return m && m[1] ? m[1] : "";
+  };
+  return {
+    title: getField("title"),
+    metaTitle: getField("metaTitle"),
+    metaDescription: getField("metaDescription"),
+    introduction: getField("introduction"),
+    slug: getField("slug"),
+  };
+}
+
+function buildBodyFromParsed(ai) {
+  const intro = (ai?.introduction || "").toString().trim();
+  const sections = Array.isArray(ai?.sections) ? ai.sections : [];
+  const conclusion = (ai?.conclusion || "").toString().trim();
+  const bodyHtmlField = (ai?.bodyHtml || ai?.contentHtml || "").toString().trim();
+  const pieces = [];
+  if (bodyHtmlField) pieces.push(bodyHtmlField);
+  if (!bodyHtmlField && ai?.metaDescription) {
+    pieces.push(`<p>${ai.metaDescription}</p>`);
+  }
+  if (intro) pieces.push(`<p>${intro}</p>`);
+  sections.forEach((s) => {
+    const heading = (s.heading || "").toString().trim();
+    const content = (s.bodyHtml || "").toString().trim();
+    if (heading) pieces.push(`<h2>${heading}</h2>`);
+    if (content) pieces.push(content);
+  });
+  if (conclusion) pieces.push(`<p>${conclusion}</p>`);
+  return pieces.filter(Boolean).join("");
+}
 const fs = require("fs");
 const BlogEnquiry = require("../../../models/blog/blogEnquiry");
 const mailer = require("../../../Utilities/Nodemailer");
@@ -981,6 +1062,134 @@ class blogController {
     } catch (error) {
       console.error('search_projects error:', error);
       return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  // --- AI blog generation ---
+  static generate_and_insert = async (req, res) => {
+    try {
+      const topic = (req.body?.topic || '').toString().trim();
+      if (!topic) {
+        return res.status(400).json({ message: 'Topic is required' });
+      }
+
+      // Validate key before calling Gemini
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ message: 'GEMINI_API_KEY not configured on backend' });
+      }
+
+      const author = (req.body?.author || 'Admin').toString().trim() || 'Admin';
+      const blog_Category =
+        (req.body?.blog_Category || req.body?.category || 'General')
+          .toString()
+          .trim() || 'General';
+      const isPublished =
+        String(req.body?.isPublished).toLowerCase() === 'true' ||
+        req.body?.isPublished === true;
+
+      // Call Gemini to generate content (parsed + raw fallback)
+      const aiResult = await generateBlog(topic);
+      let ai = aiResult?.parsed || {};
+      const rawText = aiResult?.rawText || '';
+
+      // If parsing failed in client, attempt again here
+      const aiFromRaw = rawText
+        ? parseLooseJson(rawText) || tryParse(normalizeCandidate(rawText))
+        : null;
+      if (!ai || Object.keys(ai).length === 0) {
+        ai = aiFromRaw || {};
+      }
+      // If still empty, try shallow extraction
+      if (!ai || Object.keys(ai).length === 0) {
+        ai = extractShallowFields(rawText);
+      }
+
+      // Build HTML description from parts
+      // Build HTML body from structured fields
+      let bodyHtml = buildBodyFromParsed(ai);
+
+      // If empty, try from aiFromRaw
+      if (!bodyHtml && aiFromRaw && Object.keys(aiFromRaw).length) {
+        bodyHtml = buildBodyFromParsed(aiFromRaw);
+      }
+
+      // Fallbacks
+      if (!bodyHtml && ai?.contentHtml) {
+        bodyHtml = ai.contentHtml.toString();
+      }
+      if (!bodyHtml && ai?.metaDescription) {
+        bodyHtml = `<p>${ai.metaDescription}</p>`;
+      }
+      if (!bodyHtml && ai?.introduction) {
+        bodyHtml = `<p>${ai.introduction}</p>`;
+      }
+      if (!bodyHtml && rawText) {
+        const cleaned = normalizeCandidate(rawText)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        bodyHtml = `<p>${cleaned}</p>`;
+      }
+
+      const faqs = (Array.isArray(ai.faqs) ? ai.faqs : [])
+        .map((f) => ({
+          question: (f.question || '').toString().trim(),
+          answer: (f.answer || '').toString(),
+        }))
+        .filter((f) => f.question && f.answer);
+
+      // Placeholder image (reuse existing pattern)
+      const imageData = {
+        Key: `placeholder/${Date.now()}-blog-image`,
+        Location:
+          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E",
+      };
+
+      const newBlog = new blogModel({
+        blog_Image: imageData,
+        blog_Title: ai.title || ai.metaTitle || topic,
+        blog_Description: bodyHtml || ai.contentHtml || ai.introduction || rawText,
+        author,
+        blog_Category,
+        isPublished,
+        enableFAQ: faqs.length > 0,
+        faqs: faqs.length ? faqs : undefined,
+        metaTitle: ai.metaTitle || ai.title || undefined,
+        metaDescription: ai.metaDescription || undefined,
+        slug: ai.slug || ai.title || topic,
+      });
+
+      await newBlog.save();
+
+      return res.status(201).json({
+        message: 'Blog generated and saved',
+        data: newBlog,
+      });
+    } catch (error) {
+      console.error('generate_and_insert error:', error);
+      const isKeyMissing =
+        error?.message === 'GEMINI_API_KEY missing' ||
+        error?.message === 'GEMINI_API_KEY not configured';
+
+      // Try to extract Gemini API message if present
+      const modelMessage =
+        error?.response?.data?.error?.message ||
+        error?.response?.error?.message ||
+        error?.message;
+
+      const rawResponse = error?.response?.data || error?.response || null;
+      const rawText = error?.rawText;
+
+      const message = isKeyMissing
+        ? 'GEMINI_API_KEY not configured'
+        : modelMessage || 'Failed to generate blog';
+
+      return res.status(500).json({
+        message,
+        detail: modelMessage,
+        raw: rawResponse,
+        rawText,
+      });
     }
   };
 
