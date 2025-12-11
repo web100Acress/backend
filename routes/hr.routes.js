@@ -828,7 +828,7 @@ router.patch('/leave/:id/review', async (req, res) => {
 });
 
 // HR Management routes - Get all users
-router.get('/users', adminVerify, HrController.getAllUsers);
+router.get('/users', hrAdminVerify, HrController.getAllUsers);
 
 // HR Management routes - Update user authorization status
 router.post('/user/:id/status', hrAdminVerify, HrController.updateUserStatus);
