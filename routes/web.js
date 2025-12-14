@@ -218,6 +218,7 @@ router.post(
 // remove all just chnage s code
 router.get("/career/opening/ViewAll", CareerController.openingView_all);
 router.get("/career/opening/View/:id", CareerController.openingView_id);
+router.get("/career/opening/:id", CareerController.openingView_id); // Alias for View/:id
 router.get("/career/opening/edit/:id", CareerController.openingEdit);
 router.put(
   "/career/opening/update/:id",
