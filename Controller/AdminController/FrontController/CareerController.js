@@ -173,6 +173,36 @@ class CareerController {
       });
     }
   };
+
+  static openingUpdateStatus = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { status } = req.body || {};
+
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: "invalid object id pass !" });
+      }
+
+      if (status !== "open" && status !== "closed") {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const updated = await openModal.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true },
+      );
+
+      if (!updated) {
+        return res.status(404).json({ message: "Opening not found" });
+      }
+
+      return res.status(200).json({ message: "Status updated", data: updated });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
   static careerUpdate = async (req, res) => {
     try {
       // Destructure files for easier access
@@ -305,6 +335,7 @@ class CareerController {
       const {
         jobLocation,
         jobTitle,
+        status,
         responsibility,
         experience,
         skill,
@@ -321,6 +352,7 @@ class CareerController {
         const jobData = {
           jobLocation: jobLocation,
           jobTitle: jobTitle,
+          ...(status === 'open' || status === 'closed' ? { status } : {}),
           responsibility: responsibility,
           experience: experience,
           skill: skill,
@@ -638,6 +670,19 @@ class CareerController {
 
       const opening = await openModal.findById(openingId);
       if (!opening) return res.status(404).json({ message: "Opening not found" });
+
+      if (opening.status === "closed") {
+        const supportEmail = "support@100acress.com";
+        const supportPhone = "+91 8500-900-100";
+        return res.status(409).json({
+          code: "JOB_CLOSED",
+          message: `This position is currently closed. Please contact ${supportEmail} or call ${supportPhone} for assistance.`,
+          support: {
+            email: supportEmail,
+            phone: supportPhone,
+          },
+        });
+      }
 
       // If resume file is attached, upload to S3
       let resumeUrlFinal = resumeUrl;

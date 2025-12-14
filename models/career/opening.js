@@ -7,6 +7,11 @@ const openSchema = new mongoose.Schema({
   jobTitle: {
     type: String,
   },
+  status: {
+    type: String,
+    enum: ["open", "closed"],
+    default: "open",
+  },
   responsibility: {
     type: String,
   },
