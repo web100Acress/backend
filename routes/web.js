@@ -224,6 +224,14 @@ router.put(
   upload.single('jdFile'),
   CareerController.openingUpdate
 );
+
+// Update job opening status (open/closed)
+router.patch(
+  "/career/opening/:id",
+  hrAdminVerify,
+  CareerController.openingUpdateStatus,
+);
+
 router.delete("/career/opening/delete/:id", CareerController.openingDelete);
 
 // Applications for job openings
@@ -232,6 +240,7 @@ router.post(
   resumeUpload.single("resume"),
   CareerController.applyForOpening,
 );
+
 router.get(
   "/career/opening/:id/applications",
   hrAdminVerify,
