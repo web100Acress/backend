@@ -203,11 +203,24 @@ app.options("*", cors(corsOptions)); // Enable preflight for all routes
 // Handle preflight requests more efficiently
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+    // If the CORS middleware already handled/attached headers, do not override them.
+    // Duplicate Access-Control-* headers can cause browsers to reject the preflight.
+    if (!res.getHeader('Access-Control-Allow-Origin')) {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    }
+    if (!res.getHeader('Access-Control-Allow-Methods')) {
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    }
+    if (!res.getHeader('Access-Control-Allow-Headers')) {
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token');
+    }
+    // Only set credentials header if an Origin is present (never pair credentials=true with '*').
+    if (!res.getHeader('Access-Control-Allow-Credentials') && req.headers.origin) {
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    if (!res.getHeader('Access-Control-Max-Age')) {
+      res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+    }
     return res.status(204).end();
   }
   next();
