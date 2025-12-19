@@ -1867,6 +1867,8 @@ static projectSearch = async (req, res) => {
       const includeDeleted = String(req.query.includeDeleted || '0') === '1';
       const date = (req.query.date || '').trim();
       const month = (req.query.month || '').trim();
+      const startDate = (req.query.startDate || '').trim();
+      const endDate = (req.query.endDate || '').trim();
 
       // Soft-delete filter unless explicitly included
       const filter = includeDeleted ? {} : { deletedAt: { $in: [null, undefined] } };
@@ -1879,7 +1881,29 @@ static projectSearch = async (req, res) => {
         ];
       }
 
-      if (date) {
+      // Date filtering (createdAt)
+      // - startDate/endDate: YYYY-MM-DD (inclusive range)
+      // - date: YYYY-MM-DD (filters that specific day)
+      // - month: YYYY-MM (filters whole month)
+      // Precedence: range > date > month
+      if (startDate || endDate) {
+        const ymdRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!startDate || !ymdRegex.test(startDate)) {
+          return res.status(400).json({ message: "Invalid 'startDate' format. Use YYYY-MM-DD." });
+        }
+        if (!endDate || !ymdRegex.test(endDate)) {
+          return res.status(400).json({ message: "Invalid 'endDate' format. Use YYYY-MM-DD." });
+        }
+
+        const [sy, sm, sd] = startDate.split('-').map(Number);
+        const [ey, em, ed] = endDate.split('-').map(Number);
+        const start = new Date(sy, sm - 1, sd);
+        const endExclusive = new Date(ey, em - 1, ed + 1);
+        if (isNaN(start.getTime()) || isNaN(endExclusive.getTime()) || start > endExclusive) {
+          return res.status(400).json({ message: "Invalid date range." });
+        }
+        filter.createdAt = { $gte: start, $lt: endExclusive };
+      } else if (date) {
         const match = /^\d{4}-\d{2}-\d{2}$/.test(date);
         if (!match) {
           return res.status(400).json({ message: "Invalid 'date' format. Use YYYY-MM-DD." });
