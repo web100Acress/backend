@@ -1865,6 +1865,8 @@ static projectSearch = async (req, res) => {
 
       const search = (req.query.search || '').trim();
       const includeDeleted = String(req.query.includeDeleted || '0') === '1';
+      const date = (req.query.date || '').trim();
+      const month = (req.query.month || '').trim();
 
       // Soft-delete filter unless explicitly included
       const filter = includeDeleted ? {} : { deletedAt: { $in: [null, undefined] } };
@@ -1875,6 +1877,26 @@ static projectSearch = async (req, res) => {
           { mobile: { $regex: search, $options: 'i' } },
           { projectName: { $regex: search, $options: 'i' } },
         ];
+      }
+
+      if (date) {
+        const match = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        if (!match) {
+          return res.status(400).json({ message: "Invalid 'date' format. Use YYYY-MM-DD." });
+        }
+        const [y, m, d] = date.split('-').map(Number);
+        const start = new Date(y, m - 1, d);
+        const end = new Date(y, m - 1, d + 1);
+        filter.createdAt = { $gte: start, $lt: end };
+      } else if (month) {
+        const match = /^\d{4}-\d{2}$/.test(month);
+        if (!match) {
+          return res.status(400).json({ message: "Invalid 'month' format. Use YYYY-MM." });
+        }
+        const [y, m] = month.split('-').map(Number);
+        const start = new Date(y, m - 1, 1);
+        const end = new Date(y, m, 1);
+        filter.createdAt = { $gte: start, $lt: end };
       }
 
       // Get total count
