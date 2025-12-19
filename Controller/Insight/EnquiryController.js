@@ -89,6 +89,66 @@ class EnquiryController {
     }
   };
 
+  // Insert end of year sale enquiry
+  static endOfYearSaleEnquiry = async (req, res) => {
+    try {
+      const { name, mobile, budget, message, enquiryType, timestamp, source } = req.body;
+
+      // Validate required fields
+      if (!name || !mobile || !budget || !message) {
+        return res.status(400).json({
+          success: false,
+          message: 'All required fields must be filled'
+        });
+      }
+
+      // Create comprehensive query string
+      const comprehensiveQuery = `
+End of Year Sale Enquiry:
+Name: ${name}
+Mobile: ${mobile}
+Budget: ${budget}
+Message: ${message}
+Enquiry Type: ${enquiryType || 'end_of_year_sale'}
+Source: ${source || 'enquire-now-page'}
+Timestamp: ${timestamp || new Date().toISOString()}
+      `.trim();
+
+      // Create new enquiry with comprehensive data
+      const enquiryData = new Enquiry({
+        name: name,
+        email: '',
+        mobile: mobile,
+        query: comprehensiveQuery,
+        source: source || 'enquire-now-page'
+      });
+
+      await enquiryData.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'Enquiry submitted successfully',
+        data: {
+          id: enquiryData._id,
+          name: enquiryData.name,
+          email: enquiryData.email,
+          mobile: enquiryData.mobile,
+          query: enquiryData.query,
+          status: enquiryData.status,
+          source: enquiryData.source,
+          createdAt: enquiryData.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Error creating end of year sale enquiry:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to submit enquiry. Please try again.',
+        error: error.message
+      });
+    }
+  };
+
   // Get all enquiries (for admin)
   static getAllEnquiries = async (req, res) => {
     try {
