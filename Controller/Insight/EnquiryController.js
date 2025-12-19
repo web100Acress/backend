@@ -94,11 +94,11 @@ class EnquiryController {
     try {
       const { name, mobile, budget, message, enquiryType, timestamp, source } = req.body;
 
-      // Validate required fields
-      if (!name || !mobile || !budget || !message) {
+      // Validate required fields (message is now optional)
+      if (!name || !mobile || !budget) {
         return res.status(400).json({
           success: false,
-          message: 'All required fields must be filled'
+          message: 'Name, mobile, and budget are required fields'
         });
       }
 
