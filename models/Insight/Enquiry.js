@@ -8,7 +8,7 @@ const enquiry_Schema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
     },
     mobile: {
       type: String,
@@ -16,7 +16,7 @@ const enquiry_Schema = new mongoose.Schema(
     },
     query: {
       type: String,
-      required: true,
+      required: false,
     },
     status: {
       type: String,
