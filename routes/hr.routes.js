@@ -149,24 +149,44 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
 
+    if (!uploadLink) {
+      return res.status(400).json({ message: 'Upload link is required' });
+    }
+
     const html = `
       <div style="font-family:Arial,sans-serif;color:#111">
         <h2>Documentation Required</h2>
         <p>Dear ${it.candidateName},</p>
         <p>${content || 'Please upload your documents for verification.'}</p>
-        <p><a href="${uploadLink || '#'}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">Upload Documents</a></p>
+        <p><a href="${uploadLink}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">Upload Documents</a></p>
+        <p style="margin-top:20px;font-size:12px;color:#666;">If the button doesn't work, copy this link: ${uploadLink}</p>
       </div>`;
-    await sendEmail(it.candidateEmail, fromAddr, [], 'Document Verification - 100acress', html, false);
-
+    
+    // Try to send email, but don't fail if email sending fails
+    const emailSent = await sendEmail(it.candidateEmail, fromAddr, [], 'Document Verification - 100acress', html, false);
+    
+    // Update status regardless of email success
     it.stageData = it.stageData || {};
     it.stageData.documentation = it.stageData.documentation || {};
     it.stageData.documentation.status = 'invited';
+    it.stageData.documentation.inviteSentAt = new Date();
+    it.stageData.documentation.uploadLink = uploadLink; // Store link for reference
     await it.save();
 
-    res.json({ message: 'Documentation invite sent', data: it });
+    // Return success with warning if email failed
+    if (!emailSent) {
+      return res.json({ 
+        message: 'Documentation invite prepared. Email sending failed - please share the upload link manually.',
+        warning: 'Email not sent due to AWS credentials issue. Upload link generated successfully.',
+        uploadLink: uploadLink,
+        data: it 
+      });
+    }
+
+    res.json({ message: 'Documentation invite sent successfully', data: it });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Failed to send documentation invite' });
+    console.error('Error in docs-invite:', e);
+    res.status(500).json({ message: 'Failed to send documentation invite: ' + e.message });
   }
 });
 
