@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Onboarding = require('../models/hr/onboarding');
 const Application = require('../models/career/application');
+const Opening = require('../models/career/opening');
 const LeaveRequest = require('../models/hr/leaveRequest');
 const RegisterUser = require('../models/register/registerModel');
 const HrController = require('../Controller/AdminController/FrontController/HrController');
@@ -48,6 +49,69 @@ router.post('/onboarding/sync', async (req, res) => {
 router.get('/onboarding', async (req, res) => {
   try { await syncApprovedApplications(); const list = await Onboarding.find({}).sort({ createdAt: -1 }); res.json({ data: list }); }
   catch { res.status(500).json({ message: 'Failed to fetch onboarding list' }); }
+});
+
+// Create manual onboarding entry (for direct employee addition)
+router.post('/onboarding/create', async (req, res) => {
+  try {
+    const { candidateName, candidateEmail, position, department, phone, joiningDate, notes } = req.body || {};
+    
+    if (!candidateName || !candidateEmail) {
+      return res.status(400).json({ message: 'Candidate name and email are required' });
+    }
+
+    // Create or find a placeholder opening for manual onboarding
+    let placeholderOpening = await Opening.findOne({ jobTitle: 'Manual Onboarding', status: 'open' });
+    if (!placeholderOpening) {
+      placeholderOpening = await Opening.create({
+        jobTitle: 'Manual Onboarding',
+        jobLocation: 'N/A',
+        status: 'open',
+        responsibility: 'Manual onboarding entry',
+        experience: 'N/A',
+        skill: 'N/A',
+        jobProfile: 'Manual onboarding entry'
+      });
+    }
+
+    // Create a placeholder application for manual onboarding
+    const placeholderApp = await Application.create({
+      name: candidateName,
+      email: candidateEmail,
+      phone: phone || '',
+      resumeUrl: '',
+      coverLetter: notes || `Manual onboarding entry${position ? ` - Position: ${position}` : ''}${department ? `, Department: ${department}` : ''}`,
+      status: 'approved', // Auto-approve manual entries
+      openingId: placeholderOpening._id
+    });
+
+    // Create onboarding entry
+    const newOnboarding = await Onboarding.create({
+      applicationId: placeholderApp._id,
+      openingId: placeholderOpening._id,
+      candidateName,
+      candidateEmail,
+      currentStageIndex: 0,
+      stages: ['interview1', 'hrDiscussion', 'documentation', 'success'],
+      status: 'in_progress',
+      joiningDate: joiningDate ? new Date(joiningDate) : undefined,
+      history: [{ 
+        stage: 'interview1', 
+        note: `Manual onboarding entry${position ? ` - Position: ${position}` : ''}${department ? `, Department: ${department}` : ''}`,
+        movedAt: new Date()
+      }],
+      stageData: {
+        interview1: { status: 'pending' },
+        hrDiscussion: { status: 'pending' },
+        documentation: { status: 'pending' }
+      }
+    });
+
+    res.json({ message: 'Onboarding entry created successfully', data: newOnboarding });
+  } catch (e) {
+    console.error('Error creating manual onboarding:', e);
+    res.status(500).json({ message: 'Failed to create onboarding entry: ' + e.message });
+  }
 });
 
 // Get onboarding by id
