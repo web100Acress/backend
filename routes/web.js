@@ -299,6 +299,12 @@ router.get(
   CareerController.applicationsCount,
 );
 
+// Career: Document Upload Routes
+router.post("/career/generate-upload-link", CareerController.generateUploadLink);
+router.get("/career/verify-upload-token/:token", CareerController.verifyUploadToken);
+router.post("/career/upload-documents/:token", CareerController.uploadDocuments);
+router.get("/career/test-token", CareerController.testToken);
+
 router.post("/pahleGhar", newlaunchController.pahleGhar);
 router.post("/Valley", newlaunchController.Valley);
 router.get("/snapShot", homeController.dataSnapshot);

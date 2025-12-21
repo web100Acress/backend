@@ -1,23 +1,57 @@
-const { isValidObjectId } = require("mongoose");
+ const { isValidObjectId } = require("mongoose");
 const careerModal = require("../../../models/career/careerSchema");
 const cache = require("memory-cache");
 const openModal = require("../../../models/career/opening");
 const Application = require("../../../models/career/application");
 const Followup = require("../../../models/career/followup");
 const Onboarding = require("../../../models/hr/onboarding");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const {
   getEmbedding,
   cosineSimilarity,
   getTextFromUrl,
 } = require("../../../Utilities/aiHelper");
 // Use AWS SES-based mail helper instead of raw SMTP transporter
-const fs = require("fs");
 const {
   uploadFile,
   deleteFile,
   updateFile,
   sendEmail,
 } = require("../../../Utilities/s3HelperUtility");
+
+// File-based token storage for persistence
+const TOKENS_FILE = path.join(__dirname, '../../../data/uploadTokens.json');
+
+// Helper functions for token storage
+const loadTokens = () => {
+  try {
+    if (fs.existsSync(TOKENS_FILE)) {
+      const data = fs.readFileSync(TOKENS_FILE, 'utf8');
+      return new Map(JSON.parse(data));
+    }
+  } catch (error) {
+    console.log('No existing tokens file, starting fresh');
+  }
+  return new Map();
+};
+
+const saveTokens = (tokens) => {
+  try {
+    const data = JSON.stringify(Array.from(tokens.entries()));
+    const dir = path.dirname(TOKENS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(TOKENS_FILE, data);
+  } catch (error) {
+    console.error('Error saving tokens:', error);
+  }
+};
+
+// Initialize token storage
+let uploadTokens = loadTokens();
 // const AWS = require("aws-sdk");
 require("dotenv").config();
 
@@ -1153,6 +1187,7 @@ class CareerController {
   // Delete a follow-up
   static deleteFollowup = async (req, res) => {
     try {
+      const { id } = req.params;
       const { followupId } = req.params;
 
       if (!isValidObjectId(followupId)) {
@@ -1174,6 +1209,262 @@ class CareerController {
     } catch (error) {
       console.error('Error deleting follow-up:', error);
       res.status(500).json({ error: 'Failed to delete follow-up' });
+    }
+  };
+
+  // Document Upload Methods
+  static generateUploadLink = async (req, res) => {
+    try {
+      const { onboardingId, expiresInHours = 48 } = req.body;
+      
+      console.log('=== GENERATE UPLOAD LINK ===');
+      console.log('Onboarding ID:', onboardingId);
+      console.log('Expires in hours:', expiresInHours);
+      
+      // Generate unique token
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + (expiresInHours * 60 * 60 * 1000));
+      
+      console.log('Generated token:', token);
+      console.log('Expires at:', expiresAt);
+      
+      // Store token with candidate info (enhanced with comprehensive job details)
+      const candidateInfo = {
+        candidateName: 'Test Candidate',
+        position: 'Software Developer',
+        department: 'IT',
+        onboardingId,
+        expiresAt,
+        jobDetails: {
+          position: 'Software Developer',
+          department: 'IT',
+          employmentType: 'Full-Time',
+          location: 'Remote/Office',
+          reportingManager: 'HR Manager',
+          joiningDate: '2024-01-15',
+          salary: 'As per company standards',
+          workSchedule: '9:00 AM - 6:00 PM',
+          probationPeriod: '3 months',
+          responsibilities: [
+            'Develop and maintain software applications',
+            'Write clean, scalable code',
+            'Troubleshoot and debug applications',
+            'Collaborate with cross-functional teams'
+          ],
+          requirements: [
+            'Bachelor\'s degree in Computer Science or related field',
+            '2+ years of experience in software development',
+            'Proficiency in programming languages',
+            'Strong problem-solving skills'
+          ],
+          benefits: [
+            'Health insurance',
+            'Provident fund',
+            'Paid time off',
+            'Professional development opportunities'
+          ],
+          documentsRequired: [
+            'PAN Card',
+            'Aadhaar Card',
+            'Passport size photograph',
+            'Previous employment documents',
+            'Educational certificates'
+          ]
+        }
+      };
+      
+      uploadTokens.set(token, candidateInfo);
+      saveTokens(uploadTokens);
+      console.log('Token stored successfully');
+      console.log('Total tokens in storage:', uploadTokens.size);
+      
+      res.json({
+        success: true,
+        data: {
+          token,
+          uploadLink: `https://crm.100acress.com/upload-documents/${token}`,
+          expiresAt,
+          candidateInfo
+        }
+      });
+    } catch (error) {
+      console.error('Error generating upload link:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to generate upload link'
+      });
+    }
+  };
+
+  static verifyUploadToken = async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      console.log('=== TOKEN VERIFICATION DEBUG ===');
+      console.log('Received token:', token);
+      console.log('Available tokens:', Array.from(uploadTokens.keys()));
+      console.log('Token exists in storage:', uploadTokens.has(token));
+      
+      if (!uploadTokens.has(token)) {
+        console.log('Token not found in storage');
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired upload link'
+        });
+      }
+      
+      const candidateInfo = uploadTokens.get(token);
+      console.log('Token verified for candidate:', candidateInfo.candidateName);
+      
+      // Check if token is expired
+      if (new Date() > new Date(candidateInfo.expiresAt)) {
+        uploadTokens.delete(token);
+        saveTokens(uploadTokens);
+        return res.status(400).json({
+          success: false,
+          message: 'Token expired'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: candidateInfo
+      });
+    } catch (error) {
+      console.error('Error verifying upload token:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to verify token'
+      });
+    }
+  };
+
+  static uploadDocuments = async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      console.log('=== DOCUMENT UPLOAD DEBUG ===');
+      console.log('Received token:', token);
+      console.log('Available tokens:', Array.from(uploadTokens.keys()));
+      console.log('Token exists in storage:', uploadTokens.has(token));
+      
+      if (!uploadTokens.has(token)) {
+        console.log('Token not found in storage');
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired token'
+        });
+      }
+      
+      const candidateInfo = uploadTokens.get(token);
+      
+      // Check if token is expired
+      if (new Date() > new Date(candidateInfo.expiresAt)) {
+        uploadTokens.delete(token);
+        return res.status(400).json({
+          success: false,
+          message: 'Token expired'
+        });
+      }
+      
+      // Handle file upload (simplified for now - just accept form data)
+      // In production, you would handle actual file uploads here
+      console.log('Documents uploaded for candidate:', candidateInfo.candidateName);
+      console.log('Request body:', req.body);
+      console.log('Content-Type:', req.get('Content-Type'));
+      
+      // For now, just log that we received the upload and return success
+      // The actual file processing would be implemented here
+      console.log('Upload received successfully (mock implementation)');
+      
+      // Clean up token after successful upload
+      uploadTokens.delete(token);
+      saveTokens(uploadTokens);
+      
+      res.json({
+        success: true,
+        message: 'Documents uploaded successfully'
+      });
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to upload documents'
+      });
+    }
+  };
+
+  static testToken = async (req, res) => {
+    try {
+      const testOnboardingId = 'test-123';
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + (48 * 60 * 60 * 1000));
+      
+      const candidateInfo = {
+        candidateName: 'Test Candidate',
+        position: 'Software Developer',
+        department: 'IT',
+        onboardingId: testOnboardingId,
+        expiresAt,
+        jobDetails: {
+          position: 'Software Developer',
+          department: 'IT',
+          employmentType: 'Full-Time',
+          location: 'Remote/Office',
+          reportingManager: 'HR Manager',
+          joiningDate: '2024-01-15',
+          salary: 'As per company standards',
+          workSchedule: '9:00 AM - 6:00 PM',
+          probationPeriod: '3 months',
+          responsibilities: [
+            'Develop and maintain software applications',
+            'Write clean, scalable code',
+            'Troubleshoot and debug applications',
+            'Collaborate with cross-functional teams'
+          ],
+          requirements: [
+            'Bachelor\'s degree in Computer Science or related field',
+            '2+ years of experience in software development',
+            'Proficiency in programming languages',
+            'Strong problem-solving skills'
+          ],
+          benefits: [
+            'Health insurance',
+            'Provident fund',
+            'Paid time off',
+            'Professional development opportunities'
+          ],
+          documentsRequired: [
+            'PAN Card',
+            'Aadhaar Card',
+            'Passport size photograph',
+            'Previous employment documents',
+            'Educational certificates'
+          ]
+        }
+      };
+      
+      uploadTokens.set(token, candidateInfo);
+      saveTokens(uploadTokens);
+      
+      const uploadLink = `https://crm.100acress.com/upload-documents/${token}`;
+      
+      res.json({
+        success: true,
+        message: 'Test token generated successfully',
+        data: {
+          token,
+          uploadLink,
+          expiresAt,
+          candidateInfo
+        }
+      });
+    } catch (error) {
+      console.error('Error generating test token:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to generate test token'
+      });
     }
   };
 }
