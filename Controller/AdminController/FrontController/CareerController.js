@@ -1433,6 +1433,27 @@ class CareerController {
       onboarding.stageData.documentation.status = 'completed';
       onboarding.stageData.documentation.completedAt = new Date();
       
+      // Auto-advance to next stage (success) if documentation is completed
+      const documentationStageIndex = onboarding.stages.indexOf('documentation');
+      if (documentationStageIndex >= 0 && 
+          onboarding.currentStageIndex === documentationStageIndex && 
+          documentationStageIndex < onboarding.stages.length - 1) {
+        // Move to success stage
+        onboarding.currentStageIndex = onboarding.stages.length - 1; // success stage
+        onboarding.history.push({ 
+          stage: 'success', 
+          note: 'Auto-advanced after document upload completion',
+          movedAt: new Date()
+        });
+        
+        // If this is the last stage, mark overall status as completed
+        if (onboarding.currentStageIndex === onboarding.stages.length - 1) {
+          onboarding.status = 'completed';
+        }
+        
+        console.log(`✅ Advanced to success stage for ${candidateInfo.candidateName}`);
+      }
+      
       // Save onboarding record
       await onboarding.save();
       
