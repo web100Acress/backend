@@ -1343,35 +1343,145 @@ class CareerController {
       // Check if token is expired
       if (new Date() > new Date(candidateInfo.expiresAt)) {
         uploadTokens.delete(token);
+        saveTokens(uploadTokens);
         return res.status(400).json({
           success: false,
           message: 'Token expired'
         });
       }
       
-      // Handle file upload (simplified for now - just accept form data)
-      // In production, you would handle actual file uploads here
-      console.log('Documents uploaded for candidate:', candidateInfo.candidateName);
-      console.log('Request body:', req.body);
-      console.log('Content-Type:', req.get('Content-Type'));
+      // Get onboarding record
+      const onboardingId = candidateInfo.onboardingId;
+      if (!onboardingId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Onboarding ID not found in token'
+        });
+      }
       
-      // For now, just log that we received the upload and return success
-      // The actual file processing would be implemented here
-      console.log('Upload received successfully (mock implementation)');
+      const onboarding = await Onboarding.findById(onboardingId);
+      if (!onboarding) {
+        return res.status(404).json({
+          success: false,
+          message: 'Onboarding record not found'
+        });
+      }
+      
+      console.log('Documents uploaded for candidate:', candidateInfo.candidateName);
+      console.log('Onboarding ID:', onboardingId);
+      console.log('Files received:', req.files ? Object.keys(req.files) : 'No files');
+      
+      // Initialize documents array if not exists
+      if (!onboarding.documents) {
+        onboarding.documents = [];
+      }
+      
+      // File field mappings (frontend sends: panFile, aadhaarFile, etc.)
+      const fileMappings = {
+        panFile: 'pan',
+        aadhaarFile: 'aadhaar',
+        photoFile: 'photo',
+        marksheetFile: 'marksheet',
+        otherFile1: 'other',
+        otherFile2: 'other'
+      };
+      
+      let uploadedCount = 0;
+      const uploadErrors = [];
+      
+      // Process each uploaded file
+      for (const [fieldName, docType] of Object.entries(fileMappings)) {
+        const file = req.files?.[fieldName]?.[0] || req.files?.[fieldName]; // Handle both array and single file
+        
+        if (file) {
+          try {
+            console.log(`Uploading ${fieldName} as ${docType}...`);
+            
+            // Upload file to S3
+            const uploadResult = await uploadFile(file);
+            const fileUrl = uploadResult.Location;
+            
+            // Add document to onboarding record
+            onboarding.documents.push({
+              docType,
+              url: fileUrl,
+              status: 'uploaded',
+              uploadedAt: new Date()
+            });
+            
+            uploadedCount++;
+            console.log(`✅ ${docType} uploaded successfully: ${fileUrl}`);
+          } catch (uploadError) {
+            console.error(`❌ Error uploading ${fieldName}:`, uploadError);
+            uploadErrors.push(`${fieldName}: ${uploadError.message}`);
+          }
+        }
+      }
+      
+      // Handle joining date if provided
+      if (req.body?.joiningDate) {
+        onboarding.joiningDate = new Date(req.body.joiningDate);
+      }
+      
+      // Update documentation stage status
+      if (!onboarding.stageData) {
+        onboarding.stageData = {};
+      }
+      if (!onboarding.stageData.documentation) {
+        onboarding.stageData.documentation = {};
+      }
+      onboarding.stageData.documentation.status = 'completed';
+      onboarding.stageData.documentation.completedAt = new Date();
+      
+      // Save onboarding record
+      await onboarding.save();
+      
+      console.log(`✅ Successfully saved ${uploadedCount} documents for ${candidateInfo.candidateName}`);
       
       // Clean up token after successful upload
       uploadTokens.delete(token);
       saveTokens(uploadTokens);
       
+      // Send notification emails (if AWS configured)
+      const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
+      const siteUrl = process.env.SITE_URL || 'https://100acress.com';
+      
+      // Notify HR
+      const hrHtml = `
+        <div style="font-family:Arial;color:#111;padding:16px">
+          <h3>New Document Upload</h3>
+          <p><strong>${candidateInfo.candidateName}</strong> (${candidateInfo.candidateEmail}) has uploaded ${uploadedCount} document(s).</p>
+          <p><a href="${siteUrl}/hr/onboarding" style="background:#2563eb;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none">View Onboarding</a></p>
+        </div>`;
+      
+      // Notify candidate
+      const candHtml = `
+        <div style="font-family:Arial;color:#111;padding:16px">
+          <h3>Documents Received</h3>
+          <p>Hi ${candidateInfo.candidateName},</p>
+          <p>Thank you for uploading your documents. We have received ${uploadedCount} document(s) and they are now under verification.</p>
+          <p>We will review them and contact you shortly.</p>
+        </div>`;
+      
+      // Try to send emails (don't fail if email fails)
+      try {
+        await sendEmail(fromAddr, fromAddr, [], `New Document Upload - ${candidateInfo.candidateName}`, hrHtml, false);
+        await sendEmail(candidateInfo.candidateEmail, fromAddr, [], 'Documents Under Verification - 100acress', candHtml, false);
+      } catch (emailError) {
+        console.error('Email sending failed (non-critical):', emailError.message);
+      }
+      
       res.json({
         success: true,
-        message: 'Documents uploaded successfully'
+        message: `Successfully uploaded ${uploadedCount} document(s)`,
+        uploadedCount,
+        errors: uploadErrors.length > 0 ? uploadErrors : undefined
       });
     } catch (error) {
       console.error('Error uploading documents:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to upload documents'
+        message: 'Failed to upload documents: ' + error.message
       });
     }
   };

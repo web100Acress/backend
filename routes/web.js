@@ -302,7 +302,23 @@ router.get(
 // Career: Document Upload Routes
 router.post("/career/generate-upload-link", CareerController.generateUploadLink);
 router.get("/career/verify-upload-token/:token", CareerController.verifyUploadToken);
-router.post("/career/upload-documents/:token", CareerController.uploadDocuments);
+// Add multer middleware for file uploads
+const multer = require('multer');
+const uploadDocumentsMulter = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+router.post("/career/upload-documents/:token", 
+  uploadDocumentsMulter.fields([
+    { name: 'panFile', maxCount: 1 },
+    { name: 'aadhaarFile', maxCount: 1 },
+    { name: 'photoFile', maxCount: 1 },
+    { name: 'marksheetFile', maxCount: 1 },
+    { name: 'otherFile1', maxCount: 1 },
+    { name: 'otherFile2', maxCount: 1 }
+  ]),
+  CareerController.uploadDocuments
+);
 router.get("/career/test-token", CareerController.testToken);
 
 router.post("/pahleGhar", newlaunchController.pahleGhar);
