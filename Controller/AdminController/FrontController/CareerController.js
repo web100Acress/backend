@@ -1221,56 +1221,34 @@ class CareerController {
       console.log('Onboarding ID:', onboardingId);
       console.log('Expires in hours:', expiresInHours);
       
+      // Fetch actual onboarding data
+      const onboarding = await Onboarding.findById(onboardingId);
+      if (!onboarding) {
+        return res.status(404).json({
+          success: false,
+          message: 'Onboarding record not found'
+        });
+      }
+      
       // Generate unique token
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + (expiresInHours * 60 * 60 * 1000));
       
       console.log('Generated token:', token);
       console.log('Expires at:', expiresAt);
+      console.log('Candidate:', onboarding.candidateName, onboarding.candidateEmail);
       
-      // Store token with candidate info (enhanced with comprehensive job details)
+      // Store token with actual candidate info
       const candidateInfo = {
-        candidateName: 'Test Candidate',
-        position: 'Software Developer',
-        department: 'IT',
-        onboardingId,
-        expiresAt,
-        jobDetails: {
-          position: 'Software Developer',
-          department: 'IT',
-          employmentType: 'Full-Time',
-          location: 'Remote/Office',
-          reportingManager: 'HR Manager',
-          joiningDate: '2024-01-15',
-          salary: 'As per company standards',
-          workSchedule: '9:00 AM - 6:00 PM',
-          probationPeriod: '3 months',
-          responsibilities: [
-            'Develop and maintain software applications',
-            'Write clean, scalable code',
-            'Troubleshoot and debug applications',
-            'Collaborate with cross-functional teams'
-          ],
-          requirements: [
-            'Bachelor\'s degree in Computer Science or related field',
-            '2+ years of experience in software development',
-            'Proficiency in programming languages',
-            'Strong problem-solving skills'
-          ],
-          benefits: [
-            'Health insurance',
-            'Provident fund',
-            'Paid time off',
-            'Professional development opportunities'
-          ],
-          documentsRequired: [
-            'PAN Card',
-            'Aadhaar Card',
-            'Passport size photograph',
-            'Previous employment documents',
-            'Educational certificates'
-          ]
-        }
+        candidateName: onboarding.candidateName || 'Candidate',
+        candidateEmail: onboarding.candidateEmail,
+        onboardingId: onboarding._id.toString(),
+        expiresAt: expiresAt.toISOString(),
+        // Include additional onboarding data if available
+        position: onboarding.position || 'Position TBD',
+        department: onboarding.department || 'Department TBD',
+        applicationId: onboarding.applicationId?.toString(),
+        openingId: onboarding.openingId?.toString()
       };
       
       uploadTokens.set(token, candidateInfo);
@@ -1278,11 +1256,15 @@ class CareerController {
       console.log('Token stored successfully');
       console.log('Total tokens in storage:', uploadTokens.size);
       
+      // Get site URL from env or use default
+      const siteUrl = process.env.SITE_URL || process.env.FRONTEND_URL || 'https://100acress.com';
+      const uploadLink = `${siteUrl}/onboarding/upload?token=${token}`;
+      
       res.json({
         success: true,
         data: {
           token,
-          uploadLink: `https://crm.100acress.com/upload-documents/${token}`,
+          uploadLink,
           expiresAt,
           candidateInfo
         }
@@ -1291,7 +1273,7 @@ class CareerController {
       console.error('Error generating upload link:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to generate upload link'
+        message: 'Failed to generate upload link: ' + error.message
       });
     }
   };

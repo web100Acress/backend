@@ -5,6 +5,7 @@ const Application = require('../models/career/application');
 const LeaveRequest = require('../models/hr/leaveRequest');
 const RegisterUser = require('../models/register/registerModel');
 const HrController = require('../Controller/AdminController/FrontController/HrController');
+const CareerController = require('../Controller/AdminController/FrontController/CareerController');
 const adminVerify = require('../middleware/adminVerify');
 const hrAdminVerify = adminVerify.hrAdminVerify;
 const { sendEmail, uploadFile } = require('../Utilities/s3HelperUtility');
@@ -168,6 +169,10 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
     res.status(500).json({ message: 'Failed to send documentation invite' });
   }
 });
+
+// Verify upload token (alias for CareerController.verifyUploadToken)
+// This route exists because frontend calls /api/hr/onboarding/verify-upload-token/:token
+router.get('/onboarding/verify-upload-token/:token', CareerController.verifyUploadToken);
 
 // Record a document uploaded (server-side record; actual upload handled elsewhere)
 router.post('/onboarding/:id/docs', async (req, res) => {

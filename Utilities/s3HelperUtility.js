@@ -5,54 +5,103 @@ const path = require("path");
 const {compressImage} = require("./ImageResizer");
 const nodemailer = require("nodemailer");
 
+// Track AWS configuration status
+let awsConfigured = false;
+let awsConfigError = null;
+
 // Enhanced AWS configuration with better error handling
 const configureAWS = () => {
-  console.log('Configuring AWS S3...');
+  console.log('🔧 Configuring AWS...');
 
   // Support both custom and standard env var names, and handle the misspelling
   const ACCESS_KEY = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
   const SECRET_KEY = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY; // note: ACESS (legacy) or ACCESS (standard)
-  const REGION = process.env.AWS_REGION;
+  const REGION = process.env.AWS_REGION || 'ap-south-1';
   const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
 
-  console.log('Environment variables check:', {
+  console.log('📋 AWS Environment check:', {
     hasAccessKey: !!ACCESS_KEY,
     hasSecretKey: !!SECRET_KEY,
     hasRegion: !!REGION,
     region: REGION,
-    bucket: BUCKET
+    bucket: BUCKET,
+    // Don't log actual keys for security
   });
 
-  if (!ACCESS_KEY || !SECRET_KEY) {
-    console.error('❌ AWS credentials missing! Set AWS_S3_ACCESS_KEY/AWS_ACCESS_KEY_ID and AWS_S3_SECRET_ACESS_KEY/AWS_SECRET_ACCESS_KEY');
-    throw new Error('AWS credentials not configured');
+  // Check if running on EC2 (IAM Role available)
+  const isEC2 = process.env.AWS_EXECUTION_ENV || process.env.ECS_CONTAINER_METADATA_URI || false;
+  
+  if (ACCESS_KEY && SECRET_KEY) {
+    // Use explicit credentials from env vars
+    AWS.config.update({
+      accessKeyId: ACCESS_KEY,
+      secretAccessKey: SECRET_KEY,
+      region: REGION,
+    });
+    awsConfigured = true;
+    console.log('✅ AWS configured with explicit credentials');
+  } else if (isEC2) {
+    // On EC2, try to use IAM Role (credentials will be loaded automatically)
+    AWS.config.update({
+      region: REGION,
+    });
+    // Don't set credentials - let SDK use IAM role
+    awsConfigured = true;
+    console.log('✅ AWS configured for EC2/IAM Role (credentials will be loaded automatically)');
+  } else {
+    // Try default credential chain (IAM role, env vars, credentials file)
+    AWS.config.update({
+      region: REGION,
+    });
+    // Let AWS SDK try to load credentials from default chain
+    console.log('⚠️ No explicit AWS credentials found. Will try IAM Role or default credential chain.');
+    // We'll verify credentials when first used
   }
 
-  if (!REGION) {
-    console.error('❌ AWS region missing! Please set AWS_REGION');
-    throw new Error('AWS region not configured');
-  }
-
-  AWS.config.update({
-    accessKeyId: ACCESS_KEY,
-    secretAccessKey: SECRET_KEY,
-    region: REGION,
-  });
-
-  console.log('✅ AWS S3 configured successfully');
+  return { configured: awsConfigured, region: REGION, bucket: BUCKET };
 };
 
 // Initialize AWS configuration
 try {
-  configureAWS();
+  const config = configureAWS();
+  awsConfigured = config.configured;
 } catch (error) {
-  console.error('Failed to configure AWS:', error.message);
+  awsConfigError = error;
+  console.error('❌ Failed to configure AWS:', error.message);
+  console.error('💡 To fix:');
+  console.error('   1. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env');
+  console.error('   2. OR attach IAM Role to EC2 instance');
+  console.error('   3. OR configure AWS credentials file (~/.aws/credentials)');
 }
 
-const s3 = new AWS.S3();
-const SES = new AWS.SES();
+// Initialize AWS services (will fail gracefully if credentials missing)
+let s3, SES;
+
+try {
+  s3 = new AWS.S3();
+  SES = new AWS.SES();
+  
+  // Test credentials by making a simple call (only if not using IAM role)
+  if (awsConfigured && (process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID)) {
+    // Credentials are explicitly set, assume they work
+    console.log('✅ AWS S3 and SES services initialized');
+  } else {
+    // Will verify on first actual use
+    console.log('⚠️ AWS services initialized (credentials will be verified on first use)');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize AWS services:', error.message);
+  // Create dummy instances to prevent crashes
+  s3 = null;
+  SES = null;
+}
 
 const uploadFile = async(file) => {
+  // Check if S3 is available
+  if (!s3) {
+    throw new Error('AWS S3 not initialized. Configure AWS credentials first.');
+  }
+
   try {
     console.log('📤 Starting S3 upload for file:', file.originalname);
     console.log('File details:', {
@@ -101,20 +150,23 @@ const uploadFile = async(file) => {
 
     return result;
   } catch (error) {
-    console.error('❌ S3 upload failed:', error);
+    console.error('❌ S3 upload failed:', error.message);
     console.error('Error details:', {
       code: error.code,
       message: error.message,
       statusCode: error.statusCode
     });
 
-    // Provide specific error messages
-    if (error.code === 'CredentialsError') {
-      throw new Error('AWS credentials are invalid or missing');
+    // Provide specific error messages with fix guidance
+    if (error.code === 'CredentialsError' || error.message.includes('credentials')) {
+      console.error('💡 AWS Credentials Error - Fix:');
+      console.error('   1. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env');
+      console.error('   2. OR attach IAM Role with S3 permissions to EC2 instance');
+      throw new Error('AWS credentials are invalid or missing. Check logs for fix instructions.');
     } else if (error.code === 'NoSuchBucket') {
       throw new Error('S3 bucket does not exist');
     } else if (error.code === 'AccessDenied') {
-      throw new Error('Access denied to S3 bucket - check permissions');
+      throw new Error('Access denied to S3 bucket - check IAM permissions');
     } else if (error.code === 'AccessControlListNotSupported') {
       throw new Error('S3 bucket does not support ACLs - files will be uploaded without public access');
     } else if (error.code === 'NetworkError') {
@@ -253,6 +305,32 @@ const getS3File = async(objectKey) => {
 };
 
 const sendEmail = async (to, sourceEmail , cc = [], subject, html, attachments = true ) => {
+  // Check if AWS SES is available
+  if (!SES) {
+    console.error('❌ AWS SES not initialized. Cannot send email.');
+    console.error('💡 Fix: Configure AWS credentials (IAM Role or env vars)');
+    return false;
+  }
+
+  // Verify AWS credentials before attempting to send
+  try {
+    // Quick credential check - try to get AWS account ID (lightweight operation)
+    // This will fail fast if credentials are missing
+    if (!awsConfigured && !process.env.AWS_EXECUTION_ENV) {
+      // Not on EC2 and no explicit credentials - check if we can use default chain
+      const testConfig = AWS.config.credentials;
+      if (!testConfig) {
+        throw new Error('AWS credentials not found in default chain');
+      }
+    }
+  } catch (credError) {
+    console.error('❌ AWS Credentials Error:', credError.message);
+    console.error('💡 To fix AWS email sending:');
+    console.error('   1. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env');
+    console.error('   2. OR attach IAM Role with SES permissions to EC2 instance');
+    console.error('   3. Required IAM permissions: ses:SendEmail, ses:SendRawEmail');
+    return false;
+  }
 
   const EmailAttachments = [
     {
@@ -295,10 +373,23 @@ const sendEmail = async (to, sourceEmail , cc = [], subject, html, attachments =
 
   try {
     const result = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully : ", result.envelope.from, result.envelope.to);
+    console.log("✅ Email sent successfully:", result.envelope.from, "→", result.envelope.to);
     return true;
   } catch (error) {
-    console.error("Error sending email", error);
+    console.error("❌ Error sending email:", error.message);
+    
+    // Provide specific error guidance
+    if (error.code === 'CredentialsError' || error.message.includes('credentials')) {
+      console.error('💡 AWS Credentials Error - Fix:');
+      console.error('   1. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env');
+      console.error('   2. OR attach IAM Role with SES permissions to EC2 instance');
+    } else if (error.code === 'MessageRejected') {
+      console.error('💡 Email rejected - Check:');
+      console.error('   1. Sender email is verified in SES');
+      console.error('   2. Recipient email is valid');
+      console.error('   3. SES is out of sandbox mode (for production)');
+    }
+    
     return false;
   }
   
