@@ -30,6 +30,8 @@ const blogRoute = require("./blog.route");
 const projectOrderRoute = require("./projectOrder.route");
 const propertyOrderRoute = require("./propertyOrder.route");
 const builderRoute = require("./builder.route");
+const sideBannerRoute = require("./admin.side-banners");
+const publicSideBannerRoute = require("./public.side-banners");
 
 // Mount property order routes
 router.use("/propertyOrder", propertyOrderRoute);
@@ -191,9 +193,6 @@ router.get("/data/filter", homeController.filter_data);
 //Builder
 router.use("/builder", builderRoute);
 
-
-router.use("/postPerson", usersRoute);
-
 // Test endpoint for API connectivity checks
 router.get('/test', (req, res) => {
   res.status(200).json({
@@ -352,6 +351,8 @@ router.put("/settings/shorts-video-id", adminVerify, SettingsController.updateSh
 // Banner management routes
 router.use("/api/admin/banners", bannerRoute);
 router.use("/api/admin/small-banners", smallBannerRoute);
+router.use("/api/admin/side-banners", sideBannerRoute);
+
 // Public small banners routes (no authentication required)
 const publicSmallBannerRoute = require("./public.small-banners");
 router.use("/api/small-banners", publicSmallBannerRoute);
@@ -363,6 +364,9 @@ router.use("/api/market-reports", marketReportRoutes);
 // Public banners routes (no authentication required)
 const publicBannerRoute = require("./public.banners");
 router.use("/api/banners", publicBannerRoute);
+
+// Public side banners routes (no authentication required)
+router.use("/api/side-banners", publicSideBannerRoute);
 
 // Insights management routes (for city and price trends)
 const insightsRoute = require("./Insight/insights");
