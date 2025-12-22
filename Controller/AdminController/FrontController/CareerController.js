@@ -454,9 +454,11 @@ class CareerController {
       const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
 
       // Build filter
-      const filter = {
-        jobTitle: { $ne: 'Manual Onboarding' } // Exclude Manual Onboarding entries
-      };
+      const filter = {};
+      // Only exclude Manual Onboarding for public career page (when params are sent)
+      if (q || loc || exp || page || limit) {
+        filter.jobTitle = { $ne: 'Manual Onboarding' };
+      }
       if (loc) {
         filter.$or = [
           { jobLocation: loc },
