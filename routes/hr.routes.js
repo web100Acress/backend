@@ -114,6 +114,29 @@ router.post('/onboarding/create', async (req, res) => {
   }
 });
 
+// Delete onboarding entry
+router.delete('/onboarding/:id', async (req, res) => {
+  try {
+    const onboarding = await Onboarding.findById(req.params.id);
+    if (!onboarding) {
+      return res.status(404).json({ message: 'Onboarding entry not found' });
+    }
+
+    // Delete related application if it exists
+    if (onboarding.applicationId) {
+      await Application.findByIdAndDelete(onboarding.applicationId);
+    }
+
+    // Delete the onboarding entry
+    await Onboarding.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Onboarding entry deleted successfully' });
+  } catch (e) {
+    console.error('Error deleting onboarding:', e);
+    res.status(500).json({ message: 'Failed to delete onboarding entry: ' + e.message });
+  }
+});
+
 // Get onboarding by id
 router.get('/onboarding/:id', async (req, res) => {
   try { const it = await Onboarding.findById(req.params.id); if (!it) return res.status(404).json({ message: 'Not found' }); res.json({ data: it }); }
