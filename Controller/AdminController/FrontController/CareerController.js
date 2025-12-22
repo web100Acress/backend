@@ -455,8 +455,10 @@ class CareerController {
 
       // Build filter
       const filter = {};
-      // Only exclude Manual Onboarding for public career page (when params are sent)
-      if (q || loc || exp || page || limit) {
+      // Only exclude Manual Onboarding for public career page (when meaningful params are sent)
+      // Check if any meaningful search/filter params are present (not just defaults)
+      const hasSearchParams = q || loc || exp || (page && page !== 1) || (limit && limit !== 10);
+      if (hasSearchParams) {
         filter.jobTitle = { $ne: 'Manual Onboarding' };
       }
       if (loc) {
