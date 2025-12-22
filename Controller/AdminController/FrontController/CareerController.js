@@ -454,7 +454,9 @@ class CareerController {
       const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
 
       // Build filter
-      const filter = {};
+      const filter = {
+        jobTitle: { $ne: 'Manual Onboarding' } // Exclude Manual Onboarding entries
+      };
       if (loc) {
         filter.$or = [
           { jobLocation: loc },
