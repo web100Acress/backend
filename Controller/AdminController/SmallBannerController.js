@@ -105,8 +105,7 @@ class SmallBannerController {
       }
 
       // Generate slug if not provided
-      const generatedSlug = slug || title.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
+      const generatedSlug = slug || title.replace(/[^a-zA-Z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .trim();
 
