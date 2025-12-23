@@ -16,6 +16,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Helper: simple sender
 const fromAddr = process.env.SES_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'hr@100acress.com';
 
+const DEFAULT_EMAIL_INSTRUCTIONS = `
+Please be available 10 minutes before the scheduled time.
+Keep a stable internet connection (for online interviews).
+Keep your resume and government ID handy.
+If you face any issue, reply to this email and we will assist you.`;
+
 // Helper: ensure onboarding exists for all approved applications
 async function syncApprovedApplications() {
   const approved = await Application.find({ status: 'approved' });
@@ -153,6 +159,9 @@ router.post('/onboarding/:id/invite', async (req, res) => {
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
 
+    const opening = it.openingId ? await Opening.findById(it.openingId).select('jobTitle jobProfile jobLocation') : null;
+    const profileName = (opening?.jobTitle || opening?.jobProfile || 'this position');
+
     it.stageData = it.stageData || {};
     const payload = { type, tasks, scheduledAt, endsAt, meetingLink, location, content, sentAt: new Date() };
     it.stageData[stage] = it.stageData[stage] || {};
@@ -171,9 +180,23 @@ router.post('/onboarding/:id/invite', async (req, res) => {
     };
 
     const stageLabel = stage === 'interview1' ? 'First Interview' : 'HR Discussion';
+    const roundText = `${stageLabel} (for ${profileName})`;
     const scheduleText = scheduledAt
       ? `${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}`
       : '';
+
+    const mainMessage = (content && String(content).trim())
+      ? String(content).trim()
+      : 'You are invited for the next step in our hiring process.';
+
+    const instructionsText = DEFAULT_EMAIL_INSTRUCTIONS;
+
+    const defaultTasks = [
+      { title: 'Keep your updated resume ready' },
+      { title: 'Be available 10 minutes early' },
+      { title: 'Check your internet / device (for online)' },
+    ];
+    const effectiveTasks = (Array.isArray(tasks) && tasks.length) ? tasks : defaultTasks;
 
     const metaRows = [
       scheduleText
@@ -198,12 +221,12 @@ router.post('/onboarding/:id/invite', async (req, res) => {
         : '',
     ].filter(Boolean).join('');
 
-    const tasksHtml = tasks?.length
+    const tasksHtml = effectiveTasks?.length
       ? `
         <div style="margin-top:18px;">
           <div style="font-size:14px;font-weight:700;color:#111827;margin:0 0 10px 0;">Tasks</div>
           <div style="border:1px solid #edf0f3;border-radius:10px;overflow:hidden;">
-            ${tasks
+            ${effectiveTasks
               .map((t) => {
                 const title = escapeHtml(t?.title || '');
                 const due = t?.dueAt ? escapeHtml(new Date(t.dueAt).toLocaleString()) : 'N/A';
@@ -253,10 +276,11 @@ router.post('/onboarding/:id/invite', async (req, res) => {
                   <tr>
                     <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
                       <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Interview Invitation</div>
-                      <div style="font-size:14px;color:#6b7280;margin:0 0 16px 0;">${escapeHtml(stageLabel)}</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Round: ${escapeHtml(stageLabel)}</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 16px 0;">Shortlisted for: <strong style=\"color:#111827;\">${escapeHtml(profileName)}</strong></div>
 
                       <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
-                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(content || 'You are invited for the next step in our hiring process.')}</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(mainMessage)}</div>
 
                       ${metaRows ? `
                         <div style="border:1px solid #edf0f3;border-radius:12px;padding:14px 14px 6px 14px;background:#fbfdff;">
@@ -267,6 +291,11 @@ router.post('/onboarding/:id/invite', async (req, res) => {
 
                       ${ctaHtml}
                       ${tasksHtml}
+
+                      <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(instructionsText)}</div>
+                      </div>
 
                       <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
                         <div style="font-size:14px;color:#111827;">Regards,</div>
@@ -284,7 +313,7 @@ router.post('/onboarding/:id/invite', async (req, res) => {
         </body>
       </html>`;
 
-    await sendEmail(it.candidateEmail, fromAddr, [], `Invitation: ${stage === 'interview1' ? 'First Interview' : 'HR Discussion'}`, html, false);
+    await sendEmail(it.candidateEmail, fromAddr, [], `Invitation: ${roundText}`, html, false);
 
     res.json({ message: 'Invite sent', data: it });
   } catch (e) {
@@ -300,6 +329,9 @@ router.post('/onboarding/:id/complete-stage', async (req, res) => {
     if (!stage || !['interview1','hrDiscussion'].includes(stage)) return res.status(400).json({ message: 'Invalid stage' });
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
+
+    const opening = it.openingId ? await Opening.findById(it.openingId).select('jobTitle jobProfile jobLocation') : null;
+    const profileName = (opening?.jobTitle || opening?.jobProfile || 'this position');
 
     it.stageData = it.stageData || {};
     it.stageData[stage] = it.stageData[stage] || {};
@@ -319,13 +351,30 @@ router.post('/onboarding/:id/complete-stage', async (req, res) => {
     // Send next-step email
     const next = it.stages[it.currentStageIndex];
     let subject = 'Next Step';
-    let html = `<p>Hi ${it.candidateName}, next step is ${next}.</p>`;
+    let html = `<div style="font-family:Arial,sans-serif;color:#111827;">
+      <p>Hi ${it.candidateName},</p>
+      <p><strong>Profile:</strong> ${profileName}</p>
+      <p>Next step is ${next}.</p>
+      <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
+    </div>`;
     if (stage === 'interview1') {
-      subject = 'Feedback & Next Step: HR Discussion';
-      html = `<div><p>Hi ${it.candidateName},</p><p>Interview 1 feedback: ${feedback || '—'}.</p><p>Next step is HR Discussion. We will send you the invite shortly.</p></div>`;
+      subject = `Feedback & Next Step: HR Discussion (for ${profileName})`;
+      html = `<div style="font-family:Arial,sans-serif;color:#111827;">
+        <p>Hi ${it.candidateName},</p>
+        <p><strong>Profile:</strong> ${profileName}</p>
+        <p>Interview 1 feedback: ${feedback || '—'}.</p>
+        <p>Next step is HR Discussion. We will send you the invite shortly.</p>
+        <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
+      </div>`;
     } else if (stage === 'hrDiscussion') {
-      subject = 'Next Step: Documentation';
-      html = `<div><p>Hi ${it.candidateName},</p><p>HR Discussion feedback: ${feedback || '—'}.</p><p>Next step is Documentation. You will receive a document upload link.</p></div>`;
+      subject = `Next Step: Documentation (for ${profileName})`;
+      html = `<div style="font-family:Arial,sans-serif;color:#111827;">
+        <p>Hi ${it.candidateName},</p>
+        <p><strong>Profile:</strong> ${profileName}</p>
+        <p>HR Discussion feedback: ${feedback || '—'}.</p>
+        <p>Next step is Documentation. You will receive a document upload link.</p>
+        <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
+      </div>`;
     }
     await sendEmail(it.candidateEmail, fromAddr, [], subject, html, false);
 
@@ -343,6 +392,9 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
     const it = await Onboarding.findById(req.params.id);
     if (!it) return res.status(404).json({ message: 'Not found' });
 
+    const opening = it.openingId ? await Opening.findById(it.openingId).select('jobTitle jobProfile jobLocation') : null;
+    const profileName = (opening?.jobTitle || opening?.jobProfile || 'this position');
+
     if (!uploadLink) {
       return res.status(400).json({ message: 'Upload link is required' });
     }
@@ -351,13 +403,15 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
       <div style="font-family:Arial,sans-serif;color:#111">
         <h2>Documentation Required</h2>
         <p>Dear ${it.candidateName},</p>
+        <p><strong>Profile:</strong> ${profileName}</p>
         <p>${content || 'Please upload your documents for verification.'}</p>
         <p><a href="${uploadLink}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">Upload Documents</a></p>
         <p style="margin-top:20px;font-size:12px;color:#666;">If the button doesn't work, copy this link: ${uploadLink}</p>
+        <p style="margin-top:16px;font-size:12px;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
       </div>`;
     
     // Try to send email, but don't fail if email sending fails
-    const emailSent = await sendEmail(it.candidateEmail, fromAddr, [], 'Document Verification - 100acress', html, false);
+    const emailSent = await sendEmail(it.candidateEmail, fromAddr, [], `Document Verification - ${profileName}`, html, false);
     
     // Update status regardless of email success
     it.stageData = it.stageData || {};
