@@ -242,7 +242,7 @@ router.post('/onboarding/:id/invite', async (req, res) => {
             ${effectiveTasks
               .map((t) => {
                 const title = escapeHtml(t?.title || '');
-                const due = t?.dueAt ? escapeHtml(new Date(t.dueAt).toLocaleString()) : 'N/A';
+                const due = t?.dueAt ? new Date(t.dueAt).toLocaleDateString('en-US') : 'N/A';
                 const desc = escapeHtml(t?.description || '');
                 return `
                   <div style="padding:12px 14px;border-top:1px solid #edf0f3;">
@@ -519,6 +519,16 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
     if (!uploadLink) {
       return res.status(400).json({ message: 'Upload link is required' });
     }
+
+    const escapeHtml = (value) => {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
 
     const html = `
       <!doctype html>
