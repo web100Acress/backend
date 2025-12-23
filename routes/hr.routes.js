@@ -160,22 +160,129 @@ router.post('/onboarding/:id/invite', async (req, res) => {
     it.stageData[stage].status = 'invited';
     await it.save();
 
-    const taskList = tasks?.length ? (`<ul>${tasks.map(t => `<li><strong>${t.title || ''}</strong> - due: ${t.dueAt ? new Date(t.dueAt).toLocaleString() : 'N/A'}<br/>${t.description || ''}</li>`).join('')}</ul>`) : '';
-    const scheduleLine = scheduledAt ? `<p><strong>Schedule:</strong> ${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}</p>` : '';
-    const linkLine = type === 'online' && meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>` : '';
-    const locLine = type === 'offline' && location ? `<p><strong>Location:</strong> ${location}</p>` : '';
+    const escapeHtml = (value) => {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
+    const stageLabel = stage === 'interview1' ? 'First Interview' : 'HR Discussion';
+    const scheduleText = scheduledAt
+      ? `${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}`
+      : '';
+
+    const metaRows = [
+      scheduleText
+        ? `<tr>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;width:140px;color:#6b7280;font-size:14px;">Schedule</td>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">${escapeHtml(scheduleText)}</td>
+          </tr>`
+        : '',
+      type === 'offline' && location
+        ? `<tr>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;width:140px;color:#6b7280;font-size:14px;">Location</td>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">${escapeHtml(location)}</td>
+          </tr>`
+        : '',
+      type === 'online' && meetingLink
+        ? `<tr>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;width:140px;color:#6b7280;font-size:14px;">Meeting Link</td>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">
+              <a href="${escapeHtml(meetingLink)}" style="color:#2563eb;text-decoration:none;word-break:break-all;">${escapeHtml(meetingLink)}</a>
+            </td>
+          </tr>`
+        : '',
+    ].filter(Boolean).join('');
+
+    const tasksHtml = tasks?.length
+      ? `
+        <div style="margin-top:18px;">
+          <div style="font-size:14px;font-weight:700;color:#111827;margin:0 0 10px 0;">Tasks</div>
+          <div style="border:1px solid #edf0f3;border-radius:10px;overflow:hidden;">
+            ${tasks
+              .map((t) => {
+                const title = escapeHtml(t?.title || '');
+                const due = t?.dueAt ? escapeHtml(new Date(t.dueAt).toLocaleString()) : 'N/A';
+                const desc = escapeHtml(t?.description || '');
+                return `
+                  <div style="padding:12px 14px;border-top:1px solid #edf0f3;">
+                    <div style="font-size:14px;color:#111827;font-weight:700;margin:0 0 4px 0;">${title}</div>
+                    <div style="font-size:13px;color:#6b7280;margin:0 0 6px 0;">Due: ${due}</div>
+                    ${desc ? `<div style=\"font-size:13px;color:#111827;line-height:1.5;\">${desc}</div>` : ''}
+                  </div>`;
+              })
+              .join('')
+              .replace('<div style="padding:12px 14px;border-top:1px solid #edf0f3;">', '<div style="padding:12px 14px;">')
+            }
+          </div>
+        </div>`
+      : '';
+
+    const ctaHtml = type === 'online' && meetingLink
+      ? `
+        <div style="margin-top:18px;">
+          <a href="${escapeHtml(meetingLink)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:700;">Join Meeting</a>
+          <div style="font-size:12px;color:#6b7280;margin-top:10px;">If the button doesn’t work, copy and paste this link: <span style="color:#111827;word-break:break-all;">${escapeHtml(meetingLink)}</span></div>
+        </div>`
+      : '';
 
     const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>Interview Invitation - ${stage === 'interview1' ? 'First Interview' : 'HR Discussion'}</h2>
-        <p>Dear ${it.candidateName},</p>
-        <p>${content || 'You are invited for the next step in our hiring process.'}</p>
-        ${scheduleLine}
-        ${linkLine}
-        ${locLine}
-        ${taskList}
-        <p>Regards,<br/>100acress HR Team</p>
-      </div>`;
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>Interview Invitation</title>
+        </head>
+        <body style="margin:0;padding:0;background:#f6f7fb;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7fb;padding:24px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.08);">
+                  <tr>
+                    <td style="padding:18px 20px;background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                      <div style="font-family:Arial,sans-serif;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;">100acress.com</div>
+                      <div style="font-family:Arial,sans-serif;color:#eaf2ff;font-size:13px;margin-top:4px;">HR Team</div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
+                      <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Interview Invitation</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 16px 0;">${escapeHtml(stageLabel)}</div>
+
+                      <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(content || 'You are invited for the next step in our hiring process.')}</div>
+
+                      ${metaRows ? `
+                        <div style="border:1px solid #edf0f3;border-radius:12px;padding:14px 14px 6px 14px;background:#fbfdff;">
+                          <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Details</div>
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">${metaRows}</table>
+                        </div>` : ''
+                      }
+
+                      ${ctaHtml}
+                      ${tasksHtml}
+
+                      <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
+                        <div style="font-size:14px;color:#111827;">Regards,</div>
+                        <div style="font-size:14px;color:#111827;font-weight:700;">100acress HR Team</div>
+                        <div style="font-size:12px;color:#6b7280;margin-top:10px;">This is an automated email. Please reply to this email if you have any questions.</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <div style="font-family:Arial,sans-serif;color:#94a3b8;font-size:12px;margin-top:12px;">© ${new Date().getFullYear()} 100acress.com</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>`;
 
     await sendEmail(it.candidateEmail, fromAddr, [], `Invitation: ${stage === 'interview1' ? 'First Interview' : 'HR Discussion'}`, html, false);
 
