@@ -22,6 +22,14 @@ Keep a stable internet connection (for online interviews).
 Keep your resume and government ID handy.
 If you face any issue, reply to this email and we will assist you.`;
 
+const DOCUMENT_VERIFICATION_INSTRUCTIONS = `
+MANDATORY DOCUMENTS REQUIRED:
+• PAN Card (clear photo, both sides)
+• Aadhaar Card (clear photo, both sides)  
+• Passport-size Photograph (recent, white background)
+
+Please ensure all documents are clear and readable before uploading.`;
+
 const DEFAULT_INTERVIEW_LOCATION = 'ILD Trade Center, 806 Near Malibu Town Sector 47, Gurugram 122018, Sohna Road';
 const DEFAULT_INTERVIEW_START_TIME = '11:30';
 const DEFAULT_INTERVIEW_END_TIME = '13:00';
@@ -554,14 +562,14 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
                       <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Document Verification Required</div>
                       <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Profile: <strong style="color:#111827;">${escapeHtml(profileName)}</strong></div>
                       <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
-                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(content || 'Please upload your documents for verification.')}</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(content && content.trim() ? content : 'Please upload your documents for verification.')}</div>
                       <div style="margin-top:20px;">
                         <a href="${escapeHtml(uploadLink)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;">Upload Documents</a>
                         <div style="font-size:12px;color:#6b7280;margin-top:10px;">If the button doesn't work, copy and paste this link: <span style="color:#111827;word-break:break-all;">${escapeHtml(uploadLink)}</span></div>
                       </div>
                       <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
                         <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
-                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(content && content.trim() ? DEFAULT_EMAIL_INSTRUCTIONS : DOCUMENT_VERIFICATION_INSTRUCTIONS)}</div>
                       </div>
                       <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
                         <div style="font-size:14px;color:#111827;">Regards,</div>
