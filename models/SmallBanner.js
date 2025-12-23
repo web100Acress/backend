@@ -12,8 +12,7 @@ const smallBannerSchema = new mongoose.Schema({
   },
   slug: {
     type: String,
-    trim: true,
-    lowercase: true
+    trim: true
   },
   desktopImage: {
     url: {
