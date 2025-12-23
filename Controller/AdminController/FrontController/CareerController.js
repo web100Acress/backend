@@ -781,6 +781,8 @@ class CareerController {
           return res.status(500).json({ message: 'Email sender not configured. Set SES_FROM or SMTP_FROM to a verified SES identity.' });
         }
         const siteUrl = process.env.SITE_URL || 'https://www.100acress.com';
+        const opening = await openModal.findById(app.openingId);
+        const profileName = (opening?.jobTitle || opening?.jobProfile || 'this position');
         const html = `
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
             <tr><td align="center">
@@ -792,6 +794,11 @@ class CareerController {
                 </tr>
                 <tr>
                   <td style="padding:24px 24px 8px;font-size:16px;">Hi ${app.name || 'Candidate'},</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 24px 8px;font-size:16px;line-height:1.6;">
+                    <strong>Shortlisted for:</strong> ${profileName}
+                  </td>
                 </tr>
                 <tr>
                   <td style="padding:0 24px 8px;font-size:16px;line-height:1.6;">
