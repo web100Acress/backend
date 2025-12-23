@@ -22,6 +22,10 @@ Keep a stable internet connection (for online interviews).
 Keep your resume and government ID handy.
 If you face any issue, reply to this email and we will assist you.`;
 
+const DEFAULT_INTERVIEW_LOCATION = 'ILD Trade Center, 806 Near Malibu Town Sector 47, Gurugram 122018, Sohna Road';
+const DEFAULT_INTERVIEW_START_TIME = '11:30';
+const DEFAULT_INTERVIEW_END_TIME = '13:00';
+
 // Helper: ensure onboarding exists for all approved applications
 async function syncApprovedApplications() {
   const approved = await Application.find({ status: 'approved' });
@@ -163,7 +167,16 @@ router.post('/onboarding/:id/invite', async (req, res) => {
     const profileName = (opening?.jobTitle || opening?.jobProfile || 'this position');
 
     it.stageData = it.stageData || {};
-    const payload = { type, tasks, scheduledAt, endsAt, meetingLink, location, content, sentAt: new Date() };
+    const payload = { 
+      type, 
+      tasks, 
+      scheduledAt: scheduledAt || null, 
+      endsAt: endsAt || null, 
+      meetingLink, 
+      location: location || (type === 'offline' ? DEFAULT_INTERVIEW_LOCATION : ''), 
+      content, 
+      sentAt: new Date() 
+    };
     it.stageData[stage] = it.stageData[stage] || {};
     it.stageData[stage].invite = payload;
     it.stageData[stage].status = 'invited';
@@ -182,8 +195,8 @@ router.post('/onboarding/:id/invite', async (req, res) => {
     const stageLabel = stage === 'interview1' ? 'First Interview' : 'HR Discussion';
     const roundText = `${stageLabel} (for ${profileName})`;
     const scheduleText = scheduledAt
-      ? `${new Date(scheduledAt).toLocaleString()}${endsAt ? ' - ' + new Date(endsAt).toLocaleString() : ''}`
-      : '';
+      ? `${new Date(scheduledAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}${endsAt ? ' - ' + new Date(endsAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : ''}`
+      : `Default time: ${DEFAULT_INTERVIEW_START_TIME} - ${DEFAULT_INTERVIEW_END_TIME}`;
 
     const mainMessage = (content && String(content).trim())
       ? String(content).trim()
@@ -205,10 +218,10 @@ router.post('/onboarding/:id/invite', async (req, res) => {
             <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">${escapeHtml(scheduleText)}</td>
           </tr>`
         : '',
-      type === 'offline' && location
+      type === 'offline' && (location || DEFAULT_INTERVIEW_LOCATION)
         ? `<tr>
             <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;width:140px;color:#6b7280;font-size:14px;">Location</td>
-            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">${escapeHtml(location)}</td>
+            <td style="padding:10px 0;border-bottom:1px solid #edf0f3;vertical-align:top;color:#111827;font-size:14px;">${escapeHtml(location || DEFAULT_INTERVIEW_LOCATION)}</td>
           </tr>`
         : '',
       type === 'online' && meetingLink
@@ -351,30 +364,138 @@ router.post('/onboarding/:id/complete-stage', async (req, res) => {
     // Send next-step email
     const next = it.stages[it.currentStageIndex];
     let subject = 'Next Step';
-    let html = `<div style="font-family:Arial,sans-serif;color:#111827;">
-      <p>Hi ${it.candidateName},</p>
-      <p><strong>Profile:</strong> ${profileName}</p>
-      <p>Next step is ${next}.</p>
-      <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
-    </div>`;
+    let html = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>Next Step - 100acress</title>
+        </head>
+        <body style="margin:0;padding:0;background:#f6f7fb;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7fb;padding:24px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.08);">
+                  <tr>
+                    <td style="padding:18px 20px;background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                      <div style="font-family:Arial,sans-serif;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;">100acress.com</div>
+                      <div style="font-family:Arial,sans-serif;color:#eaf2ff;font-size:13px;margin-top:4px;">HR Team</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
+                      <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Next Step</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Profile: <strong style="color:#111827;">${escapeHtml(profileName)}</strong></div>
+                      <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">Your next step is <strong style="color:#2563eb;">${escapeHtml(next)}</strong>.</div>
+                      <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                      </div>
+                      <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
+                        <div style="font-size:14px;color:#111827;">Regards,</div>
+                        <div style="font-size:14px;color:#111827;font-weight:700;">100acress HR Team</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-family:Arial,sans-serif;color:#94a3b8;font-size:12px;margin-top:12px;">© ${new Date().getFullYear()} 100acress.com</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>`;
     if (stage === 'interview1') {
       subject = `Feedback & Next Step: HR Discussion (for ${profileName})`;
-      html = `<div style="font-family:Arial,sans-serif;color:#111827;">
-        <p>Hi ${it.candidateName},</p>
-        <p><strong>Profile:</strong> ${profileName}</p>
-        <p>Interview 1 feedback: ${feedback || '—'}.</p>
-        <p>Next step is HR Discussion. We will send you the invite shortly.</p>
-        <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
-      </div>`;
+      html = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>Feedback & Next Step - 100acress</title>
+        </head>
+        <body style="margin:0;padding:0;background:#f6f7fb;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7fb;padding:24px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.08);">
+                  <tr>
+                    <td style="padding:18px 20px;background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                      <div style="font-family:Arial,sans-serif;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;">100acress.com</div>
+                      <div style="font-family:Arial,sans-serif;color:#eaf2ff;font-size:13px;margin-top:4px;">HR Team</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
+                      <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Feedback & Next Step</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Profile: <strong style="color:#111827;">${escapeHtml(profileName)}</strong></div>
+                      <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">Thank you for attending the <strong style="color:#2563eb;">Interview 1</strong>. ${feedback ? `Your feedback: ${escapeHtml(feedback)}.` : ''}</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">Your next step is <strong style="color:#2563eb;">HR Discussion</strong>. We will send you the invite shortly.</div>
+                      <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                      </div>
+                      <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
+                        <div style="font-size:14px;color:#111827;">Regards,</div>
+                        <div style="font-size:14px;color:#111827;font-weight:700;">100acress HR Team</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-family:Arial,sans-serif;color:#94a3b8;font-size:12px;margin-top:12px;">© ${new Date().getFullYear()} 100acress.com</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>`;
     } else if (stage === 'hrDiscussion') {
       subject = `Next Step: Documentation (for ${profileName})`;
-      html = `<div style="font-family:Arial,sans-serif;color:#111827;">
-        <p>Hi ${it.candidateName},</p>
-        <p><strong>Profile:</strong> ${profileName}</p>
-        <p>HR Discussion feedback: ${feedback || '—'}.</p>
-        <p>Next step is Documentation. You will receive a document upload link.</p>
-        <p style="margin-top:14px;font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
-      </div>`;
+      html = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>Next Step: Documentation - 100acress</title>
+        </head>
+        <body style="margin:0;padding:0;background:#f6f7fb;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7fb;padding:24px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.08);">
+                  <tr>
+                    <td style="padding:18px 20px;background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                      <div style="font-family:Arial,sans-serif;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;">100acress.com</div>
+                      <div style="font-family:Arial,sans-serif;color:#eaf2ff;font-size:13px;margin-top:4px;">HR Team</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
+                      <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Next Step: Documentation</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Profile: <strong style="color:#111827;">${escapeHtml(profileName)}</strong></div>
+                      <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">Thank you for attending the <strong style="color:#2563eb;">HR Discussion</strong>. ${feedback ? `Your feedback: ${escapeHtml(feedback)}.` : ''}</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">Your next step is <strong style="color:#2563eb;">Documentation</strong>. You will receive a document upload link shortly.</div>
+                      <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                      </div>
+                      <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
+                        <div style="font-size:14px;color:#111827;">Regards,</div>
+                        <div style="font-size:14px;color:#111827;font-weight:700;">100acress HR Team</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-family:Arial,sans-serif;color:#94a3b8;font-size:12px;margin-top:12px;">© ${new Date().getFullYear()} 100acress.com</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>`;
     }
     await sendEmail(it.candidateEmail, fromAddr, [], subject, html, false);
 
@@ -400,15 +521,51 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
     }
 
     const html = `
-      <div style="font-family:Arial,sans-serif;color:#111">
-        <h2>Documentation Required</h2>
-        <p>Dear ${it.candidateName},</p>
-        <p><strong>Profile:</strong> ${profileName}</p>
-        <p>${content || 'Please upload your documents for verification.'}</p>
-        <p><a href="${uploadLink}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">Upload Documents</a></p>
-        <p style="margin-top:20px;font-size:12px;color:#666;">If the button doesn't work, copy this link: ${uploadLink}</p>
-        <p style="margin-top:16px;font-size:12px;color:#111827;white-space:pre-line;"><strong>Instructions:</strong><br/>${DEFAULT_EMAIL_INSTRUCTIONS}</p>
-      </div>`;
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>Document Verification - 100acress</title>
+        </head>
+        <body style="margin:0;padding:0;background:#f6f7fb;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7fb;padding:24px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.08);">
+                  <tr>
+                    <td style="padding:18px 20px;background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                      <div style="font-family:Arial,sans-serif;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;">100acress.com</div>
+                      <div style="font-family:Arial,sans-serif;color:#eaf2ff;font-size:13px;margin-top:4px;">HR Team</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:22px 20px;font-family:Arial,sans-serif;color:#111827;">
+                      <div style="font-size:18px;font-weight:800;margin:0 0 6px 0;">Document Verification Required</div>
+                      <div style="font-size:14px;color:#6b7280;margin:0 0 6px 0;">Profile: <strong style="color:#111827;">${escapeHtml(profileName)}</strong></div>
+                      <div style="font-size:14px;line-height:1.6;margin:0 0 14px 0;">Dear ${escapeHtml(it.candidateName)},</div>
+                      <div style="font-size:14px;line-height:1.7;margin:0 0 18px 0;color:#111827;">${escapeHtml(content || 'Please upload your documents for verification.')}</div>
+                      <div style="margin-top:20px;">
+                        <a href="${escapeHtml(uploadLink)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;">Upload Documents</a>
+                        <div style="font-size:12px;color:#6b7280;margin-top:10px;">If the button doesn't work, copy and paste this link: <span style="color:#111827;word-break:break-all;">${escapeHtml(uploadLink)}</span></div>
+                      </div>
+                      <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                      </div>
+                      <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
+                        <div style="font-size:14px;color:#111827;">Regards,</div>
+                        <div style="font-size:14px;color:#111827;font-weight:700;">100acress HR Team</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-family:Arial,sans-serif;color:#94a3b8;font-size:12px;margin-top:12px;">&copy; ${new Date().getFullYear()} 100acress.com</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>`;
     
     // Try to send email, but don't fail if email sending fails
     const emailSent = await sendEmail(it.candidateEmail, fromAddr, [], `Document Verification - ${profileName}`, html, false);
