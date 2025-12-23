@@ -22,6 +22,14 @@ Keep a stable internet connection (for online interviews).
 Keep your resume and government ID handy.
 If you face any issue, reply to this email and we will assist you.`;
 
+const DOCUMENT_VERIFICATION_INSTRUCTIONS = `
+MANDATORY DOCUMENTS REQUIRED:
+• PAN Card (clear photo, both sides)
+• Aadhaar Card (clear photo, both sides)  
+• Passport-size Photograph (recent, white background)
+
+Please ensure all documents are clear and readable before uploading.`;
+
 const DEFAULT_INTERVIEW_LOCATION = 'ILD Trade Center, 806 Near Malibu Town Sector 47, Gurugram 122018, Sohna Road';
 const DEFAULT_INTERVIEW_START_TIME = '11:30';
 const DEFAULT_INTERVIEW_END_TIME = '13:00';
@@ -561,7 +569,7 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
                       </div>
                       <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
                         <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
-                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(content && content.trim() ? DEFAULT_EMAIL_INSTRUCTIONS : DEFAULT_EMAIL_INSTRUCTIONS)}</div>
+                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(content && content.trim() ? DEFAULT_EMAIL_INSTRUCTIONS : DOCUMENT_VERIFICATION_INSTRUCTIONS)}</div>
                       </div>
                       <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
                         <div style="font-size:14px;color:#111827;">Regards,</div>
