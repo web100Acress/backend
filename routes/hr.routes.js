@@ -569,7 +569,6 @@ router.post('/onboarding/:id/docs-invite', async (req, res) => {
                       </div>
                       <div style="margin-top:18px;border:1px solid #edf0f3;border-radius:12px;padding:14px;background:#ffffff;">
                         <div style="font-size:14px;font-weight:800;color:#111827;margin:0 0 10px 0;">Instructions</div>
-                        <div style="font-size:13px;line-height:1.7;color:#111827;white-space:pre-line;">${escapeHtml(content && content.trim() ? DEFAULT_EMAIL_INSTRUCTIONS : DOCUMENT_VERIFICATION_INSTRUCTIONS)}</div>
                       </div>
                       <div style="margin-top:22px;border-top:1px solid #edf0f3;padding-top:16px;">
                         <div style="font-size:14px;color:#111827;">Regards,</div>
