@@ -12,8 +12,7 @@ const bannerSchema = new mongoose.Schema({
   },
   slug: {
     type: String,
-    trim: true,
-    lowercase: true
+    trim: true
   },
   image: {
     public_id: {
