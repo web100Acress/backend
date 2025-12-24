@@ -12,8 +12,7 @@ const sideBannerSchema = new mongoose.Schema({
   },
   slug: {
     type: String,
-    trim: true,
-    lowercase: true
+    trim: true
   },
   link: {
     type: String,
