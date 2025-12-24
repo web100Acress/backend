@@ -448,6 +448,7 @@ class CareerController {
         sort = "newest",
         page = 1,
         limit = 10,
+        includeManualOnboarding,
       } = req.query || {};
 
       const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -458,7 +459,12 @@ class CareerController {
       // Only exclude Manual Onboarding for public career page (when meaningful params are sent)
       // Check if any meaningful search/filter params are present (not just defaults)
       const hasSearchParams = q || loc || exp || (page && page !== 1) || (limit && limit !== 10);
-      if (hasSearchParams) {
+      const allowManual =
+        includeManualOnboarding === 1 ||
+        includeManualOnboarding === "1" ||
+        includeManualOnboarding === true ||
+        includeManualOnboarding === "true";
+      if (hasSearchParams && !allowManual) {
         filter.jobTitle = { $ne: 'Manual Onboarding' };
       }
       if (loc) {
