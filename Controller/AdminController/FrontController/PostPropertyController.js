@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
+const UserFollowup = require("../../../models/postProperty/userFollowup");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const { isValidObjectId } = require("mongoose");
@@ -1642,6 +1643,101 @@ const email = dataPushed.email;
       logger.info(`Error in welcome endpoint: ${req.method} ${req.path}`);
       res.status(500).json({
         message: "Internal server error !",
+      });
+    }
+  };
+
+  // USER FOLLOW-UP METHODS
+  static addUserFollowup = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { discussionWith, status, notes, nextFollowupDate } = req.body;
+      const createdBy = req.user?.email || 'admin';
+
+      if (!isValidObjectId(userId)) {
+        return res.status(400).json({ success: false, message: "Invalid user ID" });
+      }
+
+      const followup = new UserFollowup({
+        userId,
+        discussionWith,
+        status,
+        notes,
+        nextFollowupDate,
+        createdBy,
+      });
+
+      await followup.save();
+
+      logger.info(`Follow-up added for user ${userId} by ${createdBy}`);
+      res.status(201).json({
+        success: true,
+        message: "Follow-up added successfully",
+        data: followup,
+      });
+    } catch (error) {
+      logger.error(`Error in addUserFollowup: ${error.message}`);
+      res.status(500).json({
+        success: false,
+        message: "Failed to add follow-up",
+        error: error.message,
+      });
+    }
+  };
+
+  static getUserFollowups = async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      if (!isValidObjectId(userId)) {
+        return res.status(400).json({ success: false, message: "Invalid user ID" });
+      }
+
+      const followups = await UserFollowup.find({ userId }).sort({ createdAt: -1 });
+
+      logger.info(`Fetched ${followups.length} follow-ups for user ${userId}`);
+      res.status(200).json({
+        success: true,
+        message: "Follow-ups fetched successfully",
+        data: followups,
+      });
+    } catch (error) {
+      logger.error(`Error in getUserFollowups: ${error.message}`);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch follow-ups",
+        error: error.message,
+      });
+    }
+  };
+
+  static deleteUserFollowup = async (req, res) => {
+    try {
+      const { followupId } = req.params;
+
+      if (!isValidObjectId(followupId)) {
+        return res.status(400).json({ success: false, message: "Invalid follow-up ID" });
+      }
+
+      const followup = await UserFollowup.findById(followupId);
+      if (!followup) {
+        return res.status(404).json({ success: false, message: "Follow-up not found" });
+      }
+
+      await UserFollowup.findByIdAndDelete(followupId);
+
+      logger.info(`Follow-up ${followupId} deleted`);
+      res.status(200).json({
+        success: true,
+        message: "Follow-up deleted successfully",
+        data: followup,
+      });
+    } catch (error) {
+      logger.error(`Error in deleteUserFollowup: ${error.message}`);
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete follow-up",
+        error: error.message,
       });
     }
   };

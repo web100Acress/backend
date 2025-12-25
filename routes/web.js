@@ -164,6 +164,11 @@ router.get("/postEnq_view", PostPropertyController.postEnquiry_view);
 router.post("/postEnquiry", PostPropertyController.postPropertyEnquiry);
 router.delete("/postEnq_delete/:id", PostPropertyController.postEnquiry_delete);
 
+// USER FOLLOW-UP ROUTES
+router.post("/postPerson/followups/:userId", PostPropertyController.addUserFollowup);
+router.get("/postPerson/followups/:userId", PostPropertyController.getUserFollowups);
+router.delete("/postPerson/followups/:followupId", PostPropertyController.deleteUserFollowup);
+
 //Blog
 router.use("/blog", blogRoute);
 
