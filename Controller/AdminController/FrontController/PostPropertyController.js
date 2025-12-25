@@ -98,7 +98,7 @@ const sendWelcomeVerifyEmail = async ({ email, name }) => {
     const to = email;
     const subject = 'Welcome to 100acress - Verify your account';
     const safeName = name || email?.split('@')?.[0] || 'User';
-    const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+    const verifyUrl = `${getFrontendBaseUrl()}/auth/signup/email-verification/?email=${encodeURIComponent(email)}`;
     const html = `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -179,7 +179,7 @@ const sendVerifyReminderEmail = async ({ email, name }) => {
     const to = email;
     const subject = 'Reminder: Verify your 100acress account';
     const safeName = name || email?.split('@')?.[0] || 'User';
-    const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+    const verifyUrl = `${getFrontendBaseUrl()}/auth/signup/email-verification/?email=${encodeURIComponent(email)}`;
     const html = `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -293,14 +293,14 @@ const sendWhatsAppText = async ({ toMobile, body }) => {
 
 const sendWelcomeVerifyWhatsApp = async ({ mobile, email, name }) => {
   const safeName = name || email?.split('@')?.[0] || 'User';
-  const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+  const verifyUrl = `${getFrontendBaseUrl()}/auth/signup/email-verification/?email=${encodeURIComponent(email)}`;
   const msg = `Welcome ${safeName}!\n\nPlease verify your account:\n${verifyUrl}\n\nAfter verification, you will receive the Post Property link.`;
   return sendWhatsAppText({ toMobile: mobile, body: msg });
 };
 
 const sendVerifyReminderWhatsApp = async ({ mobile, email, name }) => {
   const safeName = name || email?.split('@')?.[0] || 'User';
-  const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+  const verifyUrl = `${getFrontendBaseUrl()}/auth/signup/email-verification/?email=${encodeURIComponent(email)}`;
   const msg = `Reminder ${safeName}!\n\nPlease verify your account:\n${verifyUrl}`;
   return sendWhatsAppText({ toMobile: mobile, body: msg });
 };
