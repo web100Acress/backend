@@ -165,6 +165,7 @@ router.delete("/postEnq_delete/:id", PostPropertyController.postEnquiry_delete);
 // USER FOLLOW-UP ROUTES
 router.post("/postPerson/followups/:userId", PostPropertyController.addUserFollowup);
 router.get("/postPerson/followups/:userId", PostPropertyController.getUserFollowups);
+router.put("/postPerson/followups/:followupId", PostPropertyController.updateUserFollowup);
 router.delete("/postPerson/followups/:followupId", PostPropertyController.deleteUserFollowup);
 
 //Blog

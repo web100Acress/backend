@@ -20,7 +20,8 @@ const { createDecipheriv } = require("crypto");
 
 // Simple logger setup
 const logger = {
-  info: (msg) => console.log(`[INFO] ${new Date().toISOString()} - ${msg}`)
+  info: (msg) => console.log(`[INFO] ${new Date().toISOString()} - ${msg}`),
+  error: (msg) => console.error(`[ERROR] ${new Date().toISOString()} - ${msg}`)
 };
 
 // Function to get all project data and cache it
@@ -1737,6 +1738,43 @@ const email = dataPushed.email;
       res.status(500).json({
         success: false,
         message: "Failed to delete follow-up",
+        error: error.message,
+      });
+    }
+  };
+
+  static updateUserFollowup = async (req, res) => {
+    try {
+      const { followupId } = req.params;
+      const { discussionWith, status, notes, nextFollowupDate } = req.body;
+
+      if (!isValidObjectId(followupId)) {
+        return res.status(400).json({ success: false, message: "Invalid follow-up ID" });
+      }
+
+      const followup = await UserFollowup.findById(followupId);
+      if (!followup) {
+        return res.status(404).json({ success: false, message: "Follow-up not found" });
+      }
+
+      if (typeof discussionWith !== 'undefined') followup.discussionWith = discussionWith;
+      if (typeof status !== 'undefined') followup.status = status;
+      if (typeof notes !== 'undefined') followup.notes = notes;
+      if (typeof nextFollowupDate !== 'undefined') followup.nextFollowupDate = nextFollowupDate;
+
+      await followup.save();
+
+      logger.info(`Follow-up ${followupId} updated`);
+      res.status(200).json({
+        success: true,
+        message: "Follow-up updated successfully",
+        data: followup,
+      });
+    } catch (error) {
+      logger.error(`Error in updateUserFollowup: ${error.message}`);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update follow-up",
         error: error.message,
       });
     }
