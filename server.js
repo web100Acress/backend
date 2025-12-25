@@ -253,13 +253,19 @@ const getFrontendBaseUrl = () => {
 };
 
 const buildVerifyUrl = (email) => {
-  return `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+  return `${getFrontendBaseUrl()}/auth/signup/email-verification/?email=${encodeURIComponent(email)}`;
 };
 
 const getPostPropertyUrl = () => {
   const fromEnv = process.env.POST_PROPERTY_URL;
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
   return `${getFrontendBaseUrl()}/post-property`;
+};
+
+const postPropertyRemindersEnabled = () => {
+  const v = process.env.POST_PROPERTY_REMINDERS_ENABLED;
+  if (v === undefined || v === null || String(v).trim() === '') return true;
+  return String(v).trim().toLowerCase() !== 'false';
 };
 
 const canSendWhatsApp = () => {
@@ -540,6 +546,9 @@ const processVerificationReminders = async () => {
     // 10 minutes -> 24 hours -> 7 days -> weekly until the first property is posted
     // ---------------------------
     const hasNoPostedPropertyQuery = {
+      // Safety: only remind users verified after this feature was added.
+      // Older users might have emailVerified=true but emailVerifiedAt=null.
+      emailVerifiedAt: { $ne: null },
       $or: [
         { postProperty: { $exists: false } },
         { postProperty: { $size: 0 } },
@@ -547,6 +556,7 @@ const processVerificationReminders = async () => {
     };
 
     const processPostPropertyStage = async ({ stageLabel, dueMs, lockField, sentField, weekly = false }) => {
+      if (!postPropertyRemindersEnabled()) return;
       const now = new Date();
       const lockStaleMs = 30 * 60 * 1000;
       const staleBefore = new Date(Date.now() - lockStaleMs);
