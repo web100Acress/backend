@@ -8,6 +8,9 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const errorHandler = require("./middleware/errorMiddleware");
 const uploadLimits = require("./config/uploadLimits");
+const PostUser = require("./models/postProperty/post");
+const { sendEmail } = require("./Utilities/s3HelperUtility");
+const axios = require("axios");
 const app = express();
 // Load environment variables BEFORE using them
 require("dotenv").config();
@@ -239,6 +242,419 @@ app.use(bodyParser.urlencoded({ extended: false ,limit:"100mb"}));
 
 // database connection
 connectDB();
+
+// ---------------------------
+// Email verification reminders (production scheduler)
+// 10 minutes -> 24 hours -> 7 days -> weekly until verified
+// Uses DB locks to avoid duplicates and works across restarts
+// ---------------------------
+const getFrontendBaseUrl = () => {
+  return (process.env.FRONTEND_URL || 'https://100acress.com').replace(/\/$/, '');
+};
+
+const buildVerifyUrl = (email) => {
+  return `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+};
+
+const getPostPropertyUrl = () => {
+  const fromEnv = process.env.POST_PROPERTY_URL;
+  if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
+  return `${getFrontendBaseUrl()}/post-property`;
+};
+
+const canSendWhatsApp = () => {
+  return !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+};
+
+const normalizeWhatsAppNumber = (value) => {
+  if (value === null || value === undefined) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  let cleaned = raw.replace(/[^\d+]/g, '');
+  if (!cleaned) return null;
+  if (cleaned.startsWith('+')) {
+    cleaned = '+' + cleaned.slice(1).replace(/\D/g, '');
+  } else {
+    cleaned = cleaned.replace(/\D/g, '');
+    const cc = (process.env.WHATSAPP_DEFAULT_COUNTRY_CODE || '91').replace(/\D/g, '');
+    cleaned = cc ? `+${cc}${cleaned}` : `+${cleaned}`;
+  }
+  const digitsOnly = cleaned.replace(/\D/g, '');
+  if (digitsOnly.length < 10) return null;
+  return cleaned;
+};
+
+const sendWhatsAppText = async ({ toMobile, body }) => {
+  try {
+    if (!canSendWhatsApp()) return false;
+    const to = normalizeWhatsAppNumber(toMobile);
+    if (!to) return false;
+    const url = `https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    await axios.post(
+      url,
+      {
+        messaging_product: 'whatsapp',
+        to: to.replace(/^\+/, ''),
+        type: 'text',
+        text: { body },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      }
+    );
+    return true;
+  } catch (error) {
+    console.log('WhatsApp reminder send error', error?.response?.data || error?.message || error);
+    return false;
+  }
+};
+
+const sendVerifyReminderEmail = async ({ email, name, stageLabel }) => {
+  try {
+    const from = 'support@100acress.com';
+    const to = email;
+    const subject = stageLabel
+      ? `Reminder (${stageLabel}): Verify your 100acress account`
+      : 'Reminder: Verify your 100acress account';
+    const safeName = name || email?.split('@')?.[0] || 'User';
+    const verifyUrl = buildVerifyUrl(email);
+    const html = `<!DOCTYPE html>
+      <html lang="en">
+      <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Verify your account</title>
+      </head>
+      <body style="margin:0;padding:0;background:#0b1020;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#0b1020;padding:24px 12px;">
+          <tr><td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+              <tr>
+                <td style="background:linear-gradient(135deg,#111827 0%, #0b1020 45%, #111827 100%); border:1px solid rgba(255,255,255,0.10); border-radius:18px; overflow:hidden;">
+                  <div style="padding:28px 26px 22px 26px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#f9fafb;">
+                    <div style="display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:12px;color:#d1d5db;">Reminder</div>
+                    <h1 style="margin:14px 0 10px 0;font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;">Hello ${safeName},</h1>
+                    <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#d1d5db;">Please verify your email to activate your account.</p>
+                    <div style="margin:18px 0 18px 0;">
+                      <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(90deg,#2563eb 0%, #7c3aed 100%);color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;">Verify your account</a>
+                    </div>
+                    <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">If the button doesn’t work, copy & paste this link:<br /><span style="word-break:break-all;color:#c7d2fe;">${verifyUrl}</span></p>
+                  </div>
+                  <div style="padding:14px 26px 22px 26px;border-top:1px solid rgba(255,255,255,0.08); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#9ca3af; font-size:12px; line-height:1.6;">© ${new Date().getFullYear()} 100acress.</div>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </body>
+      </html>`;
+    await sendEmail(to, from, [], subject, html, false);
+    return true;
+  } catch (e) {
+    console.log('Email reminder send error', e);
+    return false;
+  }
+};
+
+const sendVerifyReminderWhatsApp = async ({ mobile, email, name, stageLabel }) => {
+  const safeName = name || email?.split('@')?.[0] || 'User';
+  const verifyUrl = buildVerifyUrl(email);
+  const prefix = stageLabel ? `Reminder (${stageLabel})` : 'Reminder';
+  const msg = `${prefix}: ${safeName}\n\nPlease verify your account:\n${verifyUrl}`;
+  return sendWhatsAppText({ toMobile: mobile, body: msg });
+};
+
+const sendPostPropertyReminderEmail = async ({ email, name, stageLabel }) => {
+  try {
+    const from = 'support@100acress.com';
+    const to = email;
+    const subject = stageLabel
+      ? `Post Property (${stageLabel}): Publish your listing on 100acress`
+      : 'Post Property: Publish your listing on 100acress';
+    const safeName = name || email?.split('@')?.[0] || 'User';
+    const postUrl = getPostPropertyUrl();
+    const html = `<!DOCTYPE html>
+      <html lang="en">
+      <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Post Property</title>
+      </head>
+      <body style="margin:0;padding:0;background:#071a12;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#071a12;padding:24px 12px;">
+          <tr><td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+              <tr>
+                <td style="background:linear-gradient(135deg,#052e1c 0%, #071a12 55%, #052e1c 100%); border:1px solid rgba(255,255,255,0.10); border-radius:18px; overflow:hidden;">
+                  <div style="padding:28px 26px 22px 26px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#ecfdf5;">
+                    <div style="display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:12px;color:#d1d5db;">Post Property</div>
+                    <h1 style="margin:14px 0 10px 0;font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;">Hi ${safeName},</h1>
+                    <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#bbf7d0;">Your account is verified. Post your property to start receiving enquiries.</p>
+                    <div style="margin:18px 0 18px 0;">
+                      <a href="${postUrl}" style="display:inline-block;background:linear-gradient(90deg,#16a34a 0%, #0ea5e9 100%);color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:800;font-size:14px;">Post Property</a>
+                    </div>
+                    <p style="margin:0;font-size:12px;line-height:1.6;color:#a7f3d0;">If the button doesn’t work, copy & paste this link:<br /><span style="word-break:break-all;color:#99f6e4;">${postUrl}</span></p>
+                  </div>
+                  <div style="padding:14px 26px 22px 26px;border-top:1px solid rgba(255,255,255,0.08); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#a7f3d0; font-size:12px; line-height:1.6;">© ${new Date().getFullYear()} 100acress.</div>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </body>
+      </html>`;
+    await sendEmail(to, from, [], subject, html, false);
+    return true;
+  } catch (e) {
+    console.log('Post property reminder email send error', e);
+    return false;
+  }
+};
+
+const sendPostPropertyReminderWhatsApp = async ({ mobile, email, name, stageLabel }) => {
+  const safeName = name || email?.split('@')?.[0] || 'User';
+  const postUrl = getPostPropertyUrl();
+  const prefix = stageLabel ? `Post Property (${stageLabel})` : 'Post Property';
+  const msg = `${prefix}: ${safeName}\n\nPost your property here:\n${postUrl}`;
+  return sendWhatsAppText({ toMobile: mobile, body: msg });
+};
+
+const processStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuery = {}, weekly = false }) => {
+  const now = new Date();
+  const lockStaleMs = 30 * 60 * 1000; // 30 minutes
+  const staleBefore = new Date(Date.now() - lockStaleMs);
+  const baseQuery = {
+    emailVerified: false,
+    ...extraQuery,
+    $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
+    $orLock: undefined,
+  };
+  // Build lock query without overwriting
+  const lockQuery = {
+    $or: [
+      { [lockField]: null },
+      { [lockField]: { $exists: false } },
+      { [lockField]: { $lt: staleBefore } },
+    ],
+  };
+  delete baseQuery.$orLock;
+
+  // For weekly, dueMs is evaluated against last weekly sent or 7d sent
+  const query = {
+    ...baseQuery,
+    ...lockQuery,
+  };
+
+  const batchSize = Math.max(1, Number(process.env.VERIFY_REMINDER_BATCH_SIZE || 50));
+  const candidates = await PostUser.find(query)
+    .select('email name mobile createdAt verifyReminder7dSentAt verifyReminderWeeklySentAt')
+    .limit(batchSize)
+    .lean();
+
+  for (const u of candidates) {
+    try {
+      if (!u.email) continue;
+
+      // Eligibility check by time
+      const createdAtMs = new Date(u.createdAt).getTime();
+      if (!weekly) {
+        if (Date.now() - createdAtMs < dueMs) continue;
+      } else {
+        const anchor = u.verifyReminderWeeklySentAt || u.verifyReminder7dSentAt;
+        if (!anchor) continue;
+        const anchorMs = new Date(anchor).getTime();
+        if (Date.now() - anchorMs < dueMs) continue;
+      }
+
+      // Acquire lock atomically
+      const locked = await PostUser.findOneAndUpdate(
+        {
+          _id: u._id,
+          emailVerified: false,
+          $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
+          $or: [
+            { [lockField]: null },
+            { [lockField]: { $exists: false } },
+            { [lockField]: { $lt: staleBefore } },
+          ],
+        },
+        { $set: { [lockField]: now } },
+        { new: false }
+      );
+      if (!locked) continue;
+
+      await sendVerifyReminderEmail({ email: u.email, name: u.name, stageLabel });
+      await sendVerifyReminderWhatsApp({ mobile: u.mobile, email: u.email, name: u.name, stageLabel });
+
+      await PostUser.updateOne(
+        { _id: u._id },
+        { $set: { [sentField]: new Date() }, $unset: { [lockField]: 1 } }
+      );
+    } catch (err) {
+      try {
+        await PostUser.updateOne({ _id: u._id }, { $unset: { [lockField]: 1 } });
+      } catch {}
+      console.log('Reminder stage processing error', stageLabel, err);
+    }
+  }
+};
+
+const processVerificationReminders = async () => {
+  try {
+    const tenMinMs = 10 * 60 * 1000;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+
+    await processStage({
+      stageLabel: '10 min',
+      dueMs: tenMinMs,
+      lockField: 'verifyReminder10mLockAt',
+      sentField: 'verifyReminder10mSentAt',
+    });
+
+    await processStage({
+      stageLabel: '24 hours',
+      dueMs: dayMs,
+      lockField: 'verifyReminder24hLockAt',
+      sentField: 'verifyReminder24hSentAt',
+    });
+
+    await processStage({
+      stageLabel: '7 days',
+      dueMs: weekMs,
+      lockField: 'verifyReminder7dLockAt',
+      sentField: 'verifyReminder7dSentAt',
+    });
+
+    // Weekly reminders after the 7-day reminder has been sent
+    await processStage({
+      stageLabel: 'Weekly',
+      dueMs: weekMs,
+      lockField: 'verifyReminderWeeklyLockAt',
+      sentField: 'verifyReminderWeeklySentAt',
+      weekly: true,
+    });
+
+    // ---------------------------
+    // Post Property reminders after verification (only if no property posted)
+    // 10 minutes -> 24 hours -> 7 days -> weekly until the first property is posted
+    // ---------------------------
+    const hasNoPostedPropertyQuery = {
+      $or: [
+        { postProperty: { $exists: false } },
+        { postProperty: { $size: 0 } },
+      ],
+    };
+
+    const processPostPropertyStage = async ({ stageLabel, dueMs, lockField, sentField, weekly = false }) => {
+      const now = new Date();
+      const lockStaleMs = 30 * 60 * 1000;
+      const staleBefore = new Date(Date.now() - lockStaleMs);
+
+      const batchSize = Math.max(1, Number(process.env.VERIFY_REMINDER_BATCH_SIZE || 50));
+      const candidates = await PostUser.find({
+        emailVerified: true,
+        ...hasNoPostedPropertyQuery,
+        $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
+        $or: [
+          { [lockField]: null },
+          { [lockField]: { $exists: false } },
+          { [lockField]: { $lt: staleBefore } },
+        ],
+      })
+        .select('email name mobile emailVerifiedAt createdAt postPropertyReminder7dSentAt postPropertyReminderWeeklySentAt')
+        .limit(batchSize)
+        .lean();
+
+      for (const u of candidates) {
+        try {
+          if (!u.email) continue;
+          const anchorDate = u.emailVerifiedAt || u.createdAt;
+
+          if (!weekly) {
+            if (Date.now() - new Date(anchorDate).getTime() < dueMs) continue;
+          } else {
+            const anchor = u.postPropertyReminderWeeklySentAt || u.postPropertyReminder7dSentAt || u.emailVerifiedAt || u.createdAt;
+            if (!anchor) continue;
+            if (Date.now() - new Date(anchor).getTime() < dueMs) continue;
+          }
+
+          const locked = await PostUser.findOneAndUpdate(
+            {
+              _id: u._id,
+              emailVerified: true,
+              ...hasNoPostedPropertyQuery,
+              $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
+              $or: [
+                { [lockField]: null },
+                { [lockField]: { $exists: false } },
+                { [lockField]: { $lt: staleBefore } },
+              ],
+            },
+            { $set: { [lockField]: now } },
+            { new: false }
+          );
+          if (!locked) continue;
+
+          await sendPostPropertyReminderEmail({ email: u.email, name: u.name, stageLabel });
+          await sendPostPropertyReminderWhatsApp({ mobile: u.mobile, email: u.email, name: u.name, stageLabel });
+
+          await PostUser.updateOne(
+            { _id: u._id },
+            { $set: { [sentField]: new Date() }, $unset: { [lockField]: 1 } }
+          );
+        } catch (err) {
+          try {
+            await PostUser.updateOne({ _id: u._id }, { $unset: { [lockField]: 1 } });
+          } catch {}
+          console.log('Post property reminder stage processing error', stageLabel, err);
+        }
+      }
+    };
+
+    await processPostPropertyStage({
+      stageLabel: '10 min',
+      dueMs: tenMinMs,
+      lockField: 'postPropertyReminder10mLockAt',
+      sentField: 'postPropertyReminder10mSentAt',
+    });
+
+    await processPostPropertyStage({
+      stageLabel: '24 hours',
+      dueMs: dayMs,
+      lockField: 'postPropertyReminder24hLockAt',
+      sentField: 'postPropertyReminder24hSentAt',
+    });
+
+    await processPostPropertyStage({
+      stageLabel: '7 days',
+      dueMs: weekMs,
+      lockField: 'postPropertyReminder7dLockAt',
+      sentField: 'postPropertyReminder7dSentAt',
+    });
+
+    await processPostPropertyStage({
+      stageLabel: 'Weekly',
+      dueMs: weekMs,
+      lockField: 'postPropertyReminderWeeklyLockAt',
+      sentField: 'postPropertyReminderWeeklySentAt',
+      weekly: true,
+    });
+  } catch (err) {
+    console.log('processVerificationReminders error', err);
+  }
+};
+
+// Run every 5 minutes (production-grade; survives restarts)
+const reminderIntervalMs = Math.max(60_000, Number(process.env.VERIFY_REMINDER_INTERVAL_MS || 5 * 60 * 1000));
+setInterval(() => {
+  processVerificationReminders();
+}, reminderIntervalMs);
+
+// Initial run after startup (give DB time to connect)
+setTimeout(() => {
+  processVerificationReminders();
+}, 30_000);
 
 app.set("trust proxy", 1);
 

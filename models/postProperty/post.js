@@ -135,6 +135,32 @@ const post_Schema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Email/WhatsApp verification reminder tracking (production scheduler)
+    verifyReminder10mLockAt: { type: Date, default: null },
+    verifyReminder10mSentAt: { type: Date, default: null },
+    verifyReminder24hLockAt: { type: Date, default: null },
+    verifyReminder24hSentAt: { type: Date, default: null },
+    verifyReminder7dLockAt: { type: Date, default: null },
+    verifyReminder7dSentAt: { type: Date, default: null },
+    verifyReminderWeeklyLockAt: { type: Date, default: null },
+    verifyReminderWeeklySentAt: { type: Date, default: null },
+
+    // Post Property reminders after verification (only if user hasn't posted any property)
+    postPropertyReminder10mLockAt: { type: Date, default: null },
+    postPropertyReminder10mSentAt: { type: Date, default: null },
+    postPropertyReminder24hLockAt: { type: Date, default: null },
+    postPropertyReminder24hSentAt: { type: Date, default: null },
+    postPropertyReminder7dLockAt: { type: Date, default: null },
+    postPropertyReminder7dSentAt: { type: Date, default: null },
+    postPropertyReminderWeeklyLockAt: { type: Date, default: null },
+    postPropertyReminderWeeklySentAt: { type: Date, default: null },
+
     // Array of liked project ids for consistency with RegisterData
     favorites: [
       {

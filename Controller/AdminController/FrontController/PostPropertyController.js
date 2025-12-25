@@ -1,6 +1,7 @@
 const postPropertyModel = require("../../../models/postProperty/post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 const cache = require("memory-cache");
 const postEnquiryModel = require("../../../models/postProperty/enquiry");
 const Email_verify = require("../../../models/postProperty/emailVerify");
@@ -79,6 +80,317 @@ const sendResetEmail = async (email, token) => {
     console.log("Error in sending password reset email",error);
   }
   return emailSuccess;
+};
+
+const getFrontendBaseUrl = () => {
+  return (process.env.FRONTEND_URL || 'https://100acress.com').replace(/\/$/, '');
+};
+
+const getPostPropertyUrl = () => {
+  const fromEnv = process.env.POST_PROPERTY_URL;
+  if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
+  return `${getFrontendBaseUrl()}/post-property`;
+};
+
+const sendWelcomeVerifyEmail = async ({ email, name }) => {
+  try {
+    const from = 'support@100acress.com';
+    const to = email;
+    const subject = 'Welcome to 100acress - Verify your account';
+    const safeName = name || email?.split('@')?.[0] || 'User';
+    const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+    const html = `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Verify your account</title>
+      </head>
+      <body style="margin:0;padding:0;background:#0b1020;">
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+          Welcome to 100acress — verify your email to unlock posting your property.
+        </div>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#0b1020;padding:24px 12px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+                <tr>
+                  <td style="padding:0 8px 14px 8px;">
+                    <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#e5e7eb; font-size:12px; letter-spacing:0.12em; text-transform:uppercase;">
+                      100acress
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:linear-gradient(135deg,#111827 0%, #0b1020 45%, #111827 100%); border:1px solid rgba(255,255,255,0.10); border-radius:18px; overflow:hidden;">
+                    <div style="padding:28px 26px 22px 26px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#f9fafb;">
+                      <div style="display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:12px;color:#d1d5db;">
+                        Welcome
+                      </div>
+                      <h1 style="margin:14px 0 10px 0;font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;">
+                        Hello ${safeName},
+                      </h1>
+                      <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#d1d5db;">
+                        Thanks for registering with <b>100acress</b>. Please verify your email to activate your account.
+                      </p>
+
+                      <div style="margin:18px 0 18px 0;">
+                        <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(90deg,#2563eb 0%, #7c3aed 100%);color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;">
+                          Verify your account
+                        </a>
+                      </div>
+
+                      <div style="padding:14px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);">
+                        <div style="font-size:12px;color:#a7f3d0;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Next step</div>
+                        <div style="margin-top:6px;font-size:14px;line-height:1.7;color:#d1d5db;">
+                          After verification, we’ll send you a direct link to <b>Post Property</b>.
+                        </div>
+                      </div>
+
+                      <p style="margin:16px 0 0 0;font-size:12px;line-height:1.6;color:#9ca3af;">
+                        If the button doesn’t work, copy & paste this link:
+                        <br />
+                        <span style="word-break:break-all;color:#c7d2fe;">${verifyUrl}</span>
+                      </p>
+                    </div>
+                    <div style="padding:14px 26px 22px 26px;border-top:1px solid rgba(255,255,255,0.08); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#9ca3af; font-size:12px; line-height:1.6;">
+                      If you didn’t create this account, you can safely ignore this email.
+                      <br />© ${new Date().getFullYear()} 100acress.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>`;
+    await sendEmail(to, from, [], subject, html, false);
+    return true;
+  } catch (error) {
+    console.log('Error sending welcome/verify email', error);
+    return false;
+  }
+};
+
+const sendVerifyReminderEmail = async ({ email, name }) => {
+  try {
+    const from = 'support@100acress.com';
+    const to = email;
+    const subject = 'Reminder: Verify your 100acress account';
+    const safeName = name || email?.split('@')?.[0] || 'User';
+    const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+    const html = `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Verify your account</title>
+      </head>
+      <body style="margin:0;padding:0;background:#0b1020;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#0b1020;padding:24px 12px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+                <tr>
+                  <td style="background:linear-gradient(135deg,#111827 0%, #0b1020 45%, #111827 100%); border:1px solid rgba(255,255,255,0.10); border-radius:18px; overflow:hidden;">
+                    <div style="padding:28px 26px 22px 26px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#f9fafb;">
+                      <div style="display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:12px;color:#d1d5db;">
+                        Reminder
+                      </div>
+                      <h1 style="margin:14px 0 10px 0;font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;">
+                        Hello ${safeName},
+                      </h1>
+                      <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#d1d5db;">
+                        Your account is almost ready. Please verify your email to activate your account.
+                      </p>
+                      <div style="margin:18px 0 18px 0;">
+                        <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(90deg,#2563eb 0%, #7c3aed 100%);color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;">
+                          Verify your account
+                        </a>
+                      </div>
+                      <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">
+                        If the button doesn’t work, copy & paste this link:
+                        <br />
+                        <span style="word-break:break-all;color:#c7d2fe;">${verifyUrl}</span>
+                      </p>
+                    </div>
+                    <div style="padding:14px 26px 22px 26px;border-top:1px solid rgba(255,255,255,0.08); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#9ca3af; font-size:12px; line-height:1.6;">
+                      © ${new Date().getFullYear()} 100acress.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>`;
+    await sendEmail(to, from, [], subject, html, false);
+    return true;
+  } catch (error) {
+    console.log('Error sending verify reminder email', error);
+    return false;
+  }
+};
+
+const normalizeWhatsAppNumber = (value) => {
+  if (value === null || value === undefined) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  let cleaned = raw.replace(/[^\d+]/g, '');
+  if (!cleaned) return null;
+
+  if (cleaned.startsWith('+')) {
+    cleaned = '+' + cleaned.slice(1).replace(/\D/g, '');
+  } else {
+    cleaned = cleaned.replace(/\D/g, '');
+    const cc = (process.env.WHATSAPP_DEFAULT_COUNTRY_CODE || '91').replace(/\D/g, '');
+    if (cc) cleaned = `+${cc}${cleaned}`;
+    else cleaned = `+${cleaned}`;
+  }
+
+  const digitsOnly = cleaned.replace(/\D/g, '');
+  if (digitsOnly.length < 10) return null;
+  return cleaned;
+};
+
+const canSendWhatsApp = () => {
+  return !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+};
+
+const sendWhatsAppText = async ({ toMobile, body }) => {
+  try {
+    if (!canSendWhatsApp()) return false;
+    const to = normalizeWhatsAppNumber(toMobile);
+    if (!to) return false;
+
+    const url = `https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    await axios.post(
+      url,
+      {
+        messaging_product: 'whatsapp',
+        to: to.replace(/^\+/, ''),
+        type: 'text',
+        text: { body },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      }
+    );
+
+    return true;
+  } catch (error) {
+    console.log('Error sending WhatsApp message', error?.response?.data || error?.message || error);
+    return false;
+  }
+};
+
+const sendWelcomeVerifyWhatsApp = async ({ mobile, email, name }) => {
+  const safeName = name || email?.split('@')?.[0] || 'User';
+  const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+  const msg = `Welcome ${safeName}!\n\nPlease verify your account:\n${verifyUrl}\n\nAfter verification, you will receive the Post Property link.`;
+  return sendWhatsAppText({ toMobile: mobile, body: msg });
+};
+
+const sendVerifyReminderWhatsApp = async ({ mobile, email, name }) => {
+  const safeName = name || email?.split('@')?.[0] || 'User';
+  const verifyUrl = `${getFrontendBaseUrl()}/verify-email?email=${encodeURIComponent(email)}`;
+  const msg = `Reminder ${safeName}!\n\nPlease verify your account:\n${verifyUrl}`;
+  return sendWhatsAppText({ toMobile: mobile, body: msg });
+};
+
+const sendPostPropertyLinkWhatsApp = async ({ mobile, email, name }) => {
+  const safeName = name || email?.split('@')?.[0] || 'User';
+  const postUrl = getPostPropertyUrl();
+  const msg = `Hi ${safeName}, your email is verified!\n\nPost your property here:\n${postUrl}`;
+  return sendWhatsAppText({ toMobile: mobile, body: msg });
+};
+
+const sendPostPropertyLinkEmail = async ({ email, name }) => {
+  try {
+    const from = 'support@100acress.com';
+    const to = email;
+    const subject = 'Account verified - Post your property now';
+    const safeName = name || email?.split('@')?.[0] || 'User';
+    const postUrl = getPostPropertyUrl();
+    const html = `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Post Property</title>
+      </head>
+      <body style="margin:0;padding:0;background:#071a12;">
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+          Your email is verified — post your property on 100acress.
+        </div>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#071a12;padding:24px 12px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+                <tr>
+                  <td style="padding:0 8px 14px 8px;">
+                    <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#d1fae5; font-size:12px; letter-spacing:0.12em; text-transform:uppercase;">
+                      100acress
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:linear-gradient(135deg,#052e1c 0%, #071a12 55%, #052e1c 100%); border:1px solid rgba(255,255,255,0.10); border-radius:18px; overflow:hidden;">
+                    <div style="padding:28px 26px 22px 26px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#ecfdf5;">
+                      <div style="display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:12px;color:#d1d5db;">
+                        Verified
+                      </div>
+                      <h1 style="margin:14px 0 10px 0;font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;">
+                        Hi ${safeName}, your email is verified.
+                      </h1>
+                      <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#bbf7d0;">
+                        You can now post your property in minutes.
+                      </p>
+
+                      <div style="margin:18px 0 18px 0;">
+                        <a href="${postUrl}" style="display:inline-block;background:linear-gradient(90deg,#16a34a 0%, #0ea5e9 100%);color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:800;font-size:14px;">
+                          Post Property
+                        </a>
+                      </div>
+
+                      <div style="padding:14px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);">
+                        <div style="font-size:12px;color:#a7f3d0;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Tip</div>
+                        <div style="margin-top:6px;font-size:14px;line-height:1.7;color:#d1d5db;">
+                          Add clear photos and accurate pricing to get faster responses.
+                        </div>
+                      </div>
+
+                      <p style="margin:16px 0 0 0;font-size:12px;line-height:1.6;color:#a7f3d0;">
+                        If the button doesn’t work, copy & paste this link:
+                        <br />
+                        <span style="word-break:break-all;color:#99f6e4;">${postUrl}</span>
+                      </p>
+                    </div>
+                    <div style="padding:14px 26px 22px 26px;border-top:1px solid rgba(255,255,255,0.08); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#a7f3d0; font-size:12px; line-height:1.6;">
+                      Need help? Reply to this email or contact support.
+                      <br />© ${new Date().getFullYear()} 100acress.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>`;
+    await sendEmail(to, from, [], subject, html, false);
+    return true;
+  } catch (error) {
+    console.log('Error sending post property link email', error);
+    return false;
+  }
 };
 
 
@@ -265,6 +577,18 @@ class PostPropertyController {
 
       await session.commitTransaction();
       session.endSession();
+
+      try {
+        await sendWelcomeVerifyEmail({ email: emailLowerCase, name });
+      } catch (mailErr) {
+        console.log('Welcome/verify email failed (non-blocking):', mailErr);
+      }
+
+      try {
+        await sendWelcomeVerifyWhatsApp({ mobile, email: emailLowerCase, name });
+      } catch (waErr) {
+        console.log('Welcome/verify WhatsApp failed (non-blocking):', waErr);
+      }
 
       const token = jwt.sign(
         { user_id: data._id, role: "user" },
@@ -1548,24 +1872,38 @@ const email = dataPushed.email;
 
     let emailToLowerCase = email.toLowerCase();
 
-    const otpNumber = generateToken();
+    const cooldownSeconds = Math.max(0, Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60));
     try {
       const checkEmail = await postPropertyModel.findOne({
         email: emailToLowerCase,
       });
+      if (!checkEmail) {
+        return res.status(404).json({
+          message: "Registration is required before verification!",
+        });
+      }
       if (checkEmail.emailVerified === true) {
         return res.status(401).json({
           message: "this email alredy Verified !",
         });
       }
+
       const otpEmail = await Email_verify.findOne({ email: email });
+      if (otpEmail && cooldownSeconds > 0) {
+        const ageSeconds = Math.floor((Date.now() - new Date(otpEmail.createdAt).getTime()) / 1000);
+        if (ageSeconds < cooldownSeconds) {
+          return res.status(429).json({
+            message: `Please wait ${cooldownSeconds - ageSeconds}s before requesting a new OTP.`,
+            retryAfterSeconds: cooldownSeconds - ageSeconds,
+          });
+        }
+      }
 
       if (otpEmail) {
-        
-        return res.status(409).json({
-          message: "check your email otp sent already!",
-        });
+        await Email_verify.deleteOne({ email: email });
       }
+
+      const otpNumber = generateToken();
 
       const template = await fs.promises.readFile(path.join(__dirname, '../../../Templates/Email/otp.html'), 'utf8');
       const username = email.split("@")[0];
@@ -1614,9 +1952,24 @@ const email = dataPushed.email;
         if (data) {
           await postPropertyModel.updateOne(
             { email: data.email },
-            { $set: { emailVerified: true } },
+            { $set: { emailVerified: true, emailVerifiedAt: new Date() } },
           );
           await Email_verify.deleteOne({ email: data.email });
+
+          try {
+            const user = await postPropertyModel.findOne({ email: data.email }).select('name email');
+            await sendPostPropertyLinkEmail({ email: data.email, name: user?.name });
+          } catch (mailErr) {
+            console.log('Post property link email failed (non-blocking):', mailErr);
+          }
+
+          try {
+            const user = await postPropertyModel.findOne({ email: data.email }).select('name email mobile');
+            await sendPostPropertyLinkWhatsApp({ mobile: user?.mobile, email: data.email, name: user?.name });
+          } catch (waErr) {
+            console.log('Post property link WhatsApp failed (non-blocking):', waErr);
+          }
+
           return res.status(200).json({
             message: "Email successfully verified !",
             data,
