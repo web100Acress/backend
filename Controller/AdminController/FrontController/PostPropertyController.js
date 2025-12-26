@@ -578,18 +578,6 @@ class PostPropertyController {
       await session.commitTransaction();
       session.endSession();
 
-      try {
-        await sendWelcomeVerifyEmail({ email: emailLowerCase, name });
-      } catch (mailErr) {
-        console.log('Welcome/verify email failed (non-blocking):', mailErr);
-      }
-
-      try {
-        await sendWelcomeVerifyWhatsApp({ mobile, email: emailLowerCase, name });
-      } catch (waErr) {
-        console.log('Welcome/verify WhatsApp failed (non-blocking):', waErr);
-      }
-
       const token = jwt.sign(
         { user_id: data._id, role: "user" },
         process.env.JWT_SECRET || "aman123",
