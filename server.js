@@ -68,7 +68,7 @@ const limiter = rateLimit({
 // compress the response
 app.use(compression());
 // Parse allowed origins from environment variable or use defaults
-const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000,http://localhost:5000,https://api.100acress.com,http://localhost:3500")
+const allowedOrigins = (process.env.CORS_ORIGIN || "https://100acress.com,https://www.100acress.com,http://localhost:3000,http://localhost:5000,https://api.100acress.com")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -116,7 +116,7 @@ const corsOptions = {
     
     // Allow all origins in development
     if (process.env.NODE_ENV !== 'production') {
-      // Always allow in development regardless of origin
+      // Only log the first occurrence of each origin to reduce noise
       if (!allowedOriginsCache.has(origin)) {
         console.log('Allowing CORS for development origin:', origin);
         allowedOriginsCache.set(origin, true);
