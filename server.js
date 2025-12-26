@@ -249,7 +249,7 @@ connectDB();
 // Uses DB locks to avoid duplicates and works across restarts
 // ---------------------------
 const getFrontendBaseUrl = () => {
-  return (process.env.FRONTEND_URL || 'https://100acress.com').replace(/\/$/, '');
+  return (process.env.FRONTEND_URL || 'https://www.100acress.com').replace(/\/$/, '');
 };
 
 const buildVerifyUrl = (email) => {
@@ -259,7 +259,7 @@ const buildVerifyUrl = (email) => {
 const getPostPropertyUrl = () => {
   const fromEnv = process.env.POST_PROPERTY_URL;
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
-  return `${getFrontendBaseUrl()}/post-property`;
+  return `${getFrontendBaseUrl()}/postproperty`;
 };
 
 const postPropertyRemindersEnabled = () => {
