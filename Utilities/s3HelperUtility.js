@@ -373,7 +373,7 @@ const sendEmail = async (to, sourceEmail , cc = [], subject, html, attachments =
 
   try {
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully:", result.envelope.from, "→", result.envelope.to);
+    console.log("✅ Email sent successfully:", result.envelope.from, "→", result.envelope.to, "| subject:", subject);
     return true;
   } catch (error) {
     console.error("❌ Error sending email:", error.message);

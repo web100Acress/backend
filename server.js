@@ -429,13 +429,7 @@ const processStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuer
   const now = new Date();
   const lockStaleMs = 30 * 60 * 1000; // 30 minutes
   const staleBefore = new Date(Date.now() - lockStaleMs);
-  const baseQuery = {
-    emailVerified: false,
-    ...extraQuery,
-    $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
-    $orLock: undefined,
-  };
-  // Build lock query without overwriting
+  const sentQuery = { $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }] };
   const lockQuery = {
     $or: [
       { [lockField]: null },
@@ -443,17 +437,17 @@ const processStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuer
       { [lockField]: { $lt: staleBefore } },
     ],
   };
-  delete baseQuery.$orLock;
 
   // For weekly, dueMs is evaluated against last weekly sent or 7d sent
   const query = {
-    ...baseQuery,
-    ...lockQuery,
+    emailVerified: false,
+    ...extraQuery,
+    $and: [sentQuery, lockQuery],
   };
 
   const batchSize = Math.max(1, Number(process.env.VERIFY_REMINDER_BATCH_SIZE || 50));
   const candidates = await PostUser.find(query)
-    .select('email name mobile createdAt verifyReminder7dSentAt verifyReminderWeeklySentAt')
+    .select('email name mobile createdAt verifyReminder24hSentAt verifyReminderWeeklySentAt')
     .limit(batchSize)
     .lean();
 
@@ -466,7 +460,7 @@ const processStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuer
       if (!weekly) {
         if (Date.now() - createdAtMs < dueMs) continue;
       } else {
-        const anchor = u.verifyReminderWeeklySentAt || u.verifyReminder7dSentAt;
+        const anchor = u.verifyReminderWeeklySentAt || u.verifyReminder24hSentAt;
         if (!anchor) continue;
         const anchorMs = new Date(anchor).getTime();
         if (Date.now() - anchorMs < dueMs) continue;
@@ -477,11 +471,15 @@ const processStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuer
         {
           _id: u._id,
           emailVerified: false,
-          $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
-          $or: [
-            { [lockField]: null },
-            { [lockField]: { $exists: false } },
-            { [lockField]: { $lt: staleBefore } },
+          $and: [
+            { $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }] },
+            {
+              $or: [
+                { [lockField]: null },
+                { [lockField]: { $exists: false } },
+                { [lockField]: { $lt: staleBefore } },
+              ],
+            },
           ],
         },
         { $set: { [lockField]: now } },
@@ -523,22 +521,19 @@ const processVerificationReminders = async () => {
       dueMs: dayMs,
       lockField: 'verifyReminder24hLockAt',
       sentField: 'verifyReminder24hSentAt',
+      // stage gating: only after 10m sent
+      extraQuery: { verifyReminder10mSentAt: { $ne: null } },
     });
 
-    await processStage({
-      stageLabel: '7 days',
-      dueMs: weekMs,
-      lockField: 'verifyReminder7dLockAt',
-      sentField: 'verifyReminder7dSentAt',
-    });
-
-    // Weekly reminders after the 7-day reminder has been sent
+    // Weekly reminders after the 24h reminder has been sent
     await processStage({
       stageLabel: 'Weekly',
       dueMs: weekMs,
       lockField: 'verifyReminderWeeklyLockAt',
       sentField: 'verifyReminderWeeklySentAt',
       weekly: true,
+      // stage gating: only after 24h sent
+      extraQuery: { verifyReminder24hSentAt: { $ne: null } },
     });
 
     // ---------------------------
@@ -555,7 +550,7 @@ const processVerificationReminders = async () => {
       ],
     };
 
-    const processPostPropertyStage = async ({ stageLabel, dueMs, lockField, sentField, weekly = false }) => {
+    const processPostPropertyStage = async ({ stageLabel, dueMs, lockField, sentField, extraQuery = {}, weekly = false }) => {
       if (!postPropertyRemindersEnabled()) return;
       const now = new Date();
       const lockStaleMs = 30 * 60 * 1000;
@@ -565,14 +560,19 @@ const processVerificationReminders = async () => {
       const candidates = await PostUser.find({
         emailVerified: true,
         ...hasNoPostedPropertyQuery,
-        $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
-        $or: [
-          { [lockField]: null },
-          { [lockField]: { $exists: false } },
-          { [lockField]: { $lt: staleBefore } },
+        ...extraQuery,
+        $and: [
+          { $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }] },
+          {
+            $or: [
+              { [lockField]: null },
+              { [lockField]: { $exists: false } },
+              { [lockField]: { $lt: staleBefore } },
+            ],
+          },
         ],
       })
-        .select('email name mobile emailVerifiedAt createdAt postPropertyReminder7dSentAt postPropertyReminderWeeklySentAt')
+        .select('email name mobile emailVerifiedAt createdAt postPropertyReminder24hSentAt postPropertyReminderWeeklySentAt')
         .limit(batchSize)
         .lean();
 
@@ -584,7 +584,7 @@ const processVerificationReminders = async () => {
           if (!weekly) {
             if (Date.now() - new Date(anchorDate).getTime() < dueMs) continue;
           } else {
-            const anchor = u.postPropertyReminderWeeklySentAt || u.postPropertyReminder7dSentAt || u.emailVerifiedAt || u.createdAt;
+            const anchor = u.postPropertyReminderWeeklySentAt || u.postPropertyReminder24hSentAt || u.emailVerifiedAt || u.createdAt;
             if (!anchor) continue;
             if (Date.now() - new Date(anchor).getTime() < dueMs) continue;
           }
@@ -594,11 +594,16 @@ const processVerificationReminders = async () => {
               _id: u._id,
               emailVerified: true,
               ...hasNoPostedPropertyQuery,
-              $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }],
-              $or: [
-                { [lockField]: null },
-                { [lockField]: { $exists: false } },
-                { [lockField]: { $lt: staleBefore } },
+              ...extraQuery,
+              $and: [
+                { $or: [{ [sentField]: null }, { [sentField]: { $exists: false } }] },
+                {
+                  $or: [
+                    { [lockField]: null },
+                    { [lockField]: { $exists: false } },
+                    { [lockField]: { $lt: staleBefore } },
+                  ],
+                },
               ],
             },
             { $set: { [lockField]: now } },
@@ -623,24 +628,10 @@ const processVerificationReminders = async () => {
     };
 
     await processPostPropertyStage({
-      stageLabel: '10 min',
-      dueMs: tenMinMs,
-      lockField: 'postPropertyReminder10mLockAt',
-      sentField: 'postPropertyReminder10mSentAt',
-    });
-
-    await processPostPropertyStage({
       stageLabel: '24 hours',
       dueMs: dayMs,
       lockField: 'postPropertyReminder24hLockAt',
       sentField: 'postPropertyReminder24hSentAt',
-    });
-
-    await processPostPropertyStage({
-      stageLabel: '7 days',
-      dueMs: weekMs,
-      lockField: 'postPropertyReminder7dLockAt',
-      sentField: 'postPropertyReminder7dSentAt',
     });
 
     await processPostPropertyStage({
@@ -649,6 +640,8 @@ const processVerificationReminders = async () => {
       lockField: 'postPropertyReminderWeeklyLockAt',
       sentField: 'postPropertyReminderWeeklySentAt',
       weekly: true,
+      // stage gating: only after 24h sent
+      extraQuery: { postPropertyReminder24hSentAt: { $ne: null } },
     });
   } catch (err) {
     console.log('processVerificationReminders error', err);
