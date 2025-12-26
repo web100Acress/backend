@@ -83,13 +83,13 @@ const sendResetEmail = async (email, token) => {
 };
 
 const getFrontendBaseUrl = () => {
-  return (process.env.FRONTEND_URL || 'https://100acress.com').replace(/\/$/, '');
+  return (process.env.FRONTEND_URL || 'https://www.100acress.com').replace(/\/$/, '');
 };
 
 const getPostPropertyUrl = () => {
   const fromEnv = process.env.POST_PROPERTY_URL;
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
-  return `${getFrontendBaseUrl()}/post-property`;
+  return `${getFrontendBaseUrl()}/postproperty`;
 };
 
 const sendWelcomeVerifyEmail = async ({ email, name }) => {

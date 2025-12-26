@@ -11,27 +11,47 @@
 />
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            max-width: 600px;
+            color: #1f2937;
+            max-width: 620px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 24px;
+            background: #f7f7fb;
         }
         .container {
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-            margin-top: 20px;
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(17, 24, 39, 0.10);
+            padding: 0;
+            margin-top: 14px;
+            overflow: hidden;
         }
         .header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #f0f0f0;
-            margin-bottom: 20px;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #C13B44 0%, #8E1E2B 100%);
+            color: #ffffff;
         }
+        .brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand-name {
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            font-size: 18px;
+        }
+        .brand-pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.20);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         .logo {
             margin: 0 auto 15px;
             text-align: center;
@@ -47,102 +67,104 @@
         }
         .icon-container {
             text-align: center;
-            margin: 20px 0;
+            padding: 22px 22px 6px 22px;
         }
         .icon {
             width: 80px;
             height: 80px;
-            background-color: #f5f5f5;
+            background: radial-gradient(circle at top, #ffffff 0%, #f3f4f6 65%, #eceff4 100%);
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 28px rgba(17, 24, 39, 0.10);
         }
+
         .icon-inner {
             color: #C13B44;
             font-size: 36px;
             font-weight: bold;
         }
         h1 {
-            color: #333;
-            font-size: 24px;
-            margin: 0 0 5px 0;
+            color: #111827;
+            font-size: 26px;
+            margin: 0 0 6px 0;
             text-align: center;
+            letter-spacing: -0.2px;
         }
         .subtitle {
             font-size: 16px;
-            color: #666;
+            color: #6b7280;
             text-align: center;
             margin-top: 0;
         }
         .content {
-            padding: 10px 0;
+            padding: 6px 22px 10px 22px;
+        }
+        .lead {
+            color: #374151;
+            font-size: 15px;
+            margin: 10px 0;
+        }
+        .greeting {
+            font-size: 15px;
+            margin: 0 0 10px 0;
+            color: #111827;
         }
         .btn {
             display: block;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #C13B44 0%, #8E1E2B 100%);
             color: white;
-            padding: 14px 24px;
+            padding: 14px 22px;
             text-decoration: none;
-            border-radius: 4px;
-            margin: 30px auto;
-            font-weight: 600;
+            border-radius: 12px;
+            margin: 18px auto 14px;
+            font-weight: 800;
             text-align: center;
-            max-width: 250px;
+            max-width: 320px;
+            box-shadow: 0 14px 30px rgba(193, 59, 68, 0.28);
+            border: 1px solid rgba(255,255,255,0.18);
         }
         .reset-link {
-            background-color: #f5f5f5;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 12px;
-            margin: 20px 0;
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 14px;
+            margin: 14px 0 18px 0;
             word-break: break-all;
-            font-size: 14px;
-            color: #3f51b5;
+            font-size: 13px;
+            color: #1f2937;
         }
         .security-notice {
-            background-color: #fff8e1;
+            background-color: #fff7ed;
+            border: 1px solid #fed7aa;
             border-left: 4px solid  #C13B44;
-            padding: 12px 15px;
-            margin: 20px 0;
-            font-size: 14px;
+            padding: 12px 14px;
+            margin: 16px 0 10px 0;
+            font-size: 13px;
+            border-radius: 12px;
         }
         .expiry-notice {
-            font-size: 14px;
-            color: #666;
-            margin: 15px 0;
+            font-size: 13px;
+            color: #6b7280;
+            margin: 8px 0 12px 0;
             text-align: center;
         }
         .footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-            color: #888;
+            margin-top: 8px;
+            padding: 18px 22px 22px 22px;
+            border-top: 1px solid #f3f4f6;
+            color: #6b7280;
             font-size: 14px;
         }
+
         .help-text {
             font-size: 14px;
             color: #666;
             margin-top: 20px;
-        }
-        .social {
-            margin: 15px 0;
-        }
-        .social a {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            font-size: 20px;
-            background-color: #f0f0f0;
-            color: #555;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 32px;
-            margin: 0 5px;
-            text-decoration: none;
-            position: relative;
         }
         .social img{
             position: absolute;
@@ -153,11 +175,28 @@
             height: 60px;
             width: 160px;
         }
+        .divider {
+            height: 1px;
+            background: #f3f4f6;
+            margin: 10px 0 0 0;
+        }
+        @media (max-width: 480px) {
+            body { padding: 14px; }
+            .icon { width: 70px; height: 70px; }
+            h1 { font-size: 22px; }
+            .content, .footer, .icon-container { padding-left: 16px; padding-right: 16px; }
+            .btn { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        
+        <div class="header">
+            <div class="brand-row">
+                <div class="brand-name">100acress</div>
+                <div class="brand-pill">Password Reset</div>
+            </div>
+        </div>
         <div class="icon-container">
             <div class="icon">
                 <div class="icon-inner">🔑</div>
@@ -167,17 +206,17 @@
         </div>
         
         <div class="content">
-            <p>Hello {{username}}</p>
+            <p class="greeting">Hello {{username}},</p>
             
-            <p>We received a request to reset the password for your 100acress account. To reset your password, please click on the button below:</p>
+            <p class="lead">We received a request to reset the password for your 100acress account. To reset your password, click the button below:</p>
             
-            <a href="https://100acress.com/resetpassword/{{token}}" class="btn">Reset Password</a>
+            <a href="https://www.100acress.com/resetpassword/{{token}}" class="btn">Reset Password</a>
             
             <p class="expiry-notice"><strong>This link will expire in 30 minutes.</strong></p>
             
             <p>If the button above doesn't work, you can paste this link into your browser:</p>
             
-            <div class="reset-link">https://100acress.com/resetpassword/{{token}}</div>
+            <div class="reset-link">https://www.100acress.com/resetpassword/{{token}}</div>
             
             <div class="security-notice">
                 <strong>Security Notice:</strong> If you didn't request a password reset, please ignore this email or contact our support team if you believe your account may be compromised.
