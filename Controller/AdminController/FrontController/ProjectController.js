@@ -682,7 +682,7 @@ class projectController {
 
       await project.save();
 
-      cache.del("projectData");
+      cache.clear();
 
       return res.status(200).json({
         message: "Project visibility updated successfully!",
@@ -751,6 +751,7 @@ class projectController {
       } = req.query;
 
       let query = {};
+      query.isHidden = { $ne: true };
 
       if (farmhouse === "1") query.type = "Farm House";
       if (industrialplots === "1") query.type = "Industrial Plots";
@@ -989,6 +990,7 @@ class projectController {
     try {
       const data = await ProjectModel.find({
         spotlight: "True",
+        isHidden: { $ne: true },
       });
       return res.status(200).json({
         message: "data get successfully !",
@@ -1006,6 +1008,7 @@ class projectController {
     try {
       const data = await ProjectModel.find({
         luxury: "True",
+        isHidden: { $ne: true },
       }).limit(8);
       return res.status(200).json({
         message: "data get successfully !",
@@ -1023,6 +1026,7 @@ class projectController {
     try {
       const data = await ProjectModel.find({
         projectOverview: "trending",
+        isHidden: { $ne: true },
       }).limit(8);
       return res.status(200).json({
         message: "data get successfully !",
@@ -1039,7 +1043,10 @@ class projectController {
   static project_featured = async (req, res) => {
     // console.log("hello")
     try {
-      const data = await ProjectModel.find({ projectOverview: "featured" });
+      const data = await ProjectModel.find({
+        projectOverview: "featured",
+        isHidden: { $ne: true },
+      });
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1057,6 +1064,7 @@ class projectController {
       const data = await ProjectModel.find({
         city: "Delhi",
         projectOverview: "delhi",
+        isHidden: { $ne: true },
       }).limit(4);
       return res.status(200).json({
         message: "data get successfully !",
@@ -1072,7 +1080,10 @@ class projectController {
   static project_Upcoming = async (req, res) => {
     // console.log("hello")
     try {
-      const data = await ProjectModel.find({ projectOverview: "upcoming" });
+      const data = await ProjectModel.find({
+        projectOverview: "upcoming",
+        isHidden: { $ne: true },
+      });
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1087,7 +1098,10 @@ class projectController {
   static projectAffordable = async (req, res) => {
     try {
       const affordable = "Affordable Homes";
-      const data = await ProjectModel.find({ type: affordable });
+      const data = await ProjectModel.find({
+        type: affordable,
+        isHidden: { $ne: true },
+      });
       //  console.log(data)
       return res.status(200).json({
         message: "data get successfully ! ",
@@ -1105,7 +1119,10 @@ class projectController {
   static project_allupcoming = async (req, res) => {
     // console.log("hello")
     try {
-      const data = await ProjectModel.find({ project_Status:"comingsoon" });
+      const data = await ProjectModel.find({
+        project_Status: "comingsoon",
+        isHidden: { $ne: true },
+      });
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1120,7 +1137,10 @@ class projectController {
   static projectSCOplots = async (req, res) => {
     try {
       const SCOplots = "SCO Plots";
-      const data = await ProjectModel.find({ type: SCOplots });
+      const data = await ProjectModel.find({
+        type: SCOplots,
+        isHidden: { $ne: true },
+      });
       //  console.log(data)
       return res.status(200).json({
         message: "data get successfully ! ",
@@ -1137,7 +1157,10 @@ class projectController {
   static project_commercial = async (req, res) => {
     try {
       const CommercialProperty = "Commercial Property";
-      const data = await ProjectModel.find({ type: CommercialProperty });
+      const data = await ProjectModel.find({
+        type: CommercialProperty,
+        isHidden: { $ne: true },
+      });
       //  console.log(data)
       return res.status(200).json({
         message: "data get successfully ! ",
@@ -1154,7 +1177,10 @@ class projectController {
   static project_budgetHomes = async (req, res) => {
     try {
       const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
-      const data = await ProjectModel.find({ projectName: {$in:BudgetProperty}});
+      const data = await ProjectModel.find({
+        projectName: { $in: BudgetProperty },
+        isHidden: { $ne: true },
+      });
       //  console.log(data)
       return res.status(200).json({
         message: "data get successfully ! ",
@@ -1182,7 +1208,10 @@ class projectController {
       }
 
       const projectNames = projects.split(',');
-      const data = await ProjectModel.find({ projectName: {$in: projectNames}});
+      const data = await ProjectModel.find({
+        projectName: { $in: projectNames },
+        isHidden: { $ne: true },
+      });
       
       return res.status(200).json({
         message: `${category} projects retrieved successfully!`,
@@ -2081,7 +2110,10 @@ class projectController {
 
       // If not available in cache, fetch from the database and cache it
       if (!data) {
-        data = await ProjectModel.find({ projectOverview: "trending" }).lean();
+        data = await ProjectModel.find({
+          projectOverview: "trending",
+          isHidden: { $ne: true },
+        }).lean();
         const expirationTime = 10 * 60 * 1000; // 10 minutes
         cache.put("trendingProjects", data, expirationTime);
       }
