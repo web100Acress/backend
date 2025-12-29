@@ -628,33 +628,10 @@ class projectController {
   };
 
   //findAll
-  // static projectviewAll = async (req, res) => {
-  //   try {
-  //     const data = await ProjectModel.find()
-  //     if (data) {
-  //       res.status(200).json({
-  //         message: "All project Data get  !",
-  //         data,
-  //       });
-  //     } else {
-  //       res.status(200).json({
-  //         message: "data not found  !",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({
-  //       message: "internal server error ! ",
-  //     });
-  //   }
-  // };
-
   static projectviewAll = async (req, res) => {
     try {
-      // Check if data is available in cache
       let data = cache.get("projectData");
 
-      // If not available in cache, fetch from the database and cache it
       if (!data) {
         data = await fetchDataFromDatabase();
         const expirationTime = 10 * 60 * 1000;
@@ -666,250 +643,260 @@ class projectController {
           message: "All project data retrieved successfully!",
           data,
         });
-      } else {
-        return res.status(404).json({
-          message: "No data found!",
-        });
       }
+
+      return res.status(404).json({
+        message: "No data found!",
+      });
     } catch (error) {
-      console.error(error);
+      console.log(error);
       return res.status(500).json({
         message: "Internal server error!",
       });
     }
   };
 
-  // projectController.js
-static projectSearch = async (req, res) => {
-  try {
-    const { 
-      city,
-      spotlight,
-      luxury,
-      featured,
-      trending,
-      upcoming,
-      affordable,
-      commercial,
-      allcommercialprojects,
-      budgetHomes,
-      comingSoon,
-      scoplots,
-      minPrice, 
-      maxPrice,
-      residentiaProject,
-      allupcomingproject,
-      budgethomesgurugram,
-      typescoplots,
-      typeaffordable,
-      builderindepedentfloor,
-      deendayalplots,
-      villas,
-      sohnaroad,
-      dwarkaexpressway,
-      nprroad,
-      newgurgaon,
-      sohna,
-      sprroad,
-      golfcourseextensionroad,
-      golfcourseroad,
-      readytomove,
-      possessiondate,
-      possesionafter2026,
-      alldlfproject,
-      builderName,
-      signatureglobal,
-      projectOverview,
-      projectStatus,
-      nh48,
-      mgroad,
-      underconstruction,
-      newlaunch,
-      dlfsco,
-      sort,
-      page = 1,
-      limit = 10,
-      farmhouse,
-      industrialplots,
-      industrialprojects
-    } = req.query;
+  static toggleProjectVisibility = async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    let query = {};
-
-    if (farmhouse === "1") query.type = "Farm House";
-    if (industrialplots === "1") query.type = "Industrial Plots";
-    if (industrialprojects === "1") query.type = "Industrial Projects";
-    // Handle boolean fields (convert string 'True' to boolean true)
-    if (spotlight === "1") query.spotlight = "True";
-    if (luxury === "1") query.luxury = "True";
-    if (featured === "1") query.projectOverview = "featured";
-    if (trending === "1") query.projectOverview = "trending";
-    if (upcoming === "1") query.$or = [{projectOverview: "upcoming"}, {projectReraNo: "upcoming"}];
-    if (affordable === "1") query.type = "Affordable Homes";
-    if (commercial === "1") {
-      // More comprehensive commercial query - check multiple fields
-      query.$or = [
-        { projectOverview: "commercial" },
-        { projectOverview: { $regex: "commercial", $options: "i" } },
-        { type: "Commercial Property" },
-        { type: { $regex: "commercial", $options: "i" } },
-        { projectType: { $regex: "commercial", $options: "i" } },
-        { category: { $regex: "commercial", $options: "i" } },
-        { propertyType: { $regex: "commercial", $options: "i" } },
-        { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
-        { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
-      ];
-    }
-    if (budgetHomes === "1") query.budgetHomes = true;
-    if (comingSoon === "1") query.comingSoon = true;
-    if (scoplots === "1") query.type = "SCO Plots";
-    if (residentiaProject === "1") query.type = "Residential Flats";
-    if (allupcomingproject === "1") query.project_Status = "comingsoon";
-    if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
-    
-    // for builders such as : DLF Homes, Signature Global,M3M India, Experion Developers, Elan Group, BPTP LTD, Adani Realty, Smartworld, Trevoc Group, Indiabulls    
-    if (builderName) query.builderName = builderName;
-
-    if (allcommercialprojects === "1") {
-      // More comprehensive commercial query - check multiple fields
-      query.$or = [
-        { type: "Commercial Property" },
-        { type: { $regex: "commercial", $options: "i" } },
-        { projectOverview: "commercial" },
-        { projectOverview: { $regex: "commercial", $options: "i" } },
-        { projectType: { $regex: "commercial", $options: "i" } },
-        { category: { $regex: "commercial", $options: "i" } },
-        { propertyType: { $regex: "commercial", $options: "i" } },
-        { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
-        { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
-      ];
-    }
-    if (typescoplots === "1") query.projectOverview = "sco";
-    if (typeaffordable === "1") query.projectOverview = "affordable";
-    if (builderindepedentfloor === "1") query.$or = [{type:"Independent Floors"},{type:"Builder Floors"}];
-    if (deendayalplots ==="1") query.$and  = [{city:"Gurugram"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
-    if (villas === "1") query.type = "Villas";
-    if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
-    if (dwarkaexpressway === "1") query.projectAddress = {"$regex": "Dwarka Expressway", "$options": "i" };
-    if (nprroad === "1") query.projectAddress = {"$regex": "Northern Peripheral Road", "$options": "i" };
-    if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course", "$options": "i" };
-    if (newgurgaon === "1") query.projectAddress = {"$regex": "New Gurgaon", "$options": "i" };
-    if (sohna === "1") query.projectAddress = {"$regex": "Sohna", "$options": "i" };
-    if (sprroad === "1") query.projectAddress = {"$regex": "Southern Peripheral Road", "$options": "i" };
-    if (golfcourseextensionroad === "1") query.projectAddress = {"$regex": "Golf Course Extn Road", "$options": "i" };
-    if (city) query.city = city;
-    if (readytomove === "1") query.$or = [{project_Status:"readytomove"}, {possessionDate: { $gte: new Date("2024-01-01"), $lte: new Date("2024-12-31") }}];
-    //Handle Possession Date
-    if (possessiondate) {
-      // Convert possessionYear to a number if it's a string
-      const year = parseInt(possessiondate, 10);
-            
-      // Check if it's a valid year
-      if (!isNaN(year)) {
-        // Create date range for the entire year (Jan 1 to Dec 31)
-        const startOfYear = new Date(year, 0, 1);  // January 1st of the year
-        const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);  // December 31st 23:59:59.999
-        
-        // Query for possession dates within that year
-        query.possessionDate = { $gte: startOfYear, $lte: endOfYear };
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({
+          message: "Invalid ID!",
+        });
       }
+
+      const project = await ProjectModel.findById(id);
+
+      if (!project) {
+        return res.status(404).json({
+          message: "Project not found!",
+        });
+      }
+
+      const requestedIsHidden =
+        req.body && typeof req.body.isHidden === "boolean" ? req.body.isHidden : undefined;
+
+      project.isHidden =
+        requestedIsHidden !== undefined ? requestedIsHidden : !Boolean(project.isHidden);
+
+      await project.save();
+
+      cache.del("projectData");
+
+      return res.status(200).json({
+        message: "Project visibility updated successfully!",
+        data: project,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error!",
+      });
     }
-    if(possesionafter2026 === "1") query.possessionDate = { $gte: new Date("2026-01-01") };
-    // Handle price range if both min and max are provided
-    if (minPrice && maxPrice) {
-      // Convert to numbers for comparison
-      const minPriceNum = parseFloat(minPrice);
-      const maxPriceNum = parseFloat(maxPrice);
-    }
+  };
 
-    // for projects such as goaProject, bptp, orris, jms, rof
-    if(projectOverview) query.projectOverview = projectOverview;
+  static projectSearch = async (req, res) => {
+    try {
+      const { 
+        city,
+        spotlight,
+        luxury,
+        featured,
+        trending,
+        upcoming,
+        affordable,
+        commercial,
+        allcommercialprojects,
+        budgetHomes,
+        comingSoon,
+        scoplots,
+        minPrice, 
+        maxPrice,
+        residentiaProject,
+        allupcomingproject,
+        budgethomesgurugram,
+        typescoplots,
+        typeaffordable,
+        builderindepedentfloor,
+        deendayalplots,
+        villas,
+        sohnaroad,
+        dwarkaexpressway,
+        nprroad,
+        newgurgaon,
+        sohna,
+        sprroad,
+        golfcourseextensionroad,
+        golfcourseroad,
+        readytomove,
+        possessiondate,
+        possesionafter2026,
+        alldlfproject,
+        builderName,
+        signatureglobal,
+        projectOverview,
+        projectStatus,
+        nh48,
+        mgroad,
+        underconstruction,
+        newlaunch,
+        dlfsco,
+        sort,
+        page = 1,
+        limit = 10,
+        farmhouse,
+        industrialplots,
+        industrialprojects
+      } = req.query;
 
-    if(signatureglobal === "1") query.$and = [{builderName:"Signature Global"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
+      let query = {};
 
-    //For builder like :emaar ,m3m, microtek
-    if(projectStatus) query.project_Status = projectStatus;
-    if(nh48 === "1") query.$or = [{projectAddress: {"$regex": "NH-48", "$options": "i" }},{projectAddress: {"$regex": "NH 48", "$options": "i" }}];
-    if(mgroad === "1") query.$or = [{projectAddress: {"$regex": "MG Road", "$options": "i" }}];
-    
-    //For gurugram use city = "Gurugram" parameter
-    if(underconstruction === "1") query.project_Status = "underconstruction";
-    if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
-    if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
+      if (farmhouse === "1") query.type = "Farm House";
+      if (industrialplots === "1") query.type = "Industrial Plots";
+      if (industrialprojects === "1") query.type = "Industrial Projects";
+      if (spotlight === "1") query.spotlight = "True";
+      if (luxury === "1") query.luxury = "True";
+      if (featured === "1") query.projectOverview = "featured";
+      if (trending === "1") query.projectOverview = "trending";
+      if (upcoming === "1") query.$or = [{projectOverview: "upcoming"}, {projectReraNo: "upcoming"}];
+      if (affordable === "1") query.type = "Affordable Homes";
+      if (commercial === "1") {
+        query.$or = [
+          { projectOverview: "commercial" },
+          { projectOverview: { $regex: "commercial", $options: "i" } },
+          { type: "Commercial Property" },
+          { type: { $regex: "commercial", $options: "i" } },
+          { projectType: { $regex: "commercial", $options: "i" } },
+          { category: { $regex: "commercial", $options: "i" } },
+          { propertyType: { $regex: "commercial", $options: "i" } },
+          { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
+          { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
+        ];
+      }
+      if (budgetHomes === "1") query.budgetHomes = true;
+      if (comingSoon === "1") query.comingSoon = true;
+      if (scoplots === "1") query.type = "SCO Plots";
+      if (residentiaProject === "1") query.type = "Residential Flats";
+      if (allupcomingproject === "1") query.project_Status = "comingsoon";
+      if (budgethomesgurugram === "1") query.$or = [{projectName:"M3M Soulitude"}, {projectName:"M3M Antalya Hills"}, {projectName:"Signature Global City 93"}, {projectName:"Signature Global City 81"}];
+      
+      if (builderName) query.builderName = builderName;
 
-    const cacheKey = JSON.stringify({
-      query,
-      page: parseInt(page),
+      if (allcommercialprojects === "1") {
+        query.$or = [
+          { type: "Commercial Property" },
+          { type: { $regex: "commercial", $options: "i" } },
+          { projectOverview: "commercial" },
+          { projectOverview: { $regex: "commercial", $options: "i" } },
+          { projectType: { $regex: "commercial", $options: "i" } },
+          { category: { $regex: "commercial", $options: "i" } },
+          { propertyType: { $regex: "commercial", $options: "i" } },
+          { projectName: { $regex: "office|shop|retail|business|corporate|tower|center|street|boulevard|arena|broadway|vedatam", $options: "i" } },
+          { project_discripation: { $regex: "office|shop|retail|business|corporate|commercial", $options: "i" } }
+        ];
+      }
+      if (typescoplots === "1") query.projectOverview = "sco";
+      if (typeaffordable === "1") query.projectOverview = "affordable";
+      if (builderindepedentfloor === "1") query.$or = [{type:"Independent Floors"},{type:"Builder Floors"}];
+      if (deendayalplots ==="1") query.$and  = [{city:"Gurugram"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
+      if (villas === "1") query.type = "Villas";
+      if (sohnaroad === "1") query.projectAddress = {"$regex": "Sohna Road", "$options": "i" };
+      if (dwarkaexpressway === "1") query.projectAddress = {"$regex": "Dwarka Expressway", "$options": "i" };
+      if (nprroad === "1") query.projectAddress = {"$regex": "Northern Peripheral Road", "$options": "i" };
+      if (golfcourseroad === "1") query.projectAddress = {"$regex": "Golf Course", "$options": "i" };
+      if (newgurgaon === "1") query.projectAddress = {"$regex": "New Gurgaon", "$options": "i" };
+      if (sohna === "1") query.projectAddress = {"$regex": "Sohna", "$options": "i" };
+      if (sprroad === "1") query.projectAddress = {"$regex": "Southern Peripheral Road", "$options": "i" };
+      if (golfcourseextensionroad === "1") query.projectAddress = {"$regex": "Golf Course Extn Road", "$options": "i" };
+      if (city) query.city = city;
+      if (readytomove === "1") query.$or = [{project_Status:"readytomove"}, {possessionDate: { $gte: new Date("2024-01-01"), $lte: new Date("2024-12-31") }}];
+      if (possessiondate) {
+        const year = parseInt(possessiondate, 10);
+        if (!isNaN(year)) {
+          const startOfYear = new Date(year, 0, 1);  
+          const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);  
+          query.possessionDate = { $gte: startOfYear, $lte: endOfYear };
+        }
+      }
+      if(possesionafter2026 === "1") query.possessionDate = { $gte: new Date("2026-01-01") };
+      if (minPrice && maxPrice) {
+        const minPriceNum = parseFloat(minPrice);
+        const maxPriceNum = parseFloat(maxPrice);
+      }
+
+      if(projectOverview) query.projectOverview = projectOverview;
+
+      if(signatureglobal === "1") query.$and = [{builderName:"Signature Global"},{$or:[{type:"Deen Dayal Plots"},{type:"Residential Plots"}]}];
+
+      if(projectStatus) query.project_Status = projectStatus;
+      if(nh48 === "1") query.$or = [{projectAddress: {"$regex": "NH-48", "$options": "i" }},{projectAddress: {"$regex": "NH 48", "$options": "i" }}];
+      if(mgroad === "1") query.$or = [{projectAddress: {"$regex": "MG Road", "$options": "i" }}];
+      
+      if(underconstruction === "1") query.project_Status = "underconstruction";
+      if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
+      if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
+
+      const cacheKey = JSON.stringify({
+        query,
+        page: parseInt(page),
         limit: parseInt(limit),
         sort: sort || '-createdAt'
-  });
+      });
 
-    // Check if result exists in cache
-    const cachedResult = cache.get(cacheKey);
- 
-    if (cachedResult) {
-      return res.status(200).json(cachedResult);
+      const cachedResult = cache.get(cacheKey);
+
+      if (cachedResult) {
+        return res.status(200).json(cachedResult);
+      }
+
+      const options = {
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        limit: parseInt(limit),
+      };
+
+      const results = await ProjectModel.find(query)
+        .sort(sort || '-createdAt')
+        .skip(options.skip)
+        .limit(options.limit).lean();
+
+      console.log("Query executed:", JSON.stringify(query, null, 2));
+      console.log("Total results found:", results.length);
+      console.log("Sample results:", results.slice(0, 3).map(r => ({
+        projectName: r.projectName,
+        city: r.city,
+        minPrice: r.minPrice,
+        maxPrice: r.maxPrice
+      })));
+
+      const dubaiProjects = await ProjectModel.find({ city: "Dubai" }).lean();
+      console.log("All Dubai projects:", dubaiProjects.map(p => ({
+        projectName: p.projectName,
+        minPrice: p.minPrice,
+        maxPrice: p.maxPrice,
+        city: p.city
+      })));
+
+      const total = await ProjectModel.countDocuments(query);
+
+      const response = {
+        message: "Projects retrieved successfully!",
+        success: true,
+        total: total,
+        data: results,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      };
+
+      cache.put(cacheKey, response, 300000);
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, error: 'Server Error' });
     }
-
-    // Pagination options
-    const options = {
-      skip: (parseInt(page) - 1) * parseInt(limit),
-      limit: parseInt(limit),
-    };
-
-    const results = await ProjectModel.find(query)
-      .sort(sort || '-createdAt')
-      .skip(options.skip)
-      .limit(options.limit).lean();
-
-    console.log("Query executed:", JSON.stringify(query, null, 2));
-    console.log("Total results found:", results.length);
-    console.log("Sample results:", results.slice(0, 3).map(r => ({
-      projectName: r.projectName,
-      city: r.city,
-      minPrice: r.minPrice,
-      maxPrice: r.maxPrice
-    })));
-
-    // Debug: Check all Dubai projects
-    const dubaiProjects = await ProjectModel.find({ city: "Dubai" }).lean();
-    console.log("All Dubai projects:", dubaiProjects.map(p => ({
-      projectName: p.projectName,
-      minPrice: p.minPrice,
-      maxPrice: p.maxPrice,
-      city: p.city
-    })));
-
-    const total = await ProjectModel.countDocuments(query);
-
-    const response = {
-      message: "Projects retrieved successfully!",
-      success: true,
-      total: total,
-      data: results,
-      currentPage: parseInt(page),
-      totalPages: Math.ceil(total / parseInt(limit)),
-    };
-
-    // Store result in cache for 5 minutes
-    cache.put(cacheKey, response, 300000);
-
-    return res.status(200).json(response);
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, error: 'Server Error' });
-  }
-}
-
-  // Route handler to get all project data
-  // static projectviewAll = async (req, res) => {
-  //     try {
-  //         const cachedData = cache.get('allProjects');
-  //         if (cachedData) {
-  //             return res.status(200).json({
-  //                 message: "Data fetched from cache!",
-  //                 data: cachedData
+  };
   //             });
   //         } else {
   //             // If data is not cached, fetch it and cache it

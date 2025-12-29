@@ -46,6 +46,12 @@ router.post(
   uploadErrorHandler,
   projectController.projectUpdate,
 );
+
+router.patch(
+  "/toggle-visibility/:id",
+  adminVerify,
+  projectController.toggleProjectVisibility,
+);
 router.delete("/Delete/:id", adminVerify, projectController.projectDelete);
 
 router.get("/trending", projectController.project_trending);

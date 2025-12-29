@@ -175,6 +175,10 @@ const projectSchema = new mongoose.Schema(
     project_url: {
       type: String,
     },
+    isHidden: {
+      type: Boolean,
+      default: false,
+    },
     about_project: [about_project_Schema],
     BhK_Details: [bhk_Schema],
     highlight: [highlight_Schema],
