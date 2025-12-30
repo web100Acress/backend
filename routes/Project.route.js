@@ -23,6 +23,7 @@ router.post(
   projectController.projectInsert,
 );
 router.get("/View/:project_url", projectController.projectView);
+router.get("/admin/View/:project_url", adminVerify, projectController.projectAdminView);
 // router.get(
 //   "/view/homepage/data",
 //   projectController.projectShowHomepageLazyLoading,
