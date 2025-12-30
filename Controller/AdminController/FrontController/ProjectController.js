@@ -408,7 +408,18 @@ class projectController {
     try {
       const project_url = req.params.project_url;
       if (project_url) {
-        const data = await ProjectModel.find({ project_url: project_url });
+        const data = await ProjectModel.find({
+          project_url: project_url,
+          isHidden: { $ne: true },
+        });
+
+        if (!data || data.length === 0) {
+          return res.status(404).json({
+            message: "Project not found!",
+            dataview: [],
+          });
+        }
+
         return res.status(200).json({
           message: " enable",
           dataview: data,
@@ -425,6 +436,34 @@ class projectController {
       });
     }
   };
+
+  static projectAdminView = async (req, res) => {
+    try {
+      const project_url = req.params.project_url;
+      if (project_url) {
+        const data = await ProjectModel.find({ project_url: project_url });
+        if (!data || data.length === 0) {
+          return res.status(404).json({
+            message: "Project not found!",
+            dataview: [],
+          });
+        }
+        return res.status(200).json({
+          message: " enable",
+          dataview: data,
+        });
+      }
+      return res.status(400).json({
+        message: "Invalid project url!",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error!",
+      });
+    }
+  };
+
   static projectUpdate = async (req, res) => {
     console.log("hello");
     try {
@@ -438,7 +477,7 @@ class projectController {
         project_floorplan_Image,
         projectGallery,
         projectMaster_plan,
-      } = req.files;
+      } = req.files || {};
       
       const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
 
@@ -508,11 +547,33 @@ class projectController {
           };
         }
 
-        if (project_Brochure) {
+        if (project_Brochure && project_Brochure[0]) {
           const existing = projectData?.project_Brochure?.public_id;
-          const brochureResult = existing
-            ? await updateFile(project_Brochure[0], existing)
-            : await uploadFile(project_Brochure[0]);
+          const incomingFile = project_Brochure[0];
+
+          const incomingExt = (path.extname(incomingFile.originalname || "") || "").toLowerCase();
+          const existingExt = (path.extname(existing || "") || "").toLowerCase();
+          const incomingMime = (incomingFile.mimetype || "").toLowerCase();
+          const isIncomingPdf = incomingMime === "application/pdf" || incomingExt === ".pdf";
+
+          let brochureResult;
+
+          if (existing) {
+            const extensionMismatch = !!incomingExt && !!existingExt && incomingExt !== existingExt;
+            const pdfTypeMismatch = isIncomingPdf ? existingExt !== ".pdf" : existingExt === ".pdf";
+
+            if (extensionMismatch || pdfTypeMismatch) {
+              try {
+                await deleteFile(existing);
+              } catch (_) {}
+              brochureResult = await uploadFile(incomingFile);
+            } else {
+              brochureResult = await updateFile(incomingFile, existing);
+            }
+          } else {
+            brochureResult = await uploadFile(incomingFile);
+          }
+
           update.project_Brochure = {
             public_id: brochureResult.Key,
             url: brochureResult.Location,
