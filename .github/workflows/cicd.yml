@@ -1,4 +1,5 @@
-name: Deploy web100Acress-backend
+name: Deploy 100Acress Backend (Docker)
+
 on:
   push:
     branches:
@@ -8,51 +9,47 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source
+      - name: Checkout source
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to docker hub
+
+      - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build Docker Image
-        run: docker build -t hunderedacress/100acressbackend .
-      - name: Publish Image to docker hub
+
+      - name: Build Docker image
+        run: docker build -t hunderedacress/100acressbackend:latest .
+
+      - name: Push image to Docker Hub
         run: docker push hunderedacress/100acressbackend:latest
 
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
-      # 🧹 Step 1: Clean disk space before pulling image
-      - name: Free up disk space on self-hosted runner
-        run: |
-          echo "Cleaning up Docker system to free up space..."
-          docker system prune -af
-          rm -rf ~/.npm/_cacache || true
-          echo "Disk cleanup done."
-
-      - name: Pull image from docker hub
+      - name: Pull latest image
         run: docker pull hunderedacress/100acressbackend:latest
 
-      - name: Generate `.env` file with secrets
+      - name: Create .env file
         run: |
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}" > .env
+          echo "NODE_ENV=production" > .env
+          echo "PORT=3500" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
           echo "AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}" >> .env
           echo "AWS_S3_SECRET_ACESS_KEY=${{ secrets.AWS_S3_SECRET_ACESS_KEY }}" >> .env
           echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}" >> .env
           echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
-          echo "AWS_SDK_LOAD_CONFIG=1" >> .env 
-          cat .env
+          echo "AWS_SDK_LOAD_CONFIG=1" >> .env
 
-      - name: Delete old container
+      - name: Remove old backend container (if exists)
         run: |
           if [ "$(docker ps -aq -f name=hundredacress-backend-container)" ]; then
             docker rm -f hundredacress-backend-container
           fi
 
-      - name: Run Docker Container with `.env`
+      - name: Run backend container
         run: |
-          docker run -d -p 3500:3500 --name hundredacress-backend-container --env-file .env hunderedacress/100acressbackend:latest
-# dxVJ
-# jjjj
-# l  wiuehfu  wg
+          docker run -d \
+            --restart unless-stopped \
+            -p 3500:3500 \
+            --name hundredacress-backend-container \
+            --env-file .env \
+            hunderedacress/100acressbackend:latest
