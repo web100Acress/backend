@@ -54,5 +54,3 @@ jobs:
             --name hundredacress-backend-container \
             --env-file .env \
             hunderedacress/100acressbackend:latest
-
-            # done
