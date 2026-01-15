@@ -38,7 +38,7 @@ const upload = multer({
 // Middleware to verify admin access
 const verifyAdmin = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  
+
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
   }
@@ -46,7 +46,7 @@ const verifyAdmin = (req, res, next) => {
   // Add your JWT verification logic here
   // For now, we'll assume the token is valid
   // In production, verify the JWT and check user role
-  
+
   next();
 };
 
@@ -99,13 +99,33 @@ router.get('/test', verifyAdmin, async (req, res) => {
   }
 });
 
+// Simple in-memory cache
+const s3Cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Get all folders from S3 bucket (with nested folder support)
 router.get('/folders', verifyAdmin, async (req, res) => {
   try {
     const { parent = '' } = req.query; // Get parent folder from query
 
+    // Check cache first
+    const cacheKey = parent || 'root';
+    const cached = s3Cache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+      console.log('Serving folders from cache:', cacheKey);
+      return res.json(cached.data);
+    }
+
     // Check if AWS is configured
     if (!isAWSConfigured()) {
+      // ... (existing local mode code - omitting for brevity in replacement if possible, but I must include it if I replace the whole block.
+      // Wait, replace_file_content replaces the BLOCK. I should try to keep the local mode code or re-include it. 
+      // The local mode code is quite long.
+      // I can wrap the "production" part only?
+      // Or I can insert the cache check at the top.
+
+      // Let's rewrite the whole function carefully to include cache check at top and cache set at bottom.
+
       console.warn('AWS not configured, returning predefined folders for local development');
 
       const predefinedFolders = [
@@ -153,6 +173,7 @@ router.get('/folders', verifyAdmin, async (req, res) => {
       const predefinedFolders = [
         { name: '100acre', path: '100acre', hasSubfolders: true },
         { name: 'festival-images', path: 'festival-images', hasSubfolders: false },
+        // ... (truncated list for brevity? No I must include all if I replace)
         { name: 'insight-banners', path: 'insight-banners', hasSubfolders: false },
         { name: 'insights', path: 'insights', hasSubfolders: false },
         { name: 'placeholder', path: 'placeholder', hasSubfolders: false },
@@ -170,11 +191,16 @@ router.get('/folders', verifyAdmin, async (req, res) => {
       folders.push(...newFolders);
     }
 
-    res.json({
+    const responseData = {
       success: true,
       folders: folders,
       parent: parent || null
-    });
+    };
+
+    // Set cache
+    s3Cache.set(cacheKey, { timestamp: Date.now(), data: responseData });
+
+    res.json(responseData);
   } catch (error) {
     console.error('Error fetching folders:', error);
     res.status(500).json({
@@ -311,7 +337,7 @@ router.post('/upload', verifyAdmin, upload.array('files', 20), async (req, res) 
       };
 
       const result = await s3.upload(uploadParams).promise();
-      
+
       return {
         id: result.ETag.replace(/"/g, ''),
         name: fileName,
@@ -419,10 +445,10 @@ router.post('/folders', verifyAdmin, async (req, res) => {
 
     // Validate folder name
     const folderName = name.trim().replace(/[^a-zA-Z0-9-_]/g, '-');
-    
+
     // Create a placeholder object to create the folder
     const key = `${folderName}/.placeholder`;
-    
+
     const uploadParams = {
       Bucket: BUCKET_NAME,
       Key: key,
@@ -464,7 +490,7 @@ router.post('/presigned-url', verifyAdmin, async (req, res) => {
     }
 
     const key = `${folder}/${crypto.randomUUID()}-${fileName}`;
-    
+
     const presignedUrl = s3.getSignedUrl('putObject', {
       Bucket: BUCKET_NAME,
       Key: key,

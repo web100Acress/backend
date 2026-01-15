@@ -97,6 +97,9 @@ router.get("/public/check-slug/:slug", ContactCardController.checkSlugAvailabili
 
 // Admin Routes (authentication required)
 
+// Get contact cards count for admin dashboard (Placed high to avoid conflict with /:id)
+router.get("/count", adminVerify, ContactCardController.getContactCardsCount);
+
 // Create new contact card
 router.post(
   "/",
@@ -135,7 +138,6 @@ router.delete("/:id", adminVerify, ContactCardController.deleteCard);
 // Get analytics for a contact card
 router.get("/:id/analytics", adminVerify, ContactCardController.getCardAnalytics);
 
-// Get contact cards count for admin dashboard
-router.get("/count", ContactCardController.getContactCardsCount);
+
 
 module.exports = router;

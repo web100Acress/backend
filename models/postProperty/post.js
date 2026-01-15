@@ -19,17 +19,17 @@ const property_Schema = new mongoose.Schema({
   price: {
     type: String,
   },
-  priceunits:{
+  priceunits: {
     type: String,
-    default:"",
+    default: "",
   },
-  bedrooms:{
+  bedrooms: {
     type: Number,
-    default:0,
+    default: 0,
   },
-  bathrooms:{
+  bathrooms: {
     type: Number,
-    default:0,
+    default: 0,
   },
   area: {
     type: String,
@@ -74,26 +74,15 @@ const property_Schema = new mongoose.Schema({
   },
   verify: {
     type: String,
-    default:"unverified"
+    default: "unverified"
   },
   propertyLooking: {
     type: String,
   },
 },
-{timestamps:true}
+  { timestamps: true }
 );
-// Define a text index on propertyName
-property_Schema.index({
-  propertyName: "text",
-  propertyType: "text",
-  address: "text",
-  city: "text",
-  price: "text",
-  state: "text",
-  type: "text",
-  landMark: "text",
-  descripation: "text",
-});
+// Text index moved to parent schema for correct embedded filtering
 const post_Schema = new mongoose.Schema(
   {
     name: {
@@ -124,7 +113,7 @@ const post_Schema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["user", "Owner", "Builder", "Agent", "propertyOwner", "Seller","Admin","ContentWriter","blog","SalesHead","sales_head"],
+      enum: ["user", "Owner", "Builder", "Agent", "propertyOwner", "Seller", "Admin", "ContentWriter", "blog", "SalesHead", "sales_head"],
       required: true,
     },
     token: {
@@ -173,5 +162,23 @@ const post_Schema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// Correct text index for embedded properties
+post_Schema.index({
+  "postProperty.propertyName": "text",
+  "postProperty.propertyType": "text",
+  "postProperty.address": "text",
+  "postProperty.city": "text",
+  "postProperty.price": "text",
+  "postProperty.state": "text",
+  "postProperty.type": "text",
+  "postProperty.landMark": "text",
+  "postProperty.descripation": "text",
+});
+
+// Index for cron job performance (frequent verification status checks)
+post_Schema.index({ emailVerified: 1 });
+post_Schema.index({ role: 1 }); // Admin user filtering
+
 const postPropertyModel = mongoose.model("postProperty", post_Schema);
 module.exports = postPropertyModel;

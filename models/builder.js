@@ -25,7 +25,7 @@ const builderSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-builderSchema.index({ builderName: 1 });
+// builderSchema.index({ builderName: 1 }); // Removed duplicate index
 builderSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Builder", builderSchema);
