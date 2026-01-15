@@ -157,6 +157,7 @@ router.delete(
 
 //post person
 
+router.use("/postPerson", usersRoute);
 router.use("/postPerson", postPropertyRoute);
 
 //post enquiry
@@ -309,11 +310,11 @@ router.post("/career/generate-upload-link", CareerController.generateUploadLink)
 router.get("/career/verify-upload-token/:token", CareerController.verifyUploadToken);
 // Add multer middleware for file uploads
 const multer = require('multer');
-const uploadDocumentsMulter = multer({ 
+const uploadDocumentsMulter = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
-router.post("/career/upload-documents/:token", 
+router.post("/career/upload-documents/:token",
   uploadDocumentsMulter.fields([
     { name: 'panFile', maxCount: 1 },
     { name: 'aadhaarFile', maxCount: 1 },

@@ -129,7 +129,7 @@ class blogController {
       }
       // Handle image upload
       let imageData;
-      
+
       if (req.file && hasAWSConfig) {
         // Upload file to S3 if AWS is configured
         console.log('📤 Uploading file to S3...');
@@ -138,7 +138,7 @@ class blogController {
           console.log('✅ S3 upload successful:', imageData);
         } catch (s3Error) {
           console.error('❌ S3 upload failed:', s3Error);
-          
+
           // Fallback: use embedded SVG placeholder
           imageData = {
             Key: `temp/${Date.now()}-${req.file?.originalname || 'placeholder'}`,
@@ -153,22 +153,22 @@ class blogController {
           Location: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='160' font-family='Arial' font-size='16' text-anchor='middle' fill='%236b7280'%3EBlog Image%3C/text%3E%3C/svg%3E`
         };
       }
-      
+
       // Save blog entry
       console.log('Saving blog to database...');
-      
+
       // Add CDN URL if it's a real S3 upload
       const cloudfrontUrl = "https://d16gdc5rm7f21b.cloudfront.net/";
       let blogImageData = {
         public_id: imageData.Key,
         url: imageData.Location,
       };
-      
+
       // Add CDN URL for S3 uploads
       if (imageData.Key && !imageData.Location.startsWith('data:')) {
         blogImageData.cdn_url = cloudfrontUrl + imageData.Key;
       }
-      
+
       // Parse related projects (accept JSON string or array)
       let relatedProjects = [];
       try {
@@ -185,14 +185,14 @@ class blogController {
               .filter((p) => p.project_url);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
 
       // Parse FAQs
       let enableFAQ = false;
       let faqs = [];
       try {
         enableFAQ = String(req.body.enableFAQ).toLowerCase() === 'true' || req.body.enableFAQ === true;
-      } catch (_) {}
+      } catch (_) { }
       try {
         const rawFaqs = req.body.faqs;
         if (rawFaqs) {
@@ -204,7 +204,7 @@ class blogController {
             })).filter(f => f.question && f.answer);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
 
       const newBlog = new blogModel({
         blog_Image: blogImageData,
@@ -223,23 +223,23 @@ class blogController {
       });
       await newBlog.save();
       console.log('Blog saved successfully');
-      
+
       // Clean up local file
       if (req.file && req.file.path) {
         try {
-      fs.unlinkSync(req.file.path);
+          fs.unlinkSync(req.file.path);
           console.log('Local file cleaned up');
         } catch (cleanupError) {
           console.warn('Failed to cleanup local file:', cleanupError);
         }
       }
-      
+
       res
         .status(200)
         .json({ message: "Blog inserted successfully", data: newBlog });
     } catch (error) {
       console.error('Blog insert error:', error);
-      
+
       // Clean up local file on error
       if (req.file && req.file.path) {
         try {
@@ -248,7 +248,7 @@ class blogController {
           console.warn('Failed to cleanup local file on error:', cleanupError);
         }
       }
-      
+
       // Provide more specific error messages
       let errorMessage = "Internal server error";
       if (error.code === 'CredentialsError') {
@@ -260,8 +260,8 @@ class blogController {
       } else if (error.name === 'MongoError') {
         errorMessage = "Database connection error";
       }
-      
-      res.status(500).json({ 
+
+      res.status(500).json({
         message: errorMessage,
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
@@ -335,14 +335,14 @@ class blogController {
         .sort({ [sortField]: sortDir })
         .lean();
       const totalBlogs = await blogModel.countDocuments({});
-      
+
       console.log(`Admin blog view: Found ${data.length} blogs out of ${totalBlogs} total`);
-      
+
       // Debug: Log image data for each blog
-      data.forEach(blog => {
-        console.log(`Blog "${blog.blog_Title}": Image URL = ${blog.blog_Image?.url}, CDN URL = ${blog.blog_Image?.cdn_url}`);
-      });
-      
+      // data.forEach(blog => {
+      //   console.log(`Blog "${blog.blog_Title}": Image URL = ${blog.blog_Image?.url}, CDN URL = ${blog.blog_Image?.cdn_url}`);
+      // });
+
       if (data) {
         res.status(200).json({
           message: "Admin data retrieved successfully",
@@ -375,13 +375,13 @@ class blogController {
       } = req.query;
 
       const skip = (page - 1) * limit;
-      const data = await blogModel.find({isPublished:false}).skip(skip).limit(limit);
-      const totalDrafts = await blogModel.countDocuments({isPublished:false});
+      const data = await blogModel.find({ isPublished: false }).skip(skip).limit(limit);
+      const totalDrafts = await blogModel.countDocuments({ isPublished: false });
       if (data) {
         return res.status(200).json({
           message: "Data get successfull ! ",
           data,
-          totalPages: Math.ceil(totalDrafts/limit)
+          totalPages: Math.ceil(totalDrafts / limit)
         });
       } else {
         return res.status(200).json({
@@ -456,7 +456,7 @@ class blogController {
   static blog_edit = async (req, res) => {
     try {
       console.log('Blog edit request received for ID:', req.params.id);
-      
+
       const id = req.params.id;
       if (!ObjectId.isValid(id)) {
         console.log('Invalid blog ID format:', id);
@@ -469,7 +469,7 @@ class blogController {
       console.log('Testing database connection...');
       const dbState = blogModel.db.readyState;
       console.log('Database state:', dbState);
-      
+
       if (dbState !== 1) {
         console.error('Database not connected. State:', dbState);
         return res.status(500).json({
@@ -492,7 +492,7 @@ class blogController {
       });
     } catch (error) {
       console.error('Blog edit error:', error);
-      
+
       // Provide more specific error messages
       let errorMessage = "Internal server error";
       if (error.name === 'CastError') {
@@ -502,7 +502,7 @@ class blogController {
       } else if (error.name === 'MongoError') {
         errorMessage = "Database connection error";
       }
-      
+
       res.status(500).json({
         message: errorMessage,
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -656,7 +656,7 @@ class blogController {
       return res.status(500).json({ message: "Internal server error", error: error?.message });
     }
   };
-  
+
   static blog_update_ispublished = async (req, res) => {
     try {
       const id = req.params.id;
@@ -695,7 +695,7 @@ class blogController {
   static blog_delete = async (req, res) => {
     try {
       console.log('Delete request received for blog ID:', req.params.id);
-      
+
       const id = req.params.id;
       if (!ObjectId.isValid(id)) {
         console.log('Invalid blog ID format:', id);
@@ -705,7 +705,7 @@ class blogController {
       }
 
       // Find the blog first
-        const data = await blogModel.findById({ _id: id });
+      const data = await blogModel.findById({ _id: id });
       if (!data) {
         console.log('Blog not found with ID:', id);
         return res.status(404).json({
@@ -732,7 +732,7 @@ class blogController {
       // Delete from database
       console.log('Deleting blog from database...');
       const deleteResult = await blogModel.findByIdAndDelete({ _id: id });
-      
+
       if (!deleteResult) {
         console.log('Database delete failed');
         return res.status(500).json({
@@ -748,10 +748,10 @@ class blogController {
           title: data.blog_Title
         }
       });
-      
+
     } catch (error) {
       console.error('Blog delete error:', error);
-      
+
       // Provide more specific error messages
       let errorMessage = "Internal server error";
       if (error.name === 'CastError') {
@@ -761,7 +761,7 @@ class blogController {
       } else if (error.code === 'CredentialsError') {
         errorMessage = "AWS credentials error";
       }
-      
+
       res.status(500).json({
         message: errorMessage,
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -783,14 +783,14 @@ class blogController {
       } catch (s3Error) {
         // Ensure local temp file is removed even on failure
         if (req.file && req.file.path) {
-          try { fs.unlinkSync(req.file.path); } catch {}
+          try { fs.unlinkSync(req.file.path); } catch { }
         }
         return res.status(500).json({ message: "Failed to upload to storage" });
       }
 
       // Clean up local file after successful upload
       if (req.file && req.file.path) {
-        try { fs.unlinkSync(req.file.path); } catch {}
+        try { fs.unlinkSync(req.file.path); } catch { }
       }
 
       // Respond with the public URL in the expected shape
@@ -845,7 +845,7 @@ class blogController {
               ${doc.project?.project_url ? `<p><strong>Project URL:</strong> ${doc.project.project_url}</p>` : ''}
             `.trim(),
           });
-          try { await BlogEnquiry.findByIdAndUpdate(doc._id, { $set: { emailSent: true } }); } catch (_) {}
+          try { await BlogEnquiry.findByIdAndUpdate(doc._id, { $set: { emailSent: true } }); } catch (_) { }
         }
       } catch (mailErr) {
         console.warn('submit_blog_enquiry: mail send failed:', mailErr?.message || mailErr);
@@ -949,9 +949,9 @@ class blogController {
       }
 
       let blog = await blogModel.findOne({ slug: normalized, isPublished: true });
-      
+
       if (!blog) {
-        blog = await blogModel.findOne({ 
+        blog = await blogModel.findOne({
           slug: { $regex: new RegExp(`^${normalized.replace(/[-]/g, '[-]?')}$`, 'i') },
           isPublished: true
         });
@@ -989,14 +989,14 @@ class blogController {
 
       // First try exact match
       let existing = await blogModel.findOne({ slug: normalized }).select('_id slug blog_Title');
-      
+
       // If no exact match, try case-insensitive regex match to handle edge cases
       if (!existing) {
-        existing = await blogModel.findOne({ 
+        existing = await blogModel.findOne({
           slug: { $regex: new RegExp(`^${normalized.replace(/[-]/g, '[-]?')}$`, 'i') }
         }).select('_id slug blog_Title');
       }
-      
+
       if (existing) {
         return res.status(200).json({ message: 'Slug taken', data: { exists: true, id: existing._id, slug: existing.slug, title: existing.blog_Title } });
       }
@@ -1012,9 +1012,9 @@ class blogController {
     try {
       const { q = '', limit = 10 } = req.query;
       const searchTerm = q.toString().trim();
-      
+
       let query = {};
-      
+
       // If search term is provided, use search criteria
       if (searchTerm && searchTerm.length >= 2) {
         const searchRegex = new RegExp(searchTerm, 'i');
@@ -1030,7 +1030,7 @@ class blogController {
 
       console.log('[search_projects] Query:', query);
       console.log('[search_projects] Limit:', Math.min(parseInt(limit) || 100, 100));
-      
+
       // Use the correct Project model rather than postPropertyModel
       const projects = await ProjectModel
         .find(query)

@@ -43,7 +43,7 @@ const contactCardSchema = new mongoose.Schema(
       trim: true,
       match: [/^https?:\/\/.+/, "Please enter a valid website URL"],
     },
-    
+
     // URL and Identification
     slug: {
       type: String,
@@ -53,7 +53,7 @@ const contactCardSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"],
     },
-    
+
     // Branding and Customization
     logo: {
       type: String, // S3 URL for logo image
@@ -92,14 +92,14 @@ const contactCardSchema = new mongoose.Schema(
       enum: ["modern", "executive", "minimalist", "creative", "premium", "glassmorphism"],
       default: "modern",
     },
-    
+
     // Social Links (optional)
     socialLinks: {
       linkedin: {
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https:\/\/(www\.)?linkedin\.com\/.*/.test(v);
           },
@@ -110,7 +110,7 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https:\/\/(www\.)?(twitter\.com|x\.com)\/.*/.test(v);
           },
@@ -121,7 +121,7 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https:\/\/(www\.)?instagram\.com\/.*/.test(v);
           },
@@ -132,7 +132,7 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https:\/\/(www\.)?facebook\.com\/.*/.test(v);
           },
@@ -143,7 +143,7 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https:\/\/(www\.)?github\.com\/.*/.test(v);
           },
@@ -154,7 +154,7 @@ const contactCardSchema = new mongoose.Schema(
         type: String,
         trim: true,
         validate: {
-          validator: function(v) {
+          validator: function (v) {
             if (!v || v === '') return true;
             return /^https?:\/\/.+/.test(v);
           },
@@ -162,7 +162,7 @@ const contactCardSchema = new mongoose.Schema(
         }
       },
     },
-    
+
     // Analytics and Tracking
     analytics: {
       totalViews: {
@@ -181,7 +181,7 @@ const contactCardSchema = new mongoose.Schema(
         type: Date,
       },
     },
-    
+
     // Status and Metadata
     isActive: {
       type: Boolean,
@@ -191,7 +191,7 @@ const contactCardSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Reference to admin/user who created this card
     },
-    
+
     // Additional Information
     bio: {
       type: String,
@@ -226,7 +226,7 @@ contactCardSchema.virtual("qrCodeUrl").get(function () {
 });
 
 // Index for better search performance
-contactCardSchema.index({ slug: 1 });
+// contactCardSchema.index({ slug: 1 }); // Removed duplicate index
 contactCardSchema.index({ email: 1 });
 contactCardSchema.index({ name: "text", company: "text", designation: "text" });
 contactCardSchema.index({ createdAt: -1 });
@@ -236,11 +236,11 @@ contactCardSchema.index({ isActive: 1 });
 contactCardSchema.pre("save", async function (next) {
   // If slug is provided, check for uniqueness
   if (this.slug) {
-    const existingCard = await this.constructor.findOne({ 
-      slug: this.slug, 
-      _id: { $ne: this._id } 
+    const existingCard = await this.constructor.findOne({
+      slug: this.slug,
+      _id: { $ne: this._id }
     });
-    
+
     if (existingCard) {
       const error = new Error('Slug already exists. Please choose a different slug.');
       error.name = 'ValidationError';
@@ -254,16 +254,16 @@ contactCardSchema.pre("save", async function (next) {
       .replace(/\s+/g, "-") // Replace spaces with hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single
       .trim("-"); // Remove leading/trailing hyphens
-    
+
     // Ensure uniqueness
     let slug = baseSlug;
     let counter = 1;
-    
+
     while (await this.constructor.findOne({ slug, _id: { $ne: this._id } })) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
-    
+
     this.slug = slug;
   }
   next();

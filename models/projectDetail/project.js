@@ -135,9 +135,9 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: "False",
     },
-    spotlight:{
-      type:String,
-      default:"False",
+    spotlight: {
+      type: String,
+      default: "False",
     },
     city: {
       type: String,
@@ -273,6 +273,13 @@ projectSchema.index(
     },
   },
 );
+
+// Optimize filtering and sorting
+projectSchema.index({ project_url: 1 }, { unique: true }); // Faster slug lookup
+projectSchema.index({ isHidden: 1, city: 1, project_Status: 1 }); // Common public filters
+projectSchema.index({ createdAt: -1 }); // Newest first sorting
+projectSchema.index({ builderName: 1 }); // Builder specific pages
+projectSchema.index({ isHidden: 1, luxury: 1 }); // Luxury filter
 
 const ProjectModel = mongoose.model("projectData", projectSchema);
 module.exports = ProjectModel;

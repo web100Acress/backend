@@ -26,7 +26,6 @@ const blogSchema = new mongoose.Schema({
     type: String,
     trim: true,
     unique: true,
-    index: true,
   },
   blog_Description: {
     type: String,
@@ -106,7 +105,7 @@ const blogSchema = new mongoose.Schema({
     index: true,
   }
   // Using the csdkccn subdocument schema as an array in the main schema
-},{timestamps: true});
+}, { timestamps: true });
 
 // Performance indexes for fast listings
 // Compound index used by public listing: find({ isPublished: true }).sort({ createdAt: -1 })
@@ -128,7 +127,7 @@ function slugify(text) {
 }
 
 // Ensure slug exists and is unique on save
-blogSchema.pre('save', async function(next) {
+blogSchema.pre('save', async function (next) {
   try {
     if (!this.slug) {
       this.slug = slugify(this.blog_Title);
