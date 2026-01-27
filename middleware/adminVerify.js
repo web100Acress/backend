@@ -75,7 +75,7 @@ const hrAdminVerify = async (req, res, next) => {
 
     // Allow Admin, HR, IT, and Super Admin roles (case-insensitive)
     const userRole = decoded.role?.toLowerCase();
-    const allowedRoles = ["admin", "hr", "hr_manager", "blog_manager", "it", "superadmin", "super_admin"];
+    const allowedRoles = ["admin", "hr", "hr_manager", "blog_manager", "it", "boss", "Boss"];
     
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({
@@ -196,7 +196,59 @@ const adminSalesHeadVerify = async (req, res, next) => {
   }
 };
 
+// Boss role middleware for CRM access
+const bossVerify = async (req, res, next) => {
+  try {
+    let token_without_quotes = null;
+    
+    // Check for x-access-token header first (used by admin panel)
+    if (req.headers['x-access-token']) {
+      token_without_quotes = req.headers['x-access-token'].replace(/"/g, "");
+    }
+    // Fallback to authorization header
+    else if (req.headers.authorization) {
+      const token = req.headers.authorization.split(" ")[1];
+      token_without_quotes = token.replace(/"/g, "");
+    }
+    
+    if (!token_without_quotes) {
+      console.log("No token provided");
+      return res.status(401).json({success:false, message: "No token provided" });
+    }
+
+    // Verify using the same secret used when signing tokens
+    const decoded = jwt.verify(
+      token_without_quotes,
+      process.env.JWT_SECRET || "aman123"
+    );
+
+    // Allow Boss role (case-insensitive)
+    const userRole = decoded.role?.toLowerCase();
+    if (userRole !== "boss" && userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action. Boss role required."
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      console.log("Invalid token");
+      return res.status(401).json({success:false, message: "Invalid token" });
+    }
+    if (error.name === "TokenExpiredError") {
+      console.log("Token expired");
+      return res.status(401).json({success:false, message: "Token expired" });
+    }
+    console.log("Internal server error");
+    return res.status(500).json({success:false, message: "Internal server error" });
+  }
+};
+
 module.exports = jwtVerification;
 module.exports.hrAdminVerify = hrAdminVerify;
 module.exports.hrVerify = hrVerify;
 module.exports.adminSalesHeadVerify = adminSalesHeadVerify;
+module.exports.bossVerify = bossVerify;
