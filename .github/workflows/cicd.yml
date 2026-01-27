@@ -47,7 +47,7 @@ jobs:
         run: |
           docker run -d \
             --restart unless-stopped \
-            --cpus="2.0" \
+            --cpus="1.0" \
             --memory="2g" \
             --ulimit nofile=65535:65535 \
             -p 3500:3500 \
