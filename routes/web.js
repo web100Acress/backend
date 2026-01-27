@@ -3,7 +3,7 @@ const router = express.Router();
 const upload = require("../aws/multerConfig");
 const { resumeUpload } = require("../aws/multerConfig");
 const adminVerify = require("../middleware/adminVerify");
-const { hrAdminVerify, adminSalesHeadVerify } = require("../middleware/adminVerify");
+const { hrAdminVerify, adminSalesHeadVerify, bossVerify } = require("../middleware/adminVerify");
 const ContentWriterVerify = require("../middleware/ContentWriterVerify");
 // Import S3 Routes
 const s3Routes = require("./s3Routes");
@@ -419,5 +419,9 @@ router.use("/api/contact-cards", contactCardRoute);
 // Image proxy routes for S3 CORS issues
 const imageProxyRoute = require("./image-proxy.route");
 router.use("/api", imageProxyRoute);
+
+// CRM Enquiry Access Routes for Boss Role
+router.get("/crm/enquiries", bossVerify, projectController.userViewAll);
+router.get("/crm/enquiries/download", bossVerify, projectController.enquiryDownload);
 
 module.exports = router;
