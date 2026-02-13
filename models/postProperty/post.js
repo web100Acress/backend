@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const property_Schema = new mongoose.Schema({
   frontImage: {
     public_id: {
@@ -12,16 +11,27 @@ const property_Schema = new mongoose.Schema({
   otherImage: [],
   propertyType: {
     type: String, // means for resident home ,or for commercial like warehouse
+    required: true,
+  },
+  selectoption: {
+    type: String, // Residential or Commercial selection
+    required: true,
+  },
+  subType: {
+    type: String, // Property sub-type
+    required: true,
   },
   propertyName: {
     type: String,
+    required: true,
   },
   price: {
     type: String,
+    required: true,
   },
   priceunits: {
     type: String,
-    default: "",
+    required: true,
   },
   bedrooms: {
     type: Number,
@@ -33,18 +43,27 @@ const property_Schema = new mongoose.Schema({
   },
   area: {
     type: String,
+    required: true,
+  },
+  areaUnit: {
+    type: String,
+    required: true,
   },
   availableDate: {
     type: String,
+    required: true,
   },
   descripation: {
     type: String,
+    required: true,
   },
   furnishing: {
     type: String,
+    required: true,
   },
   builtYear: {
-    Type: String,
+    type: String,
+    required: true,
   },
   amenities: [
     {
@@ -53,18 +72,23 @@ const property_Schema = new mongoose.Schema({
   ],
   landMark: {
     type: String,
+    required: true,
   },
   type: {
     type: String,
+    required: true,
   }, //resident or commercial
   city: {
     type: String,
+    required: true,
   },
   state: {
     type: String,
+    required: true,
   },
   address: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
@@ -78,6 +102,7 @@ const property_Schema = new mongoose.Schema({
   },
   propertyLooking: {
     type: String,
+    required: true,
   },
 },
   { timestamps: true }

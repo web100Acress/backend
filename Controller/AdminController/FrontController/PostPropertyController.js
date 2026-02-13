@@ -1159,6 +1159,8 @@ class PostPropertyController {
 
         const data = {
           propertyType: req.body.propertyType,
+          selectoption: req.body.selectoption,
+          subType: req.body.subType,
           propertyName: req.body.propertyName,
           address: req.body.address,
           city: req.body.city,
@@ -1168,6 +1170,7 @@ class PostPropertyController {
           bedrooms: req.body.bedrooms,
           bathrooms: req.body.bathrooms,
           area: req.body.area,
+          areaUnit: req.body.areaUnit,
           descripation: req.body.descripation,
           landMark: req.body.landMark,
           amenities: req.body.amenities,
@@ -1229,12 +1232,16 @@ class PostPropertyController {
 
         const data = {
           propertyType: req.body.propertyType,
+          selectoption: req.body.selectoption,
+          subType: req.body.subType,
           propertyName: req.body.propertyName,
           address: req.body.address,
           city: req.body.city,
           state: req.body.state,
           price: req.body.price,
+          priceunits: req.body.priceunits,
           area: req.body.area,
+          areaUnit: req.body.areaUnit,
           descripation: req.body.descripation,
           landMark: req.body.landMark,
           amenities: req.body.amenities,
@@ -1250,7 +1257,7 @@ class PostPropertyController {
           number: number,
           agentName: agentName,
           role: role,
-          verify: "",
+          verify: "unverified",
           propertyLooking: req.body.propertyLooking,
         };
         // console.log(data)
@@ -1295,12 +1302,16 @@ class PostPropertyController {
 
         const data = {
           propertyType: req.body.propertyType,
+          selectoption: req.body.selectoption,
+          subType: req.body.subType,
           propertyName: req.body.propertyName,
           address: req.body.address,
           city: req.body.city,
           state: req.body.state,
           price: req.body.price,
+          priceunits: req.body.priceunits,
           area: req.body.area,
+          areaUnit: req.body.areaUnit,
           descripation: req.body.descripation,
           landMark: req.body.landMark,
           amenities: req.body.amenities,
@@ -1314,7 +1325,7 @@ class PostPropertyController {
           number: number,
           agentName: agentName,
           role: role,
-          verify: "",
+          verify: "unverified",
           propertyLooking: req.body.propertyLooking,
         };
         // console.log(data)
@@ -1647,9 +1658,11 @@ const email = dataPushed.email;
           propertyType: "postProperty.$.propertyType",
           address: "postProperty.$.address",
           area: "postProperty.$.area",
+          areaUnit: "postProperty.$.areaUnit",
           city: "postProperty.$.city", 
           state: "postProperty.$.state",
           price: "postProperty.$.price",
+          priceunits: "postProperty.$.priceunits",
           descripation: "postProperty.$.descripation",
           furnishing: "postProperty.$.furnishing",
           builtYear: "postProperty.$.builtYear",
