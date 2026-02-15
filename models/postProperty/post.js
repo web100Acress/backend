@@ -104,6 +104,20 @@ const property_Schema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // User-updatable listing status (visible to admin)
+  listingStatus: {
+    type: String,
+    enum: ["available", "sold", "rented", "withdrawn"],
+    default: "available",
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false,
+  },
+  // Last user activity for admin visibility
+  lastStatusUpdatedAt: { type: Date, default: null },
+  // Form completion % when submitted (for admin / draft visibility)
+  completionPercentage: { type: Number, default: null },
 },
   { timestamps: true }
 );

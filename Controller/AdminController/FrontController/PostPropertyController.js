@@ -873,13 +873,16 @@ class PostPropertyController {
             {
               $project: {
                 name: "$name",
-                _id: "$postProperty._id", // Include the property's _id if needed
+                _id: "$postProperty._id",
                 frontImage: "$postProperty.frontImage",
                 otherImage: "$postProperty.otherImage",
                 propertyType: "$postProperty.propertyType",
+                selectoption: "$postProperty.selectoption",
                 propertyName: "$postProperty.propertyName",
                 price: "$postProperty.price",
+                priceunits: "$postProperty.priceunits",
                 area: "$postProperty.area",
+                areaUnit: "$postProperty.areaUnit",
                 availableDate: "$postProperty.availableDate",
                 descripation: "$postProperty.descripation",
                 furnishing: "$postProperty.furnishing",
@@ -1192,6 +1195,7 @@ class PostPropertyController {
             url: file.Location,
           })),
           propertyLooking: req.body.propertyLooking,
+          ...(req.body.completionPercentage !== undefined && req.body.completionPercentage !== "" && { completionPercentage: Number(req.body.completionPercentage) }),
         };
 
 
@@ -1259,6 +1263,7 @@ class PostPropertyController {
           role: role,
           verify: "unverified",
           propertyLooking: req.body.propertyLooking,
+          ...(req.body.completionPercentage !== undefined && req.body.completionPercentage !== "" && { completionPercentage: Number(req.body.completionPercentage) }),
         };
         // console.log(data)
 
@@ -1327,6 +1332,7 @@ class PostPropertyController {
           role: role,
           verify: "unverified",
           propertyLooking: req.body.propertyLooking,
+          ...(req.body.completionPercentage !== undefined && req.body.completionPercentage !== "" && { completionPercentage: Number(req.body.completionPercentage) }),
         };
         // console.log(data)
 
@@ -1670,15 +1676,21 @@ const email = dataPushed.email;
           amenities: "postProperty.$.amenities",
           landMark: "postProperty.$.landMark",
           availableDate: "postProperty.$.availableDate",
-          propertyLooking: "postProperty.$.propertyLooking"
+          propertyLooking: "postProperty.$.propertyLooking",
+          listingStatus: "postProperty.$.listingStatus",
+          isDisabled: "postProperty.$.isDisabled",
+          lastStatusUpdatedAt: "postProperty.$.lastStatusUpdatedAt",
         };
         
         Object.entries(fields).forEach(([key, path]) => {
-          if (req.body[key] !== undefined && req.body[key] !== null) {
-            // Check if field is provided
-            update.$set[path] = req.body[key];
-          }
+          if (req.body[key] === undefined || req.body[key] === null) return;
+          let val = req.body[key];
+          if (key === "isDisabled") val = val === true || val === "true" || String(val).toLowerCase() === "true";
+          update.$set[path] = val;
         });
+        if (req.body.listingStatus !== undefined || req.body.isDisabled !== undefined) {
+          update.$set["postProperty.$.lastStatusUpdatedAt"] = new Date();
+        }
         // Perform the update
         const updatedDoc = await postPropertyModel.findOneAndUpdate(
           { "postProperty._id": id },
