@@ -227,7 +227,7 @@ router.get('/users/:id/profile', async (req, res) => {
 // --- Email verification update endpoint ---
 // PATCH /postPerson/users/:id/email-verified
 // Updates a user's emailVerified boolean (admin only)
-router.patch('/postPerson/users/:id/email-verified', adminVerify, async (req, res) => {
+router.patch('/users/:id/email-verified', adminVerify, async (req, res) => {
   try {
     const userId = req.params.id;
     let { emailVerified } = req.body || {};
@@ -310,7 +310,7 @@ router.patch('/postPerson/users/:id/email-verified', adminVerify, async (req, re
 });
 
 // Explicit preflight for email-verified endpoint (helps some environments)
-router.options('/postPerson/users/:id/email-verified', cors());
+router.options('/users/:id/email-verified', cors());
 
 // Admin authorization middleware
 const requireAdmin = (req, res, next) => {
@@ -329,7 +329,7 @@ const requireAdmin = (req, res, next) => {
  * DELETE /postPerson/deleteUser/:id
  * REAL DATABASE DELETION - Permanently removes user and all associated data
  */
-router.delete('/postPerson/deleteUser/:id', adminVerify, async (req, res) => {
+router.delete('/deleteUser/:id', adminVerify, async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -410,9 +410,9 @@ router.delete('/postPerson/deleteUser/:id', adminVerify, async (req, res) => {
 /**
  * Alternative endpoint for user deletion
  */
-router.delete('/postPerson/userDelete/:id', adminVerify, async (req, res) => {
+router.delete('/userDelete/:id', adminVerify, async (req, res) => {
   // Redirect to main deletion endpoint
-  req.url = `/postPerson/deleteUser/${req.params.id}`;
+  req.url = `/deleteUser/${req.params.id}`;
   return router.handle(req, res);
 });
 
@@ -421,7 +421,7 @@ router.delete('/postPerson/userDelete/:id', adminVerify, async (req, res) => {
  */
 router.delete('/admin/user/delete/:id', adminVerify, async (req, res) => {
   // Redirect to main deletion endpoint
-  req.url = `/postPerson/deleteUser/${req.params.id}`;
+  req.url = `/deleteUser/${req.params.id}`;
   return router.handle(req, res);
 });
 
