@@ -26,6 +26,10 @@ const rent_Schema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    propertysubType: {
+      type: String,
+      required: true,
+    },
     propertyName: {
       type: String,
       required: true,
