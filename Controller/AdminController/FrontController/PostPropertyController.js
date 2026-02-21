@@ -1146,11 +1146,26 @@ class PostPropertyController {
   // acc-s3
   static postProperty = async (req, res) => {
     try {
+      if (!req.files || (!req.files.frontImage && !req.files.otherImage)) {
+        return res.status(400).json({
+          success: false,
+          message: "Both frontImage and otherImage files are required",
+        });
+      }
+      
       if (req.files.frontImage && req.files.otherImage) {
         const id = req.params.id;
         console.log(req.params.id,"id of person")
         const personData = await postPropertyModel.findById({ _id: id });
         console.log(personData,"personData")
+        
+        if (!personData) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found with the provided ID",
+          });
+        }
+        
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
@@ -1227,6 +1242,14 @@ class PostPropertyController {
       } else if (req.files.frontImage) {
         const id = req.params.id;
         const personData = await postPropertyModel.findOne({ _id: id });
+        
+        if (!personData) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found with the provided ID",
+          });
+        }
+        
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
@@ -1298,6 +1321,14 @@ class PostPropertyController {
       } else {
         const id = req.params.id;
         const personData = await postPropertyModel.findOne({ _id: id });
+        
+        if (!personData) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found with the provided ID",
+          });
+        }
+        
         const email = personData.email;
         const number = personData.mobile;
         const agentName = personData.name;
