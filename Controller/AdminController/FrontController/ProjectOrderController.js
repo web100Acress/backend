@@ -120,14 +120,19 @@ class ProjectOrderController {
   // Get all project orders for sync (used by frontend)
   static getAllProjectOrdersForSync = AsyncHandler(async (req, res) => {
     try {
+      console.log('🔄 Starting getAllProjectOrdersForSync...');
+      
       // Get builder-based orders
+      console.log('📦 Fetching project orders from ProjectOrderModel...');
       const projectOrders = await ProjectOrderModel.find({});
+      console.log(`✅ Found ${projectOrders.length} project orders`);
       
       // Transform data to match Redux structure
       const customOrders = {};
       const buildersWithCustomOrder = {};
       const randomSeeds = {};
 
+      console.log('🔄 Transforming project orders...');
       projectOrders.forEach(order => {
         customOrders[order.builderName] = order.customOrder;
         buildersWithCustomOrder[order.builderName] = order.hasCustomOrder;
@@ -135,11 +140,14 @@ class ProjectOrderController {
           randomSeeds[order.builderName] = order.randomSeed;
         }
       });
+      console.log('✅ Project orders transformed');
 
       // Get status-based orders from admin panel
       let statusOrders = {};
       try {
+        console.log('📦 Fetching admin project orders from ProjectOrder...');
         const adminProjectOrder = await ProjectOrder.findOne();
+        console.log('✅ Admin project order fetched:', adminProjectOrder ? 'found' : 'not found');
         if (adminProjectOrder && adminProjectOrder.data) {
           // Transform admin panel data to match frontend structure
           Object.keys(adminProjectOrder.data).forEach(statusKey => {
@@ -152,7 +160,7 @@ class ProjectOrderController {
           });
         }
       } catch (error) {
-        console.log('No admin project orders found, using builder orders only');
+        console.log('⚠️ No admin project orders found, using builder orders only');
       }
 
       const syncData = {
@@ -160,12 +168,17 @@ class ProjectOrderController {
         buildersWithCustomOrder,
         randomSeeds
       };
+      
+      console.log('📤 Sending response with ApiResponse...');
+      console.log('ApiResponse type:', typeof ApiResponse);
+      console.log('ApiResponse constructor:', ApiResponse.constructor.name);
 
       return res.status(200).json(
         new ApiResponse(200, syncData, "Project orders sync data retrieved successfully")
       );
     } catch (error) {
       console.error('❌ Error in getAllProjectOrdersForSync:', error);
+      console.error('Error stack:', error.stack);
       throw new ApiError(500, "Error retrieving project orders for sync: " + error.message);
     }
   });
