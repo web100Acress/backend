@@ -1,5 +1,5 @@
 const PropertyOrderModel = require("../../../models/property/propertyOrder");
-const ApiResponse = require("../../../Utilities/ApiResponse");
+const { ApiResponse } = require("../../../Utilities/ApiResponse");
 const ApiError = require("../../../Utilities/ApiError");
 const AsyncHandler = require("../../../Utilities/AsyncHandler");
 

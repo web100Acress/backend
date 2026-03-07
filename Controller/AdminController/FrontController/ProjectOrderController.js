@@ -1,6 +1,6 @@
 const ProjectOrderModel = require("../../../models/projectDetail/projectOrder");
 const ProjectOrder = require("../../../models/ProjectOrder");
-const ApiResponse = require("../../../Utilities/ApiResponse");
+const { ApiResponse } = require("../../../Utilities/ApiResponse");
 const ApiError = require("../../../Utilities/ApiError");
 const AsyncHandler = require("../../../Utilities/AsyncHandler");
 
@@ -165,7 +165,8 @@ class ProjectOrderController {
         new ApiResponse(200, syncData, "Project orders sync data retrieved successfully")
       );
     } catch (error) {
-      throw new ApiError(500, "Error retrieving project orders for sync");
+      console.error('❌ Error in getAllProjectOrdersForSync:', error);
+      throw new ApiError(500, "Error retrieving project orders for sync: " + error.message);
     }
   });
 }
