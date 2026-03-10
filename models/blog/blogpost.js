@@ -103,7 +103,11 @@ const blogSchema = new mongoose.Schema({
     unique: true,
     sparse: true,  // This allows multiple null values
     index: true,
-  }
+  },
+  // Table Data for TableBuilder recovery
+  tableData: {
+    type: String, // Stored as JSON string
+  },
   // Using the csdkccn subdocument schema as an array in the main schema
 }, { timestamps: true });
 

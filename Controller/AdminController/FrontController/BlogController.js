@@ -213,6 +213,7 @@ class blogController {
         author,
         blog_Category,
         isPublished,
+        tableData: req.body.tableData, // Add this line
         relatedProjects: relatedProjects && relatedProjects.length ? relatedProjects : undefined,
         enableFAQ: enableFAQ || (faqs && faqs.length > 0) || false,
         faqs: faqs && faqs.length ? faqs : undefined,
@@ -528,6 +529,7 @@ class blogController {
         if (typeof author !== 'undefined') doc.author = author;
         if (typeof blog_Category !== 'undefined') doc.blog_Category = blog_Category;
         if (typeof isPublished !== 'undefined') doc.isPublished = isPublished;
+        if (typeof req.body.tableData !== 'undefined') doc.tableData = req.body.tableData; // Add this line
 
         // SEO fields
         if (typeof metaTitle !== 'undefined') doc.metaTitle = metaTitle;
