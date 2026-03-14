@@ -44,48 +44,29 @@ const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
 const { Server } = require("socket.io");
 
-// Create a rate limit rule
+// Create a rate limit rule - TEMPORARILY DISABLED FOR EMERGENCY FIX
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // Increased to 1000 to handle legitimate traffic while preventing abuse
+  max: 10000, // Very high limit to prevent blocking
   message: {
     success: false,
     message: "Too many requests, please try again after some time."
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip rate limiting for critical operations and high-traffic endpoints
+  // Skip rate limiting for almost everything during emergency
   skip: (req) => {
     try {
       const p = (req.originalUrl || req.url || '').toLowerCase();
-      const m = (req.method || '').toUpperCase();
+      
+      // Skip ALL endpoints except potentially abusive ones
+      const isAbusiveEndpoint = 
+        p.includes('/admin/') && p.includes('/delete');
 
-      // Skip for critical admin POST/PUT endpoints
-      const isCriticalAdminPath = 
-        p.includes('/project/insert') || 
-        p.includes('/builder/insert') || 
-        p.includes('/project/update') ||
-        p.includes('/api/admin/project-orders');
-
-      // Skip for high-traffic public endpoints that need caching instead
-      const isHighTrafficEndpoint = 
-        p.includes('/project/viewall/data') ||
-        p.includes('/project/featured') ||
-        p.includes('/blog/view') ||
-        p.includes('/project/commercial') ||
-        p.includes('/project/sco') ||
-        p.includes('/project/budgethomes') ||
-        p.includes('/project/category') ||
-        p.includes('/project/projectsearch') ||
-        p.includes('/health') ||
-        p.includes('/postPerson/users/') && p.includes('/favorites');
-
-      // Skip admin POST/PUT and high-traffic endpoints
-      if ((m !== 'GET' && isCriticalAdminPath) || isHighTrafficEndpoint) {
-        return true;
-      }
+      // Allow everything else
+      return !isAbusiveEndpoint;
     } catch { }
-    return false;
+    return true; // Default to allowing requests
   },
 });
 
@@ -698,6 +679,12 @@ app.use('/project/sco', cacheMiddleware(60 * 1000));
 app.use('/project/budgethomes', cacheMiddleware(60 * 1000));
 app.use('/project/category', cacheMiddleware(60 * 1000));
 app.use('/project/projectsearch', cacheMiddleware(60 * 1000));
+app.use('/project/upcoming', cacheMiddleware(60 * 1000));
+app.use('/api/project-orders', cacheMiddleware(30 * 1000)); // 30 seconds cache
+app.use('/api/banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
+app.use('/api/small-banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
+app.use('/api/side-banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
+app.use('/postPerson/users/', cacheMiddleware(30 * 1000)); // 30 seconds cache for user endpoints
 app.use('/health', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache for health
 
 // Router Link
