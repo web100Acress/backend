@@ -149,17 +149,29 @@ class BuyController {
   // view by id
   static viewAll = async (req, res) => {
     try {
-      // Check if data is in cache
-      const cachedData = cache.get("buyData");
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 100;
+      const skip = (page - 1) * limit;
+
+      // Use a more specific cache key for pagination
+      const cacheKey = `buyData_p${page}_l${limit}`;
+      const cachedData = cache.get(cacheKey);
+      
       if (cachedData) {
         return res.status(200).json({
           message: "Data fetched from the cache!",
-          ResaleData: cachedData,
+          ResaleData: cachedData.data,
+          totalCount: cachedData.total
         });
       }
 
+      // Get total count for pagination info
+      const totalCount = await postPropertyModel.countDocuments({
+        "postProperty.verify": "verified",
+        "postProperty.propertyLooking": "Sell"
+      });
+
       const data1 = await postPropertyModel.aggregate([
-        // Step 1: Unwind the postProperty array to deconstruct it into individual documents
         {
           $unwind: "$postProperty"
         },
@@ -170,12 +182,17 @@ class BuyController {
           }
         },
         {
-          $sort: {"postProperty.createdAt":-1}
+          $sort: { "postProperty.createdAt": -1 }
         },
-        // Step 2: Project only the fields from postProperty (excluding other user-related fields)
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        },
         {
           $project: {
-            _id: "$postProperty._id", // Include the property's _id if needed
+            _id: "$postProperty._id",
             frontImage: "$postProperty.frontImage",
             otherImage: "$postProperty.otherImage",
             propertyType: "$postProperty.propertyType",
@@ -202,15 +219,13 @@ class BuyController {
         }
       ]);
 
+      const expirationTime = 5 * 60 * 1000; // 5 minutes
+      cache.put(cacheKey, { data: data1, total: totalCount }, expirationTime);
 
-      const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-      cache.put("buyData", data1, expirationTime);
-
-      // Send the response with the fetched data
       return res.status(200).json({
         message: "Data fetched from the database!",
         ResaleData: data1,
+        totalCount: totalCount
       });
     } catch (error) {
       console.log(error);
@@ -223,13 +238,22 @@ class BuyController {
   static buyView_id = async (req, res) => {
     try {
       const id = req.params.id;
-      console.log(id, "id");
+      
+      // Cache property details for 5 minutes
+      const cacheKey = `buyDetail_${id}`;
+      const cachedDetail = cache.get(cacheKey);
+      if (cachedDetail) {
+        return res.status(200).json({
+          message: "data get successfully from cache!",
+          data: cachedDetail,
+        });
+      }
 
       if (id) {
         const postData = await postPropertyModel.aggregate([
           {
             $match: {
-              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id) // Match parent documents containing the target array element
+              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id)
             }
           },
           {
@@ -237,7 +261,7 @@ class BuyController {
           },
           {
             $match: {
-              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id) // Match parent documents containing the target array element
+              "postProperty._id": mongoose.Types.ObjectId.createFromHexString(id)
             }
           },
           {
@@ -251,21 +275,26 @@ class BuyController {
           }
         ]);
         
-      console.log(postData[0], "postData");
-      res.status(200).json({
-        message: "data get  successfully ! ",
-        data:postData[0],
-      });
-        
+        if (postData.length > 0) {
+          cache.put(cacheKey, postData[0], 5 * 60 * 1000);
+          res.status(200).json({
+            message: "data get successfully!",
+            data: postData[0],
+          });
+        } else {
+          res.status(404).json({
+            message: "Property not found!",
+          });
+        }
       } else {
         res.status(404).json({
-          message: "id does not found in url !",
+          message: "id does not found in url!",
         });
       }
     } catch (error) {
       console.log(error);
       res.status(500).json({
-        message: "internal server error ! ",
+        message: "internal server error!",
       });
     }
   };
