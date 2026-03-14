@@ -9,10 +9,12 @@ class ProjectOrderController {
   // Get all project orders
   static getProjectOrders = async (req, res) => {
     try {
+      const startTime = Date.now();
       const now = Date.now();
       
       // Check cache first
       if (ordersCache && (now - lastCacheTime < CACHE_TTL)) {
+        console.log(`Cache hit - ${(Date.now() - startTime)}ms`);
         return res.status(200).json({
           success: true,
           message: "Project orders retrieved from cache",
@@ -21,7 +23,16 @@ class ProjectOrderController {
         });
       }
 
-      const projectOrders = await ProjectOrder.findOne();
+      console.log('Cache miss - querying database...');
+      const dbStartTime = Date.now();
+      
+      // Use lean() for faster query and select only needed fields
+      const projectOrders = await ProjectOrder.findOne()
+        .select('data updatedAt')
+        .lean();
+      
+      const dbTime = Date.now() - dbStartTime;
+      console.log(`Database query took: ${dbTime}ms`);
       
       if (!projectOrders) {
         // Return default data if no data exists
@@ -88,6 +99,9 @@ class ProjectOrderController {
       ordersCache = projectOrders.data;
       lastCacheTime = now;
 
+      const totalTime = Date.now() - startTime;
+      console.log(`Total request time: ${totalTime}ms`);
+
       res.status(200).json({
         success: true,
         message: "Project orders retrieved successfully!",
@@ -151,7 +165,10 @@ class ProjectOrderController {
     try {
       const { category } = req.params;
       
-      const projectOrder = await ProjectOrder.findOne();
+      // Use lean() for faster query - only need data field
+      const projectOrder = await ProjectOrder.findOne()
+        .select('data')
+        .lean();
       
       if (!projectOrder || !projectOrder.data[category]) {
         return res.status(404).json({
