@@ -44,29 +44,20 @@ const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
 const { Server } = require("socket.io");
 
-// Create a rate limit rule - TEMPORARILY DISABLED FOR EMERGENCY FIX
+// Create a rate limit rule - EMERGENCY DISABLED FOR PRODUCTION
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10000, // Very high limit to prevent blocking
+  max: 100000, // Extremely high limit - effectively disabled
   message: {
     success: false,
     message: "Too many requests, please try again after some time."
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip rate limiting for almost everything during emergency
-  skip: (req) => {
-    try {
-      const p = (req.originalUrl || req.url || '').toLowerCase();
-      
-      // Skip ALL endpoints except potentially abusive ones
-      const isAbusiveEndpoint = 
-        p.includes('/admin/') && p.includes('/delete');
-
-      // Allow everything else
-      return !isAbusiveEndpoint;
-    } catch { }
-    return true; // Default to allowing requests
+  // Skip rate limiting completely during emergency
+  skip: () => {
+    // TEMPORARILY DISABLE ALL RATE LIMITING
+    return true;
   },
 });
 
