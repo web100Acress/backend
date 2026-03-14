@@ -12,6 +12,31 @@ const PostUser = require("./models/postProperty/post");
 const { sendEmail } = require("./Utilities/s3HelperUtility");
 const axios = require("axios");
 const app = express();
+
+// Simple in-memory cache for high-traffic endpoints
+const cache = new Map();
+const CACHE_TTL = 30 * 1000; // 30 seconds
+
+// Cache middleware
+const cacheMiddleware = (ttl = CACHE_TTL) => (req, res, next) => {
+  const key = req.originalUrl;
+  const cached = cache.get(key);
+  
+  if (cached && (Date.now() - cached.timestamp < ttl)) {
+    console.log(`🚀 Cache hit for: ${key}`);
+    return res.json(cached.data);
+  }
+  
+  // Override res.json to cache responses
+  const originalJson = res.json;
+  res.json = function(data) {
+    cache.set(key, { data, timestamp: Date.now() });
+    console.log(`📦 Cached response for: ${key}`);
+    return originalJson.call(this, data);
+  };
+  
+  next();
+};
 // Load environment variables BEFORE using them
 require("dotenv").config();
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
@@ -22,29 +47,41 @@ const { Server } = require("socket.io");
 // Create a rate limit rule
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // Reduced from 2000 to 100 to prevent spam
+  max: 1000, // Increased to 1000 to handle legitimate traffic while preventing abuse
   message: {
     success: false,
     message: "Too many requests, please try again after some time."
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip rate limiting only for critical admin operations
+  // Skip rate limiting for critical operations and high-traffic endpoints
   skip: (req) => {
     try {
       const p = (req.originalUrl || req.url || '').toLowerCase();
       const m = (req.method || '').toUpperCase();
 
-      // Do NOT skip GET/OPTIONS as they are being spammed in the logs
-
-      // Only skip specific critical POST/PUT endpoints for admin
+      // Skip for critical admin POST/PUT endpoints
       const isCriticalAdminPath = 
         p.includes('/project/insert') || 
         p.includes('/builder/insert') || 
         p.includes('/project/update') ||
         p.includes('/api/admin/project-orders');
 
-      if (m !== 'GET' && isCriticalAdminPath) {
+      // Skip for high-traffic public endpoints that need caching instead
+      const isHighTrafficEndpoint = 
+        p.includes('/project/viewall/data') ||
+        p.includes('/project/featured') ||
+        p.includes('/blog/view') ||
+        p.includes('/project/commercial') ||
+        p.includes('/project/sco') ||
+        p.includes('/project/budgethomes') ||
+        p.includes('/project/category') ||
+        p.includes('/project/projectsearch') ||
+        p.includes('/health') ||
+        p.includes('/postPerson/users/') && p.includes('/favorites');
+
+      // Skip admin POST/PUT and high-traffic endpoints
+      if ((m !== 'GET' && isCriticalAdminPath) || isHighTrafficEndpoint) {
         return true;
       }
     } catch { }
@@ -651,6 +688,17 @@ app.set("trust proxy", 1);
 // cookie
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
+
+// Add caching for high-traffic endpoints
+app.use('/project/viewAll/data', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/project/featured', cacheMiddleware(60 * 1000));
+app.use('/blog/view', cacheMiddleware(60 * 1000));
+app.use('/project/commercial', cacheMiddleware(60 * 1000));
+app.use('/project/sco', cacheMiddleware(60 * 1000));
+app.use('/project/budgethomes', cacheMiddleware(60 * 1000));
+app.use('/project/category', cacheMiddleware(60 * 1000));
+app.use('/project/projectsearch', cacheMiddleware(60 * 1000));
+app.use('/health', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache for health
 
 // Router Link
 app.use("/", router);
