@@ -13,30 +13,63 @@ const { sendEmail } = require("./Utilities/s3HelperUtility");
 const axios = require("axios");
 const app = express();
 
-// Simple in-memory cache for high-traffic endpoints
+// Enhanced caching middleware for high-traffic endpoints
+// TODO: MIGRATE TO REDIS FOR PRODUCTION
+// Current: In-memory Map cache (resets on restart, single-server only)
+// Production goal: Redis cache (persistent, distributed, scalable)
+// Install: npm install redis
+// Replace Map with Redis client for better production performance
 const cache = new Map();
-const CACHE_TTL = 30 * 1000; // 30 seconds
+const MAX_CACHE_SIZE = 1000; // Limit cache size for production
 
-// Cache middleware
-const cacheMiddleware = (ttl = CACHE_TTL) => (req, res, next) => {
-  const key = req.originalUrl;
-  const cached = cache.get(key);
+const cacheMiddleware = (duration = 30000) => {
+  return (req, res, next) => {
+    // Normalize cache key - remove timestamp parameters to prevent cache bypass
+    const originalUrl = req.originalUrl || req.url;
+    const normalizedUrl = originalUrl.replace(/[?&]_t=\d+/g, ''); // Remove _t=timestamp
+    const key = normalizedUrl;
+    
+    const cached = cache.get(key);
+    
+    if (cached && (Date.now() - cached.timestamp < duration)) {
+      console.log(`🚀 Cache hit for: ${key}`);
+      return res.json(cached.data);
+    }
+    
+    // Override res.json to cache the response
+    const originalJson = res.json;
+    res.json = function(data) {
+      // Prevent cache from growing too large
+      if (cache.size >= MAX_CACHE_SIZE) {
+        // Delete oldest entry (simple FIFO)
+        const firstKey = cache.keys().next().value;
+        cache.delete(firstKey);
+      }
+      
+      cache.set(key, { data, timestamp: Date.now() });
+      console.log(`📦 Cached response for: ${key} (Cache size: ${cache.size})`);
+      return originalJson.call(this, data);
+    };
+    
+    next();
+  };
+};
+
+// Clear cache periodically to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const keysToDelete = [];
   
-  if (cached && (Date.now() - cached.timestamp < ttl)) {
-    console.log(`🚀 Cache hit for: ${key}`);
-    return res.json(cached.data);
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > 300000) { // 5 minutes
+      keysToDelete.push(key);
+    }
   }
   
-  // Override res.json to cache responses
-  const originalJson = res.json;
-  res.json = function(data) {
-    cache.set(key, { data, timestamp: Date.now() });
-    console.log(`📦 Cached response for: ${key}`);
-    return originalJson.call(this, data);
-  };
-  
-  next();
-};
+  keysToDelete.forEach(key => cache.delete(key));
+  console.log(`🧹 Cache cleanup: Removed ${keysToDelete.length} expired entries. Current size: ${cache.size}`);
+}, 60000); // Clean every minute
+
 // Load environment variables BEFORE using them
 require("dotenv").config();
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
@@ -661,22 +694,57 @@ app.set("trust proxy", 1);
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
-// Add caching for high-traffic endpoints
+// Add caching for high-traffic endpoints - Production optimized strategy
+// Heavy data endpoints - longer cache for better performance
 app.use('/project/viewAll/data', cacheMiddleware(60 * 1000)); // 1 minute cache
 app.use('/project/featured', cacheMiddleware(60 * 1000));
-app.use('/blog/view', cacheMiddleware(60 * 1000));
-app.use('/project/commercial', cacheMiddleware(60 * 1000));
-app.use('/project/sco', cacheMiddleware(60 * 1000));
-app.use('/project/budgethomes', cacheMiddleware(60 * 1000));
-app.use('/project/category', cacheMiddleware(60 * 1000));
-app.use('/project/projectsearch', cacheMiddleware(60 * 1000));
+app.use('/project/trending', cacheMiddleware(60 * 1000));
+app.use('/project/luxury', cacheMiddleware(60 * 1000));
 app.use('/project/upcoming', cacheMiddleware(60 * 1000));
-app.use('/api/project-orders', cacheMiddleware(30 * 1000)); // 30 seconds cache
-app.use('/api/banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
-app.use('/api/small-banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
-app.use('/api/side-banners/active', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
-app.use('/postPerson/users/', cacheMiddleware(30 * 1000)); // 30 seconds cache for user endpoints
-app.use('/health', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache for health
+app.use('/project/commercial', cacheMiddleware(60 * 1000));
+app.use('/project/budgethomes', cacheMiddleware(60 * 1000));
+app.use('/project/scoplots', cacheMiddleware(60 * 1000));
+app.use('/project/affordable', cacheMiddleware(60 * 1000));
+app.use('/project/View', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache for project details
+app.use('/project/comingsoon', cacheMiddleware(60 * 1000));
+app.use('/project/city', cacheMiddleware(60 * 1000));
+app.use('/project/spotlight', cacheMiddleware(60 * 1000));
+app.use('/project/suggested', cacheMiddleware(60 * 1000));
+
+// Blog content - medium cache
+app.use('/blog/view', cacheMiddleware(30 * 1000)); // 30 seconds cache
+
+// Search and dynamic data - short cache for freshness
+app.use('/property/search', cacheMiddleware(10 * 1000)); // 10 seconds cache
+app.use('/property/view', cacheMiddleware(60 * 1000)); // 1 minute cache for property details
+app.use('/property/buy/ViewAll', cacheMiddleware(60 * 1000)); // 1 minute cache for resale listings
+app.use('/property/rent/viewAll', cacheMiddleware(60 * 1000)); // 1 minute cache for rental listings
+app.use('/search/suggestions', cacheMiddleware(10 * 1000)); // 10 seconds cache
+app.use('/data/filter', cacheMiddleware(10 * 1000)); // 10 seconds cache
+app.use('/project/projectsearch', cacheMiddleware(60 * 1000)); // Increased to 60 seconds for better performance
+app.use('/project/category', cacheMiddleware(10 * 1000)); // 10 seconds cache
+
+// Static content - longer cache
+app.use('/about', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/contact', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/agent', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/career/opening', cacheMiddleware(60 * 1000)); // 1 minute cache
+
+// Analytics and monitoring - no cache for real-time data
+app.use('/snapShot', cacheMiddleware(5 * 1000)); // 5 seconds cache
+app.use('/projectCount', cacheMiddleware(5 * 1000)); // 5 seconds cache
+
+// User data - short cache for privacy
+app.use('/postPerson/users/', cacheMiddleware(15 * 1000)); // 15 seconds cache
+
+// Banners and static assets - longer cache
+app.use('/api/banners/active', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/api/small-banners/active', cacheMiddleware(60 * 1000)); // 1 minute cache
+app.use('/api/side-banners/active', cacheMiddleware(60 * 1000)); // 1 minute cache
+
+// Critical endpoints - longer cache to prevent spam
+app.use('/api/project-orders', cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache
+app.use('/health', cacheMiddleware(30 * 1000)); // 30 seconds cache
 
 // Router Link
 app.use("/", router);
