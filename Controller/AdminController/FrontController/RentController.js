@@ -2,6 +2,7 @@ const postPropertyModel = require("../../../models/postProperty/post");
 const rent_Model = require("../../../models/property/rent");
 const NodeCache = require("node-cache");
 const AWS = require("aws-sdk");
+const rentCache = new NodeCache();
 const { isValidObjectId } = require("mongoose");
 const {
   uploadFile,
@@ -142,10 +143,18 @@ class rentController {
   };
   // rental property view by id
   static rentView_id = async (req, res) => {
-    // console.log("helllo")
     try {
-      // console.log("hello")
       const id = req.params.id;
+      
+      const cacheKey = `rentDetail_${id}`;
+      const cachedDetail = rentCache.get(cacheKey);
+      if (cachedDetail) {
+        return res.status(200).json({
+          message: "data get successfully from cache!",
+          data: cachedDetail,
+        });
+      }
+
       if (id) {
         const data = await rent_Model.findById({ _id: id });
 
@@ -159,27 +168,29 @@ class rentController {
             },
           },
         );
-        //  const data1=postData.postProperty[0]
-        if (data) {
+        
+        const finalData = data || (postData ? postData.postProperty[0] : null);
+        
+        if (finalData) {
+          rentCache.set(cacheKey, finalData, 5 * 60); // 5 minutes in seconds
           res.status(200).json({
-            message: "data get successfully !",
-            data: data,
+            message: "data get successfully!",
+            data: finalData,
           });
         } else {
-          res.status(200).json({
-            message: "data get successfully ! ",
-            postData,
+          res.status(404).json({
+            message: "data not found!",
           });
         }
       } else {
-        res.status(200).json({
-          message: "data not found !",
+        res.status(404).json({
+          message: "id not found!",
         });
       }
     } catch (error) {
       console.log(error);
       res.status(500).json({
-        message: "internal server error ! ",
+        message: "internal server error!",
       });
     }
   };
@@ -203,21 +214,50 @@ class rentController {
   // ViewAll
   static rentViewAll = async (req, res) => {
     try {
-      // const data = await rent_Model.find();
-      const data1 = await postPropertyModel.aggregate([
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 100;
+      const skip = (page - 1) * limit;
 
+      // Use node-cache for pagination
+      const cacheKey = `rentData_p${page}_l${limit}`;
+      const cachedData = rentCache.get(cacheKey);
+      
+      if (cachedData) {
+        return res.status(200).json({
+          message: "Data fetched from the cache!",
+          rentaldata: cachedData.data,
+          totalCount: cachedData.total
+        });
+      }
+
+      // Get total count for pagination info
+      const totalCount = await postPropertyModel.countDocuments({
+        "postProperty.verify": "verified",
+        "postProperty.propertyLooking": "rent"
+      });
+
+      const data1 = await postPropertyModel.aggregate([
         {
           $unwind: "$postProperty"
         },
         {
-          $match:{
-            "postProperty.verify":"verified",
-            "postProperty.propertyLooking":"rent"
+          $match: {
+            "postProperty.verify": "verified",
+            "postProperty.propertyLooking": "rent"
           }
         },
         {
-          $project:{
-            _id: "$postProperty._id", // Include the property's _id if needed
+          $sort: { "postProperty.createdAt": -1 }
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        },
+        {
+          $project: {
+            _id: "$postProperty._id",
             frontImage: "$postProperty.frontImage",
             otherImage: "$postProperty.otherImage",
             propertyType: "$postProperty.propertyType",
@@ -237,26 +277,19 @@ class rentController {
             email: "$postProperty.email",
             number: "$postProperty.number",
             verify: "$postProperty.verify",
-            propertyLooking: "$postProperty.propertyLooking",
-            // createdAt: "$postProperty.createdAt",
+            propertyLooking: "$postProperty.propertyLooking"
           }
-        },
-        {
-          $sort: { createdAt: -1 } 
         }
-      ])
-      
-      const RentalData = [...data1];
-      if (RentalData) {
-        return res.status(200).json({
-          message: "data get successfully !",
-          rentaldata:RentalData,
-        });
-      } else {
-        return res.status(404).json({
-          message: "data not  found !",
-        });
-      }
+      ]);
+
+      const expirationTime = 5 * 60; // 5 minutes in seconds for node-cache
+      rentCache.set(cacheKey, { data: data1, total: totalCount }, expirationTime);
+
+      return res.status(200).json({
+        message: "Data fetched from the database!",
+        rentaldata: data1,
+        totalCount: totalCount
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
