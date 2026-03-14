@@ -4,6 +4,11 @@ const { ApiResponse } = require("../../../Utilities/ApiResponse");
 const ApiError = require("../../../Utilities/ApiError");
 const AsyncHandler = require("../../../Utilities/AsyncHandler");
 
+// Cache for sync data
+let syncCache = null;
+let lastSyncCacheTime = 0;
+const SYNC_CACHE_TTL = 30 * 1000; // 30 seconds
+
 class ProjectOrderController {
   // Get all project orders
   static getAllProjectOrders = AsyncHandler(async (req, res) => {
@@ -120,12 +125,32 @@ class ProjectOrderController {
   // Get all project orders for sync (used by frontend)
   static getAllProjectOrdersForSync = AsyncHandler(async (req, res) => {
     try {
+      const startTime = Date.now();
+      const now = Date.now();
+      
+      // Check cache first
+      if (syncCache && (now - lastSyncCacheTime < SYNC_CACHE_TTL)) {
+        console.log(`🚀 Sync cache hit - ${(Date.now() - startTime)}ms`);
+        return res.status(200).json(
+          new ApiResponse(200, syncCache, "Project orders sync data retrieved successfully (from cache)")
+        );
+      }
+
       console.log('🔄 Starting getAllProjectOrdersForSync...');
       
-      // Get builder-based orders
-      console.log('📦 Fetching project orders from ProjectOrderModel...');
-      const projectOrders = await ProjectOrderModel.find({});
+      // Use Promise.all for parallel database queries
+      console.log('📦 Fetching data in parallel...');
+      const dbStartTime = Date.now();
+      
+      const [projectOrders, adminProjectOrder] = await Promise.all([
+        ProjectOrderModel.find({}).lean().select('builderName customOrder hasCustomOrder randomSeed'),
+        ProjectOrder.findOne().lean().select('data')
+      ]);
+      
+      const dbTime = Date.now() - dbStartTime;
+      console.log(`🚀 Database queries completed in: ${dbTime}ms`);
       console.log(`✅ Found ${projectOrders.length} project orders`);
+      console.log('✅ Admin project order fetched:', adminProjectOrder ? 'found' : 'not found');
       
       // Transform data to match Redux structure
       const customOrders = {};
@@ -142,25 +167,17 @@ class ProjectOrderController {
       });
       console.log('✅ Project orders transformed');
 
-      // Get status-based orders from admin panel
-      let statusOrders = {};
-      try {
-        console.log('📦 Fetching admin project orders from ProjectOrder...');
-        const adminProjectOrder = await ProjectOrder.findOne();
-        console.log('✅ Admin project order fetched:', adminProjectOrder ? 'found' : 'not found');
-        if (adminProjectOrder && adminProjectOrder.data) {
-          // Transform admin panel data to match frontend structure
-          Object.keys(adminProjectOrder.data).forEach(statusKey => {
-            const statusData = adminProjectOrder.data[statusKey];
-            if (Array.isArray(statusData)) {
-              // Keep the full structure with isActive and name properties
-              customOrders[statusKey] = statusData;
-              buildersWithCustomOrder[statusKey] = true;
-            }
-          });
-        }
-      } catch (error) {
-        console.log('⚠️ No admin project orders found, using builder orders only');
+      // Process admin panel data if exists
+      if (adminProjectOrder && adminProjectOrder.data) {
+        console.log('🔄 Processing admin project orders...');
+        Object.keys(adminProjectOrder.data).forEach(statusKey => {
+          const statusData = adminProjectOrder.data[statusKey];
+          if (Array.isArray(statusData)) {
+            customOrders[statusKey] = statusData;
+            buildersWithCustomOrder[statusKey] = true;
+          }
+        });
+        console.log('✅ Admin project orders processed');
       }
 
       const syncData = {
@@ -169,9 +186,13 @@ class ProjectOrderController {
         randomSeeds
       };
       
+      // Update cache
+      syncCache = syncData;
+      lastSyncCacheTime = now;
+      
+      const totalTime = Date.now() - startTime;
+      console.log(`🚀 Total sync time: ${totalTime}ms`);
       console.log('📤 Sending response with ApiResponse...');
-      console.log('ApiResponse type:', typeof ApiResponse);
-      console.log('ApiResponse constructor:', ApiResponse.constructor.name);
 
       return res.status(200).json(
         new ApiResponse(200, syncData, "Project orders sync data retrieved successfully")

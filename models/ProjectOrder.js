@@ -32,8 +32,10 @@ projectOrderSchema.pre('save', function(next) {
   next();
 });
 
-// Add index for better query performance
+// Add indexes for better query performance
 projectOrderSchema.index({ updatedAt: -1 });
+projectOrderSchema.index({ createdAt: -1 });
+projectOrderSchema.index({ _id: 1 });
 
 module.exports = mongoose.model('ProjectOrder', projectOrderSchema);
 
