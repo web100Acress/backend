@@ -22,42 +22,29 @@ const { Server } = require("socket.io");
 // Create a rate limit rule
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 2000, // Increased limit to 2000 requests per minute
+  max: 100, // Reduced from 2000 to 100 to prevent spam
   message: {
     success: false,
     message: "Too many requests, please try again after some time."
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Do not rate limit heavy, authenticated admin uploads and frequently accessed endpoints
+  // Skip rate limiting only for critical admin operations
   skip: (req) => {
     try {
       const p = (req.originalUrl || req.url || '').toLowerCase();
       const m = (req.method || '').toUpperCase();
 
-      // Skip rate limiting for all GET and OPTIONS requests
-      if (m === 'GET' || m === 'OPTIONS') return true;
+      // Do NOT skip GET/OPTIONS as they are being spammed in the logs
 
-      // Skip rate limiting for specific POST endpoints
-      if (m === 'POST' && (
-        p.includes('/project/insert') ||
-        p.includes('/builder/insert') ||
-        p.includes('/api/project/insert') ||
-        p.includes('/api/builder/insert') ||
+      // Only skip specific critical POST/PUT endpoints for admin
+      const isCriticalAdminPath = 
+        p.includes('/project/insert') || 
+        p.includes('/builder/insert') || 
         p.includes('/project/update') ||
-        p.includes('/api/project/update') ||
-        p.includes('/career/page/insert')
-      )) {
-        return true;
-      }
+        p.includes('/api/admin/project-orders');
 
-      // Skip project insert/update and builder insert
-      if (
-        (m === 'POST' && (p.startsWith('/project/insert') || p.startsWith('/builder/insert') || p.startsWith('/api/project/insert') || p.startsWith('/api/builder/insert')))
-        || (m === 'POST' && (p.startsWith('/project/update') || p.startsWith('/api/project/update')))
-        || (m === 'POST' && p.includes('/career/page/insert'))
-        || p.startsWith('/api/guide')
-      ) {
+      if (m !== 'GET' && isCriticalAdminPath) {
         return true;
       }
     } catch { }

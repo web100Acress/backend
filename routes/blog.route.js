@@ -39,6 +39,7 @@ router.post(
   router.get("/view", blogController.blog_view);
   router.get("/view/:id", blogController.blog_viewId);
   router.get("/edit/:id", blogController.blog_edit);
+  router.post("/analyze-seo", ContentWriterVerify, blogController.analyze_seo);
 // Engagement
 router.post("/:id/like", blogController.like);
 router.post("/:id/unlike", blogController.unlike);

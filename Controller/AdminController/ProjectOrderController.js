@@ -1,9 +1,26 @@
 const ProjectOrder = require('../../models/ProjectOrder');
 
+// Simple in-memory cache for project orders
+let ordersCache = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 60 * 1000; // 60 seconds
+
 class ProjectOrderController {
   // Get all project orders
   static getProjectOrders = async (req, res) => {
     try {
+      const now = Date.now();
+      
+      // Check cache first
+      if (ordersCache && (now - lastCacheTime < CACHE_TTL)) {
+        return res.status(200).json({
+          success: true,
+          message: "Project orders retrieved from cache",
+          data: ordersCache,
+          fromCache: true
+        });
+      }
+
       const projectOrders = await ProjectOrder.findOne();
       
       if (!projectOrders) {
@@ -56,6 +73,10 @@ class ProjectOrderController {
           readytomove: []
         };
         
+        // Cache the default data too
+        ordersCache = defaultData;
+        lastCacheTime = now;
+
         return res.status(200).json({
           success: true,
           message: "Project orders retrieved successfully!",
@@ -63,6 +84,10 @@ class ProjectOrderController {
         });
       }
       
+      // Update cache
+      ordersCache = projectOrders.data;
+      lastCacheTime = now;
+
       res.status(200).json({
         success: true,
         message: "Project orders retrieved successfully!",
@@ -102,6 +127,10 @@ class ProjectOrderController {
       
       await projectOrder.save();
       
+      // Invalidate cache on update
+      ordersCache = data;
+      lastCacheTime = Date.now();
+
       res.status(200).json({
         success: true,
         message: "Project orders updated successfully!",

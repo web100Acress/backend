@@ -771,6 +771,54 @@ class blogController {
     }
   };
 
+  static analyze_seo = async (req, res) => {
+    try {
+      const { title, metaTitle, metaDescription, slug, content, focusKeyword } = req.body;
+      const { spawn } = require("child_process");
+      const path = require("path");
+
+      const scriptPath = path.join(__dirname, "../../../scripts/seo_analyzer.py");
+      const pythonProcess = spawn("python3", [scriptPath]);
+
+      let resultData = "";
+      let errorData = "";
+
+      pythonProcess.stdin.write(JSON.stringify({
+        title,
+        metaTitle,
+        metaDescription,
+        slug,
+        content,
+        focusKeyword
+      }));
+      pythonProcess.stdin.end();
+
+      pythonProcess.stdout.on("data", (data) => {
+        resultData += data.toString();
+      });
+
+      pythonProcess.stderr.on("data", (data) => {
+        errorData += data.toString();
+      });
+
+      pythonProcess.on("close", (code) => {
+        if (code !== 0) {
+          console.error("Python script error:", errorData);
+          return res.status(500).json({ message: "SEO Analysis failed", error: errorData });
+        }
+        try {
+          const results = JSON.parse(resultData);
+          res.status(200).json(results);
+        } catch (e) {
+          res.status(500).json({ message: "Failed to parse analysis results", error: e.message });
+        }
+      });
+    } catch (error) {
+      console.error("SEO Analysis controller error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
   // Inline image upload endpoint for the editor toolbar
   static upload_inline_image = async (req, res) => {
     try {
