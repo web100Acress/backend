@@ -10,6 +10,7 @@ const {
   updateFile,
 } = require("../../../Utilities/s3HelperUtility");
 const { generateBlog } = require("../../../Utilities/geminiClient");
+const { redisClient } = require("../../../config/redis");
 
 // Helpers for loose JSON parsing in case model wraps content strangely
 function tryParse(str) {
@@ -224,6 +225,16 @@ class blogController {
       });
       await newBlog.save();
       console.log('Blog saved successfully');
+      
+      // Invalidate all blog view caches
+      if (redisClient.isOpen) {
+        // Get all keys matching blog_view pattern
+        const keys = await redisClient.keys("blog_view_*");
+        if (keys.length > 0) {
+          await redisClient.del(keys);
+          console.log(`🧹 Redis Cache Purged: ${keys.length} blog view caches (New Blog)`);
+        }
+      }
 
       // Clean up local file
       if (req.file && req.file.path) {
@@ -271,13 +282,25 @@ class blogController {
 
   static blog_view = async (req, res) => {
     try {
-      // res.send("bsdbk.kkjnc cnf")
       const {
         page = 1,
         limit = 10,
         sortBy = "createdAt",
         sortOrder = "desc",
       } = req.query;
+      
+      // Create cache key based on query parameters
+      const cacheKey = `blog_view_${page}_${limit}_${sortBy}_${sortOrder}`;
+      
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: blog_view");
+          return res.status(200).json(JSON.parse(cachedData));
+        }
+      }
+      
       // Coerce and clamp params for performance and safety
       const pageNum = Math.max(1, parseInt(page, 10) || 1);
       const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
@@ -293,12 +316,20 @@ class blogController {
         .sort({ [sortField]: sortDir })
         .lean();
       const totalBlogs = await blogModel.countDocuments({ isPublished: true });
+      
+      const response = {
+        message: "Data get successfull ! ",
+        data,
+        totalPages: Math.ceil(totalBlogs / limitNum),
+      };
+      
+      // Cache the response in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(response)); // 5 minutes
+      }
+      
       if (data) {
-        res.status(200).json({
-          message: "Data get successfull ! ",
-          data,
-          totalPages: Math.ceil(totalBlogs / limitNum),
-        });
+        res.status(200).json(response);
       } else {
         res.status(200).json({
           message: "Data not found ! ",
@@ -640,7 +671,17 @@ class blogController {
         }
 
         await doc.save();
-        return res.status(200).json({ message: "data updated successfully !" });
+      
+      // Invalidate all blog view caches
+      if (redisClient.isOpen) {
+        const keys = await redisClient.keys("blog_view_*");
+        if (keys.length > 0) {
+          await redisClient.del(keys);
+          console.log(`🧹 Redis Cache Purged: ${keys.length} blog view caches (Blog Update)`);
+        }
+      }
+      
+      return res.status(200).json({ message: "data updated successfully !" });
       } else {
         res.status(404).json({
           message: "not found!",
@@ -1210,6 +1251,15 @@ class blogController {
       });
 
       await newBlog.save();
+      
+      // Invalidate all blog view caches
+      if (redisClient.isOpen) {
+        const keys = await redisClient.keys("blog_view_*");
+        if (keys.length > 0) {
+          await redisClient.del(keys);
+          console.log(`🧹 Redis Cache Purged: ${keys.length} blog view caches (AI Generated Blog)`);
+        }
+      }
 
       return res.status(201).json({
         message: 'Blog generated and saved',

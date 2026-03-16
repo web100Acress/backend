@@ -24,10 +24,8 @@ router.post(
 );
 router.get("/View/:project_url", projectController.projectView);
 router.get("/admin/View/:project_url", adminVerify, projectController.projectAdminView);
-// router.get(
-//   "/view/homepage/data",
-//   projectController.projectShowHomepageLazyLoading,
-// );
+router.get("/homepage/data", projectController.getHomepageData);
+router.get("/farmhouse", projectController.project_farmhouse);
 router.get("/viewAll/data", projectController.projectviewAll);
 router.get("/Edit/:id", projectController.projectEdit);
 router.post(
@@ -59,7 +57,6 @@ router.get("/trending", projectController.project_trending);
 router.get("/luxury", projectController.project_luxury);
 router.get("/spotlight", projectController.project_spotlight);
 router.get("/featured", projectController.project_featured);
-router.get("/city", projectController.project_City);
 router.get("/upcoming", projectController.project_Upcoming);
 router.get("/affordable", projectController.projectAffordable); 
 router.get("/scoplots", projectController.projectSCOplots); 
