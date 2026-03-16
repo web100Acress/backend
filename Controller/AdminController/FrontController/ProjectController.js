@@ -13,6 +13,7 @@ const {
 } = require("../../../Utilities/s3HelperUtility");
 const ConvertJSONtoExcel = require("../../../Utilities/ConvertJSONtoExcel");
 const path = require("path");
+const { redisClient } = require("../../../config/redis");
 
 require("dotenv").config();
 
@@ -42,11 +43,25 @@ class projectController {
 
   static projectInsert = async (req, res) => {
     console.log("=== Project Insert API Called ===");
-    console.log("Headers:", req.headers);
-    console.log("Body keys:", Object.keys(req.body));
-    console.log("Files keys:", req.files ? Object.keys(req.files) : "No files");
-    
     try {
+      if (redisClient.isOpen) {
+        await Promise.all([
+          redisClient.del("homepage_data"),
+          redisClient.del("project_trending"),
+          redisClient.del("project_view_all"),
+          redisClient.del("project_scoplots"),
+          redisClient.del("project_commercial"),
+          redisClient.del("project_farmhouse"),
+          redisClient.del("project_luxury"),
+          redisClient.del("project_spotlight"),
+          redisClient.del("project_featured"),
+          redisClient.del("project_upcoming"),
+          redisClient.del("project_affordable"),
+          redisClient.del("project_allupcoming"),
+          redisClient.del("project_budget_homes")
+        ]);
+        console.log("🧹 Redis Cache Purged: all project caches (New Project)");
+      }
       const {
         projectName,
         state,
@@ -467,6 +482,24 @@ class projectController {
   static projectUpdate = async (req, res) => {
     console.log("hello");
     try {
+      if (redisClient.isOpen) {
+        await Promise.all([
+          redisClient.del("homepage_data"),
+          redisClient.del("project_trending"),
+          redisClient.del("project_view_all"),
+          redisClient.del("project_scoplots"),
+          redisClient.del("project_commercial"),
+          redisClient.del("project_farmhouse"),
+          redisClient.del("project_luxury"),
+          redisClient.del("project_spotlight"),
+          redisClient.del("project_featured"),
+          redisClient.del("project_upcoming"),
+          redisClient.del("project_affordable"),
+          redisClient.del("project_allupcoming"),
+          redisClient.del("project_budget_homes")
+        ]);
+        console.log("🧹 Redis Cache Purged: all project caches (Project Update)");
+      }
       const {
         logo,
         thumbnailImage,
@@ -690,16 +723,26 @@ class projectController {
 
   //findAll
   static projectviewAll = async (req, res) => {
+    const cacheKey = "project_view_all";
     try {
-      let data = cache.get("projectData");
-
-      if (!data) {
-        data = await fetchDataFromDatabase();
-        const expirationTime = 10 * 60 * 1000;
-        cache.put("projectData", data, expirationTime);
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_view_all");
+          return res.status(200).json({
+            message: "All project data retrieved from cache!",
+            data: JSON.parse(cachedData),
+          });
+        }
       }
 
+      let data = await fetchDataFromDatabase();
+
       if (data && data.length > 0) {
+        if (redisClient.isOpen) {
+          await redisClient.setEx(cacheKey, 600, JSON.stringify(data)); // 10 minutes
+          console.log("💾 Project view all data cached in Redis");
+        }
         return res.status(200).json({
           message: "All project data retrieved successfully!",
           data,
@@ -719,6 +762,24 @@ class projectController {
 
   static toggleProjectVisibility = async (req, res) => {
     try {
+      if (redisClient.isOpen) {
+        await Promise.all([
+          redisClient.del("homepage_data"),
+          redisClient.del("project_trending"),
+          redisClient.del("project_view_all"),
+          redisClient.del("project_scoplots"),
+          redisClient.del("project_commercial"),
+          redisClient.del("project_farmhouse"),
+          redisClient.del("project_luxury"),
+          redisClient.del("project_spotlight"),
+          redisClient.del("project_featured"),
+          redisClient.del("project_upcoming"),
+          redisClient.del("project_affordable"),
+          redisClient.del("project_allupcoming"),
+          redisClient.del("project_budget_homes")
+        ]);
+        console.log("🧹 Redis Cache Purged: all project caches (Visibility Toggle)");
+      }
       const id = req.params.id;
 
       if (!isValidObjectId(id)) {
@@ -743,6 +804,10 @@ class projectController {
 
       await project.save();
 
+      if (redisClient.isOpen) {
+        await redisClient.del("project_view_all");
+        console.log("🧹 Redis Cache Purged: project_view_all (Visibility Toggle)");
+      }
       cache.clear();
 
       return res.status(200).json({
@@ -981,6 +1046,24 @@ class projectController {
   static projectDelete = async (req, res) => {
     // console.log("helo")
     try {
+      if (redisClient.isOpen) {
+        await Promise.all([
+          redisClient.del("homepage_data"),
+          redisClient.del("project_trending"),
+          redisClient.del("project_view_all"),
+          redisClient.del("project_scoplots"),
+          redisClient.del("project_commercial"),
+          redisClient.del("project_farmhouse"),
+          redisClient.del("project_luxury"),
+          redisClient.del("project_spotlight"),
+          redisClient.del("project_featured"),
+          redisClient.del("project_upcoming"),
+          redisClient.del("project_affordable"),
+          redisClient.del("project_allupcoming"),
+          redisClient.del("project_budget_homes")
+        ]);
+        console.log("🧹 Redis Cache Purged: all project caches (Project Deletion)");
+      }
       const id = req.params.id;
       const data_id = await ProjectModel.findById({ _id: id });
 
@@ -1047,12 +1130,30 @@ class projectController {
   };
   //project find trending data
   static project_spotlight = async (req, res) => {
-    // console.log("hello")
+    const cacheKey = "project_spotlight";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_spotlight");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const data = await ProjectModel.find({
         spotlight: "True",
         isHidden: { $ne: true },
       });
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1065,12 +1166,30 @@ class projectController {
     }
   };
   static project_luxury = async (req, res) => {
-    // console.log("hello")
+    const cacheKey = "project_luxury";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_luxury");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const data = await ProjectModel.find({
         luxury: "True",
         isHidden: { $ne: true },
       }).limit(8);
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1083,50 +1202,29 @@ class projectController {
     }
   };
   static project_trending = async (req, res) => {
-    // console.log("hello")
+    const cacheKey = "project_trending";
     try {
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_trending");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const data = await ProjectModel.find({
         projectOverview: "trending",
         isHidden: { $ne: true },
       }).limit(8);
-      return res.status(200).json({
-        message: "data get successfully !",
-        data,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "internal server error ! ",
-      });
-    }
-  };
-  // project find featured data
-  static project_featured = async (req, res) => {
-    // console.log("hello")
-    try {
-      const data = await ProjectModel.find({
-        projectOverview: "featured",
-        isHidden: { $ne: true },
-      });
-      return res.status(200).json({
-        message: "data get successfully !",
-        data,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "internal server error ! ",
-      });
-    }
-  };
-  static project_City = async (req, res) => {
-    // console.log("delhi")
-    try {
-      const data = await ProjectModel.find({
-        city: "Delhi",
-        projectOverview: "delhi",
-        isHidden: { $ne: true },
-      }).limit(4);
+
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data));
+        console.log("💾 Project trending data cached in Redis");
+      }
+
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1138,13 +1236,171 @@ class projectController {
       });
     }
   };
-  static project_Upcoming = async (req, res) => {
-    // console.log("hello")
+
+  static getHomepageData = async (req, res) => {
+    const cacheKey = "homepage_data";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: homepage_data");
+          return res.status(200).json({
+            message: "Homepage data fetched from cache",
+            data: JSON.parse(cachedData)
+          });
+        }
+      }
+
+      console.log("📦 Redis Cache Miss: Fetching from MongoDB");
+      const projection = {
+        projectName: 1,
+        project_url: 1,
+        minPrice: 1,
+        maxPrice: 1,
+        projectAddress: 1,
+        type: 1,
+        thumbnailImage: 1,
+        city: 1,
+        state: 1,
+        projectOverview: 1,
+        project_Status: 1
+      };
+
+      const [featured, trending, luxury, budget, sco, commercial, upcoming, farmhouse] = await Promise.all([
+        ProjectModel.find({ projectOverview: "featured", isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ isTrending: true, isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ luxury: "luxury", isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ minPrice: { $lte: "5000000" }, isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ type: "SCO Plots", isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ type: "Commercial", isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ projectOverview: "upcoming", isHidden: { $ne: true } }, projection).limit(8).lean(),
+        ProjectModel.find({ type: "farmhouse", isHidden: { $ne: true } }, projection).limit(8).lean()
+      ]);
+
+      const homepageData = {
+        featured,
+        trending,
+        luxury,
+        budget,
+        sco,
+        commercial,
+        upcoming,
+        farmhouse
+      };
+
+      // Store in Redis for 5 minutes (300 seconds)
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(homepageData));
+        console.log("💾 Homepage data cached in Redis");
+      }
+
+      return res.status(200).json({
+        message: "Homepage data fetched successfully",
+        data: homepageData
+      });
+    } catch (error) {
+      console.error("Error in getHomepageData:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static project_farmhouse = async (req, res) => {
+    const cacheKey = "project_farmhouse";
+    try {
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_farmhouse");
+          return res.status(200).json({
+            message: "Farmhouse data fetched from cache",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
+      const data = await ProjectModel.find({
+        type: "Farm House",
+        isHidden: { $ne: true },
+      });
+
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data));
+        console.log("💾 Project farmhouse data cached in Redis");
+      }
+
+      return res.status(200).json({
+        message: "Farmhouse data fetched successfully",
+        data,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static project_featured = async (req, res) => {
+    const cacheKey = "project_featured";
+    try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_featured");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
+      const data = await ProjectModel.find({
+        projectOverview: "featured",
+        isHidden: { $ne: true },
+      });
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
+      return res.status(200).json({
+        message: "data get successfully !",
+        data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal server error !",
+      });
+    }
+  };
+
+  static project_Upcoming = async (req, res) => {
+    const cacheKey = "project_upcoming";
+    try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_upcoming");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const data = await ProjectModel.find({
         projectOverview: "upcoming",
         isHidden: { $ne: true },
       });
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1157,18 +1413,35 @@ class projectController {
     }
   };
   static projectAffordable = async (req, res) => {
+    const cacheKey = "project_affordable";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_affordable");
+          return res.status(200).json({
+            message: "data get successfully from cache ! ",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const affordable = "Affordable Homes";
       const data = await ProjectModel.find({
         type: affordable,
         isHidden: { $ne: true },
       });
-      //  console.log(data)
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
@@ -1178,12 +1451,30 @@ class projectController {
   };
 
   static project_allupcoming = async (req, res) => {
-    // console.log("hello")
+    const cacheKey = "project_allupcoming";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_allupcoming");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const data = await ProjectModel.find({
         project_Status: "comingsoon",
         isHidden: { $ne: true },
       });
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully !",
         data,
@@ -1196,18 +1487,34 @@ class projectController {
     }
   };
   static projectSCOplots = async (req, res) => {
+    const cacheKey = "project_scoplots";
     try {
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_scoplots");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const SCOplots = "SCO Plots";
       const data = await ProjectModel.find({
         type: SCOplots,
         isHidden: { $ne: true },
       });
-      //  console.log(data)
+
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data));
+        console.log("💾 Project scoplots data cached in Redis");
+      }
+
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
@@ -1215,19 +1522,36 @@ class projectController {
       });
     }
   };
+
   static project_commercial = async (req, res) => {
+    const cacheKey = "project_commercial";
     try {
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_commercial");
+          return res.status(200).json({
+            message: "data get successfully from cache !",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const CommercialProperty = "Commercial Property";
       const data = await ProjectModel.find({
         type: CommercialProperty,
         isHidden: { $ne: true },
       });
-      //  console.log(data)
+
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data));
+        console.log("💾 Project commercial data cached in Redis");
+      }
+
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({
@@ -1236,18 +1560,35 @@ class projectController {
     }
   };
   static project_budgetHomes = async (req, res) => {
+    const cacheKey = "project_budget_homes";
     try {
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_budget_homes");
+          return res.status(200).json({
+            message: "data get successfully from cache ! ",
+            data: JSON.parse(cachedData),
+          });
+        }
+      }
+
       const BudgetProperty = ["M3M Antalya Hills","ROF Pravasa","Signature Global City 81","M3M Soulitude"];
       const data = await ProjectModel.find({
         projectName: { $in: BudgetProperty },
         isHidden: { $ne: true },
       });
-      //  console.log(data)
+
+      // Cache the data in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(data)); // 5 minutes
+      }
+
       return res.status(200).json({
         message: "data get successfully ! ",
         data,
       });
-      // res.send(data)
     } catch (error) {
       console.log(error);
       return res.status(500).json({

@@ -1,5 +1,6 @@
 const SmallBanner = require('../../models/SmallBanner');
 const { uploadToS3 } = require('../../aws/s3Helper');
+const { redisClient } = require('../../config/redis');
 
 class SmallBannerController {
   // Get all small banners (admin)
@@ -25,14 +26,32 @@ class SmallBannerController {
   // Get active small banners (public)
   static getActiveSmallBanners = async (req, res) => {
     try {
+      const cacheKey = "small_banners_active";
+      
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: small_banners_active");
+          return res.status(200).json(JSON.parse(cachedData));
+        }
+      }
+      
       const banners = await SmallBanner.find({ isActive: true })
         .sort({ order: 1, createdAt: -1 })
         .select('-uploadedBy -__v');
       
-      res.status(200).json({
+      const response = {
         success: true,
         banners
-      });
+      };
+      
+      // Cache the response in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 600, JSON.stringify(response)); // 10 minutes
+      }
+      
+      res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching active small banners:', error);
       res.status(500).json({
@@ -137,6 +156,12 @@ class SmallBannerController {
       });
 
       await newSmallBanner.save();
+      
+      // Invalidate small banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("small_banners_active");
+        console.log("🧹 Redis Cache Purged: small_banners_active (New Banner)");
+      }
 
       res.status(201).json({
         success: true,
@@ -194,6 +219,12 @@ class SmallBannerController {
       }
 
       await smallBanner.save();
+      
+      // Invalidate small banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("small_banners_active");
+        console.log("🧹 Redis Cache Purged: small_banners_active (Banner Update)");
+      }
 
       res.status(200).json({
         success: true,
@@ -223,6 +254,12 @@ class SmallBannerController {
       }
 
       await SmallBanner.findByIdAndDelete(id);
+      
+      // Invalidate small banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("small_banners_active");
+        console.log("🧹 Redis Cache Purged: small_banners_active (Banner Delete)");
+      }
 
       res.status(200).json({
         success: true,
@@ -252,6 +289,12 @@ class SmallBannerController {
 
       smallBanner.isActive = !smallBanner.isActive;
       await smallBanner.save();
+      
+      // Invalidate small banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("small_banners_active");
+        console.log("🧹 Redis Cache Purged: small_banners_active (Banner Status Toggle)");
+      }
 
       res.status(200).json({
         success: true,

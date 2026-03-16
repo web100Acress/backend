@@ -1,5 +1,6 @@
 const Banner = require('../../models/Banner');
 const { uploadFile } = require('../../Utilities/s3HelperUtility');
+const { redisClient } = require('../../config/redis');
 
 class BannerController {
   // Get all banners (admin view)
@@ -25,14 +26,32 @@ class BannerController {
   // Get active banners (public view)
   static getActiveBanners = async (req, res) => {
     try {
+      const cacheKey = "banners_active";
+      
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: banners_active");
+          return res.status(200).json(JSON.parse(cachedData));
+        }
+      }
+      
       const banners = await Banner.find({ isActive: true })
         .sort({ order: 1, createdAt: -1 })
         .select('-uploadedBy -__v');
       
-      res.status(200).json({
+      const response = {
         success: true,
         banners
-      });
+      };
+      
+      // Cache the response in Redis
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 600, JSON.stringify(response)); // 10 minutes
+      }
+      
+      res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching active banners:', error);
       res.status(500).json({
@@ -139,6 +158,12 @@ class BannerController {
       });
 
       await banner.save();
+      
+      // Invalidate banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("banners_active");
+        console.log("🧹 Redis Cache Purged: banners_active (New Banner)");
+      }
 
       res.status(201).json({
         success: true,
@@ -249,6 +274,12 @@ class BannerController {
       }
 
       await banner.save();
+      
+      // Invalidate banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("banners_active");
+        console.log("🧹 Redis Cache Purged: banners_active (Banner Update)");
+      }
 
       res.status(200).json({
         success: true,
@@ -281,6 +312,12 @@ class BannerController {
 
       banner.isActive = isActive === 'true' || isActive === true;
       await banner.save();
+      
+      // Invalidate banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("banners_active");
+        console.log("🧹 Redis Cache Purged: banners_active (Banner Status Toggle)");
+      }
 
       res.status(200).json({
         success: true,
@@ -314,6 +351,12 @@ class BannerController {
       // For now, we'll just delete the database record
       
       await Banner.findByIdAndDelete(id);
+      
+      // Invalidate banners cache
+      if (redisClient.isOpen) {
+        await redisClient.del("banners_active");
+        console.log("🧹 Redis Cache Purged: banners_active (Banner Delete)");
+      }
 
       res.status(200).json({
         success: true,

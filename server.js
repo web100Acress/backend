@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const errorHandler = require("./middleware/errorMiddleware");
+const { connectRedis } = require("./config/redis");
 const uploadLimits = require("./config/uploadLimits");
 const PostUser = require("./models/postProperty/post");
 const { sendEmail } = require("./Utilities/s3HelperUtility");
@@ -22,33 +23,63 @@ const app = express();
 const cache = new Map();
 const MAX_CACHE_SIZE = 1000; // Limit cache size for production
 
+const { redisClient } = require("./config/redis");
+
 const cacheMiddleware = (duration = 30000) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
+    // Skip caching for non-GET requests
+    if (req.method !== 'GET') return next();
+
     // Normalize cache key - remove timestamp parameters to prevent cache bypass
     const originalUrl = req.originalUrl || req.url;
-    const normalizedUrl = originalUrl.replace(/[?&]_t=\d+/g, ''); // Remove _t=timestamp
-    const key = normalizedUrl;
+    const normalizedUrl = originalUrl.replace(/[?&]_t=\d+/g, '');
+    const key = `api_cache:${normalizedUrl}`;
     
-    const cached = cache.get(key);
-    
-    if (cached && (Date.now() - cached.timestamp < duration)) {
-      console.log(`🚀 Cache hit for: ${key}`);
-      return res.json(cached.data);
+    try {
+      // Try Redis first
+      if (redisClient.isOpen) {
+        const cached = await redisClient.get(key);
+        if (cached) {
+          console.log(`⚡ Redis hit for: ${key}`);
+          return res.json(JSON.parse(cached));
+        }
+      } else {
+        // Fallback to in-memory cache if Redis is down
+        const cached = cache.get(key);
+        if (cached && (Date.now() - cached.timestamp < duration)) {
+          console.log(`🚀 In-memory hit for: ${key}`);
+          return res.json(cached.data);
+        }
+      }
+    } catch (err) {
+      console.error('Cache middleware error:', err);
     }
     
     // Override res.json to cache the response
     const originalJson = res.json;
     res.json = function(data) {
-      // Prevent cache from growing too large
-      if (cache.size >= MAX_CACHE_SIZE) {
-        // Delete oldest entry (simple FIFO)
-        const firstKey = cache.keys().next().value;
-        cache.delete(firstKey);
-      }
+      const self = this;
       
-      cache.set(key, { data, timestamp: Date.now() });
-      console.log(`📦 Cached response for: ${key} (Cache size: ${cache.size})`);
-      return originalJson.call(this, data);
+      // Async cache storage
+      (async () => {
+        try {
+          if (redisClient.isOpen) {
+            await redisClient.setEx(key, Math.floor(duration / 1000), JSON.stringify(data));
+            console.log(`💾 Redis cached: ${key}`);
+          } else {
+            if (cache.size >= MAX_CACHE_SIZE) {
+              const firstKey = cache.keys().next().value;
+              cache.delete(firstKey);
+            }
+            cache.set(key, { data, timestamp: Date.now() });
+            console.log(`📦 In-memory cached: ${key}`);
+          }
+        } catch (err) {
+          console.error('Failed to store in cache:', err);
+        }
+      })();
+      
+      return originalJson.call(self, data);
     };
     
     next();
@@ -72,6 +103,7 @@ setInterval(() => {
 
 // Load environment variables BEFORE using them
 require("dotenv").config();
+connectRedis();
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
