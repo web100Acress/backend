@@ -18,22 +18,65 @@ const { redisClient } = require("../../../config/redis");
 require("dotenv").config();
 
 
-const fetchDataFromDatabase = async () => {
+const fetchDataFromDatabase = async (page = 1, limit = 20) => {
   try {
-    const limit = 50; // Split into more chunks
-    const dataPromises = [];
-    for (let i = 0; i < 10; i++) {
-      dataPromises.push(
-        ProjectModel.find()
-          .skip(i * limit)
-          .limit(limit)
-          .lean(),
-      );
-    }
-    const dataArrays = await Promise.all(dataPromises);
-    const data = [].concat(...dataArrays);
-    return data;
+    // Optimized query with pagination and projection
+    const skip = (page - 1) * limit;
+    
+    // Only select essential fields for list view
+    const projection = {
+      projectName: 1,
+      project_url: 1,
+      city: 1,
+      state: 1,
+      type: 1,
+      minPrice: 1,
+      maxPrice: 1,
+      projectOverview: 1,
+      luxury: 1,
+      spotlight: 1,
+      frontImage: 1,
+      thumbnailImage: 1,
+      projectAddress: 1,
+      isHidden: 1,
+      createdAt: 1,
+      // Exclude heavy fields like descriptions, galleries, etc.
+      project_discripation: 0,
+      projectGallery: 0,
+      project_floorplan_Image: 0,
+      projectMaster_plan: 0,
+      projectRedefine_Connectivity: 0,
+      projectRedefine_Education: 0,
+      projectRedefine_Business: 0,
+      projectRedefine_Entertainment: 0,
+      Amenities: 0,
+      BhK_Details: 0,
+      paymentPlan: 0
+    };
+    
+    const data = await ProjectModel.find({ isHidden: { $ne: true } })
+      .select(projection)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+      
+    // Get total count for pagination info
+    const total = await ProjectModel.countDocuments({ isHidden: { $ne: true } });
+    
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: limit,
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1
+      }
+    };
   } catch (error) {
+    console.error('Database query error:', error);
     throw error;
   }
 };
@@ -48,6 +91,13 @@ class ProjectController {
         await redisClient.del(keys);
         console.log(`🧹 Cleared ${keys.length} project search cache keys`);
       }
+      
+      // Clear all paginated project_view_all cache keys
+      const viewAllKeys = await redisClient.keys("project_view_all:*");
+      if (viewAllKeys.length > 0) {
+        await redisClient.del(viewAllKeys);
+        console.log(`🧹 Cleared ${viewAllKeys.length} project view all cache keys`);
+      }
     } catch (error) {
       console.error("Error clearing project search cache:", error);
     }
@@ -58,11 +108,10 @@ class ProjectController {
     console.log("=== Project Insert API Called ===");
     try {
       if (redisClient.isOpen) {
-        // Clear basic cache keys
+        // Clear basic cache keys (excluding project_view_all which is handled by clearProjectSearchCache)
         await Promise.all([
           redisClient.del("homepage_data"),
           redisClient.del("project_trending"),
-          redisClient.del("project_view_all"),
           redisClient.del("project_scoplots"),
           redisClient.del("project_commercial"),
           redisClient.del("project_farmhouse"),
@@ -744,41 +793,60 @@ class ProjectController {
     }
   };
 
-  //findAll
+  //findAll with pagination
   static projectviewAll = async (req, res) => {
-    const cacheKey = "project_view_all";
+    const cacheKey = `project_view_all:${req.query.page || 1}:${req.query.limit || 20}`;
     try {
       if (redisClient.isOpen) {
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
-          console.log("⚡ Redis Cache Hit: project_view_all");
+          console.log("⚡ Redis Cache Hit: projectviewAll");
           return res.status(200).json({
             message: "All project data retrieved from cache!",
-            data: JSON.parse(cachedData),
+            ...JSON.parse(cachedData),
           });
         }
       }
 
-      let data = await fetchDataFromDatabase();
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      
+      // Validate limit
+      if (limit > 100) {
+        return res.status(400).json({
+          message: "Limit cannot exceed 100 items per page"
+        });
+      }
 
-      if (data && data.length > 0) {
+      const result = await fetchDataFromDatabase(page, limit);
+
+      if (result && result.data && result.data.length > 0) {
         if (redisClient.isOpen) {
-          await redisClient.setEx(cacheKey, 600, JSON.stringify(data)); // 10 minutes
+          await redisClient.setEx(cacheKey, 300, JSON.stringify(result)); // 5 minutes for paginated data
           console.log("💾 Project view all data cached in Redis");
         }
         return res.status(200).json({
           message: "All project data retrieved successfully!",
-          data,
+          data: result.data,
+          pagination: result.pagination
         });
       }
 
       return res.status(404).json({
         message: "No data found!",
+        data: [],
+        pagination: {
+          currentPage: page,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: limit
+        }
       });
     } catch (error) {
-      console.log(error);
+      console.error('projectviewAll error:', error);
       return res.status(500).json({
         message: "Internal server error!",
+        error: error.message
       });
     }
   };
@@ -2642,7 +2710,7 @@ class ProjectController {
   };
 }
 
-module.exports = projectController;
+module.exports = ProjectController;
 
 // const data=await ProjectModel.findOne()
 // const query = { city:"delhi" };
