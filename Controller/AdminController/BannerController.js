@@ -61,7 +61,7 @@ class BannerController {
     }
   };
 
-  // Upload new banner
+ 
   static uploadBanner = async (req, res) => {
     try {
       const { title, subtitle, slug, isActive, order } = req.body;

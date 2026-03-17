@@ -38,13 +38,27 @@ const fetchDataFromDatabase = async () => {
   }
 };
 
-class projectController {
+class ProjectController {
+  // Helper method to clear all project search cache keys
+  static async clearProjectSearchCache(redisClient) {
+    try {
+      // Get all keys matching the project_search pattern
+      const keys = await redisClient.keys("project_search:*");
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+        console.log(`🧹 Cleared ${keys.length} project search cache keys`);
+      }
+    } catch (error) {
+      console.error("Error clearing project search cache:", error);
+    }
+  }
   // Project data insert api
 
   static projectInsert = async (req, res) => {
     console.log("=== Project Insert API Called ===");
     try {
       if (redisClient.isOpen) {
+        // Clear basic cache keys
         await Promise.all([
           redisClient.del("homepage_data"),
           redisClient.del("project_trending"),
@@ -60,6 +74,10 @@ class projectController {
           redisClient.del("project_allupcoming"),
           redisClient.del("project_budget_homes")
         ]);
+        
+        // Clear all project search cache keys
+        await ProjectController.clearProjectSearchCache(redisClient);
+        
         console.log("🧹 Redis Cache Purged: all project caches (New Project)");
       }
       const {
@@ -483,6 +501,7 @@ class projectController {
     console.log("hello");
     try {
       if (redisClient.isOpen) {
+        // Clear basic cache keys
         await Promise.all([
           redisClient.del("homepage_data"),
           redisClient.del("project_trending"),
@@ -498,6 +517,10 @@ class projectController {
           redisClient.del("project_allupcoming"),
           redisClient.del("project_budget_homes")
         ]);
+        
+        // Clear all project search cache keys
+        await ProjectController.clearProjectSearchCache(redisClient);
+        
         console.log("🧹 Redis Cache Purged: all project caches (Project Update)");
       }
       const {
@@ -763,6 +786,7 @@ class projectController {
   static toggleProjectVisibility = async (req, res) => {
     try {
       if (redisClient.isOpen) {
+        // Clear basic cache keys
         await Promise.all([
           redisClient.del("homepage_data"),
           redisClient.del("project_trending"),
@@ -778,6 +802,10 @@ class projectController {
           redisClient.del("project_allupcoming"),
           redisClient.del("project_budget_homes")
         ]);
+        
+        // Clear all project search cache keys
+        await ProjectController.clearProjectSearchCache(redisClient);
+        
         console.log("🧹 Redis Cache Purged: all project caches (Visibility Toggle)");
       }
       const id = req.params.id;
@@ -964,18 +992,22 @@ class projectController {
       if(newlaunch === "1") query.$or = [{project_Status:"newlunch"}, {project_Status:"newlaunch"}];
       if(dlfsco === "1") query.$and = [{builderName:"DLF Homes"},{type:"SCO Plots"}];
 
-      const cacheKey = JSON.stringify({
+      const cacheKey = `project_search:${JSON.stringify({
         query,
         page: parseInt(page),
         limit: parseInt(limit),
         sort: sort || '-createdAt'
-      });
+      })}`;
 
-      const cachedResult = cache.get(cacheKey);
-
-      if (cachedResult) {
-        return res.status(200).json(cachedResult);
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_search");
+          return res.status(200).json(JSON.parse(cachedData));
+        }
       }
+      console.log("📦 Redis Cache Miss: Fetching project_search from MongoDB");
 
       const options = {
         skip: (parseInt(page) - 1) * parseInt(limit),
@@ -1015,7 +1047,11 @@ class projectController {
         totalPages: Math.ceil(total / parseInt(limit)),
       };
 
-      cache.put(cacheKey, response, 300000);
+      // Cache the data in Redis for 5 minutes (300 seconds)
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+        console.log("💾 Project search data cached in Redis");
+      }
 
       return res.status(200).json(response);
 
@@ -1047,6 +1083,7 @@ class projectController {
     // console.log("helo")
     try {
       if (redisClient.isOpen) {
+        // Clear basic cache keys
         await Promise.all([
           redisClient.del("homepage_data"),
           redisClient.del("project_trending"),
@@ -1062,6 +1099,10 @@ class projectController {
           redisClient.del("project_allupcoming"),
           redisClient.del("project_budget_homes")
         ]);
+        
+        // Clear all project search cache keys
+        await ProjectController.clearProjectSearchCache(redisClient);
+        
         console.log("🧹 Redis Cache Purged: all project caches (Project Deletion)");
       }
       const id = req.params.id;
