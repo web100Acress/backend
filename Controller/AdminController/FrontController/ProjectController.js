@@ -2907,7 +2907,7 @@ class ProjectController {
   };
 }
 
-module.exports = projectController;
+module.exports = ProjectController;
 
 // const data=await ProjectModel.findOne()
 // const query = { city:"delhi" };
