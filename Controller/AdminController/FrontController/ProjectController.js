@@ -2911,7 +2911,7 @@ module.exports = projectController;
 
 
 
-// const query = { city:"delhi" };
+
 
 //     const countCanada = await ProjectModel. countDocuments(query);
 //     console.log(countCanada)
