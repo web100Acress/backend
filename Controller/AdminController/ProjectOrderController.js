@@ -193,6 +193,6 @@ class ProjectOrderController {
   };
 }
 
-module.exports = ProjectOrderController;
+module.exports = projectOrderController;
 
 
