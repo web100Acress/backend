@@ -183,6 +183,8 @@ router.get("/api/project-orders", ProjectOrderController.getAllProjectOrdersForS
 // Property Order
 // searching rent and buy
 router.get("/property/search/:key", homeController.search);
+// Fast real-time keyword search with Redis caching
+router.get("/fast-search", homeController.fastKeywordSearch);
 //searching buy
 // router.get("/buyproperty/search/:key", homeController.search_buy);
 //searching rent
