@@ -2909,7 +2909,8 @@ class ProjectController {
 
 module.exports = projectController;
 
-// const data=await ProjectModel.findOne()
+
+
 // const query = { city:"delhi" };
 
 //     const countCanada = await ProjectModel. countDocuments(query);
