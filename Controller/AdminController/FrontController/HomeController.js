@@ -9,6 +9,7 @@ const UserModel = require("../../../models/projectDetail/user");
 const nodemailer = require("nodemailer");
 const LeadModel = require("../../../models/projectDetail/website");
 const cache = require("memory-cache");
+const { redisClient } = require("../../../config/redis");
 const tarnsporter = nodemailer.createTransport({
   service: "gmail",
   port: 465,
@@ -22,7 +23,7 @@ const tarnsporter = nodemailer.createTransport({
   },
 });
 class homeController {
-  // search in buy and rent
+  // search in buy and rent with Redis caching
   static search = async (req, res) => {
     const searchTerm = req.params.key;
     if (!searchTerm) {
@@ -34,12 +35,28 @@ class homeController {
     // Generate a unique cache key for the search term
     const cacheKey = `findData:${searchTerm}`;
 
-    // Check if the data is in cache
-    const cachedData = await cache.get(cacheKey);
-    if (cachedData) {
+    // Check if the data is in Redis cache first
+    if (redisClient.isOpen) {
+      try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log(`🎯 Redis cache hit for search: ${searchTerm}`);
+          return res.status(200).json({
+            message: "Data found in Redis cache!",
+            searchdata: JSON.parse(cachedData),
+          });
+        }
+      } catch (error) {
+        console.log("Redis cache check failed, falling back to memory cache");
+      }
+    }
+
+    // Fallback to memory cache
+    const memoryCachedData = await cache.get(cacheKey);
+    if (memoryCachedData) {
       return res.status(200).json({
-        message: "Data found in cache!",
-        searchdata: JSON.parse(cachedData),
+        message: "Data found in memory cache!",
+        searchdata: JSON.parse(memoryCachedData),
       });
     }
 
@@ -53,8 +70,20 @@ class homeController {
 
       // Cache the results if found
       if (searchResults.length > 0) {
+        // Cache in Redis for 3 minutes (180 seconds)
+        if (redisClient.isOpen) {
+          try {
+            await redisClient.setEx(cacheKey, 180, JSON.stringify(searchResults));
+            console.log(`💾 Search results cached in Redis for: ${searchTerm}`);
+          } catch (error) {
+            console.log("Redis caching failed, using memory cache");
+          }
+        }
+        
+        // Fallback to memory cache
         const time = 3 * 60 * 1000; // Cache for 3 minutes
         cache.put(cacheKey, JSON.stringify(searchResults), time);
+        
         return res.status(200).json({
           message: "Data found-1!",
           searchdata: searchResults,
@@ -76,8 +105,20 @@ class homeController {
 
         // Cache the results from regex search
         if (combinedResults.length > 0) {
+          // Cache in Redis for 3 minutes
+          if (redisClient.isOpen) {
+            try {
+              await redisClient.setEx(cacheKey, 180, JSON.stringify(combinedResults));
+              console.log(`💾 Regex search results cached in Redis for: ${searchTerm}`);
+            } catch (error) {
+              console.log("Redis caching failed, using memory cache");
+            }
+          }
+          
+          // Fallback to memory cache
           const time = 3 * 60 * 1000; // Cache for 3 minutes
           cache.put(cacheKey, JSON.stringify(combinedResults), time);
+          
           return res.status(200).json({
             message: "Data found-2!",
             searchdata: combinedResults,
@@ -89,6 +130,118 @@ class homeController {
     } catch (error) {
       console.error("Search error:", error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Fast real-time keyword search with Redis caching - Projects First, Then Properties
+  static fastKeywordSearch = async (req, res) => {
+    try {
+      const { keyword, limit = 20 } = req.query;
+      
+      if (!keyword || keyword.trim().length < 2) {
+        return res.status(200).json({
+          message: "Keyword too short!",
+          results: [],
+          total: 0
+        });
+      }
+
+      const cacheKey = `fast_search:${keyword.toLowerCase()}:${limit}`;
+      
+      // Check Redis cache first
+      if (redisClient.isOpen) {
+        try {
+          const cachedData = await redisClient.get(cacheKey);
+          if (cachedData) {
+            console.log(`⚡ Fast search cache hit for: ${keyword}`);
+            return res.status(200).json(JSON.parse(cachedData));
+          }
+        } catch (error) {
+          console.log("Redis cache check failed for fast search");
+        }
+      }
+
+      // Enhanced multi-field search with regex
+      const searchRegex = new RegExp(keyword, 'i');
+      const projectSearchQuery = {
+        $or: [
+          { projectName: searchRegex },
+          { city: searchRegex },
+          { state: searchRegex },
+          { builderName: searchRegex },
+          { projectAddress: searchRegex },
+          { type: searchRegex },
+          { projectOverview: searchRegex },
+          { project_discripation: searchRegex }
+        ],
+        isHidden: false
+      };
+
+      // Use exclusion projection for faster response
+      const projects = await ProjectModel.find(projectSearchQuery)
+        .select('-projectGallery -project_floorplan_Image -projectMaster_plan -projectRedefine_connectivity -projectRedefine_education -projectRedefine_business -Amenities -BhK_Details -paymentPlan')
+        .limit(parseInt(limit))
+        .sort({ projectName: 1 })
+        .lean();
+
+      // Now search for properties (Buy/Rent) if we still have room in limit
+      let properties = [];
+      const remainingLimit = parseInt(limit) - projects.length;
+      
+      if (remainingLimit > 0) {
+        const propertySearchQuery = {
+          $or: [
+            { "postProperty.projectName": searchRegex },
+            { "postProperty.city": searchRegex },
+            { "postProperty.state": searchRegex },
+            { "postProperty.propertyAddress": searchRegex },
+            { "postProperty.propertyType": searchRegex },
+            { "postProperty.description": searchRegex }
+          ],
+          "postProperty.verify": "verified"
+        };
+
+        properties = await postPropertyModel.find(propertySearchQuery)
+          .limit(remainingLimit)
+          .sort({ "postProperty.projectName": 1 })
+          .lean();
+      }
+
+      // Combine results: Projects first, then Properties
+      const allResults = [
+        ...projects.map(p => ({ ...p, resultType: 'project' })),
+        ...properties.map(p => ({ ...p, resultType: 'property' }))
+      ];
+
+      const response = {
+        message: `Found ${allResults.length} results matching "${keyword}" (${projects.length} projects, ${properties.length} properties)`,
+        results: allResults,
+        total: allResults.length,
+        projects: projects.length,
+        properties: properties.length,
+        keyword: keyword,
+        cached: false
+      };
+
+      // Cache in Redis for 5 minutes
+      if (redisClient.isOpen) {
+        try {
+          await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+          console.log(`⚡ Fast search cached for: ${keyword} (${allResults.length} results)`);
+        } catch (error) {
+          console.log("Redis caching failed for fast search");
+        }
+      }
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+      console.error("Fast keyword search error:", error);
+      return res.status(500).json({ 
+        message: "Internal server error!",
+        results: [],
+        total: 0
+      });
     }
   };
 

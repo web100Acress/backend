@@ -64,6 +64,8 @@ router.get("/commercial", projectController.project_commercial);
 router.get("/budgethomes", projectController.project_budgetHomes); 
 router.get("/comingsoon", projectController.project_allupcoming);
 router.get("/projectsearch", projectController.projectSearch);
+router.get("/keyword-search", projectController.projectKeywordSearch);
+router.get("/all-projects", projectController.getAllProjectsForAdmin);
 router.get("/category", projectController.getProjectsByCategory);
 router.get("/suggested", projectController.project_featured); // Suggested projects (reuse featured logic)
 

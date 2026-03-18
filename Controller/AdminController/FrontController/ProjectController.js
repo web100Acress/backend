@@ -23,23 +23,21 @@ const fetchDataFromDatabase = async (page = 1, limit = 20) => {
     // Optimized query with pagination and projection
     const skip = (page - 1) * limit;
     
-    // Only select essential fields for list view
+    // Create cache key for paginated results
+    const cacheKey = `project_view_all:${page}:${limit}`;
+    
+    // Try to get from Redis cache first
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        console.log("⚡ Redis Cache Hit: project_view_all");
+        return JSON.parse(cachedData);
+      }
+    }
+    console.log("📦 Redis Cache Miss: Fetching project_view_all from MongoDB");
+    
+    // Only select essential fields for list view (exclusion mode)
     const projection = {
-      projectName: 1,
-      project_url: 1,
-      city: 1,
-      state: 1,
-      type: 1,
-      minPrice: 1,
-      maxPrice: 1,
-      projectOverview: 1,
-      luxury: 1,
-      spotlight: 1,
-      frontImage: 1,
-      thumbnailImage: 1,
-      projectAddress: 1,
-      isHidden: 1,
-      createdAt: 1,
       // Exclude heavy fields like descriptions, galleries, etc.
       project_discripation: 0,
       projectGallery: 0,
@@ -64,7 +62,7 @@ const fetchDataFromDatabase = async (page = 1, limit = 20) => {
     // Get total count for pagination info
     const total = await ProjectModel.countDocuments({ isHidden: { $ne: true } });
     
-    return {
+    const result = {
       data,
       pagination: {
         currentPage: page,
@@ -75,6 +73,14 @@ const fetchDataFromDatabase = async (page = 1, limit = 20) => {
         hasPrevPage: page > 1
       }
     };
+    
+    // Cache the data in Redis for 10 minutes (600 seconds)
+    if (redisClient.isOpen) {
+      await redisClient.setEx(cacheKey, 600, JSON.stringify(result));
+      console.log("💾 Project view all data cached in Redis");
+    }
+    
+    return result;
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -97,6 +103,34 @@ class ProjectController {
       if (viewAllKeys.length > 0) {
         await redisClient.del(viewAllKeys);
         console.log(`🧹 Cleared ${viewAllKeys.length} project view all cache keys`);
+      }
+      
+      // Clear all keyword search cache keys
+      const keywordKeys = await redisClient.keys("project_keyword_search:*");
+      if (keywordKeys.length > 0) {
+        await redisClient.del(keywordKeys);
+        console.log(`🧹 Cleared ${keywordKeys.length} keyword search cache keys`);
+      }
+      
+      // Clear all fast search cache keys from HomeController
+      const fastSearchKeys = await redisClient.keys("fast_search:*");
+      if (fastSearchKeys.length > 0) {
+        await redisClient.del(fastSearchKeys);
+        console.log(`🧹 Cleared ${fastSearchKeys.length} fast search cache keys`);
+      }
+      
+      // Clear all HomeController findData cache keys
+      const findDataKeys = await redisClient.keys("findData:*");
+      if (findDataKeys.length > 0) {
+        await redisClient.del(findDataKeys);
+        console.log(`🧹 Cleared ${findDataKeys.length} HomeController search cache keys`);
+      }
+      
+      // Clear all projects admin cache
+      const adminKeys = await redisClient.keys("all_projects_admin");
+      if (adminKeys.length > 0) {
+        await redisClient.del(adminKeys);
+        console.log(`🧹 Cleared ${adminKeys.length} admin projects cache keys`);
       }
     } catch (error) {
       console.error("Error clearing project search cache:", error);
@@ -2383,6 +2417,169 @@ class ProjectController {
       return res.status(500).json({ message: "Internal server error !" });
     }
   };
+  // Keyword-based project search
+  static projectKeywordSearch = async (req, res) => {
+    try {
+      const { keyword, page = 1, limit = 20 } = req.query;
+      
+      if (!keyword || keyword.trim() === '') {
+        return res.status(400).json({
+          message: "Keyword is required for search",
+          success: false
+        });
+      }
+      
+      const searchKeyword = keyword.trim();
+      const cacheKey = `project_keyword_search:${searchKeyword}:${page}:${limit}`;
+      
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: project_keyword_search");
+          return res.status(200).json(JSON.parse(cachedData));
+        }
+      }
+      console.log("📦 Redis Cache Miss: Fetching project_keyword_search from MongoDB");
+      
+      // Create search query for keyword matching across multiple fields
+      const searchQuery = {
+        isHidden: { $ne: true },
+        $or: [
+          { projectName: { $regex: searchKeyword, $options: 'i' } },
+          { city: { $regex: searchKeyword, $options: 'i' } },
+          { state: { $regex: searchKeyword, $options: 'i' } },
+          { type: { $regex: searchKeyword, $options: 'i' } },
+          { builderName: { $regex: searchKeyword, $options: 'i' } },
+          { projectAddress: { $regex: searchKeyword, $options: 'i' } },
+          { projectOverview: { $regex: searchKeyword, $options: 'i' } },
+          { project_discripation: { $regex: searchKeyword, $options: 'i' } },
+          { Amenities: { $regex: searchKeyword, $options: 'i' } }
+        ]
+      };
+      
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      
+      // Use exclusion projection for performance
+      const projection = {
+        project_discripation: 0,
+        projectGallery: 0,
+        project_floorplan_Image: 0,
+        projectMaster_plan: 0,
+        projectRedefine_Connectivity: 0,
+        projectRedefine_Education: 0,
+        projectRedefine_Business: 0,
+        projectRedefine_Entertainment: 0,
+        BhK_Details: 0,
+        paymentPlan: 0
+      };
+      
+      const [results, total] = await Promise.all([
+        ProjectModel.find(searchQuery)
+          .select(projection)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        ProjectModel.countDocuments(searchQuery)
+      ]);
+      
+      const response = {
+        message: `Found ${total} projects matching "${searchKeyword}"`,
+        success: true,
+        keyword: searchKeyword,
+        total: total,
+        data: results,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalItems: total,
+          itemsPerPage: parseInt(limit),
+          hasNextPage: parseInt(page) < Math.ceil(total / parseInt(limit)),
+          hasPrevPage: parseInt(page) > 1
+        }
+      };
+      
+      // Cache the results for 5 minutes
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+        console.log(`💾 Keyword search data cached for: ${searchKeyword}`);
+      }
+      
+      return res.status(200).json(response);
+      
+    } catch (error) {
+      console.error('Keyword search error:', error);
+      return res.status(500).json({
+        message: "Internal server error",
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // Get all projects for admin loading (no pagination limit)
+  static getAllProjectsForAdmin = async (req, res) => {
+    try {
+      const cacheKey = "all_projects_admin";
+      
+      // Try to get from Redis cache first
+      if (redisClient.isOpen) {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ Redis Cache Hit: all_projects_admin");
+          return res.status(200).json({
+            message: "All projects retrieved from cache",
+            success: true,
+            data: JSON.parse(cachedData),
+            total: JSON.parse(cachedData).length
+          });
+        }
+      }
+      console.log("📦 Redis Cache Miss: Fetching all projects from MongoDB");
+      
+      // Use exclusion projection for performance
+      const projection = {
+        project_discripation: 0,
+        projectGallery: 0,
+        project_floorplan_Image: 0,
+        projectMaster_plan: 0,
+        projectRedefine_Connectivity: 0,
+        projectRedefine_Education: 0,
+        projectRedefine_Business: 0,
+        projectRedefine_Entertainment: 0,
+        BhK_Details: 0,
+        paymentPlan: 0
+      };
+      
+      const allProjects = await ProjectModel.find({ isHidden: { $ne: true } })
+        .select(projection)
+        .sort({ createdAt: -1 })
+        .lean();
+      
+      // Cache for 30 minutes (admin data changes less frequently)
+      if (redisClient.isOpen) {
+        await redisClient.setEx(cacheKey, 1800, JSON.stringify(allProjects));
+        console.log(`💾 All ${allProjects.length} projects cached for admin`);
+      }
+      
+      return res.status(200).json({
+        message: `Successfully retrieved ${allProjects.length} projects`,
+        success: true,
+        data: allProjects,
+        total: allProjects.length
+      });
+      
+    } catch (error) {
+      console.error('Get all projects error:', error);
+      return res.status(500).json({
+        message: "Internal server error",
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
   static userViewAll = async (req, res) => {
     try {
       //Get page and limit from query parameters, with default values
