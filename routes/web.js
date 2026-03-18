@@ -205,15 +205,6 @@ router.get('/test', (req, res) => {
   });
 });
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
 //career
 router.post(
   "/career/page/Insert",
