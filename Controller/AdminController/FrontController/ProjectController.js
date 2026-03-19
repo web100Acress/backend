@@ -2518,13 +2518,25 @@ class ProjectController {
     }
   };
 
-  // Get all projects for admin loading (no pagination limit)
+  // Get all projects for admin loading (with safety limits)
   static getAllProjectsForAdmin = async (req, res) => {
     try {
       const cacheKey = "all_projects_admin";
       
-      // Try to get from Redis cache first
-      if (redisClient.isOpen) {
+      // Add safety limits
+      const limit = parseInt(req.query.limit) || 100;
+      const page = parseInt(req.query.page) || 1;
+      
+      // Hard limit protection
+      if (limit > 500) {
+        return res.status(400).json({
+          message: "Too much data requested. Maximum limit is 500.",
+          success: false
+        });
+      }
+      
+      // Try to get from Redis cache first (only for full requests without pagination)
+      if (redisClient.isOpen && limit === 100 && page === 1) {
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
           console.log("⚡ Redis Cache Hit: all_projects_admin");
@@ -2555,19 +2567,30 @@ class ProjectController {
       const allProjects = await ProjectModel.find({ isHidden: { $ne: true } })
         .select(projection)
         .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
         .lean();
       
       // Cache for 30 minutes (admin data changes less frequently)
-      if (redisClient.isOpen) {
+      // Only cache if it's a reasonable size (first page with standard limit)
+      if (redisClient.isOpen && limit === 100 && page === 1) {
         await redisClient.setEx(cacheKey, 1800, JSON.stringify(allProjects));
         console.log(`💾 All ${allProjects.length} projects cached for admin`);
       }
+      
+      // Get total count for pagination info
+      const totalCount = await ProjectModel.countDocuments({ isHidden: { $ne: true } });
       
       return res.status(200).json({
         message: `Successfully retrieved ${allProjects.length} projects`,
         success: true,
         data: allProjects,
-        total: allProjects.length
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit)
+        }
       });
       
     } catch (error) {
