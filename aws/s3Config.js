@@ -2,6 +2,15 @@ const fs = require("fs");
 const AWS = require("aws-sdk");
 require("dotenv").config();
 
+// AWS SDK v3 imports for multer-s3 compatibility
+let S3Client;
+try {
+  const { S3Client: S3ClientV3 } = require("@aws-sdk/client-s3");
+  S3Client = S3ClientV3;
+} catch (e) {
+  console.warn('⚠️ @aws-sdk/client-s3 not available');
+}
+
 // Check for AWS credentials
 const awsAccessKey = process.env.AWS_S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID;
 const awsSecretKey = process.env.AWS_S3_SECRET_ACESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
@@ -19,8 +28,26 @@ if (!awsAccessKey || !awsSecretKey) {
   });
 }
 
-// Initialize S3 (will work with or without credentials for local development)
+// Initialize S3 v2 client (for backward compatibility)
 const s3 = new AWS.S3();
+
+// Initialize S3 v3 client (for multer-s3 v3 compatibility)
+let s3ClientV3 = null;
+if (S3Client && awsAccessKey && awsSecretKey) {
+  try {
+    s3ClientV3 = new S3Client({
+      region: awsRegion,
+      credentials: {
+        accessKeyId: awsAccessKey,
+        secretAccessKey: awsSecretKey,
+      },
+    });
+    console.log('✅ S3 v3 client initialized for multer-s3');
+  } catch (error) {
+    console.error('❌ Failed to initialize S3 v3 client:', error.message);
+  }
+}
+
 const BUCKET = process.env.AWS_S3_BUCKET || "100acress-media-bucket";
 
 // Upload file to S3 with custom folder structure
@@ -146,5 +173,6 @@ module.exports = {
   isAWSConfigured,
   getAWSStatus,
   s3,
+  s3ClientV3,
   BUCKET
 };

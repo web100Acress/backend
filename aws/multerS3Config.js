@@ -1,6 +1,6 @@
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-const { s3, BUCKET, isAWSConfigured } = require("./s3Config");
+const { s3ClientV3, BUCKET, isAWSConfigured } = require("./s3Config");
 const uploadLimits = require("../config/uploadLimits");
 const path = require("path");
 const fs = require("fs");
@@ -25,9 +25,9 @@ const diskStorage = multer.diskStorage({
   },
 });
 
-// S3 storage configuration
-const s3Storage = multerS3({
-  s3: s3,
+// S3 storage configuration - use v3 client for multer-s3 v3
+const s3Storage = s3ClientV3 ? multerS3({
+  s3: s3ClientV3,
   bucket: BUCKET,
   key: (req, file, cb) => {
     const timestamp = Date.now();
@@ -37,12 +37,12 @@ const s3Storage = multerS3({
     cb(null, key);
   },
   contentType: multerS3.AUTO_CONTENT_TYPE,
-});
+}) : null;
 
 // Choose storage based on AWS configuration
-const storage = isAWSConfigured() ? s3Storage : diskStorage;
+const storage = s3ClientV3 ? s3Storage : diskStorage;
 
-console.log(`📁 Contact card uploads using: ${isAWSConfigured() ? 'S3 Storage' : 'Disk Storage (local development)'}`);
+console.log(`📁 Contact card uploads using: ${s3ClientV3 ? 'S3 Storage (v3)' : 'Disk Storage (local development)'}`);
 
 const uploadS3 = multer({
   storage,

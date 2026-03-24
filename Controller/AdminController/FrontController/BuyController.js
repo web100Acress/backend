@@ -149,8 +149,8 @@ class BuyController {
   // view by id
   static viewAll = async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 100;
+      const page = Math.max(parseInt(req.query.page) || 1, 1);
+      const limit = Math.max(Math.min(parseInt(req.query.limit) || 100, 100), 1);
       const skip = (page - 1) * limit;
 
       // Use a more specific cache key for pagination
