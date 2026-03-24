@@ -218,9 +218,28 @@ class rentController {
       const limit = Math.max(Math.min(parseInt(req.query.limit) || 100, 100), 1);
       const skip = (page - 1) * limit;
 
-      // Use node-cache for pagination
-      const cacheKey = `rentData_p${page}_l${limit}`;
-      const cachedData = rentCache.get(cacheKey);
+      // Check Redis cache first
+      const cacheKey = `rent_view_all:${page}:${limit}`;
+      if (redisClient.isOpen) {
+        try {
+          const cachedData = await redisClient.get(cacheKey);
+          if (cachedData) {
+            console.log(`⚡ Redis hit for: ${cacheKey}`);
+            const parsed = JSON.parse(cachedData);
+            return res.status(200).json({
+              message: "Data fetched from Redis cache!",
+              rentaldata: parsed.data,
+              totalCount: parsed.total
+            });
+          }
+        } catch (error) {
+          console.log("Redis cache check failed, using database");
+        }
+      }
+
+      // Use node-cache as fallback
+      const localCacheKey = `rentData_p${page}_l${limit}`;
+      const cachedData = rentCache.get(localCacheKey);
       
       if (cachedData) {
         return res.status(200).json({
@@ -282,8 +301,18 @@ class rentController {
         }
       ]);
 
+      // Cache in Redis for 5 minutes (300 seconds)
+      if (redisClient.isOpen) {
+        try {
+          await redisClient.setEx(cacheKey, 300, JSON.stringify({ data: data1, total: totalCount }));
+          console.log(`💾 Redis cached: ${cacheKey}`);
+        } catch (error) {
+          console.log("Redis caching failed, using memory cache");
+        }
+      }
+
       const expirationTime = 5 * 60; // 5 minutes in seconds for node-cache
-      rentCache.set(cacheKey, { data: data1, total: totalCount }, expirationTime);
+      rentCache.set(localCacheKey, { data: data1, total: totalCount }, expirationTime);
 
       return res.status(200).json({
         message: "Data fetched from the database!",
