@@ -103,7 +103,17 @@ setInterval(() => {
 
 // Load environment variables BEFORE using them
 require("dotenv").config();
-connectRedis();
+
+// Initialize Redis connection with proper error handling
+(async () => {
+  try {
+    await connectRedis();
+    console.log("🔥 Redis initialization completed");
+  } catch (error) {
+    console.error("💥 Redis initialization failed:", error.message);
+    console.log("🔄 Continuing with in-memory cache only...");
+  }
+})();
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
