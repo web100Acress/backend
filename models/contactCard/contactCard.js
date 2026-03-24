@@ -101,7 +101,7 @@ const contactCardSchema = new mongoose.Schema(
         validate: {
           validator: function (v) {
             if (!v || v === '') return true;
-            return /^https:\/\/(www\.)?linkedin\.com\/.*/.test(v);
+            return /^https?:\/\/.+/.test(v);
           },
           message: "Please enter a valid LinkedIn URL"
         }
@@ -112,7 +112,7 @@ const contactCardSchema = new mongoose.Schema(
         validate: {
           validator: function (v) {
             if (!v || v === '') return true;
-            return /^https:\/\/(www\.)?(twitter\.com|x\.com)\/.*/.test(v);
+            return /^https?:\/\/.+/.test(v);
           },
           message: "Please enter a valid Twitter/X URL"
         }
@@ -123,7 +123,7 @@ const contactCardSchema = new mongoose.Schema(
         validate: {
           validator: function (v) {
             if (!v || v === '') return true;
-            return /^https:\/\/(www\.)?instagram\.com\/.*/.test(v);
+            return /^https?:\/\/.+/.test(v);
           },
           message: "Please enter a valid Instagram URL"
         }
@@ -134,7 +134,7 @@ const contactCardSchema = new mongoose.Schema(
         validate: {
           validator: function (v) {
             if (!v || v === '') return true;
-            return /^https:\/\/(www\.)?facebook\.com\/.*/.test(v);
+            return /^https?:\/\/.+/.test(v);
           },
           message: "Please enter a valid Facebook URL"
         }
@@ -145,7 +145,7 @@ const contactCardSchema = new mongoose.Schema(
         validate: {
           validator: function (v) {
             if (!v || v === '') return true;
-            return /^https:\/\/(www\.)?github\.com\/.*/.test(v);
+            return /^https?:\/\/.+/.test(v);
           },
           message: "Please enter a valid GitHub URL"
         }

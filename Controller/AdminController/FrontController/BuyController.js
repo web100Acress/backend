@@ -149,9 +149,28 @@ class BuyController {
   // view by id
   static viewAll = async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 100;
+      const page = Math.max(parseInt(req.query.page) || 1, 1);
+      const limit = Math.max(Math.min(parseInt(req.query.limit) || 100, 100), 1);
       const skip = (page - 1) * limit;
+
+      // Check Redis cache first
+      const redisCacheKey = `buy_view_all:${page}:${limit}`;
+      if (redisClient.isOpen) {
+        try {
+          const cachedData = await redisClient.get(redisCacheKey);
+          if (cachedData) {
+            console.log(`⚡ Redis hit for: ${redisCacheKey}`);
+            const parsed = JSON.parse(cachedData);
+            return res.status(200).json({
+              message: "Data fetched from Redis cache!",
+              ResaleData: parsed.data,
+              totalCount: parsed.total
+            });
+          }
+        } catch (error) {
+          console.log("Redis cache check failed, using database");
+        }
+      }
 
       // Use a more specific cache key for pagination
       const cacheKey = `buyData_p${page}_l${limit}`;
@@ -218,6 +237,16 @@ class BuyController {
           }
         }
       ]);
+
+      // Cache in Redis for 5 minutes (300 seconds)
+      if (redisClient.isOpen) {
+        try {
+          await redisClient.setEx(redisCacheKey, 300, JSON.stringify({ data: data1, total: totalCount }));
+          console.log(`💾 Redis cached: ${redisCacheKey}`);
+        } catch (error) {
+          console.log("Redis caching failed, using memory cache");
+        }
+      }
 
       const expirationTime = 5 * 60 * 1000; // 5 minutes
       cache.put(cacheKey, { data: data1, total: totalCount }, expirationTime);

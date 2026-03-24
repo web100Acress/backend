@@ -103,7 +103,17 @@ setInterval(() => {
 
 // Load environment variables BEFORE using them
 require("dotenv").config();
-connectRedis();
+
+// Initialize Redis connection with proper error handling
+(async () => {
+  try {
+    await connectRedis();
+    console.log("🔥 Redis initialization completed");
+  } catch (error) {
+    console.error("💥 Redis initialization failed:", error.message);
+    console.log("🔄 Continuing with in-memory cache only...");
+  }
+})();
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 const Port = isProd ? (process.env.PORT || 3500) : 3500;
 const http = require("http");
@@ -747,11 +757,12 @@ app.use('/project/suggested', cacheMiddleware(60 * 1000));
 app.use('/blog/view', cacheMiddleware(30 * 1000)); // 30 seconds cache
 
 // Search and dynamic data - short cache for freshness
-app.use('/property/search', cacheMiddleware(10 * 1000)); // 10 seconds cache
+// Search endpoints - NO CACHE for real-time results
+// Note: These will use the router middleware defined below
 app.use('/property/view', cacheMiddleware(60 * 1000)); // 1 minute cache for property details
 app.use('/property/buy/ViewAll', cacheMiddleware(60 * 1000)); // 1 minute cache for resale listings
 app.use('/property/rent/viewAll', cacheMiddleware(60 * 1000)); // 1 minute cache for rental listings
-app.use('/search/suggestions', cacheMiddleware(10 * 1000)); // 10 seconds cache
+// Note: Search suggestions will use the router middleware defined below
 app.use('/data/filter', cacheMiddleware(10 * 1000)); // 10 seconds cache
 app.use('/project/projectsearch', cacheMiddleware(60 * 1000)); // Increased to 60 seconds for better performance
 app.use('/project/category', cacheMiddleware(10 * 1000)); // 10 seconds cache

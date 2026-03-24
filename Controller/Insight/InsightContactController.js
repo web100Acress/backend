@@ -149,8 +149,8 @@ class InsightContactController {
     try {
       console.log('📋 Fetching all contacts for admin');
 
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 20;
+      const page = Math.max(parseInt(req.query.page) || 1, 1);
+      const limit = Math.max(Math.min(parseInt(req.query.limit) || 20, 100), 1);
       const skip = (page - 1) * limit;
 
       const contacts = await InsightContact.find({})
