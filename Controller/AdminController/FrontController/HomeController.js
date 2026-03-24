@@ -23,7 +23,7 @@ const tarnsporter = nodemailer.createTransport({
   },
 });
 class homeController {
-  // search in buy and rent with Redis caching
+  // search in buy and rent - NO CACHE for real-time results
   static search = async (req, res) => {
     const searchTerm = req.params.key;
     if (!searchTerm) {
@@ -32,60 +32,17 @@ class homeController {
       });
     }
 
-    // Generate a unique cache key for the search term
-    const cacheKey = `findData:${searchTerm}`;
-
-    // Check if the data is in Redis cache first
-    if (redisClient.isOpen) {
-      try {
-        const cachedData = await redisClient.get(cacheKey);
-        if (cachedData) {
-          console.log(`🎯 Redis cache hit for search: ${searchTerm}`);
-          return res.status(200).json({
-            message: "Data found in Redis cache!",
-            searchdata: JSON.parse(cachedData),
-          });
-        }
-      } catch (error) {
-        console.log("Redis cache check failed, falling back to memory cache");
-      }
-    }
-
-    // Fallback to memory cache
-    const memoryCachedData = await cache.get(cacheKey);
-    if (memoryCachedData) {
-      return res.status(200).json({
-        message: "Data found in memory cache!",
-        searchdata: JSON.parse(memoryCachedData),
-      });
-    }
-
     try {
-      // First try the text search
+      // Direct database query - no caching
       const searchResults = await ProjectModel.find({
         $text: { $search: searchTerm },
       })
         .limit(16)
         .lean();
 
-      // Cache the results if found
       if (searchResults.length > 0) {
-        // Cache in Redis for 3 minutes (180 seconds)
-        if (redisClient.isOpen) {
-          try {
-            await redisClient.setEx(cacheKey, 180, JSON.stringify(searchResults));
-            console.log(`💾 Search results cached in Redis for: ${searchTerm}`);
-          } catch (error) {
-            console.log("Redis caching failed, using memory cache");
-          }
-        }
-        
-        // Fallback to memory cache
-        const time = 3 * 60 * 1000; // Cache for 3 minutes
-        cache.put(cacheKey, JSON.stringify(searchResults), time);
-        
         return res.status(200).json({
-          message: "Data found-1!",
+          message: "Data found!",
           searchdata: searchResults,
         });
       } else {
@@ -101,31 +58,12 @@ class homeController {
         });
 
         const regexResults = await Promise.all(searchPromises);
-        const combinedResults = [...new Set(regexResults.flat())]; // Remove duplicates
-
-        // Cache the results from regex search
-        if (combinedResults.length > 0) {
-          // Cache in Redis for 3 minutes
-          if (redisClient.isOpen) {
-            try {
-              await redisClient.setEx(cacheKey, 180, JSON.stringify(combinedResults));
-              console.log(`💾 Regex search results cached in Redis for: ${searchTerm}`);
-            } catch (error) {
-              console.log("Redis caching failed, using memory cache");
-            }
-          }
+        const combinedResults = [...new Set(regexResults.flat())].slice(0, 16); // Remove duplicates and limit results
           
-          // Fallback to memory cache
-          const time = 3 * 60 * 1000; // Cache for 3 minutes
-          cache.put(cacheKey, JSON.stringify(combinedResults), time);
-          
-          return res.status(200).json({
-            message: "Data found-2!",
-            searchdata: combinedResults,
-          });
-        }
-
-        return res.status(404).json({ message: "No data found!" });
+        return res.status(200).json({
+          message: "Data found!",
+          searchdata: combinedResults,
+        });
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -245,222 +183,49 @@ class homeController {
     }
   };
 
-  // Search suggestions for autocomplete
+  // Fast search suggestions for autocomplete - NO CACHE for real-time
   static searchSuggestions = async (req, res) => {
     try {
       const query = req.params.query;
-      if (!query || query.length < 1) {
+      if (!query || query.length < 2) {
         return res.status(200).json({ suggestions: [] });
       }
 
       const suggestions = [];
-      const limit = 15; // Increased limit for more suggestions
+      const limit = 10; // Reduced limit for faster response
 
-      // Get suggestions from projects (main search)
+      // Fast project suggestions only - removed slow aggregation
       const projectSuggestions = await ProjectModel.find({
         $or: [
-          { projectName: { $regex: query, $options: "i" } },
+          { projectName: { $regex: `^${query}`, $options: "i" } }, // Startswith for better UX
           { projectAddress: { $regex: query, $options: "i" } },
-          { city: { $regex: query, $options: "i" } },
-          { builderName: { $regex: query, $options: "i" } },
-          { state: { $regex: query, $options: "i" } },
-          { project_discripation: { $regex: query, $options: "i" } }
+          { city: { $regex: `^${query}`, $options: "i" } },
         ]
       })
       .limit(limit)
-      .select('projectName projectAddress city builderName state project_url project_discripation')
+      .select('projectName projectAddress city project_url')
       .lean();
 
-      // Get suggestions from buy properties with enhanced search
-      const buySuggestions = await postPropertyModel.aggregate([
-        {
-          $match: {
-            "postProperty.verify": "verified",
-            "postProperty.propertyLooking": "Sell"
-          }
-        },
-        {
-          $project: {
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.propertyLooking", "Sell"] },
-                    { $eq: ["$$property.verify", "verified"] },
-                    {
-                      $or: [
-                        { $regexMatch: { input: "$$property.propertyName", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.address", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.city", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.state", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.area", regex: new RegExp(query, "i") } }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        {
-          $limit: limit
-        },
-        {
-          $project: {
-            "postProperty.propertyName": 1,
-            "postProperty.address": 1,
-            "postProperty.city": 1,
-            "postProperty.state": 1,
-            "postProperty.area": 1,
-            "postProperty.price": 1
-          }
-        }
-      ]);
-
-      // Get suggestions from rent properties with enhanced search
-      const rentSuggestions = await postPropertyModel.aggregate([
-        {
-          $match: {
-            "postProperty.verify": "verified",
-            "postProperty.propertyLooking": "rent"
-          }
-        },
-        {
-          $project: {
-            postProperty: {
-              $filter: {
-                input: "$postProperty",
-                as: "property",
-                cond: {
-                  $and: [
-                    { $eq: ["$$property.propertyLooking", "rent"] },
-                    { $eq: ["$$property.verify", "verified"] },
-                    {
-                      $or: [
-                        { $regexMatch: { input: "$$property.propertyName", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.address", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.city", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.state", regex: new RegExp(query, "i") } },
-                        { $regexMatch: { input: "$$property.area", regex: new RegExp(query, "i") } }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        {
-          $limit: limit
-        },
-        {
-          $project: {
-            "postProperty.propertyName": 1,
-            "postProperty.address": 1,
-            "postProperty.city": 1,
-            "postProperty.state": 1,
-            "postProperty.area": 1,
-            "postProperty.price": 1
-          }
-        }
-      ]);
-
-      // Process project suggestions with enhanced details
-      projectSuggestions.forEach(project => {
-        if (project.projectName) {
-          let subtitle = '';
-          if (project.city) subtitle += project.city;
-          if (project.state && project.city) subtitle += `, ${project.state}`;
-          if (!subtitle && project.projectAddress) subtitle = project.projectAddress;
-
-          suggestions.push({
-            text: project.projectName,
-            type: 'project',
-            url: `/${project.project_url}/`,
-            subtitle: subtitle || 'Project',
-            description: project.project_discripation ? project.project_discripation.substring(0, 100) + '...' : undefined
-          });
-        }
+      // Format project suggestions
+      projectSuggestions.forEach(item => {
+        suggestions.push({
+          text: item.projectName,
+          type: 'project',
+          url: item.project_url,
+          address: item.projectAddress,
+          city: item.city
+        });
       });
 
-      // Process buy suggestions with enhanced details
-      buySuggestions.forEach(item => {
-        if (item.postProperty && item.postProperty.propertyName) {
-          let subtitle = '';
-          if (item.postProperty.city) subtitle += item.postProperty.city;
-          if (item.postProperty.state && item.postProperty.city) subtitle += `, ${item.postProperty.state}`;
-          if (item.postProperty.area) subtitle += ` • ${item.postProperty.area}`;
-          if (item.postProperty.price) subtitle += ` • ₹${item.postProperty.price}`;
-
-          suggestions.push({
-            text: item.postProperty.propertyName,
-            type: 'buy',
-            url: `/buy-properties/${item.postProperty.propertyName.toLowerCase().replace(/\s+/g, '-')}/`,
-            subtitle: subtitle || 'For Sale',
-            price: item.postProperty.price
-          });
-        }
-      });
-
-      // Process rent suggestions with enhanced details
-      rentSuggestions.forEach(item => {
-        if (item.postProperty && item.postProperty.propertyName) {
-          let subtitle = '';
-          if (item.postProperty.city) subtitle += item.postProperty.city;
-          if (item.postProperty.state && item.postProperty.city) subtitle += `, ${item.postProperty.state}`;
-          if (item.postProperty.area) subtitle += ` • ${item.postProperty.area}`;
-          if (item.postProperty.price) subtitle += ` • ₹${item.postProperty.price}`;
-
-          suggestions.push({
-            text: item.postProperty.propertyName,
-            type: 'rent',
-            url: `/rental-properties/${item.postProperty.propertyName.toLowerCase().replace(/\s+/g, '-')}/`,
-            subtitle: subtitle || 'For Rent',
-            price: item.postProperty.price
-          });
-        }
-      });
-
-      // Remove duplicates based on text
-      const uniqueSuggestions = suggestions.filter((suggestion, index, self) =>
-        index === self.findIndex(s => s.text === suggestion.text)
-      );
-
-      // Sort by relevance and limit to 12 suggestions max
-      const finalSuggestions = uniqueSuggestions
-        .sort((a, b) => {
-          // Prioritize exact matches
-          const aExact = a.text.toLowerCase().includes(query.toLowerCase());
-          const bExact = b.text.toLowerCase().includes(query.toLowerCase());
-          if (aExact && !bExact) return -1;
-          if (!aExact && bExact) return 1;
-
-          // Then prioritize by length (shorter matches are more relevant)
-          return a.text.length - b.text.length;
-        })
-        .slice(0, 12);
-
-      res.status(200).json({
-        suggestions: finalSuggestions,
-        query: query,
-        total: finalSuggestions.length
+      return res.status(200).json({ 
+        suggestions: suggestions.slice(0, 8) // Limit to 8 for UI
       });
 
     } catch (error) {
-      console.error("Search suggestions error:", error);
-      res.status(500).json({
-        suggestions: [],
-        error: "Internal server error"
-      });
+      console.error('Search suggestions error:', error);
+      return res.status(200).json({ suggestions: [] });
     }
   };
-  // filter data by projectname, city,buildername,minPrice,maxprice
-  // type===residential and Commercial
-  //area or state
-  // furnishing === select box fully or semi furnished
-
   // static filter_data = async (req, res) => {
   //   try {
 
