@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const connectDb = () => {
   const mongoUri = process.env.MONGO_URI || 
-    "mongodb+srv://amit100acre:Amit123@cluster0.ffg8qyf.mongodb.net/?retryWrites=true&w=majority";
+    "mongodb+srv://amit100acre:Mission2030@cluster0.ffg8qyf.mongodb.net/?retryWrites=true&w=majority";
 
   const connectionOptions = {
     serverSelectionTimeoutMS: 30000, // 30 seconds timeout
